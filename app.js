@@ -1,199 +1,214 @@
 "use strict";
 
-
 window.CatchTrack = {
 
-
-    version: "1.0",
-
+    version: "2.0",
 
     database: null,
 
-
     config: null,
-
 
     modules: [],
 
 
-
     async init() {
 
-
         try {
-
 
             console.log(
                 "CatchTrack Start"
             );
 
 
+            /*
+             * SQLite initialisieren
+             */
 
             const SQL =
+                await initSqlJs({
 
-            await initSqlJs({
+                    locateFile: file =>
+                        "libraries/" + file
 
-                locateFile: file =>
-                "libraries/" + file
-
-            });
+                });
 
 
+            /*
+             * Vorhandene Datenbank laden
+             * oder neue Datenbank erstellen
+             */
 
             this.database =
-
-            CatchTrackDatabase.loadDatabase(
-
-                SQL
-
-            );
+                CatchTrackDatabase.loadDatabase(
+                    SQL
+                );
 
 
+            /*
+             * Database Manager verbinden
+             *
+             * Der Database Manager übernimmt
+             * ab hier die Migrationen.
+             */
 
             CatchTrackDatabase.connect(
-
                 this.database
-
             );
 
 
+            /*
+             * Fischdaten laden
+             *
+             * fish_seed.sql enthält nur
+             * Stammdaten und gehört nicht
+             * zum eigentlichen Schema.
+             */
 
-            const schema =
-
-            await (
-
+            const seedResponse =
                 await fetch(
-
-                    "database/schema.sql"
-
-                )
-
-            ).text();
-
-
-
-            this.database.exec(
-
-                schema
-
-            );
-
-
-
-            const seed =
-
-            await (
-
-                await fetch(
-
                     "database/fish_seed.sql"
-
-                )
-
-            ).text();
+                );
 
 
+            if (seedResponse.ok) {
 
-            this.database.exec(
+                const seed =
+                    await seedResponse.text();
 
-                seed
+                if (seed.trim()) {
 
-            );
+                    this.database.exec(
+                        seed
+                    );
+
+                    CatchTrackDatabase.saveDatabase();
+
+                }
+
+            }
 
 
+            /*
+             * App-Konfiguration laden
+             */
 
             const configResponse =
+                await fetch(
+                    "config/app.json"
+                );
 
-            await fetch(
 
-                "config/app.json"
+            if (!configResponse.ok) {
 
-            );
+                throw new Error(
+                    "config/app.json konnte nicht geladen werden."
+                );
 
+            }
 
 
             this.config =
+                await configResponse.json();
 
-            await configResponse.json();
 
-
+            /*
+             * Modul-Konfiguration laden
+             */
 
             const moduleResponse =
+                await fetch(
+                    "config/modules.json"
+                );
 
-            await fetch(
 
-                "config/modules.json"
+            if (!moduleResponse.ok) {
 
-            );
+                throw new Error(
+                    "config/modules.json konnte nicht geladen werden."
+                );
 
+            }
 
 
             const moduleData =
-
-            await moduleResponse.json();
-
+                await moduleResponse.json();
 
 
             this.modules =
-
-            moduleData.modules;
-
-
-
-            CatchTrackModuleManager.loadModules(
-
-                this.modules
-
-            );
+                Array.isArray(
+                    moduleData.modules
+                )
+                    ? moduleData.modules
+                    : [];
 
 
+            /*
+             * Module Manager
+             */
+
+            if (
+                window.CatchTrackModuleManager &&
+                typeof
+                CatchTrackModuleManager.loadModules
+                === "function"
+            ) {
+
+                CatchTrackModuleManager.loadModules(
+                    this.modules
+                );
+
+            }
+
+
+            /*
+             * Start abgeschlossen
+             */
 
             console.log(
-
                 "CatchTrack gestartet"
+            );
 
+            console.log(
+                "Datenbank-Version:",
+                CatchTrackDatabase.getSchemaVersion()
             );
 
 
         }
-
 
         catch(error) {
 
-
             console.error(
-
                 "CatchTrack Fehler:",
-
                 error
-
             );
 
 
-            document.getElementById(
+            const app =
+                document.getElementById(
+                    "app"
+                );
 
-                "app"
 
-            ).innerHTML =
+            if (app) {
 
-            "<h2>CatchTrack</h2><p>"
+                app.innerHTML =
 
-            +
+                    "<h2>CatchTrack</h2>" +
 
-            error.message
+                    "<p>" +
 
-            +
+                    error.message +
 
-            "</p>";
+                    "</p>";
+
+            }
 
         }
 
-
     }
 
-
 };
-
 
 
 document.addEventListener(
