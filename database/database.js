@@ -2,17 +2,16 @@
 
 /*
  * CatchTrack Database Manager
- * Version: 2.0
+ * Version 2.1
  *
  * Zentrale SQLite-Datenbank
- * Mehrbenutzerfähig
  * Versioniertes Migrationssystem
- * Speicherung im Browser-localStorage
+ * Browser-localStorage Persistenz
  */
 
 window.CatchTrackDatabase = {
 
-    version: "2.0",
+    version: "2.1",
 
     database: null,
 
@@ -29,19 +28,24 @@ window.CatchTrackDatabase = {
 
     init() {
 
-        console.log(
-            "CatchTrack Database Manager V2.0 bereit."
-        );
-
         this.initialized = true;
+
+        console.log(
+            "CatchTrack Database Manager V2.1 bereit."
+        );
 
     },
 
 
-    registerMigration(version, description, migration) {
+    registerMigration(
+        version,
+        description,
+        migration
+    ) {
 
         if (
-            !version ||
+            version === undefined ||
+            version === null ||
             typeof migration !== "function"
         ) {
 
@@ -53,13 +57,15 @@ window.CatchTrackDatabase = {
 
         }
 
-        const exists =
+        const migrationVersion =
+            String(version);
+
+        if (
             this.migrations.some(
                 item =>
-                    item.version === version
-            );
-
-        if (exists) {
+                    item.version === migrationVersion
+            )
+        ) {
 
             return false;
 
@@ -67,7 +73,7 @@ window.CatchTrackDatabase = {
 
         this.migrations.push({
 
-            version: String(version),
+            version: migrationVersion,
 
             description:
                 description || "",
@@ -92,7 +98,7 @@ window.CatchTrackDatabase = {
         if (!db) {
 
             console.error(
-                "Keine SQLite Datenbank übergeben."
+                "Keine SQLite-Datenbank übergeben."
             );
 
             return false;
@@ -102,16 +108,22 @@ window.CatchTrackDatabase = {
         this.database = db;
 
         console.log(
-            "SQLite Datenbank verbunden."
+            "SQLite-Datenbank verbunden."
         );
 
-        this.checkDatabase();
+        if (!this.checkDatabase()) {
 
-        this.ensureMigrationTable();
+            return false;
 
-        this.runMigrations();
+        }
 
-        return true;
+        if (!this.ensureMigrationTable()) {
+
+            return false;
+
+        }
+
+        return this.runMigrations();
 
     },
 
@@ -128,7 +140,7 @@ window.CatchTrackDatabase = {
             if (!saved) {
 
                 console.log(
-                    "Neue SQLite Datenbank erstellt."
+                    "Neue SQLite-Datenbank erstellt."
                 );
 
                 return new SQL.Database();
@@ -143,6 +155,10 @@ window.CatchTrackDatabase = {
                 data.length === 0
             ) {
 
+                console.log(
+                    "Ungültige gespeicherte Datenbank. Neue Datenbank wird erstellt."
+                );
+
                 return new SQL.Database();
 
             }
@@ -151,7 +167,7 @@ window.CatchTrackDatabase = {
                 new Uint8Array(data);
 
             console.log(
-                "SQLite Datenbank geladen."
+                "SQLite-Datenbank geladen."
             );
 
             return new SQL.Database(
@@ -233,11 +249,7 @@ window.CatchTrackDatabase = {
         try {
 
             this.database.exec(
-                "SELECT 1"
-            );
-
-            console.log(
-                "SQLite Prüfung erfolgreich."
+                "SELECT 1;"
             );
 
             return true;
@@ -247,7 +259,7 @@ window.CatchTrackDatabase = {
         catch (error) {
 
             console.error(
-                "SQLite Prüfung Fehler:",
+                "SQLite-Prüfung Fehler:",
                 error
             );
 
@@ -282,7 +294,7 @@ window.CatchTrackDatabase = {
                         NOT NULL
                         DEFAULT CURRENT_TIMESTAMP
 
-                )
+                );
 
             `);
 
@@ -314,19 +326,36 @@ window.CatchTrackDatabase = {
 
         try {
 
-            return this.query(`
+            const statement =
+                this.database.prepare(`
 
-                SELECT
-                    version,
-                    description,
-                    applied_at
+                    SELECT
+                        version,
+                        description,
+                        applied_at
 
-                FROM migrations
+                    FROM migrations
 
-                ORDER BY
-                    CAST(version AS INTEGER)
+                    ORDER BY
+                        CAST(version AS INTEGER);
 
-            `);
+                `);
+
+            const rows = [];
+
+            while (
+                statement.step()
+            ) {
+
+                rows.push(
+                    statement.getAsObject()
+                );
+
+            }
+
+            statement.free();
+
+            return rows;
 
         }
 
@@ -352,24 +381,44 @@ window.CatchTrackDatabase = {
 
         }
 
-        const result =
-            this.query(`
+        try {
 
-                SELECT id
+            const statement =
+                this.database.prepare(`
 
-                FROM migrations
+                    SELECT id
 
-                WHERE version = ?
+                    FROM migrations
 
-                LIMIT 1
+                    WHERE version = ?
 
-            `, [
+                    LIMIT 1;
 
+                `);
+
+            statement.bind([
                 String(version)
-
             ]);
 
-        return result.length > 0;
+            const exists =
+                statement.step();
+
+            statement.free();
+
+            return exists;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Migration-Prüfung Fehler:",
+                error
+            );
+
+            return false;
+
+        }
 
     },
 
@@ -419,7 +468,7 @@ window.CatchTrackDatabase = {
                 );
 
                 this.database.run(
-                    "BEGIN TRANSACTION"
+                    "BEGIN TRANSACTION;"
                 );
 
                 try {
@@ -428,30 +477,32 @@ window.CatchTrackDatabase = {
                         this.database
                     );
 
-                    this.database.run(`
+                    const statement =
+                        this.database.prepare(`
 
-                        INSERT INTO migrations
-                        (
-                            version,
-                            description
-                        )
+                            INSERT INTO migrations
+                            (
+                                version,
+                                description
+                            )
 
-                        VALUES
-                        (
-                            ?,
-                            ?
-                        )
+                            VALUES
+                            (
+                                ?,
+                                ?
+                            );
 
-                    `, [
+                        `);
 
+                    statement.run([
                         migration.version,
-
                         migration.description
-
                     ]);
 
+                    statement.free();
+
                     this.database.run(
-                        "COMMIT"
+                        "COMMIT;"
                     );
 
                     console.log(
@@ -466,9 +517,14 @@ window.CatchTrackDatabase = {
 
                 catch (migrationError) {
 
-                    this.database.run(
-                        "ROLLBACK"
-                    );
+                    try {
+
+                        this.database.run(
+                            "ROLLBACK;"
+                        );
+
+                    }
+                    catch (_) {}
 
                     throw migrationError;
 
@@ -502,16 +558,12 @@ window.CatchTrackDatabase = {
 
     updateSchemaVersion() {
 
-        if (!this.database) {
-
-            return;
-
-        }
-
         const migrations =
             this.getAppliedMigrations();
 
-        if (migrations.length === 0) {
+        if (
+            !migrations.length
+        ) {
 
             this.schemaVersion = 0;
 
@@ -533,7 +585,10 @@ window.CatchTrackDatabase = {
     },
 
 
-    execute(sql, params = []) {
+    execute(
+        sql,
+        params = []
+    ) {
 
         if (!this.database) {
 
@@ -543,11 +598,26 @@ window.CatchTrackDatabase = {
 
         try {
 
-            const result =
-                this.database.run(
-                    sql,
-                    params
+            const statement =
+                this.database.prepare(
+                    sql
                 );
+
+            if (
+                Array.isArray(params) &&
+                params.length > 0
+            ) {
+
+                statement.bind(params);
+
+            }
+
+            statement.step();
+
+            const result =
+                statement.getAsObject();
+
+            statement.free();
 
             this.saveDatabase();
 
@@ -558,7 +628,7 @@ window.CatchTrackDatabase = {
         catch (error) {
 
             console.error(
-                "SQL Fehler:",
+                "SQL-Fehler:",
                 error
             );
 
@@ -569,7 +639,10 @@ window.CatchTrackDatabase = {
     },
 
 
-    query(sql, params = []) {
+    query(
+        sql,
+        params = []
+    ) {
 
         if (!this.database) {
 
@@ -586,9 +659,14 @@ window.CatchTrackDatabase = {
                     sql
                 );
 
-            statement.bind(
-                params
-            );
+            if (
+                Array.isArray(params) &&
+                params.length > 0
+            ) {
+
+                statement.bind(params);
+
+            }
 
             const rows = [];
 
@@ -622,7 +700,7 @@ window.CatchTrackDatabase = {
             }
 
             console.error(
-                "Query Fehler:",
+                "Query-Fehler:",
                 error
             );
 
