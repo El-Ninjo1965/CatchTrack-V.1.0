@@ -1,0 +1,360 @@
+* {
+
+    box-sizing: border-box;
+
+}
+
+
+
+html {
+
+    height: 100%;
+
+}
+
+
+
+body {
+
+    margin: 0;
+
+    padding: 0;
+
+    min-height: 100%;
+
+
+    font-family:
+
+        Arial,
+
+        Helvetica,
+
+        sans-serif;
+
+
+    background:
+
+        #f5f5f5;
+
+
+    color:
+
+        #222;
+
+
+}
+
+
+
+/*
+==================================================
+Header
+==================================================
+*/
+
+
+header {
+
+    padding: 20px;
+
+
+    text-align: center;
+
+
+    background:
+
+        #ffffff;
+
+
+    border-bottom:
+
+        1px solid #ddd;
+
+}
+
+
+
+header h1 {
+
+    margin: 0;
+
+
+    font-size:
+
+        28px;
+
+}
+
+
+
+
+
+/*
+==================================================
+Hauptbereich
+==================================================
+*/
+
+
+main {
+
+
+    padding: 20px;
+
+
+    min-height:
+
+        300px;
+
+
+}
+
+
+
+
+
+/*
+==================================================
+Modul Menü
+==================================================
+*/
+
+
+#catchtrack-menu {
+
+
+    display:
+
+        flex;
+
+
+    flex-wrap:
+
+        wrap;
+
+
+    gap:
+
+        10px;
+
+
+    padding:
+
+        15px;
+
+
+    background:
+
+        #ffffff;
+
+
+    border-bottom:
+
+        1px solid #ddd;
+
+
+}
+
+
+
+#catchtrack-menu button {
+
+
+    padding:
+
+        10px 15px;
+
+
+    border:
+
+        none;
+
+
+    border-radius:
+
+        6px;
+
+
+    cursor:
+
+        pointer;
+
+
+    background:
+
+        #1976d2;
+
+
+    color:
+
+        white;
+
+
+    font-size:
+
+        14px;
+
+
+}
+
+
+
+#catchtrack-menu button:hover {
+
+
+    opacity:
+
+        0.85;
+
+
+}
+
+
+
+
+
+/*
+==================================================
+Formulare
+==================================================
+*/
+
+
+input,
+
+select,
+
+textarea,
+
+button {
+
+
+    font-family:
+
+        inherit;
+
+
+}
+
+
+
+button {
+
+
+    cursor:
+
+        pointer;
+
+
+}
+
+
+
+
+
+/*
+==================================================
+Container
+==================================================
+*/
+
+
+.container {
+
+
+    width:
+
+        100%;
+
+
+    max-width:
+
+        1200px;
+
+
+    margin:
+
+        0 auto;
+
+
+}
+
+
+
+
+
+/*
+==================================================
+Responsive
+==================================================
+*/
+
+
+@media
+
+(max-width: 600px) {
+
+
+    header h1 {
+
+
+        font-size:
+
+            22px;
+
+
+    }
+
+
+
+    main {
+
+
+        padding:
+
+            10px;
+
+
+    }
+
+
+
+    #catchtrack-menu {
+
+
+        flex-direction:
+
+            column;
+
+
+    }
+
+
+
+    #catchtrack-menu button {
+
+
+        width:
+
+            100%;
+
+
+    }
+
+
+}
+
+
+
+
+
+/*
+==================================================
+ENDE DATEI
+
+CatchTrack Master Edition V1.0
+style.css
+
+Version 1.0 Final Master
+==================================================
+*/
