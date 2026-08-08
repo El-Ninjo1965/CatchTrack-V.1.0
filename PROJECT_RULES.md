@@ -1,249 +1,1006 @@
-CatchTrack – PROJECT RULES
+# CatchTrack – PROJECT RULES
+Version: 2.1
+Status: MASTER
+Last Update: 2026-08-08
 
-Zweck
+—
 
-Diese Datei definiert die verbindlichen Arbeitsregeln für die Entwicklung von CatchTrack-V.1.0.
+## 1. Zweck dieser Datei
 
-Sie ist eine dauerhafte Projektverfassung.
+Diese Datei ist die verbindliche Arbeitsgrundlage für die Weiterentwicklung von CatchTrack.
 
-Sie enthält bewusst keine laufenden Statusinformationen. Der tatsächliche Projektstand wird aus dem GitHub-Repository und der Git-Historie ermittelt.
+Vor jeder Änderung am Projekt müssen diese Regeln und der aktuelle Projektstand berücksichtigt werden.
 
-⸻
+Ziele:
 
-1. Masterquelle
+- keine fertigen Funktionen erneut erstellen
+- keine bestehenden Abläufe unbeabsichtigt verändern
+- keine fertigen Dateien ohne ausdrücklichen Auftrag ändern
+- keine Module mehrfach oder parallel entwickeln
+- Änderungen nachvollziehbar halten
+- Abhängigkeiten zwischen Modulen berücksichtigen
+- Datenbankstruktur von Anfang an mehrbenutzerfähig planen
+- automatische Daten niemals als unveränderbare Werte behandeln
 
-Das GitHub-Repository
+—
 
-El-Ninjo1965/CatchTrack-V.1.0
+# 2. Grundprinzip
 
-ist die technische Masterquelle des Projekts.
+CatchTrack wird modular entwickelt.
 
-Der Branch main ist der maßgebliche Entwicklungsstand, sofern kein anderer Branch ausdrücklich als Arbeitsstand festgelegt wurde.
+Jede eigenständige Funktion soll, soweit technisch sinnvoll, als eigenes Modul aufgebaut werden.
 
-⸻
+Ein fertiges Modul muss anschließend von anderen Modulen verwendet werden können, ohne seine interne Implementierung zu kopieren.
 
-2. Vor jeder Änderung
+Grundprinzip:
 
-Vor jeder Änderung müssen folgende Punkte geprüft werden:
+MODULE
+↓
+KLARE SCHNITTSTELLEN
+↓
+ZENTRALE DATENBANK
 
-1. aktueller Branch
-2. aktueller Commit
-3. aktuelle Version der betroffenen Datei
-4. Abhängigkeiten der betroffenen Datei
-5. vorhandene Funktionen
-6. Auswirkungen auf andere Komponenten
+—
 
-Es darf nicht auf Grundlage einer veralteten Chat-Erinnerung gearbeitet werden, wenn der aktuelle Repository-Stand verfügbar ist.
+# 3. Zentrale Datenbank
 
-⸻
+CatchTrack verwendet grundsätzlich eine zentrale SQLite-Datenbank.
 
-3. Bestehende Dateien
+Es werden NICHT mehrere voneinander unabhängige Datenbanken pro Modul angelegt.
 
-Eine vorhandene Datei wird nicht neu erstellt, wenn sie bereits die benötigte Funktion enthält.
+Gründe:
 
-Vor einer Änderung muss geprüft werden, ob die gewünschte Funktion bereits vorhanden ist.
+- Beziehungen zwischen Daten
+- Benutzerzuordnung
+- Datenintegrität
+- Backups
+- Statistiken
+- Datenmigrationen
+- Vermeidung redundanter Daten
 
-Bereits funktionierende Bestandteile dürfen nicht ohne konkreten Auftrag umgebaut werden.
+Die Datenbank ist zentral.
 
-⸻
+Die Datenlogik bleibt innerhalb der jeweiligen Module gekapselt.
 
-4. Keine ungeplanten Nebenänderungen
+—
 
-Ein Arbeitsauftrag betrifft grundsätzlich nur die dafür notwendigen Dateien.
+# 4. Modulprinzip
 
-Nicht betroffene Bereiche bleiben unverändert.
+Ein Modul besitzt grundsätzlich:
 
-Insbesondere dürfen Änderungen nicht nebenbei:
+modules/<module>/
 
-* die Architektur verändern
-* andere Module umbauen
-* Datenbankstrukturen verändern
-* bestehende Prozesse ersetzen
-* bestehende Services verändern
-* funktionierende Schnittstellen verändern
+├── <module>.html
+├── <module>.css
+└── <module>.js
 
-Wenn eine zusätzliche Änderung technisch notwendig wird, muss sie vor ihrer Durchführung ausdrücklich festgestellt und begründet werden.
+Zusätzliche Dateien sind erlaubt, wenn sie technisch sinnvoll sind.
 
-⸻
+Beispiel:
 
-5. Fertige Komponenten
+modules/gps/
 
-Eine als fertig etablierte Komponente wird als geschützt betrachtet.
+├── gps.html
+├── gps.css
+├── gps.js
+└── gps.data.js
 
-Sie darf nur verändert werden, wenn:
+—
 
-* ein konkreter Fehler behoben werden muss
-* eine ausdrücklich gewünschte Funktion ergänzt wird
-* eine dokumentierte technische Abhängigkeit dies erforderlich macht
+# 5. Module müssen mehrfach verwendbar sein
 
-Eine fertige Komponente wird nicht aus Gründen der Vereinfachung oder persönlicher Präferenz neu geschrieben.
+Ein Modul darf nicht ausschließlich für einen einzigen Anwendungsfall entwickelt werden.
 
-⸻
+Jedes Datenmodul muss:
 
-6. Vollständige Dateien
+1. selbstständig über seine Benutzeroberfläche verwendet werden können
+2. seine Daten anderen Modulen über definierte Schnittstellen zur Verfügung stellen können
 
-Bei Codeänderungen wird grundsätzlich eine vollständige, konsistente Version der betroffenen Datei erstellt.
+Beispiele:
 
-Keine unnötigen Teilstücke, Such-und-Ersetzen-Anweisungen oder unvollständigen Zwischenstände.
+GPS:
 
-Ziel ist immer eine direkt verwendbare Masterversion.
+GPS.getCurrentLocation()
 
-⸻
+Weather:
 
-7. Architektur
+Weather.getData(latitude, longitude, timestamp)
 
-CatchTrack ist modular aufgebaut.
+Tides:
 
-Bestehende Architekturprinzipien sind zu erhalten.
+Tides.getData(latitude, longitude, timestamp)
 
-Insbesondere gilt:
+Moon:
 
-Module
-   ↓
-Core / Services
-   ↓
-Zentrale Datenbank
+Moon.getData(timestamp)
 
-Module sollen nicht unnötig direkt miteinander gekoppelt werden.
+Waters:
 
-Bestehende zentrale Schnittstellen werden bevorzugt weiterverwendet.
+Waters.getNearby(latitude, longitude)
 
-⸻
+Photos:
 
-8. Datenbank
+Photos.getForCatch(catchId)
 
-Die zentrale Datenbank ist Bestandteil der bestehenden CatchTrack-Architektur.
+—
 
-Datenbankstrukturen dürfen nicht nebenbei verändert werden.
+# 6. Wiederverwendung von Modulen
 
-Schemaänderungen müssen:
+Andere Module dürfen die Funktionen eines fertigen Moduls verwenden.
 
-1. ausdrücklich erforderlich sein
-2. auf Kompatibilität geprüft werden
-3. mit bestehenden Daten und Funktionen abgeglichen werden
-4. nachvollziehbar dokumentiert werden
+Die interne Logik darf nicht kopiert werden.
 
-⸻
+Beispiel:
 
-9. Entwicklungsreihenfolge
+Catches benötigt Wetterdaten.
 
-Die Entwicklung erfolgt schrittweise.
+Catches implementiert NICHT selbst die Wetterermittlung.
 
-Ein abgeschlossener Arbeitsschritt wird nicht erneut begonnen, solange kein konkreter Fehler oder Änderungsauftrag vorliegt.
+Stattdessen:
 
-Der bekannte Übergabepunkt ist:
+Weather.getData(...)
 
-Step 1 → abgeschlossen bis einschließlich Weather-Modul
+Das Wettermodul liefert die benötigten Daten.
 
-Die weitere Entwicklung beginnt danach mit Step 2.
+Damit bleibt Weather unabhängig und kann gleichzeitig direkt vom Benutzer geöffnet werden.
 
-Bereits vorhandene Dateien werden dabei zuerst geprüft.
+—
 
-⸻
+# 7. Fertige Module
 
-10. Keine Rekonstruktion aus Erinnerung
+Wenn ein Modul vollständig entwickelt und getestet wurde:
 
-ChatGPT darf den Projektstand nicht aus einer früheren Unterhaltung rekonstruieren, wenn der aktuelle Repository-Stand verfügbar ist.
+- Version festhalten
+- Funktion dokumentieren
+- Schnittstellen dokumentieren
+- Abhängigkeiten dokumentieren
+- Datenstruktur dokumentieren
 
-GitHub ist maßgeblich.
+Danach gilt das Modul als fertiger Baustein.
 
-Bei widersprüchlichen Informationen gilt:
+Andere Module dürfen es verwenden.
 
-aktueller Repository-Stand
-        >
-Git-Historie
-        >
-Projekt-Dokumentation
-        >
-Chat-Erinnerung
+Ein fertiges Modul darf nicht für jede neue Funktion unnötig umgebaut werden.
 
-⸻
+Änderungen an fertigen Modulen nur:
 
-11. Vor Änderungen prüfen
+- wenn technisch erforderlich
+- wenn ausdrücklich beauftragt
+- oder wenn ein Fehler behoben werden muss
 
-Vor einer Änderung muss beantwortet werden können:
+—
 
-* Was soll geändert werden?
-* Warum soll es geändert werden?
-* Welche Datei ist betroffen?
-* Welche bestehenden Funktionen hängen davon ab?
-* Was darf ausdrücklich nicht verändert werden?
-* Wie wird nach der Änderung geprüft?
+# 8. Benutzerstruktur
 
-Wenn diese Fragen nicht ausreichend beantwortet werden können, wird zunächst geprüft und nicht verändert.
+CatchTrack muss von Anfang an mehrere unabhängige Benutzer unterstützen.
 
-⸻
+Jeder Benutzer besitzt eine eindeutige user_id.
 
-12. Nach Änderungen prüfen
+Beispiel:
 
-Nach jeder Änderung werden mindestens geprüft:
+users
 
-* Syntax
-* Dateireferenzen
-* Abhängigkeiten
-* bestehende Funktionen
-* Auswirkungen auf andere Module
-* Konsistenz mit der bestehenden Architektur
+├── id
+├── username
+├── display_name
+├── email
+├── created_at
+└── updated_at
 
-Danach wird der tatsächliche GitHub-Stand erneut geprüft, sofern die Änderung bereits synchronisiert wurde.
+Weitere Benutzerinformationen können getrennt geführt werden:
 
-⸻
+user_settings
+social_connections
+privacy_settings
 
-13. Git-Historie
+—
 
-Commits gelten als tatsächliches Änderungsprotokoll.
+# 9. Benutzertrennung
 
-Commit-Nachrichten sollen die Änderung eindeutig beschreiben.
+Daten verschiedener Benutzer dürfen niemals vermischt werden.
 
-Unnötige Sammeländerungen verschiedener unabhängiger Aufgaben in einem Commit sollen vermieden werden.
+Persönliche Daten müssen, soweit relevant, eine user_id besitzen.
 
-⸻
+Beispiele:
 
-14. Änderungen durch Working Copy
+catches.user_id
 
-Wenn ChatGPT keinen direkten Schreibzugriff auf GitHub besitzt, wird Working Copy als Übertragungsweg verwendet.
+waters.user_id
 
-Ablauf:
+photos.user_id
 
-GitHub
-   ↓
-ChatGPT liest aktuellen Stand
-   ↓
-Änderung wird gemeinsam festgelegt
-   ↓
-ChatGPT erstellt vollständige Masterdatei
-   ↓
-Working Copy übernimmt die Datei
-   ↓
+saved_locations.user_id
+
+statistics müssen immer auf den jeweiligen Benutzer begrenzt werden.
+
+—
+
+# 10. User-Modul
+
+Das User-Modul verwaltet:
+
+- Benutzerprofil
+- Benutzername
+- Anzeigename
+- persönliche Einstellungen
+- Social-Media-Verbindungen
+- Datenschutz
+- Freigabeeinstellungen
+
+Social-Media-Verbindungen gehören zum Benutzerprofil.
+
+Sie gehören nicht direkt in einen Fangdatensatz.
+
+—
+
+# 11. GPS-Modul
+
+GPS ist ein eigenständiges Grundmodul.
+
+Es darf nicht als Bestandteil von Catches implementiert werden.
+
+Das GPS-Modul soll unterstützen:
+
+- aktuellen Standort ermitteln
+- Home-Standort speichern
+- Home-Standort ändern
+- Fangposition ermitteln
+- Gewässerposition ermitteln
+- Standort manuell auswählen
+- Standort bearbeiten
+- gespeicherte Standorte verwalten
+- Entfernungen berechnen
+- Standort teilen
+
+Beispielhafte Schnittstellen:
+
+GPS.getCurrentLocation()
+
+GPS.getHomeLocation()
+
+GPS.saveHomeLocation()
+
+GPS.saveLocation()
+
+GPS.getLocation()
+
+GPS.calculateDistance()
+
+GPS.shareLocation()
+
+—
+
+# 12. Standortdaten
+
+GPS-Daten werden zentral gespeichert.
+
+Beispiele:
+
+users
+└── home_location
+
+catches
+├── latitude
+├── longitude
+└── location_timestamp
+
+waters
+├── latitude
+└── longitude
+
+saved_locations
+├── user_id
+├── name
+├── latitude
+├── longitude
+└── type
+
+Mögliche Standorttypen:
+
+- home
+- favorite
+- meeting
+- other
+
+Der Home-Standort ist ein persönlicher Benutzerstandort.
+
+Er darf nicht automatisch öffentlich geteilt werden.
+
+—
+
+# 13. Weather-Modul
+
+Weather ist ein eigenständiges Datenmodul.
+
+Es muss:
+
+- selbstständig aufgerufen werden können
+- Wetterdaten anzeigen können
+- Wetterdaten anderen Modulen zur Verfügung stellen können
+
+Mögliche Wetterdaten:
+
+- Temperatur
+- Luftdruck
+- Luftfeuchtigkeit
+- Windgeschwindigkeit
+- Windrichtung
+- Niederschlag
+- Wetterzustand
+- weitere verfügbare Wetterdaten
+
+Beispiel:
+
+Weather.getData(latitude, longitude, timestamp)
+
+Catches kann diese Daten anschließend dem Fang zuordnen.
+
+—
+
+# 14. Tides-Modul
+
+Tides ist ein eigenständiges Datenmodul.
+
+Es muss:
+
+- selbstständig aufgerufen werden können
+- Gezeitendaten anzeigen können
+- Gezeitendaten anderen Modulen zur Verfügung stellen können
+
+Catches kann die Gezeitendaten anhand von:
+
+- GPS/Ort
+- Datum
+- Uhrzeit
+
+abrufen und dem Fang zuordnen.
+
+—
+
+# 15. Moon-Modul
+
+Moon ist ein eigenständiges Datenmodul.
+
+Es muss:
+
+- selbstständig aufgerufen werden können
+- Mondinformationen anzeigen können
+- Mondinformationen anderen Modulen zur Verfügung stellen können
+
+Catches kann die Mondinformationen anhand des Fangzeitpunktes abrufen.
+
+—
+
+# 16. Waters-Modul
+
+Waters ist ein eigenständiges Modul für Gewässer.
+
+Es soll:
+
+- Gewässer verwalten
+- Gewässerpositionen speichern
+- Gewässer suchen
+- Gewässer anhand der GPS-Position vorschlagen
+- Gewässer anderen Modulen zur Verfügung stellen
+
+Beispiel:
+
+Waters.getNearby(latitude, longitude)
+
+—
+
+# 17. Photos-Modul
+
+Photos ist ein eigenständiges Modul.
+
+Es soll Fotos verwalten und anderen Modulen zuordnen können.
+
+Beispiel:
+
+Photos.getForCatch(catchId)
+
+Fotos gehören grundsätzlich zum jeweiligen Benutzer und dürfen nicht mit Daten anderer Benutzer vermischt werden.
+
+—
+
+# 18. Automatisch ermittelte Daten
+
+Dies ist eine verbindliche Grundregel für CatchTrack:
+
+AUTOMATISCH ERMITTELTE DATEN SIND VORSCHLÄGE UND NIEMALS UNVERÄNDERBARE DATEN.
+
+Der Benutzer muss automatisch ermittelte Werte korrigieren können, sofern dies fachlich sinnvoll ist.
+
+Das gilt insbesondere für:
+
+- Datum
+- Uhrzeit
+- GPS
+- Gewässer
+- Temperatur
+- Luftdruck
+- Luftfeuchtigkeit
+- Wind
+- Niederschlag
+- Wetterzustand
+- Gezeiten
+- Mondinformationen
+
+—
+
+# 19. Automatische Daten und Benutzerwerte
+
+Wenn ein automatisch ermittelter Wert vom Benutzer geändert werden kann, muss die Datenstruktur die Herkunft des Wertes nachvollziehbar halten.
+
+Beispiel:
+
+temperature
+temperature_source
+
+Mögliche Quellen:
+
+- api
+- gps
+- calculated
+- user
+
+Alternativ können Originalwert und bestätigter Wert getrennt gespeichert werden.
+
+Beispiel:
+
+temperature_auto = 16.0
+
+temperature_user = 23.0
+
+Die Anwendung muss anschließend den bestätigten Benutzerwert verwenden.
+
+—
+
+# 20. Beispiel Weather
+
+Wetterdienst meldet:
+
+Temperatur = 16 °C
+
+Der Benutzer stellt vor Ort fest:
+
+Temperatur = 23 °C
+
+Der Benutzer darf den Wert ändern.
+
+Das gespeicherte Ergebnis muss erkennen lassen:
+
+- welcher Wert automatisch ermittelt wurde
+- welcher Wert vom Benutzer bestätigt/geändert wurde
+
+Dadurch bleiben Daten für spätere Auswertungen nachvollziehbar.
+
+—
+
+# 21. Beispiel GPS
+
+GPS ermittelt:
+
+latitude = A
+longitude = B
+
+Der Benutzer stellt fest, dass die Position nicht korrekt ist.
+
+Der Benutzer kann:
+
+- GPS erneut ermitteln
+- Position manuell korrigieren
+- Position auf einer Karte auswählen
+
+Der anschließend bestätigte Standort wird dem jeweiligen Datensatz zugeordnet.
+
+—
+
+# 22. Catches / Neuer Fang
+
+Das Modul wird in der Benutzeroberfläche auf Deutsch als:
+
+NEUER FANG
+
+bezeichnet.
+
+Catches ist die zentrale Eingabefunktion für einen Fang.
+
+Der Fangdatensatz soll später unter anderem enthalten können:
+
+- user_id
+- Datum
+- Uhrzeit
+- Fischart
+- Gewicht
+- Länge
+- Gewässer
+- GPS
+- Köder
+- Fangmethode
+- Wetter
+- Gezeiten
+- Mondphase
+- Fotos
+- Notizen
+
+Automatisch ermittelte Daten werden vorgeschlagen und können vom Benutzer korrigiert werden.
+
+—
+
+# 23. Neuer Fang – Datum und Uhrzeit
+
+Beim Öffnen von „Neuer Fang“:
+
+Datum und Uhrzeit werden standardmäßig vorgeschlagen.
+
+Der Benutzer kann beide Werte jederzeit ändern.
+
+Dies ist erforderlich, weil ein Fang auch:
+
+- später am selben Tag
+- zu Hause
+- am nächsten Tag
+- mehrere Tage später
+
+eingetragen werden kann.
+
+Der gespeicherte Fangzeitpunkt ist der vom Benutzer bestätigte Zeitpunkt.
+
+—
+
+# 24. Neuer Fang – Gewässer
+
+Das Gewässer kann:
+
+- automatisch vorgeschlagen werden
+- anhand von GPS ermittelt werden
+- aus vorhandenen Gewässern ausgewählt werden
+- manuell geändert werden
+
+Der Benutzer hat immer die Möglichkeit, den vorgeschlagenen Wert zu korrigieren.
+
+—
+
+# 25. Neuer Fang – GPS
+
+Die Fangposition kann:
+
+- automatisch über GPS ermittelt werden
+- manuell geändert werden
+- auf einer Karte ausgewählt werden
+
+Die bestätigte Position wird mit dem Fang gespeichert.
+
+—
+
+# 26. Neuer Fang – Wetter
+
+Das Wetter kann anhand von:
+
+- Fangposition
+- Fangdatum
+- Fangzeit
+
+automatisch ermittelt werden.
+
+Die ermittelten Werte werden vorgeschlagen.
+
+Der Benutzer kann sie korrigieren.
+
+Beispielsweise:
+
+API:
+16 °C
+
+Benutzer:
+23 °C
+
+Gespeichert wird der bestätigte Wert sowie, soweit technisch möglich, die ursprüngliche Datenquelle.
+
+—
+
+# 27. Neuer Fang – Gezeiten
+
+Die Gezeiten können anhand von:
+
+- Fangposition
+- Fangdatum
+- Fangzeit
+
+automatisch ermittelt werden.
+
+Die Werte können dem Fang zugeordnet werden.
+
+Wenn die automatische Ermittlung nicht verfügbar oder nicht korrekt ist, muss der Benutzer die Daten manuell ergänzen oder korrigieren können.
+
+—
+
+# 28. Neuer Fang – Mond
+
+Die Mondinformationen werden anhand des bestätigten Fangzeitpunktes ermittelt.
+
+Sie können dem Fang zugeordnet werden.
+
+Automatisch berechnete Informationen müssen nachvollziehbar bleiben.
+
+—
+
+# 29. Fangbuch
+
+Catchbook wird in der Benutzeroberfläche als:
+
+FANGBUCH
+
+bezeichnet.
+
+Das Fangbuch zeigt die gespeicherten Fangdaten.
+
+Es soll später auch anzeigen können:
+
+- Wetter
+- Gezeiten
+- Mond
+- GPS
+- Gewässer
+- Fotos
+- Köder
+- Fangmethode
+- Notizen
+
+—
+
+# 30. Datenbeziehungen
+
+Ein Fang kann Daten aus mehreren Modulen verwenden.
+
+Beispiel:
+
+Fang
+│
+├── User
+├── GPS
+├── Waters
+├── Weather
+├── Tides
+├── Moon
+├── Photos
+├── Fish Database
+└── Equipment
+
+Diese Verknüpfungen erfolgen über eindeutige IDs und definierte Schnittstellen.
+
+Daten sollen nicht unnötig mehrfach gespeichert werden.
+
+Wenn für historische Daten ein Snapshot erforderlich ist, muss dieser ausdrücklich als historischer Wert gekennzeichnet werden.
+
+—
+
+# 31. Historische Daten
+
+Daten, die zum Zeitpunkt eines Fangs automatisch ermittelt wurden, sollen grundsätzlich als historische Fangdaten erhalten bleiben.
+
+Beispiel:
+
+Der aktuelle Wetterdienst ändert später seine Daten.
+
+Der bereits gespeicherte Fang darf dadurch nicht rückwirkend verändert werden.
+
+Ein Fang muss die zum Zeitpunkt der Speicherung bestätigten Daten behalten.
+
+—
+
+# 32. Social Media / Teilen
+
+Social-Media-Verbindungen gehören zum Benutzerprofil.
+
+Das Teilen ist eine eigene Funktion.
+
+Der Benutzer entscheidet:
+
+- ob geteilt wird
+- was geteilt wird
+- mit wem geteilt wird
+- über welchen Dienst geteilt wird
+
+Home-Standorte und private GPS-Daten dürfen nicht automatisch öffentlich geteilt werden.
+
+—
+
+# 33. Datenschutz
+
+Benutzerbezogene Daten müssen voneinander getrennt bleiben.
+
+Private Daten dürfen nicht automatisch veröffentlicht werden.
+
+Besonders geschützt:
+
+- Home-Standort
+- persönliche GPS-Daten
+- Benutzerprofil
+- Social-Media-Verbindungen
+
+Freigaben müssen ausdrücklich durch den Benutzer ausgelöst werden.
+
+—
+
+# 34. Sprache der Benutzeroberfläche
+
+Die Benutzeroberfläche soll grundsätzlich Deutsch verwenden.
+
+Beispiele:
+
+Catches → Neuer Fang
+
+Catchbook → Fangbuch
+
+Fish Database → Fischdatenbank
+
+Fish → Fisch
+
+Weather → Wetter
+
+Tides → Gezeiten
+
+Moon → Mond
+
+Settings → Einstellungen
+
+Englische Begriffe dürfen intern im Code verwendet werden.
+
+Sie sollen jedoch nicht unnötig in der Benutzeroberfläche erscheinen.
+
+—
+
+# 35. Modulaktivierung
+
+Module werden zentral registriert.
+
+Ein Modul kann registriert, aber deaktiviert sein.
+
+Deaktivierte Module dürfen keine aktive Benutzerfunktion bereitstellen.
+
+Die Aktivierung erfolgt erst, wenn das Modul technisch ausreichend fertiggestellt und getestet ist.
+
+—
+
+# 36. Keine unnötigen Änderungen
+
+Bei jeder Änderung gilt:
+
+Nur die tatsächlich benötigten Dateien verändern.
+
+Keine fertigen Module neu schreiben.
+
+Keine bestehenden Abläufe ändern, wenn dies für die aktuelle Aufgabe nicht erforderlich ist.
+
+Keine Dateien löschen, solange ihre Funktion nicht eindeutig geprüft und ihre Entfernung beschlossen wurde.
+
+—
+
+# 37. Vollständige Dateien
+
+Bei Änderungen an Projektdateien wird grundsätzlich die vollständige neue Version der betroffenen Datei erstellt.
+
+Keine unklaren Teiländerungen.
+
+Keine Anweisungen wie:
+
+„Ersetze irgendwo Zeile X.“
+
+Die vollständige Datei ist die neue Masterversion.
+
+—
+
+# 38. Working Copy / GitHub
+
+Der praktische Arbeitsablauf:
+
+ChatGPT
+↓
+vollständige Datei
+↓
+Working Copy
+↓
+Vorschau / Test
+↓
 Commit
-   ↓
-Push nach GitHub
-   ↓
-ChatGPT prüft den neuen GitHub-Stand
+↓
+Push
+↓
+GitHub
 
-⸻
+ChatGPT arbeitet grundsätzlich auf Basis des aktuellen GitHub-Stands.
 
-15. Sicherheitsregel
+Nach Änderungen über Working Copy muss der aktuelle Stand erneut geprüft werden, bevor darauf aufgebaut wird.
 
-Bei Unsicherheit wird nichts überschrieben.
+—
 
-Insbesondere gilt:
+# 39. Projektstand vor jeder Arbeit
 
-Nicht sicher = zuerst lesen und prüfen.
+Vor einer Änderung müssen geprüft werden:
 
-Es ist besser, eine Änderung zu verzögern, als eine bereits funktionierende Komponente versehentlich zu ersetzen.
+1. PROJECT_RULES.md
+2. aktueller GitHub-Stand
+3. betroffene Dateien
+4. vorhandene Module
+5. Abhängigkeiten
+6. Datenbankstruktur
+7. bereits abgeschlossene Funktionen
+8. relevante Schnittstellen
 
-⸻
+Bereits fertige Funktionen dürfen nicht erneut erstellt werden.
 
-16. Ziel
+—
 
-CatchTrack soll schrittweise zu einer stabilen, nachvollziehbaren und wartbaren Anwendung entwickelt werden.
+# 40. Änderungsprotokoll
 
-Die Prioritäten sind:
+Wichtige Architekturentscheidungen müssen dokumentiert werden.
 
-1. bestehende Funktionalität erhalten
-2. Änderungen kontrolliert durchführen
-3. unnötige Rückarbeit vermeiden
-4. Architektur konsistent halten
-5. jeden Entwicklungsschritt nachvollziehbar machen
-6. niemals bereits erledigte Arbeit ohne Grund wiederholen
+Insbesondere:
+
+- abgeschlossene Module
+- neue Datenbankstrukturen
+- neue Schnittstellen
+- Architekturentscheidungen
+- Änderungen an Abhängigkeiten
+- bewusste Abweichungen vom ursprünglichen Plan
+
+—
+
+# 41. Step-System
+
+Step 1 endet mit dem abgeschlossenen Weather-Modul.
+
+Step 2 beginnt danach.
+
+Vor jedem neuen Step wird der aktuelle Projektstand geprüft.
+
+Ein abgeschlossener Step wird nicht erneut begonnen.
+
+—
+
+# 42. Entwicklungsreihenfolge
+
+Die grundlegenden Abhängigkeiten sollen möglichst zuerst fertiggestellt werden.
+
+Empfohlene Reihenfolge:
+
+1. User / Account
+2. Benutzertrennung in Datenbank
+3. GPS
+4. Waters
+5. Weather
+6. Tides
+7. Moon
+8. Photos
+9. Fish Database
+10. Equipment
+11. Catches / Neuer Fang
+12. Fangbuch
+13. Statistics
+14. Sharing / Social Media
+15. weitere Funktionen
+
+Die Reihenfolge darf geändert werden, wenn technische Abhängigkeiten dies erfordern.
+
+—
+
+# 43. Keine unnötige Kopplung
+
+Module sollen möglichst unabhängig bleiben.
+
+Catches darf beispielsweise nicht die interne Implementierung von:
+
+- GPS
+- Weather
+- Tides
+- Moon
+- Waters
+- Photos
+
+kennen müssen.
+
+Catches verwendet ausschließlich deren definierte Schnittstellen.
+
+—
+
+# 44. Änderungen an Schnittstellen
+
+Eine bestehende Schnittstelle darf nicht ohne Prüfung inkompatibel geändert werden.
+
+Wenn eine Schnittstelle geändert werden muss:
+
+1. Abhängige Module identifizieren
+2. Auswirkungen prüfen
+3. Schnittstelle dokumentieren
+4. betroffene Module kontrolliert anpassen
+5. anschließend testen
+
+—
+
+# 45. Fehlerbehandlung
+
+Automatische Datenquellen können ausfallen oder falsche Werte liefern.
+
+Daher muss jedes Datenmodul grundsätzlich mit folgenden Situationen umgehen können:
+
+- keine Verbindung
+- keine Daten
+- ungenaue Daten
+- veraltete Daten
+- ungültige Daten
+- Benutzerkorrektur
+
+Die Anwendung darf bei einem Ausfall eines externen Datenmoduls nicht unnötig andere Funktionen blockieren.
+
+—
+
+# 46. Offline-Grundprinzip
+
+Soweit technisch möglich, sollen bereits gespeicherte Fangdaten auch ohne Internetverbindung verfügbar bleiben.
+
+Externe Daten wie:
+
+- Weather
+- Tides
+- Karten
+- externe Dienste
+
+können eine Verbindung benötigen.
+
+Bereits gespeicherte historische Daten dürfen dadurch nicht verloren gehen.
+
+—
+
+# 47. Masterprinzip
+
+CatchTrack wird nach folgendem Prinzip entwickelt:
+
+ZENTRALE DATENBANK
++
+MEHRBENUTZERFÄHIGKEIT
++
+UNABHÄNGIGE MODULE
++
+KLARE SCHNITTSTELLEN
++
+WIEDERVERWENDBARE FUNKTIONEN
++
+AUTOMATISCHE DATEN ALS VORSCHLÄGE
++
+BENUTZERKORREKTUR
++
+HISTORISCHE DATENSTABILITÄT
++
+DOKUMENTIERTE ARCHITEKTUR
+
+Ziel ist eine stabile Masterversion, bei der neue Funktionen bestehende Funktionen nicht unnötig verändern oder zerstören.
+
+—
+
+# 48. Absolute Arbeitsregel
+
+Bei Unsicherheit:
+
+NICHT raten.
+
+NICHT von einem alten Projektstand ausgehen.
+
+NICHT bereits fertige Funktionen neu erstellen.
+
+NICHT bestehende Abläufe verändern.
+
+NICHT Dateien löschen.
+
+Zuerst den aktuellen Projektstand lesen.
+
+Dann Abhängigkeiten prüfen.
+
+Dann die kleinste notwendige Änderung planen.
+
+Dann die vollständige betroffene Datei erstellen.
+
+Nach der Übertragung über Working Copy den neuen GitHub-Stand erneut prüfen.
+
+Erst danach mit dem nächsten Arbeitsschritt fortfahren.
