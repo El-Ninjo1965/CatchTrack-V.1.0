@@ -1,0 +1,14 @@
+{
+    "name": "records",
+    "version": "1.0",
+    "enabled": true,
+    "status": "active",
+
+    "description": "Persönliche Fänge und Hitparade",
+
+    "files": {
+        "html": "records.html",
+        "js": "records.js",
+        "css": "records.css"
+    }
+}

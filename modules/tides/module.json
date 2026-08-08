@@ -1,0 +1,7 @@
+{
+    "name": "tides",
+    "version": "1.0",
+    "status": "disabled",
+    "enabled": false,
+    "description": "Gezeitenmodul vorbereitet"
+}

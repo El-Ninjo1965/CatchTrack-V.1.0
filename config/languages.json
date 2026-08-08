@@ -1,0 +1,85 @@
+{
+    "default": "de",
+    "available": [
+        {
+            "code": "en",
+            "name": "English",
+            "priority": 1
+        },
+        {
+            "code": "zh",
+            "name": "中文",
+            "priority": 2
+        },
+        {
+            "code": "es",
+            "name": "Español",
+            "priority": 3
+        },
+        {
+            "code": "pt",
+            "name": "Português",
+            "priority": 4
+        },
+        {
+            "code": "ja",
+            "name": "日本語",
+            "priority": 5
+        },
+        {
+            "code": "de",
+            "name": "Deutsch",
+            "priority": 6
+        },
+        {
+            "code": "fr",
+            "name": "Français",
+            "priority": 7
+        },
+        {
+            "code": "th",
+            "name": "ไทย",
+            "priority": 8
+        },
+        {
+            "code": "ko",
+            "name": "한국어",
+            "priority": 9
+        },
+        {
+            "code": "it",
+            "name": "Italiano",
+            "priority": 10
+        },
+        {
+            "code": "nl",
+            "name": "Nederlands",
+            "priority": 11
+        },
+        {
+            "code": "pl",
+            "name": "Polski",
+            "priority": 12
+        },
+        {
+            "code": "ru",
+            "name": "Русский",
+            "priority": 13
+        },
+        {
+            "code": "tr",
+            "name": "Türkçe",
+            "priority": 14
+        },
+        {
+            "code": "sv",
+            "name": "Svenska",
+            "priority": 15
+        },
+        {
+            "code": "ar",
+            "name": "العربية",
+            "priority": 16
+        }
+    ]
+}

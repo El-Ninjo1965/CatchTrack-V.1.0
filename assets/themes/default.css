@@ -1,0 +1,76 @@
+:root {
+    --primary-color: #1b5e20;
+    --secondary-color: #2e7d32;
+    --accent-color: #0288d1;
+
+    --background-color: #ffffff;
+    --surface-color: #f5f5f5;
+
+    --text-color: #212121;
+    --text-light: #757575;
+
+    --border-color: #dddddd;
+
+    --success-color: #388e3c;
+    --warning-color: #f57c00;
+    --error-color: #d32f2f;
+
+    --radius-small: 4px;
+    --radius-medium: 8px;
+    --radius-large: 12px;
+
+    --shadow-small: 0 1px 3px rgba(0,0,0,0.15);
+    --shadow-medium: 0 3px 8px rgba(0,0,0,0.15);
+
+    --font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+/* Grundlayout */
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+}
+
+/* Container */
+
+.container {
+    background-color: var(--surface-color);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--shadow-small);
+}
+
+/* Buttons */
+
+button {
+    border-radius: var(--radius-small);
+    border: none;
+    cursor: pointer;
+}
+
+/* Karten / Module */
+
+.module-card {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--shadow-small);
+}
+
+/* Status */
+
+.status-success {
+    color: var(--success-color);
+}
+
+.status-warning {
+    color: var(--warning-color);
+}
+
+.status-error {
+    color: var(--error-color);
+}

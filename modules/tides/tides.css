@@ -1,0 +1,166 @@
+.tide-container {
+
+
+    width:
+
+        100%;
+
+
+    max-width:
+
+        900px;
+
+
+    margin:
+
+        0 auto;
+
+
+    padding:
+
+        20px;
+
+
+}
+
+
+
+
+
+.tide-container h1 {
+
+
+    font-size:
+
+        26px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+}
+
+
+
+
+
+.tide-card,
+
+.tide-info {
+
+
+    background:
+
+        #ffffff;
+
+
+    padding:
+
+        20px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+#tide-result {
+
+
+    padding:
+
+        15px;
+
+
+    background:
+
+        #f5f5f5;
+
+
+    border-radius:
+
+        6px;
+
+
+}
+
+
+
+
+
+.tide-info ul {
+
+
+    padding-left:
+
+        20px;
+
+
+}
+
+
+
+
+
+.tide-info li {
+
+
+    margin-bottom:
+
+        8px;
+
+
+}
+
+
+
+
+
+@media
+
+(max-width:600px) {
+
+
+    .tide-container {
+
+
+        padding:
+
+            10px;
+
+
+    }
+
+
+}
+
+
+
+/*
+==================================================
+ENDE DATEI
+
+CatchTrack Master Edition V1.0
+modules/tide/tide.css
+
+Version 1.0 Final Master
+==================================================
+*/

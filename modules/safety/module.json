@@ -1,0 +1,7 @@
+{
+    "name": "safety",
+    "version": "1.0",
+    "status": "active",
+    "enabled": true,
+    "description": "Notruf und Sicherheitsfunktionen"
+}

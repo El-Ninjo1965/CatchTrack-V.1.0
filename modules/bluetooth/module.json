@@ -1,0 +1,44 @@
+{
+    "id": "bluetooth",
+
+    "name": "Bluetooth",
+
+    "version": "1.0.0",
+
+    "description": "Verbindung und Verwaltung von Bluetooth-fähigen Angelgeräten und Sensoren.",
+
+    "author": "CatchTrack",
+
+    "category": "hardware",
+
+    "enabled": false,
+
+    "adminControl": true,
+
+    "files": {
+        "html": "bluetooth.html",
+        "js": "bluetooth.js",
+        "css": "bluetooth.css"
+    },
+
+    "permissions": [
+        "bluetooth"
+    ],
+
+    "supportedDevices": [
+        "bite_alarm",
+        "fishing_scale",
+        "weather_station",
+        "sensor"
+    ],
+
+    "settings": {
+
+        "autoConnect": false,
+
+        "allowNotifications": true,
+
+        "scanOnStart": false
+
+    }
+}

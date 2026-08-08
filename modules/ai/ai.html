@@ -1,0 +1,96 @@
+<section class="module ai-module">
+
+
+    <header class="module-header">
+
+        <h2>
+            KI-Erkennung
+        </h2>
+
+        <p>
+            Erkenne Fische, Pflanzen, Tiere oder Objekte.
+        </p>
+
+    </header>
+
+
+
+    <div class="module-content">
+
+
+        <label for="aiCategory">
+            Kategorie
+        </label>
+
+
+        <select id="aiCategory">
+
+
+            <option value="fish">
+                Fisch
+            </option>
+
+
+            <option value="plant">
+                Pflanze
+            </option>
+
+
+            <option value="animal">
+                Tier
+            </option>
+
+
+            <option value="object">
+                Objekt
+            </option>
+
+
+            <option value="unknown">
+                Unbekannt
+            </option>
+
+
+        </select>
+
+
+
+
+        <button id="aiCameraBtn">
+
+            Foto aufnehmen
+
+        </button>
+
+
+
+
+        <input
+            type="file"
+            id="aiImageInput"
+            accept="image/*"
+            capture="environment"
+            hidden
+        />
+
+
+
+        <button id="aiSendBtn">
+
+            An KI senden
+
+        </button>
+
+
+
+        <div id="aiResult">
+
+            Noch keine Anfrage.
+
+        </div>
+
+
+    </div>
+
+
+</section>

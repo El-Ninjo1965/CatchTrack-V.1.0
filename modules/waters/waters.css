@@ -1,0 +1,341 @@
+.waters-container {
+
+
+    width:
+
+        100%;
+
+
+    max-width:
+
+        900px;
+
+
+    margin:
+
+        0 auto;
+
+
+    padding:
+
+        20px;
+
+
+}
+
+
+
+
+
+.waters-container h1 {
+
+
+    font-size:
+
+        26px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+}
+
+
+
+
+
+.waters-form-container,
+
+.waters-list-container {
+
+
+    background:
+
+        #ffffff;
+
+
+    padding:
+
+        20px;
+
+
+    margin-bottom:
+
+        25px;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+.waters-form-container {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        12px;
+
+
+}
+
+
+
+
+
+.waters-form-container label {
+
+
+    font-weight:
+
+        bold;
+
+
+}
+
+
+
+
+
+.waters-form-container input,
+
+.waters-form-container textarea {
+
+
+    width:
+
+        100%;
+
+
+    padding:
+
+        12px;
+
+
+    font-size:
+
+        16px;
+
+
+    border:
+
+        1px solid #ccc;
+
+
+    border-radius:
+
+        6px;
+
+
+}
+
+
+
+
+
+.waters-form-container textarea {
+
+
+    min-height:
+
+        120px;
+
+
+    resize:
+
+        vertical;
+
+
+}
+
+
+
+
+
+.waters-form-container button {
+
+
+    padding:
+
+        14px;
+
+
+    border:
+
+        none;
+
+
+    border-radius:
+
+        6px;
+
+
+    background:
+
+        #1976d2;
+
+
+    color:
+
+        white;
+
+
+    font-size:
+
+        16px;
+
+
+    cursor:
+
+        pointer;
+
+
+}
+
+
+
+
+
+.waters-form-container button:hover {
+
+
+    opacity:
+
+        0.85;
+
+
+}
+
+
+
+
+
+#waters-list {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        15px;
+
+
+}
+
+
+
+
+
+.water-item {
+
+
+    padding:
+
+        15px;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+.water-item h3 {
+
+
+    margin-top:
+
+        0;
+
+
+}
+
+
+
+
+
+.water-item p {
+
+
+    margin:
+
+        5px 0;
+
+
+}
+
+
+
+
+
+@media
+
+(max-width:600px) {
+
+
+    .waters-container {
+
+
+        padding:
+
+            10px;
+
+
+    }
+
+
+}
+
+
+
+/*
+==================================================
+ENDE DATEI
+
+CatchTrack Master Edition V1.0
+modules/waters/waters.css
+
+Version 1.0 Final Master
+==================================================
+*/

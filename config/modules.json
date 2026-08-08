@@ -1,0 +1,291 @@
+{
+    "modules": [
+
+        {
+            "name": "start",
+            "displayName": "Start",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": false,
+            "path": "modules/start/",
+            "initializer": "CatchTrackStartModule",
+            "files": {
+                "html": "start.html",
+                "js": "start.js",
+                "css": "start.css"
+            }
+        },
+
+
+        {
+    "name": "admin",
+    "displayName": "Admin",
+    "version": "1.0",
+    "enabled": true,
+    "status": "active",
+    "database": true,
+    "path": "modules/admin/",
+    "initializer": "CatchTrackAdminModule",
+    "files": {
+        "html": "admin.html",
+        "js": "admin.js",
+        "css": "admin.css"
+    }
+        },
+
+        {
+            "name": "catches",
+            "displayName": "Neuer Fang",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/catches/",
+            "initializer": "CatchTrackCatchesModule",
+            "files": {
+                "html": "catches.html",
+                "js": "catches.js",
+                "css": "catches.css"
+            }
+        },
+
+
+        {
+            "name": "fishDatabase",
+            "displayName": "Fischdatenbank",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/fishDatabase/",
+            "initializer": "CatchTrackFishDatabaseModule",
+            "files": {
+                "html": "fishDatabase.html",
+                "js": "fishDatabase.js",
+                "css": "fishDatabase.css"
+            }
+        },
+
+
+        {
+    "name": "catchbook",
+    "displayName": "Fangbuch",
+    "version": "1.0",
+    "enabled": true,
+    "status": "active",
+    "database": true,
+    "path": "modules/catchbook/",
+    "initializer": "CatchTrackCatchbookModule",
+    "files": {
+        "html": "catchbook.html",
+        "js": "catchbook.js",
+        "css": "catchbook.css"
+    }
+        },
+
+        {
+            "name": "equipment",
+            "displayName": "Ausrüstung",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/equipment/",
+            "initializer": "CatchTrackEquipmentModule",
+            "files": {
+                "html": "equipment.html",
+                "js": "equipment.js",
+                "css": "equipment.css"
+            }
+        },
+
+
+        {
+            "name": "gps",
+            "displayName": "GPS",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/gps/",
+            "initializer": "CatchTrackGPSModule",
+            "files": {
+                "html": "gps.html",
+                "js": "gps.js",
+                "css": "gps.css"
+            }
+        },
+
+
+        {
+            "name": "maps",
+            "displayName": "Karten",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/maps/",
+            "initializer": "CatchTrackMapsModule",
+            "files": {
+                "html": "maps.html",
+                "js": "maps.js",
+                "css": "maps.css"
+            }
+        },
+
+
+        {
+            "name": "waters",
+            "displayName": "Gewässer",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/waters/",
+            "initializer": "CatchTrackWatersModule",
+            "files": {
+                "html": "waters.html",
+                "js": "waters.js",
+                "css": "waters.css"
+            }
+        },
+
+
+        {
+            "name": "statistics",
+            "displayName": "Statistik",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/statistics/",
+            "initializer": "CatchTrackStatisticsModule",
+            "files": {
+                "html": "statistics.html",
+                "js": "statistics.js",
+                "css": "statistics.css"
+            }
+        },
+
+
+        {
+            "name": "records",
+            "displayName": "Hitparade",
+            "version": "1.0",
+            "enabled": true,
+            "status": "active",
+            "database": true,
+            "path": "modules/records/",
+            "initializer": "CatchTrackRecordsModule",
+            "files": {
+                "html": "records.html",
+                "js": "records.js",
+                "css": "records.css"
+            }
+        },
+
+
+        {
+            "name": "leaderboard",
+            "displayName": "Rangliste",
+            "version": "1.0",
+            "enabled": false,
+            "status": "prepared",
+            "database": true,
+            "path": "modules/leaderboard/",
+            "initializer": "CatchTrackLeaderboardModule",
+            "files": {
+                "html": "leaderboard.html",
+                "js": "leaderboard.js",
+                "css": "leaderboard.css"
+            }
+        },
+
+
+        {
+            "name": "weather",
+            "displayName": "Wetter",
+            "version": "1.0",
+            "enabled": false,
+            "status": "prepared",
+            "database": true,
+            "path": "modules/weather/",
+            "initializer": "CatchTrackWeatherModule",
+            "files": {
+                "html": "weather.html",
+                "js": "weather.js",
+                "css": "weather.css"
+            }
+        },
+
+
+        {
+            "name": "tides",
+            "displayName": "Gezeiten",
+            "version": "1.0",
+            "enabled": false,
+            "status": "prepared",
+            "database": true,
+            "path": "modules/tides/",
+            "initializer": "CatchTrackTidesModule",
+            "files": {
+                "html": "tides.html",
+                "js": "tides.js",
+                "css": "tides.css"
+            }
+        },
+
+
+        {
+            "name": "moon",
+            "displayName": "Mondphase",
+            "version": "1.0",
+            "enabled": false,
+            "status": "prepared",
+            "database": true,
+            "path": "modules/moon/",
+            "initializer": "CatchTrackMoonModule",
+            "files": {
+                "html": "moon.html",
+                "js": "moon.js",
+                "css": "moon.css"
+            }
+        },
+
+
+        {
+            "name": "ai",
+            "displayName": "KI-Assistent",
+            "version": "1.0",
+            "enabled": false,
+            "status": "prepared",
+            "database": true,
+            "path": "modules/ai/",
+            "initializer": "CatchTrackAIModule",
+            "files": {
+                "html": "ai.html",
+                "js": "ai.js",
+                "css": "ai.css"
+            }
+        },
+
+
+        {
+            "name": "bluetooth",
+            "displayName": "Bluetooth",
+            "version": "1.0",
+            "enabled": false,
+            "status": "prepared",
+            "database": true,
+            "path": "modules/bluetooth/",
+            "initializer": "CatchTrackBluetoothModule",
+            "files": {
+                "html": "bluetooth.html",
+                "js": "bluetooth.js",
+                "css": "bluetooth.css"
+            }
+        }
+
+    ]
+}

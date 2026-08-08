@@ -1,0 +1,154 @@
+.catch-container {
+
+
+    width: 100%;
+
+
+    max-width: 800px;
+
+
+    margin: 0 auto;
+
+
+    padding: 20px;
+
+
+}
+
+
+
+.catch-container h1 {
+
+
+    margin-bottom: 20px;
+
+
+}
+
+
+
+.catch-form {
+
+
+    display: flex;
+
+
+    flex-direction: column;
+
+
+    gap: 10px;
+
+
+    background: #ffffff;
+
+
+    padding: 20px;
+
+
+    border: 1px solid #ddd;
+
+
+    border-radius: 8px;
+
+
+}
+
+
+
+.catch-form label {
+
+
+    font-weight: bold;
+
+
+}
+
+
+
+.catch-form input,
+
+.catch-form select,
+
+.catch-form textarea {
+
+
+    width: 100%;
+
+
+    padding: 10px;
+
+
+    border: 1px solid #ccc;
+
+
+    border-radius: 6px;
+
+
+    box-sizing: border-box;
+
+
+}
+
+
+
+.catch-form textarea {
+
+
+    min-height: 100px;
+
+
+    resize: vertical;
+
+
+}
+
+
+
+.catch-form button {
+
+
+    margin-top: 15px;
+
+
+    padding: 12px;
+
+
+    border: none;
+
+
+    border-radius: 6px;
+
+
+    cursor: pointer;
+
+
+    font-size: 16px;
+
+
+}
+
+
+
+.hidden {
+
+
+    display: none;
+
+
+}
+
+
+
+@media(max-width:600px) {
+
+
+    .catch-container {
+
+
+        padding: 10px;
+
+
+    }
+
+
+}

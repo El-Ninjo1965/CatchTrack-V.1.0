@@ -1,0 +1,248 @@
+.leaderboard-container {
+
+
+    width:
+
+        100%;
+
+
+    max-width:
+
+        1000px;
+
+
+    margin:
+
+        0 auto;
+
+
+    padding:
+
+        20px;
+
+
+}
+
+
+
+
+
+.leaderboard-container h1 {
+
+
+    font-size:
+
+        26px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+}
+
+
+
+
+
+.leaderboard-filter,
+
+.leaderboard-list-container {
+
+
+    background:
+
+        #ffffff;
+
+
+    padding:
+
+        20px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+.leaderboard-filter {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        10px;
+
+
+}
+
+
+
+
+
+.leaderboard-filter select {
+
+
+    padding:
+
+        12px;
+
+
+    font-size:
+
+        16px;
+
+
+    border:
+
+        1px solid #ccc;
+
+
+    border-radius:
+
+        6px;
+
+
+}
+
+
+
+
+
+#leaderboard-list {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        15px;
+
+
+}
+
+
+
+
+
+.leaderboard-item {
+
+
+    padding:
+
+        15px;
+
+
+    background:
+
+        #f5f5f5;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+.leaderboard-item h3 {
+
+
+    margin-top:
+
+        0;
+
+
+}
+
+
+
+
+
+.leaderboard-item p {
+
+
+    margin:
+
+        5px 0;
+
+
+}
+
+
+
+
+
+@media
+
+(max-width:600px) {
+
+
+    .leaderboard-container {
+
+
+        padding:
+
+            10px;
+
+
+    }
+
+
+}
+
+
+
+/*
+==================================================
+ENDE DATEI
+
+CatchTrack Master Edition V1.0
+modules/leaderboard/leaderboard.css
+
+Version 1.0 Final Master
+==================================================
+*/

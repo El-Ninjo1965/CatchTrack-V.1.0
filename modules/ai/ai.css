@@ -1,0 +1,93 @@
+.ai-module {
+
+    padding: 16px;
+
+}
+
+
+/* Kopfbereich */
+
+.ai-module .module-header {
+
+    margin-bottom: 20px;
+
+}
+
+
+.ai-module h2 {
+
+    margin: 0;
+
+    font-size: 1.4rem;
+
+}
+
+
+/* Beschreibung */
+
+.ai-module p {
+
+    color: var(--text-light);
+
+}
+
+
+
+/* Auswahl */
+
+#aiCategory {
+
+    width: 100%;
+
+    padding: 10px;
+
+    margin-bottom: 15px;
+
+    border: 1px solid var(--border-color);
+
+    border-radius: var(--radius-medium);
+
+    background: var(--surface-color);
+
+}
+
+
+
+/* Buttons */
+
+#aiCameraBtn,
+#aiSendBtn {
+
+    width: 100%;
+
+    padding: 12px;
+
+    margin-top: 10px;
+
+    background: var(--primary-color);
+
+    color: white;
+
+    border-radius: var(--radius-medium);
+
+}
+
+
+
+/* Ergebnis */
+
+#aiResult {
+
+    margin-top: 20px;
+
+    padding: 12px;
+
+    background: var(--surface-color);
+
+    border: 1px solid var(--border-color);
+
+    border-radius: var(--radius-medium);
+
+    min-height: 50px;
+
+}

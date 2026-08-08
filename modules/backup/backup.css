@@ -1,0 +1,239 @@
+.backup-container {
+
+
+    width:
+
+        100%;
+
+
+    max-width:
+
+        900px;
+
+
+    margin:
+
+        0 auto;
+
+
+    padding:
+
+        20px;
+
+
+}
+
+
+
+
+
+.backup-container h1 {
+
+
+    font-size:
+
+        26px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+}
+
+
+
+
+
+.backup-card,
+
+.backup-info {
+
+
+    background:
+
+        #ffffff;
+
+
+    padding:
+
+        20px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+.backup-card button {
+
+
+    width:
+
+        100%;
+
+
+    padding:
+
+        14px;
+
+
+    margin-bottom:
+
+        12px;
+
+
+    border:
+
+        none;
+
+
+    border-radius:
+
+        6px;
+
+
+    background:
+
+        #1976d2;
+
+
+    color:
+
+        white;
+
+
+    font-size:
+
+        16px;
+
+
+    cursor:
+
+        pointer;
+
+
+}
+
+
+
+
+
+.backup-card button:hover {
+
+
+    opacity:
+
+        0.85;
+
+
+}
+
+
+
+
+
+#backup-result {
+
+
+    margin-top:
+
+        15px;
+
+
+    padding:
+
+        15px;
+
+
+    background:
+
+        #f5f5f5;
+
+
+    border-radius:
+
+        6px;
+
+
+}
+
+
+
+
+
+.backup-info ul {
+
+
+    padding-left:
+
+        20px;
+
+
+}
+
+
+
+
+
+.backup-info li {
+
+
+    margin-bottom:
+
+        8px;
+
+
+}
+
+
+
+
+
+@media
+
+(max-width:600px) {
+
+
+    .backup-container {
+
+
+        padding:
+
+            10px;
+
+
+    }
+
+
+}
+
+
+
+/*
+==================================================
+ENDE DATEI
+
+CatchTrack Master Edition V1.0
+modules/backup/backup.css
+
+Version 1.0 Final Master
+==================================================
+*/

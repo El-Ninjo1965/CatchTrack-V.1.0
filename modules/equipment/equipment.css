@@ -1,0 +1,326 @@
+.equipment-container {
+
+
+    width: 100%;
+
+
+    max-width: 900px;
+
+
+    margin: 0 auto;
+
+
+    padding: 20px;
+
+
+}
+
+
+
+
+
+.equipment-container h1 {
+
+
+    font-size:
+
+        26px;
+
+
+    margin-bottom:
+
+        20px;
+
+
+}
+
+
+
+
+
+.equipment-form-container {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        12px;
+
+
+    margin-bottom:
+
+        30px;
+
+
+}
+
+
+
+
+
+.equipment-form-container label {
+
+
+    font-weight:
+
+        bold;
+
+
+}
+
+
+
+
+
+.equipment-form-container input,
+
+.equipment-form-container textarea {
+
+
+    width:
+
+        100%;
+
+
+    padding:
+
+        12px;
+
+
+    font-size:
+
+        16px;
+
+
+    border:
+
+        1px solid #ccc;
+
+
+    border-radius:
+
+        6px;
+
+
+}
+
+
+
+
+
+.equipment-form-container textarea {
+
+
+    min-height:
+
+        120px;
+
+
+    resize:
+
+        vertical;
+
+
+}
+
+
+
+
+
+.equipment-form-container button {
+
+
+    padding:
+
+        14px;
+
+
+    border:
+
+        none;
+
+
+    border-radius:
+
+        6px;
+
+
+    background:
+
+        #1976d2;
+
+
+    color:
+
+        white;
+
+
+    font-size:
+
+        16px;
+
+
+}
+
+
+
+
+
+.equipment-form-container button:hover {
+
+
+    opacity:
+
+        0.85;
+
+
+}
+
+
+
+
+
+.equipment-list-container {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        15px;
+
+
+}
+
+
+
+
+
+#equipment-list {
+
+
+    display:
+
+        flex;
+
+
+    flex-direction:
+
+        column;
+
+
+    gap:
+
+        15px;
+
+
+}
+
+
+
+
+
+.equipment-item {
+
+
+    padding:
+
+        15px;
+
+
+    background:
+
+        #ffffff;
+
+
+    border:
+
+        1px solid #ddd;
+
+
+    border-radius:
+
+        8px;
+
+
+}
+
+
+
+
+
+.equipment-item h3 {
+
+
+    margin-top:
+
+        0;
+
+
+}
+
+
+
+
+
+.equipment-item p {
+
+
+    margin:
+
+        5px 0;
+
+
+}
+
+
+
+
+
+@media
+
+(max-width:600px) {
+
+
+    .equipment-container {
+
+
+        padding:
+
+            10px;
+
+
+    }
+
+
+}
+
+
+
+/*
+==================================================
+ENDE DATEI
+
+CatchTrack Master Edition V1.0
+modules/equipment/equipment.css
+
+Version 1.0 Final Master
+==================================================
+*/
