@@ -1,291 +1,280 @@
 {
-    "modules": [
-
-        {
-            "name": "start",
-            "displayName": "Start",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": false,
-            "path": "modules/start/",
-            "initializer": "CatchTrackStartModule",
-            "files": {
-                "html": "start.html",
-                "js": "start.js",
-                "css": "start.css"
-            }
-        },
-
-
-        {
-    "name": "admin",
-    "displayName": "Admin",
-    "version": "1.0",
-    "enabled": true,
-    "status": "active",
-    "database": true,
-    "path": "modules/admin/",
-    "initializer": "CatchTrackAdminModule",
-    "files": {
+  "modules": [
+    {
+      "name": "start",
+      "displayName": "Start",
+      "path": "modules/start/",
+      "files": {
+        "html": "start.html",
+        "css": "start.css",
+        "js": "start.js"
+      },
+      "initializer": "CatchTrackStartModule",
+      "enabled": true
+    },
+    {
+      "name": "admin",
+      "displayName": "Admin",
+      "path": "modules/admin/",
+      "files": {
         "html": "admin.html",
-        "js": "admin.js",
-        "css": "admin.css"
-    }
-        },
-
-        {
-            "name": "catches",
-            "displayName": "Neuer Fang",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/catches/",
-            "initializer": "CatchTrackCatchesModule",
-            "files": {
-                "html": "catches.html",
-                "js": "catches.js",
-                "css": "catches.css"
-            }
-        },
-
-
-        {
-            "name": "fishDatabase",
-            "displayName": "Fischdatenbank",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/fishDatabase/",
-            "initializer": "CatchTrackFishDatabaseModule",
-            "files": {
-                "html": "fishDatabase.html",
-                "js": "fishDatabase.js",
-                "css": "fishDatabase.css"
-            }
-        },
-
-
-        {
-    "name": "catchbook",
-    "displayName": "Fangbuch",
-    "version": "1.0",
-    "enabled": true,
-    "status": "active",
-    "database": true,
-    "path": "modules/catchbook/",
-    "initializer": "CatchTrackCatchbookModule",
-    "files": {
+        "css": "admin.css",
+        "js": "admin.js"
+      },
+      "initializer": "CatchTrackAdminModule",
+      "enabled": true
+    },
+    {
+      "name": "catches",
+      "displayName": "Catches",
+      "path": "modules/catches/",
+      "files": {
+        "html": "catches.html",
+        "css": "catches.css",
+        "js": "catches.js"
+      },
+      "initializer": "CatchTrackCatchesModule",
+      "enabled": true
+    },
+    {
+      "name": "catchbook",
+      "displayName": "Catchbook",
+      "path": "modules/catchbook/",
+      "files": {
         "html": "catchbook.html",
-        "js": "catchbook.js",
-        "css": "catchbook.css"
+        "css": "catchbook.css",
+        "js": "catchbook.js"
+      },
+      "initializer": "CatchTrackCatchbookModule",
+      "enabled": true
+    },
+    {
+      "name": "fishDatabase",
+      "displayName": "Fish Database",
+      "path": "modules/fishDatabase/",
+      "files": {
+        "html": "fishDatabase.html",
+        "css": "fishDatabase.css",
+        "js": "fishDatabase.js"
+      },
+      "initializer": "CatchTrackFishDatabaseModule",
+      "enabled": true
+    },
+    {
+      "name": "equipment",
+      "displayName": "Equipment",
+      "path": "modules/equipment/",
+      "files": {
+        "html": "equipment.html",
+        "css": "equipment.css",
+        "js": "equipment.js"
+      },
+      "initializer": "CatchTrackEquipmentModule",
+      "enabled": true
+    },
+    {
+      "name": "gps",
+      "displayName": "GPS",
+      "path": "modules/gps/",
+      "files": {
+        "html": "gps.html",
+        "css": "gps.css",
+        "js": "gps.js"
+      },
+      "initializer": "CatchTrackGPSModule",
+      "enabled": true
+    },
+    {
+      "name": "maps",
+      "displayName": "Maps",
+      "path": "modules/maps/",
+      "files": {
+        "html": "maps.html",
+        "css": "maps.css",
+        "js": "maps.js"
+      },
+      "initializer": "CatchTrackMapsModule",
+      "enabled": true
+    },
+    {
+      "name": "waters",
+      "displayName": "Waters",
+      "path": "modules/waters/",
+      "files": {
+        "html": "waters.html",
+        "css": "waters.css",
+        "js": "waters.js"
+      },
+      "initializer": "CatchTrackWatersModule",
+      "enabled": true
+    },
+    {
+      "name": "statistics",
+      "displayName": "Statistics",
+      "path": "modules/statistics/",
+      "files": {
+        "html": "statistics.html",
+        "css": "statistics.css",
+        "js": "statistics.js"
+      },
+      "initializer": "CatchTrackStatisticsModule",
+      "enabled": true
+    },
+    {
+      "name": "records",
+      "displayName": "Records",
+      "path": "modules/records/",
+      "files": {
+        "html": "records.html",
+        "css": "records.css",
+        "js": "records.js"
+      },
+      "initializer": "CatchTrackRecordsModule",
+      "enabled": true
+    },
+    {
+      "name": "leaderboard",
+      "displayName": "Leaderboard",
+      "path": "modules/leaderboard/",
+      "files": {
+        "html": "leaderboard.html",
+        "css": "leaderboard.css",
+        "js": "leaderboard.js"
+      },
+      "initializer": "CatchTrackLeaderboardModule",
+      "enabled": false
+    },
+    {
+      "name": "weather",
+      "displayName": "Weather",
+      "path": "modules/weather/",
+      "files": {
+        "html": "weather.html",
+        "css": "weather.css",
+        "js": "weather.js"
+      },
+      "initializer": "CatchTrackWeatherModule",
+      "enabled": false
+    },
+    {
+      "name": "tides",
+      "displayName": "Tides",
+      "path": "modules/tides/",
+      "files": {
+        "html": "tides.html",
+        "css": "tides.css",
+        "js": "tides.js"
+      },
+      "initializer": "CatchTrackTidesModule",
+      "enabled": false
+    },
+    {
+      "name": "moon",
+      "displayName": "Moon",
+      "path": "modules/moon/",
+      "files": {
+        "html": "moon.html",
+        "css": "moon.css",
+        "js": "moon.js"
+      },
+      "initializer": "CatchTrackMoonModule",
+      "enabled": false
+    },
+    {
+      "name": "ai",
+      "displayName": "AI",
+      "path": "modules/ai/",
+      "files": {
+        "html": "ai.html",
+        "css": "ai.css",
+        "js": "ai.js"
+      },
+      "initializer": "CatchTrackAIModule",
+      "enabled": false
+    },
+    {
+      "name": "bluetooth",
+      "displayName": "Bluetooth",
+      "path": "modules/bluetooth/",
+      "files": {
+        "html": "bluetooth.html",
+        "css": "bluetooth.css",
+        "js": "bluetooth.js"
+      },
+      "initializer": "CatchTrackBluetoothModule",
+      "enabled": false
+    },
+    {
+      "name": "backup",
+      "displayName": "Backup",
+      "path": "modules/backup/",
+      "files": {
+        "html": "backup.html",
+        "css": "backup.css",
+        "js": "backup.js"
+      },
+      "initializer": "CatchTrackBackupModule",
+      "enabled": false
+    },
+    {
+      "name": "export",
+      "displayName": "Export",
+      "path": "modules/export/",
+      "files": {
+        "html": "export.html",
+        "css": "export.css",
+        "js": "export.js"
+      },
+      "initializer": "CatchTrackExportModule",
+      "enabled": false
+    },
+    {
+      "name": "conditions",
+      "displayName": "Conditions",
+      "path": "modules/conditions/",
+      "files": {
+        "html": "conditions.html",
+        "css": "conditions.css",
+        "js": "conditions.js"
+      },
+      "initializer": "CatchTrackConditionsModule",
+      "enabled": false
+    },
+    {
+      "name": "photos",
+      "displayName": "Photos",
+      "path": "modules/photos/",
+      "files": {
+        "html": "photos.html",
+        "css": "photos.css",
+        "js": "photos.js"
+      },
+      "initializer": "CatchTrackPhotosModule",
+      "enabled": false
+    },
+    {
+      "name": "safety",
+      "displayName": "Safety",
+      "path": "modules/safety/",
+      "files": {
+        "html": "safety.html",
+        "css": "safety.css",
+        "js": "safety.js"
+      },
+      "initializer": "CatchTrackSafetyModule",
+      "enabled": false
+    },
+    {
+      "name": "settings",
+      "displayName": "Settings",
+      "path": "modules/settings/",
+      "files": {
+        "html": "settings.html",
+        "css": "settings.css",
+        "js": "settings.js"
+      },
+      "initializer": "CatchTrackSettingsModule",
+      "enabled": false
     }
-        },
-
-        {
-            "name": "equipment",
-            "displayName": "Ausrüstung",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/equipment/",
-            "initializer": "CatchTrackEquipmentModule",
-            "files": {
-                "html": "equipment.html",
-                "js": "equipment.js",
-                "css": "equipment.css"
-            }
-        },
-
-
-        {
-            "name": "gps",
-            "displayName": "GPS",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/gps/",
-            "initializer": "CatchTrackGPSModule",
-            "files": {
-                "html": "gps.html",
-                "js": "gps.js",
-                "css": "gps.css"
-            }
-        },
-
-
-        {
-            "name": "maps",
-            "displayName": "Karten",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/maps/",
-            "initializer": "CatchTrackMapsModule",
-            "files": {
-                "html": "maps.html",
-                "js": "maps.js",
-                "css": "maps.css"
-            }
-        },
-
-
-        {
-            "name": "waters",
-            "displayName": "Gewässer",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/waters/",
-            "initializer": "CatchTrackWatersModule",
-            "files": {
-                "html": "waters.html",
-                "js": "waters.js",
-                "css": "waters.css"
-            }
-        },
-
-
-        {
-            "name": "statistics",
-            "displayName": "Statistik",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/statistics/",
-            "initializer": "CatchTrackStatisticsModule",
-            "files": {
-                "html": "statistics.html",
-                "js": "statistics.js",
-                "css": "statistics.css"
-            }
-        },
-
-
-        {
-            "name": "records",
-            "displayName": "Hitparade",
-            "version": "1.0",
-            "enabled": true,
-            "status": "active",
-            "database": true,
-            "path": "modules/records/",
-            "initializer": "CatchTrackRecordsModule",
-            "files": {
-                "html": "records.html",
-                "js": "records.js",
-                "css": "records.css"
-            }
-        },
-
-
-        {
-            "name": "leaderboard",
-            "displayName": "Rangliste",
-            "version": "1.0",
-            "enabled": false,
-            "status": "prepared",
-            "database": true,
-            "path": "modules/leaderboard/",
-            "initializer": "CatchTrackLeaderboardModule",
-            "files": {
-                "html": "leaderboard.html",
-                "js": "leaderboard.js",
-                "css": "leaderboard.css"
-            }
-        },
-
-
-        {
-            "name": "weather",
-            "displayName": "Wetter",
-            "version": "1.0",
-            "enabled": false,
-            "status": "prepared",
-            "database": true,
-            "path": "modules/weather/",
-            "initializer": "CatchTrackWeatherModule",
-            "files": {
-                "html": "weather.html",
-                "js": "weather.js",
-                "css": "weather.css"
-            }
-        },
-
-
-        {
-            "name": "tides",
-            "displayName": "Gezeiten",
-            "version": "1.0",
-            "enabled": false,
-            "status": "prepared",
-            "database": true,
-            "path": "modules/tides/",
-            "initializer": "CatchTrackTidesModule",
-            "files": {
-                "html": "tides.html",
-                "js": "tides.js",
-                "css": "tides.css"
-            }
-        },
-
-
-        {
-            "name": "moon",
-            "displayName": "Mondphase",
-            "version": "1.0",
-            "enabled": false,
-            "status": "prepared",
-            "database": true,
-            "path": "modules/moon/",
-            "initializer": "CatchTrackMoonModule",
-            "files": {
-                "html": "moon.html",
-                "js": "moon.js",
-                "css": "moon.css"
-            }
-        },
-
-
-        {
-            "name": "ai",
-            "displayName": "KI-Assistent",
-            "version": "1.0",
-            "enabled": false,
-            "status": "prepared",
-            "database": true,
-            "path": "modules/ai/",
-            "initializer": "CatchTrackAIModule",
-            "files": {
-                "html": "ai.html",
-                "js": "ai.js",
-                "css": "ai.css"
-            }
-        },
-
-
-        {
-            "name": "bluetooth",
-            "displayName": "Bluetooth",
-            "version": "1.0",
-            "enabled": false,
-            "status": "prepared",
-            "database": true,
-            "path": "modules/bluetooth/",
-            "initializer": "CatchTrackBluetoothModule",
-            "files": {
-                "html": "bluetooth.html",
-                "js": "bluetooth.js",
-                "css": "bluetooth.css"
-            }
-        }
-
-    ]
+  ]
 }
