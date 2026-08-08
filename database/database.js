@@ -2,16 +2,21 @@
 
 /*
  * CatchTrack Database Manager
- * Version 2.1
+ * Version 2.2
  *
  * Zentrale SQLite-Datenbank
  * Versioniertes Migrationssystem
  * Browser-localStorage Persistenz
+ *
+ * Version 2.2:
+ * - Abwärtskompatibilität alter migrations-Tabellen
+ * - Automatische Ergänzung fehlender Spalten
+ * - Erweiterte SQLite-Fehlerausgabe
  */
 
 window.CatchTrackDatabase = {
 
-    version: "2.1",
+    version: "2.2",
 
     database: null,
 
@@ -31,7 +36,7 @@ window.CatchTrackDatabase = {
         this.initialized = true;
 
         console.log(
-            "CatchTrack Database Manager V2.1 bereit."
+            "CatchTrack Database Manager V2.2 bereit."
         );
 
     },
@@ -181,12 +186,18 @@ window.CatchTrackDatabase = {
             console.error(
                 "Datenbank laden Fehler:",
                 error?.message || String(error),
-                error?.stack || ""
+                error?.stack || "",
+                error
             );
 
-            localStorage.removeItem(
-                this.storageKey
-            );
+            try {
+
+                localStorage.removeItem(
+                    this.storageKey
+                );
+
+            }
+            catch (_) {}
 
             return new SQL.Database();
 
@@ -230,7 +241,8 @@ window.CatchTrackDatabase = {
             console.error(
                 "Datenbank speichern Fehler:",
                 error?.message || String(error),
-                error?.stack || ""
+                error?.stack || "",
+                error
             );
 
             return false;
@@ -263,10 +275,63 @@ window.CatchTrackDatabase = {
             console.error(
                 "SQLite-Prüfung Fehler:",
                 error?.message || String(error),
-                error?.stack || ""
+                error?.stack || "",
+                error
             );
 
             return false;
+
+        }
+
+    },
+
+
+    getTableColumns(tableName) {
+
+        if (!this.database) {
+
+            return [];
+
+        }
+
+        try {
+
+            const statement =
+                this.database.prepare(
+                    `PRAGMA table_info(${tableName});`
+                );
+
+            const columns = [];
+
+            while (
+                statement.step()
+            ) {
+
+                const row =
+                    statement.getAsObject();
+
+                columns.push(
+                    row.name
+                );
+
+            }
+
+            statement.free();
+
+            return columns;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Tabellenstruktur konnte nicht gelesen werden:",
+                error?.message || String(error),
+                error?.stack || "",
+                error
+            );
+
+            return [];
 
         }
 
@@ -282,6 +347,11 @@ window.CatchTrackDatabase = {
         }
 
         try {
+
+            /*
+             * Grundstruktur erstellen,
+             * falls die Tabelle noch nicht existiert.
+             */
 
             this.database.run(`
 
@@ -301,6 +371,74 @@ window.CatchTrackDatabase = {
 
             `);
 
+
+            /*
+             * Bestehende ältere Versionen
+             * der migrations-Tabelle prüfen.
+             */
+
+            const columns =
+                this.getTableColumns(
+                    "migrations"
+                );
+
+
+            /*
+             * Alte migrations-Tabellen können
+             * die description-Spalte noch nicht besitzen.
+             */
+
+            if (
+                !columns.includes(
+                    "description"
+                )
+            ) {
+
+                console.log(
+                    "Migrationstabelle wird erweitert: description"
+                );
+
+                this.database.run(`
+
+                    ALTER TABLE migrations
+                    ADD COLUMN description TEXT;
+
+                `);
+
+            }
+
+
+            /*
+             * Ebenso kann applied_at bei einer
+             * älteren Version fehlen.
+             */
+
+            const updatedColumns =
+                this.getTableColumns(
+                    "migrations"
+                );
+
+
+            if (
+                !updatedColumns.includes(
+                    "applied_at"
+                )
+            ) {
+
+                console.log(
+                    "Migrationstabelle wird erweitert: applied_at"
+                );
+
+                this.database.run(`
+
+                    ALTER TABLE migrations
+                    ADD COLUMN applied_at DATETIME;
+
+                `);
+
+            }
+
+
             return true;
 
         }
@@ -310,7 +448,8 @@ window.CatchTrackDatabase = {
             console.error(
                 "Migrationstabelle Fehler:",
                 error?.message || String(error),
-                error?.stack || ""
+                error?.stack || "",
+                error
             );
 
             return false;
@@ -368,7 +507,8 @@ window.CatchTrackDatabase = {
             console.error(
                 "Migrationen lesen Fehler:",
                 error?.message || String(error),
-                error?.stack || ""
+                error?.stack || "",
+                error
             );
 
             return [];
@@ -419,7 +559,8 @@ window.CatchTrackDatabase = {
             console.error(
                 "Migration-Prüfung Fehler:",
                 error?.message || String(error),
-                error?.stack || ""
+                error?.stack || "",
+                error
             );
 
             return false;
@@ -451,10 +592,11 @@ window.CatchTrackDatabase = {
             ) {
 
                 throw new Error(
-                    "Migrationstabelle konnte nicht erstellt oder geprüft werden."
+                    "Migrationstabelle konnte nicht erstellt oder aktualisiert werden."
                 );
 
             }
+
 
             for (
                 const migration
@@ -471,6 +613,7 @@ window.CatchTrackDatabase = {
 
                 }
 
+
                 console.log(
 
                     "Migration wird ausgeführt:",
@@ -481,15 +624,18 @@ window.CatchTrackDatabase = {
 
                 );
 
+
                 this.database.run(
                     "BEGIN TRANSACTION;"
                 );
+
 
                 try {
 
                     migration.migration(
                         this.database
                     );
+
 
                     const statement =
                         this.database.prepare(`
@@ -508,16 +654,20 @@ window.CatchTrackDatabase = {
 
                         `);
 
+
                     statement.run([
                         migration.version,
                         migration.description
                     ]);
 
+
                     statement.free();
+
 
                     this.database.run(
                         "COMMIT;"
                     );
+
 
                     console.log(
 
@@ -538,13 +688,15 @@ window.CatchTrackDatabase = {
                         );
 
                     }
+
                     catch (rollbackError) {
 
                         console.error(
                             "Rollback Fehler:",
                             rollbackError?.message ||
                             String(rollbackError),
-                            rollbackError?.stack || ""
+                            rollbackError?.stack || "",
+                            rollbackError
                         );
 
                     }
@@ -554,6 +706,7 @@ window.CatchTrackDatabase = {
                 }
 
             }
+
 
             this.updateSchemaVersion();
 
@@ -571,6 +724,7 @@ window.CatchTrackDatabase = {
             );
 
         }
+
 
         this.isMigrating = false;
 
@@ -628,6 +782,7 @@ window.CatchTrackDatabase = {
                     sql
                 );
 
+
             if (
                 Array.isArray(params) &&
                 params.length > 0
@@ -637,14 +792,19 @@ window.CatchTrackDatabase = {
 
             }
 
+
             statement.step();
+
 
             const result =
                 statement.getAsObject();
 
+
             statement.free();
 
+
             this.saveDatabase();
+
 
             return result;
 
@@ -686,6 +846,7 @@ window.CatchTrackDatabase = {
                     sql
                 );
 
+
             if (
                 Array.isArray(params) &&
                 params.length > 0
@@ -695,7 +856,9 @@ window.CatchTrackDatabase = {
 
             }
 
+
             const rows = [];
+
 
             while (
                 statement.step()
@@ -707,7 +870,9 @@ window.CatchTrackDatabase = {
 
             }
 
+
             statement.free();
+
 
             return rows;
 
@@ -722,9 +887,11 @@ window.CatchTrackDatabase = {
                     statement.free();
 
                 }
+
                 catch (_) {}
 
             }
+
 
             console.error(
                 "Query-Fehler:",
@@ -732,6 +899,7 @@ window.CatchTrackDatabase = {
                 error?.stack || "",
                 error
             );
+
 
             return [];
 
