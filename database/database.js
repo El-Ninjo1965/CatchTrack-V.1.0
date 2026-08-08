@@ -180,7 +180,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Datenbank laden Fehler:",
-                error
+                error?.message || String(error),
+                error?.stack || ""
             );
 
             localStorage.removeItem(
@@ -228,7 +229,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Datenbank speichern Fehler:",
-                error
+                error?.message || String(error),
+                error?.stack || ""
             );
 
             return false;
@@ -260,7 +262,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "SQLite-Prüfung Fehler:",
-                error
+                error?.message || String(error),
+                error?.stack || ""
             );
 
             return false;
@@ -306,7 +309,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Migrationstabelle Fehler:",
-                error
+                error?.message || String(error),
+                error?.stack || ""
             );
 
             return false;
@@ -363,7 +367,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Migrationen lesen Fehler:",
-                error
+                error?.message || String(error),
+                error?.stack || ""
             );
 
             return [];
@@ -413,7 +418,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Migration-Prüfung Fehler:",
-                error
+                error?.message || String(error),
+                error?.stack || ""
             );
 
             return false;
@@ -440,7 +446,15 @@ window.CatchTrackDatabase = {
 
         try {
 
-            this.ensureMigrationTable();
+            if (
+                !this.ensureMigrationTable()
+            ) {
+
+                throw new Error(
+                    "Migrationstabelle konnte nicht erstellt oder geprüft werden."
+                );
+
+            }
 
             for (
                 const migration
@@ -524,7 +538,16 @@ window.CatchTrackDatabase = {
                         );
 
                     }
-                    catch (_) {}
+                    catch (rollbackError) {
+
+                        console.error(
+                            "Rollback Fehler:",
+                            rollbackError?.message ||
+                            String(rollbackError),
+                            rollbackError?.stack || ""
+                        );
+
+                    }
 
                     throw migrationError;
 
@@ -542,6 +565,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Migration Fehler:",
+                error?.message || String(error),
+                error?.stack || "",
                 error
             );
 
@@ -629,6 +654,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "SQL-Fehler:",
+                error?.message || String(error),
+                error?.stack || "",
                 error
             );
 
@@ -701,6 +728,8 @@ window.CatchTrackDatabase = {
 
             console.error(
                 "Query-Fehler:",
+                error?.message || String(error),
+                error?.stack || "",
                 error
             );
 
