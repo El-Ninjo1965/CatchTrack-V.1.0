@@ -1,4 +1,4 @@
-# AI_CONTEXT Version 1.2
+# AI_CONTEXT Version 1.3
 # Updated: 2026-08-09
 # CatchTrack – AI Context
 ## Zweck
@@ -39,8 +39,13 @@ Diese Datei enthält:
 Einlesen:
 - `runtime/runtime_status.json`
 - `runtime/error.log`
-Diese Dateien zeigen den aktuellen Laufzeitstatus und bekannte
-Fehler.
+- `localStorage.json`
+Diese Dateien zeigen den aktuellen Laufzeitstatus,
+bekannte Fehler und den zuletzt übertragenen
+Browser-LocalStorage-Snapshot.
+`localStorage.json` ist bei CatchTrack eine wichtige
+Persistenz- und Diagnosequelle und darf bei der Analyse
+der Runtime nicht ignoriert werden.
 —
 ## 5. Projektstruktur
 Die aktuelle GitHub-Projektstruktur prüfen.
@@ -82,9 +87,10 @@ Bei „AI einlesen“:
 4. `PROJECT_MODULE_PLAN.md`
 5. `runtime/runtime_status.json`
 6. `runtime/error.log`
-7. aktuelle GitHub-Projektstruktur
-8. relevante aktuelle Dateien
-9. relevante Commit-Historie
+7. `localStorage.json`
+8. aktuelle GitHub-Projektstruktur
+9. relevante aktuelle Dateien
+10. relevante Commit-Historie
 Danach den tatsächlichen Stand mit den Planungsdateien
 abgleichen.
 —
@@ -137,18 +143,9 @@ Der Commit ist damit die erste Übermittlungsreferenz.
 Wenn ein passender Commit gefunden wurde, wird geprüft,
 ob die erwartete Datei tatsächlich Bestandteil dieses
 Commits ist.
-Damit wird unterschieden zwischen:
-- Commit vorhanden und Datei enthalten
-- Commit vorhanden, aber andere Datei geändert
-- falscher bzw. älterer Commit
-- Commit nicht vorhanden
 ### Schritt 3 – Datei direkt abrufen
 Erst danach wird die Datei anhand ihres tatsächlichen
 Repository-Pfades direkt abgerufen.
-Beispiel:
-`modules/fishDatabase/fishData.js`
-Wenn der direkte Abruf einen vorübergehenden Fehler liefert,
-wird die Abfrage automatisch wiederholt.
 ### Wiederholungsregel
 Bei:
 - 404 / Not Found
@@ -166,22 +163,9 @@ Die Wiederholungen erfolgen:
 ### Schritt 4 – Commit als Fallback
 Wenn der Commit eindeutig vorhanden ist und die Datei im
 Commit nachweisbar ist, der direkte Dateiabruf aber weiterhin
-fehlschlägt, gilt die Datei als übermittelt, sofern der
-Commit die Datei eindeutig enthält.
-In diesem Fall darf nicht vorschnell behauptet werden,
-dass die Datei nicht übertragen wurde.
-Der Commit dient dann als maßgebliche Übermittlungsreferenz.
-### Schritt 5 – Ergebnis
-Erfolgreich:
-**Commit vorhanden + Datei im Commit vorhanden + Datei direkt
-abrufbar**
-oder:
-**Commit vorhanden + Datei eindeutig im Commit enthalten,
-direkter Abruf trotz Wiederholungen nicht möglich**
-Nicht übertragen:
-**Kein passender Commit + Datei nicht auffindbar**
-Erst dann wird dem Benutzer mitgeteilt, dass die Datei nicht
-verifiziert werden konnte.
+fehlschlägt, gilt die Datei als übermittelt.
+Der Commit dient dann als maßgebliche
+Übermittlungsreferenz.
 —
 ## 10. Dateiarbeit
 Der Benutzer arbeitet über Working Copy.
@@ -227,9 +211,6 @@ Wenn `AI_CONTEXT.md` geändert wird, muss dem Benutzer immer
 die vollständige Datei ausgegeben werden.
 Wenn `PROJECT_RULES.md` geändert wird, muss dem Benutzer immer
 die vollständige Datei ausgegeben werden.
-Der Benutzer soll dadurch eine Datei in Working Copy
-vollständig ersetzen können, ohne manuell einzelne Stellen
-suchen oder ergänzen zu müssen.
 —
 ## 12. Verhalten bei „OK“
 Wenn der Benutzer „OK“ sagt, gilt die vorherige Anweisung als
@@ -251,10 +232,8 @@ Neue Module sollen nach Möglichkeit:
 - mehrsprachig vorbereitet sein
 - erweiterbar sein
 - keine unnötigen Abhängigkeiten erzeugen
-Die Module sollen langfristig so aufgebaut werden, dass sie
-nicht nur eine feste Anzeige darstellen.
-Insbesondere Daten- und Inhaltsmodule sollen später über eine
-zentrale Admin-Oberfläche administrierbar sein.
+Daten- und Inhaltsmodule sollen später über eine zentrale
+Admin-Oberfläche administrierbar sein.
 Das betrifft nach Möglichkeit:
 - Inhalte
 - Texte
@@ -265,30 +244,29 @@ Das betrifft nach Möglichkeit:
 - Reihenfolgen
 - aktivierte/deaktivierte Felder
 - weitere konfigurierbare Eigenschaften
-Dabei soll die Architektur eher einem modularen CMS bzw.
-E-Commerce-System entsprechen als einer Sammlung fest
+Die Architektur soll langfristig eher einem modularen CMS
+bzw. E-Commerce-System entsprechen als einer Sammlung fest
 programmierter Einzelansichten.
 Die erste Implementierung eines Moduls soll trotzdem zunächst
 klein, stabil und testbar bleiben.
-Nicht gleichzeitig unnötig viele Erweiterungen einbauen.
 —
 ## 14. Entwicklungsstrategie – Basis zuerst
-Die Entwicklung wird grundsätzlich in zwei Gruppen aufgeteilt:
+Die Entwicklung wird grundsätzlich in zwei Gruppen aufgeteilt.
 ### Gruppe A – eigenständige Basis- und Datenmodule
-Diese Module sollen zuerst fertiggestellt werden.
-Dazu gehören insbesondere Module wie:
+Diese Module werden zuerst fertiggestellt.
+Dazu gehören insbesondere:
 - Wetter
 - GPS / Standort
-- weitere eigenständige Datenmodule
 - Equipment
-- sonstige Module, die ohne komplexe Integration in
-  Fish Data oder das Fangbuch funktionieren
-Diese Module sollen jeweils:
+- weitere eigenständige Datenmodule
+- sonstige Module ohne komplexe Integration in Fish Data
+  oder das Fangbuch
+Diese Module sollen:
 1. vollständig implementiert werden
 2. eigenständig funktionieren
 3. getestet werden
 4. Fehler bereinigt werden
-5. als stabile Datenquelle für spätere Module dienen
+5. als stabile Datenquellen für spätere Module dienen
 ### Gruppe B – integrative Module
 Diese Module werden erst danach entwickelt.
 Dazu gehören insbesondere:
@@ -297,12 +275,8 @@ Dazu gehören insbesondere:
 - Fischkarten
 - komplexe Verknüpfungen zwischen Fisch-, Fang-,
   Wetter-, GPS- und Equipmentdaten
-- spätere umfassende Fisch-/Fangverwaltung
+- umfassende Fisch-/Fangverwaltung
 ### Grundregel
-Ein Modul, das später Daten aus mehreren anderen Modulen
-zusammenführen oder in das Fangbuch bzw. die Fischverwaltung
-integriert werden muss, soll nicht unnötig früh fertig
-programmiert werden.
 Zuerst werden die benötigten Datenquellen stabil aufgebaut.
 Danach werden die integrativen Module entwickelt.
 Dadurch sollen:
@@ -310,13 +284,9 @@ Dadurch sollen:
 - spätere Umbauten reduziert werden
 - Schnittstellen auf tatsächlich vorhandenen Daten basieren
 - das Fangbuch auf bereits getestete Module zugreifen können
-- Fish Data erst dann mit den fertigen Datenquellen verbunden
-  werden
+- Fish Data erst mit fertigen Datenquellen verbunden werden
 —
 ## 15. Entwicklungsreihenfolge
-Die konkrete Reihenfolge wird anhand des tatsächlichen
-Projektstands und des bestehenden Modulplans bestimmt.
-Grundsätzlich gilt jedoch:
 ### Phase 1 – unabhängige Module
 Zuerst:
 - Wetter
@@ -334,10 +304,8 @@ Nach Fertigstellung der unabhängigen Module:
 - gemeinsame Nutzungsmöglichkeiten feststellen
 ### Phase 3 – Fangbuch / Catchbook
 Erst danach wird das Fangbuch aufgebaut.
-Das Fangbuch soll dann bereits auf fertige Module zugreifen
-können.
-Beispielsweise können später automatisch oder manuell
-verknüpft werden:
+Das Fangbuch soll auf fertige Module zugreifen können.
+Später können beispielsweise verknüpft werden:
 - Fangdatum
 - Uhrzeit
 - GPS / Standort
@@ -350,31 +318,26 @@ verknüpft werden:
 ### Phase 4 – Fish Data / Fischkarten
 Danach wird Fish Data als umfassende Fischdatenbank und
 Fischkarten-System aufgebaut.
-Fish Data soll dann bereits auf die zuvor festgelegten und
-getesteten Strukturen Rücksicht nehmen können.
 ### Phase 5 – Gesamtintegration
-Zum Schluss:
+Zum Schluss werden:
 - Fangbuch
 - Fish Data
 - Wetter
 - GPS
 - Equipment
 - weitere Module
-miteinander verbinden.
+miteinander verbunden.
 Die Integration erfolgt erst, wenn die beteiligten
 Einzelmodule stabil sind.
 —
-## 16. Fish Data – geplanter späterer Entwicklungsbereich
-Fish Data wird bewusst **nicht als nächster
-Entwicklungsschritt behandelt**, solange noch relevante
+## 16. Fish Data – späterer Entwicklungsbereich
+Fish Data wird bewusst zurückgestellt, solange relevante
 eigenständige Basis-/Datenmodule fertigzustellen sind.
-Die geplante Datei bleibt:
+Geplante Datei:
 `modules/fishDatabase/fishData.js`
 Die bisherige:
 `modules/fishDatabase/fishDatabase.js`
 wird zunächst nicht gelöscht.
-Sie bleibt als Rückfall- bzw. Vergleichsversion erhalten,
-bis die spätere Fish-Data-Implementierung stabil funktioniert.
 ### Langfristiges Ziel
 Fish Data soll die zentrale Fischdatenbank bzw.
 Fischkarten-Funktion von CatchTrack bilden.
@@ -402,77 +365,174 @@ Ein Fischdatensatz kann später unter anderem enthalten:
 - Verknüpfungen zum Fangbuch
 Die tatsächlichen Datenfelder werden erst anhand der
 vorhandenen Gesamtarchitektur festgelegt.
-### Geplante Entwicklungsstufen
-#### Stufe 1 – stabiler Kern
-- fehlerfreies Laden
-- einmalige Initialisierung
-- keine Endlosschleifen
-- keine doppelten Datensätze
-- korrekter Datenzugriff
-- einfache Fischansicht
-#### Stufe 2 – Fischkarte
-- Fischübersicht
-- einzelne Fischkarte
-- Detailansicht
-- strukturierte Eigenschaften
-- Bilder
-- Kategorien
-#### Stufe 3 – erweiterte Fischdaten
-- Köder
-- Tiefe
-- Fangzeit
-- Saison
-- Gewässer
-- Lebensraum
-- Fangmethoden
-- weitere fischereiliche Informationen
-#### Stufe 4 – Administration
-Die Fischdaten sollen später über die Admin-Oberfläche
-administrierbar sein.
-Möglichst ohne Änderungen am Frontend-Code für jede einzelne
-inhaltliche Änderung.
-#### Stufe 5 – CMS-artige Erweiterbarkeit
-Langfristig sollen neue Eigenschaften möglichst über die
-Administration ergänzt werden können.
-Dabei wird zwischen:
-- Daten
-- Darstellung
-- Konfiguration
-- Administration
-getrennt.
-—
-## 17. Fish Data – wichtige Architekturregel
 Fish Data darf nicht nur eine statische HTML-Anzeige sein.
-Das Modul soll als eigenständige Funktion innerhalb von
-CatchTrack arbeiten.
-Datenhaltung, Datenzugriff und Darstellung sollen so weit
-wie sinnvoll getrennt werden.
-Andere CatchTrack-Module sollen später auf die Fischdaten
-zugreifen können.
-Insbesondere das Fangbuch soll später eine Fischart aus
-Fish Data auswählen bzw. mit einem Fang verknüpfen können.
-Die genaue Schnittstelle zwischen Fangbuch und Fish Data
-wird erst festgelegt, wenn die vorher benötigten Module und
-Datenstrukturen stabil sind.
+Datenhaltung, Datenzugriff und Darstellung sollen soweit
+sinnvoll getrennt werden.
 —
-## 18. Umgang mit bestehenden Dateien
+## 17. Runtime, Storage und Fehlerprotokollierung
+### Grundstruktur
+Die Runtime-Persistenz besteht aus mehreren Ebenen:
+```text
+Fehler
+  ↓
+core/errorHandler.js
+  ↓
+core/runtimeStorage.js
+  ↓
+Browser LocalStorage
+  ↓
+localStorage.json
+
+runtime/error.log und runtime/runtime_status.json
+sind die lesbaren Projekt-/Runtime-Dateien.
+
+core/errorHandler.js
+
+Der Error Handler soll:
+
+* normale JavaScript-Fehler erfassen
+* unhandledrejection erfassen
+* Fehler intern zwischenspeichern
+* Fehler an den Runtime Storage übergeben
+* Fehler an den Runtime Status melden
+* Fehler diagnostizierbar machen
+
+core/runtimeStorage.js
+
+Der Runtime Storage ist für die Runtime-Persistenz zuständig.
+
+Er darf nicht nur eine nicht persistente
+Zwischenspeicherung darstellen.
+
+Die genaue Persistenztechnik muss sich an der tatsächlich
+vorhandenen CatchTrack-Architektur orientieren.
+
+localStorage.json
+
+localStorage.json ist der von CatchTrack verwendete
+persistierte Snapshot des Browser-LocalStorage.
+
+Die Datei kann unter anderem enthalten:
+
+* Datenbank-Snapshots
+* Runtime-Daten
+* Statusdaten
+* Fehler-/Logdaten
+* weitere persistierte CatchTrack-Daten
+
+Deshalb gilt:
+
+localStorage.json ist eine wichtige Referenzdatei und darf
+bei Runtime-, Storage-, Error-Handler- oder Datenbankproblemen
+nicht ignoriert werden.
+
+Wenn der Benutzer eine aktualisierte localStorage.json
+über Working Copy nach GitHub überträgt, muss sie bei der
+nächsten Prüfung berücksichtigt werden.
+
+Wichtige Regel
+
+localStorage.json darf niemals einfach durch eine neu
+erfundene oder vereinfachte Struktur ersetzt werden.
+
+Vor Änderungen an:
+
+* core/runtimeStorage.js
+* core/errorHandler.js
+* core/runtimeStatus.js
+* Datenbank-/Storage-Mechanismen
+
+muss die aktuelle localStorage.json geprüft werden.
+
+Bestehende persistierte Daten müssen erhalten bleiben.
+
+Snapshot-Workflow
+
+Wenn sich Runtime-Daten im Browser geändert haben:
+
+1. Browser-/CatchTrack-LocalStorage aktualisieren
+2. aktuellen LocalStorage-Snapshot erzeugen bzw. übernehmen
+3. localStorage.json über Working Copy aktualisieren
+4. Datei nach GitHub committen
+5. Commit prüfen
+6. localStorage.json erneut von GitHub einlesen
+7. Inhalt mit dem erwarteten Runtime-Stand vergleichen
+
+Die Datei ist damit nicht nur eine statische Projektdatei,
+sondern gleichzeitig eine Diagnose- und
+Persistenzreferenz.
+
+runtime/error.log
+
+runtime/error.log dient als lesbare Fehler-/Exportdatei.
+
+Dass diese Datei leer ist, beweist nicht automatisch, dass
+keine Laufzeitfehler aufgetreten sind.
+
+Bei einer leeren error.log müssen zusätzlich geprüft werden:
+
+* core/errorHandler.js
+* core/runtimeStorage.js
+* core/runtimeStatus.js
+* localStorage.json
+* tatsächliche Script-Ladereihenfolge
+* Browser-LocalStorage
+
+⸻
+
+18. Script-Ladereihenfolge
+
+Bei Runtime-abhängigen Funktionen muss die tatsächliche
+Ladereihenfolge der JavaScript-Dateien geprüft werden.
+
+Insbesondere muss sichergestellt sein, dass benötigte globale
+Objekte vorhanden sind, bevor andere Module darauf zugreifen.
+
+Beispiel:
+
+runtimeStorage
+  ↓
+errorHandler
+  ↓
+runtimeStatus
+
+Die tatsächliche Projektstruktur und index.html sind dabei
+maßgeblich.
+
+Keine Abhängigkeit darf nur angenommen werden.
+
+⸻
+
+19. Umgang mit bestehenden Dateien
+
 Bestehende funktionierende Dateien werden nicht unnötig
 verändert.
+
 Vor jeder Änderung:
+
 1. aktuelle Datei aus GitHub lesen
 2. Abhängigkeiten feststellen
-3. prüfen, ob die Datei tatsächlich geändert werden muss
-4. erst danach eine vollständige Ersatzdatei erstellen
+3. localStorage.json prüfen, wenn Storage/Runtime betroffen ist
+4. Projektplan prüfen
+5. prüfen, ob die Datei tatsächlich geändert werden muss
+6. erst danach eine vollständige Ersatzdatei erstellen
+
 Bei einem neuen Modul möglichst eine neue Datei verwenden,
 anstatt eine funktionierende Altdatei immer wieder umzubauen.
+
 Alte Dateien werden erst entfernt, wenn:
-- die neue Implementierung funktioniert
-- alle Abhängigkeiten umgestellt wurden
-- die alte Datei nicht mehr benötigt wird
-- der Schritt dokumentiert wurde
-—
-## 19. Test- und Fortschrittsverfahren
+
+* die neue Implementierung funktioniert
+* alle Abhängigkeiten umgestellt wurden
+* die alte Datei nicht mehr benötigt wird
+* der Schritt dokumentiert wurde
+
+⸻
+
+20. Test- und Fortschrittsverfahren
+
 Nach jeder wichtigen Datei:
+
 1. vollständige Datei erstellen
 2. Benutzer übernimmt sie über Working Copy
 3. Benutzer erstellt einen GitHub-Commit
@@ -481,81 +541,103 @@ Nach jeder wichtigen Datei:
 6. Funktion testen
 7. Fehler dokumentieren
 8. erst danach nächsten Entwicklungsschritt beginnen
+
+Bei Runtime-/Storage-Änderungen zusätzlich:
+
+9. localStorage.json prüfen
+10. Persistenz prüfen
+11. runtime/error.log prüfen
+12. runtime/runtime_status.json prüfen
+
 Die GitHub-Commit-Historie ist dabei eine zusätzliche
 Fortschrittsreferenz.
-Der Commit-Name des Benutzers entspricht grundsätzlich dem
-Dateinamen und kann deshalb direkt als Hinweis auf den
-übertragenen Arbeitsschritt verwendet werden.
-Bei einem Modul wird nicht automatisch mit dem nächsten Modul
-begonnen.
-Erst wenn das aktuelle Modul stabil getestet wurde, wird der
-nächste geplante Schritt begonnen.
-—
-## 20. Aktueller Übergabepunkt
+
+⸻
+
+21. Aktueller Übergabepunkt
+
 Das Basisskelett des Projekts steht.
+
 Die bisherige Fish-Database-Implementierung zeigte beim Test
 mehrfach wiederholte Fischdatensätze und anschließend eine
 weiße Seite.
-Die Fish-Funktion wird deshalb momentan nicht weiter
-ausgebaut.
-Der zuvor geplante nächste Schritt:
-**NEU: FISH DATA**
-wird zurückgestellt.
-Stattdessen gilt ab Version 1.2:
-**Zuerst die eigenständigen Module und Datenquellen
-fertigstellen.**
-Danach:
-**Fangbuch / Catchbook**
-und anschließend:
-**Fish Data / Fischkarten**
-und danach die vollständige Integration.
-Die bisherige Fish-Database-Datei wird dabei nicht unnötig
-verändert oder gelöscht.
-—
-## 21. Versionsverwaltung dieser Datei
+
+Fish Data wird deshalb momentan nicht weiter ausgebaut.
+
+Der aktuelle Entwicklungsweg lautet:
+
+1. unabhängige Module und Datenquellen fertigstellen
+
+2. Datenbasis und Schnittstellen prüfen
+
+3. Fangbuch / Catchbook entwickeln
+
+4. Fish Data / Fischkarten entwickeln
+
+5. Gesamtintegration durchführen
+
+Die bisherige Fish-Database-Datei wird nicht unnötig verändert
+oder gelöscht.
+
+⸻
+
+22. Versionsverwaltung dieser Datei
+
 Die erste Zeile dieser Datei enthält immer die aktuelle
 Version.
+
 Format:
-`# AI_CONTEXT Version X.Y`
-Zusätzlich enthält die zweite Zeile das Datum der letzten
-inhaltlichen Änderung:
-`# Updated: YYYY-MM-DD`
-Bei jeder inhaltlichen Änderung wird die Versionsnummer
-erhöht.
-Beispiele:
-- `1.0` = Ausgangsversion
-- `1.1` = kleinere Regel- oder Inhaltsänderung
-- `1.2` = Änderung der Entwicklungsstrategie
-- `1.3` = weitere kleinere Änderung
-- `2.0` = größere strukturelle Änderung
-Damit kann beim Einlesen jederzeit festgestellt werden,
-welche Fassung aktuell ist.
-Bei einer Änderung von `AI_CONTEXT.md` muss die neue
-Versionsnummer in der vollständigen Ersatzdatei aktualisiert
-werden.
+
+# AI_CONTEXT Version X.Y
+
+Die zweite Zeile enthält das Datum der letzten inhaltlichen
+Änderung:
+
+# Updated: YYYY-MM-DD
+
+Versionsbeispiele:
+
+* 1.0 = Ausgangsversion
+* 1.1 = kleinere Regel-/Inhaltsänderung
+* 1.2 = Änderung der Entwicklungsstrategie
+* 1.3 = Runtime-/LocalStorage-Regeln ergänzt
+* 2.0 = größere strukturelle Änderung
+
 Die Versionsnummer ersetzt nicht die GitHub-Commit-Historie,
 sondern ergänzt sie.
-—
-## 22. Wichtig
-Diese Datei ist ein Lesefahrplan.
-Sie enthält keine:
-- Passwörter
-- Access Tokens
-- SSH-Private-Keys
-- sonstigen Zugangsdaten
+
+⸻
+
+23. Wichtig
+
+Diese Datei enthält keine:
+
+* Passwörter
+* Access Tokens
+* SSH-Private-Keys
+* sonstigen Zugangsdaten
+
 Bei widersprüchlichen Informationen gilt:
+
 tatsächliche GitHub-Datei
->
+
 GitHub-Commit-Historie
->
+
 aktueller Runtime-/Teststatus
->
+
+localStorage.json
+
 Projektwissensstand
->
+
 Projektplan
->
+
 ältere Dokumentation
+
 Die tatsächliche Projektstruktur und die tatsächlich auf
 GitHub vorhandenen Dateien haben Vorrang vor Annahmen.
-—
-## Ende AI_CONTEXT
+
+⸻
+
+Ende AI_CONTEXT
+
+:::
