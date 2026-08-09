@@ -6,6 +6,7 @@
     <header class="gps-header">
         <div>
             <h1 id="gps-title" data-i18n="gps.title">GPS</h1>
+
             <p
                 class="gps-subtitle"
                 data-i18n="gps.subtitle"
@@ -13,6 +14,7 @@
                 Standortverwaltung
             </p>
         </div>
+
         <span
             id="gps-status-badge"
             class="gps-status-badge"
@@ -22,13 +24,14 @@
             Bereit
         </span>
     </header>
+
     <div
         id="gps-message"
         class="gps-message"
         role="status"
         aria-live="polite"
     ></div>
-    <!-- Aktueller Standort -->
+
     <section
         class="gps-card gps-current-card"
         aria-labelledby="gps-current-title"
@@ -41,6 +44,7 @@
                 >
                     Aktueller Standort
                 </h2>
+
                 <span
                     id="gps-source"
                     class="gps-source"
@@ -50,7 +54,9 @@
                 </span>
             </div>
         </div>
+
         <div class="gps-position-grid">
+
             <div class="gps-value">
                 <span
                     class="gps-label"
@@ -58,6 +64,7 @@
                 >
                     Breitengrad
                 </span>
+
                 <strong
                     id="gps-latitude"
                     class="gps-data"
@@ -65,6 +72,7 @@
                     --
                 </strong>
             </div>
+
             <div class="gps-value">
                 <span
                     class="gps-label"
@@ -72,6 +80,7 @@
                 >
                     Längengrad
                 </span>
+
                 <strong
                     id="gps-longitude"
                     class="gps-data"
@@ -79,6 +88,7 @@
                     --
                 </strong>
             </div>
+
             <div class="gps-value">
                 <span
                     class="gps-label"
@@ -86,6 +96,7 @@
                 >
                     Genauigkeit
                 </span>
+
                 <strong
                     id="gps-accuracy"
                     class="gps-data"
@@ -93,13 +104,15 @@
                     --
                 </strong>
             </div>
+
             <div class="gps-value">
                 <span
                     class="gps-label"
                     data-i18n="gps.altitude"
                 >
-                    Höhe
+                    Höhe über Meeresspiegel
                 </span>
+
                 <strong
                     id="gps-altitude"
                     class="gps-data"
@@ -107,6 +120,23 @@
                     --
                 </strong>
             </div>
+
+            <div class="gps-value">
+                <span
+                    class="gps-label"
+                    data-i18n="gps.altitudeAccuracy"
+                >
+                    Höhen-Genauigkeit
+                </span>
+
+                <strong
+                    id="gps-altitude-accuracy"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+            </div>
+
             <div class="gps-value gps-value-wide">
                 <span
                     class="gps-label"
@@ -114,6 +144,7 @@
                 >
                     Zeitpunkt
                 </span>
+
                 <strong
                     id="gps-timestamp"
                     class="gps-data"
@@ -121,16 +152,36 @@
                     --
                 </strong>
             </div>
+
+            <div class="gps-value gps-value-wide">
+                <span
+                    class="gps-label"
+                    data-i18n="gps.stayDuration"
+                >
+                    Aufenthaltsdauer
+                </span>
+
+                <strong
+                    id="gps-stay-duration"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+            </div>
+
         </div>
+
         <div class="gps-actions">
+
             <button
                 id="gps-update-button"
                 type="button"
                 class="gps-button gps-button-primary"
                 data-i18n="gps.action.update"
             >
-                Standort ermitteln
+                Standort aktualisieren
             </button>
+
             <button
                 id="gps-share-button"
                 type="button"
@@ -139,6 +190,7 @@
             >
                 Position teilen
             </button>
+
             <button
                 id="gps-clear-button"
                 type="button"
@@ -147,14 +199,16 @@
             >
                 Anzeige zurücksetzen
             </button>
+
         </div>
     </section>
-    <!-- Home-Standort -->
+
     <section
         class="gps-card gps-home-card"
         aria-labelledby="gps-home-title"
     >
         <div class="gps-card-header">
+
             <div>
                 <h2
                     id="gps-home-title"
@@ -162,6 +216,7 @@
                 >
                     Home-Standort
                 </h2>
+
                 <p
                     class="gps-card-description"
                     data-i18n="gps.home.description"
@@ -169,6 +224,7 @@
                     Ein gespeicherter Referenzstandort.
                 </p>
             </div>
+
             <span
                 id="gps-home-status"
                 class="gps-source"
@@ -176,7 +232,9 @@
             >
                 Nicht gespeichert
             </span>
+
         </div>
+
         <div
             id="gps-home-position"
             class="gps-home-position"
@@ -185,7 +243,9 @@
                 Kein Home-Standort vorhanden.
             </span>
         </div>
+
         <div class="gps-actions">
+
             <button
                 id="gps-save-home-button"
                 type="button"
@@ -194,6 +254,7 @@
             >
                 Aktuellen Standort als Home speichern
             </button>
+
             <button
                 id="gps-delete-home-button"
                 type="button"
@@ -202,21 +263,24 @@
             >
                 Home löschen
             </button>
+
         </div>
     </section>
-    <!-- Entfernung -->
+
     <section
         class="gps-card gps-distance-card"
         aria-labelledby="gps-distance-title"
     >
         <div class="gps-card-header">
+
             <div>
                 <h2
                     id="gps-distance-title"
                     data-i18n="gps.distance.title"
                 >
-                    Entfernung
+                    Entfernung zu Home
                 </h2>
+
                 <p
                     class="gps-card-description"
                     data-i18n="gps.distance.description"
@@ -224,7 +288,9 @@
                     Entfernung zwischen aktuellem Standort und Home.
                 </p>
             </div>
+
         </div>
+
         <div
             id="gps-distance-value"
             class="gps-distance-value"
@@ -232,4 +298,5 @@
             --
         </div>
     </section>
+
 </section>
