@@ -1,8 +1,8 @@
 "use strict";
 
-window.CatchTrackGPS = {
+window.CatchTrackGPSModule = {
 
-    version: "2.0.0",
+    version: "2.0.1",
 
     storageKeys: {
         lastPosition: "gps:lastPosition",
@@ -123,13 +123,16 @@ window.CatchTrackGPS = {
             "gps.message.saved": "Home location saved.",
             "gps.message.deleted": "Home location deleted.",
             "gps.message.cleared": "Display cleared.",
-            "gps.message.noPosition": "No current location is available.",
+            "gps.message.noPosition":
+                "No current location is available.",
             "gps.error.unsupported":
                 "This browser does not support location services.",
-            "gps.error.permission": "Location access was denied.",
+            "gps.error.permission":
+                "Location access was denied.",
             "gps.error.unavailable":
                 "The location is currently unavailable.",
-            "gps.error.timeout": "Location detection timed out.",
+            "gps.error.timeout":
+                "Location detection timed out.",
             "gps.error.unknown":
                 "The location could not be determined.",
             "gps.error.storage":
@@ -150,12 +153,16 @@ window.CatchTrackGPS = {
 
         this.state.currentPosition =
             this.normalizePosition(
-                storage.load(this.storageKeys.lastPosition)
+                storage.load(
+                    this.storageKeys.lastPosition
+                )
             );
 
         this.state.homePosition =
             this.normalizePosition(
-                storage.load(this.storageKeys.homePosition)
+                storage.load(
+                    this.storageKeys.homePosition
+                )
             );
     },
 
@@ -170,7 +177,10 @@ window.CatchTrackGPS = {
             return false;
         }
 
-        return storage.save(key, position);
+        return storage.save(
+            key,
+            position
+        );
     },
 
     removeStoredPosition(key) {
@@ -195,8 +205,11 @@ window.CatchTrackGPS = {
             return null;
         }
 
-        const latitude = Number(position.latitude);
-        const longitude = Number(position.longitude);
+        const latitude =
+            Number(position.latitude);
+
+        const longitude =
+            Number(position.longitude);
 
         if (
             !Number.isFinite(latitude) ||
@@ -209,45 +222,64 @@ window.CatchTrackGPS = {
             return null;
         }
 
-        const accuracy = Number(position.accuracy);
-        const altitude = Number(position.altitude);
+        const accuracy =
+            Number(position.accuracy);
+
+        const altitude =
+            Number(position.altitude);
 
         let timestamp;
 
         if (position.timestamp) {
-            const date = new Date(position.timestamp);
+            const date =
+                new Date(position.timestamp);
 
-            timestamp = Number.isNaN(date.getTime())
-                ? new Date().toISOString()
-                : date.toISOString();
+            timestamp =
+                Number.isNaN(date.getTime())
+                    ? new Date().toISOString()
+                    : date.toISOString();
         } else {
-            timestamp = new Date().toISOString();
+            timestamp =
+                new Date().toISOString();
         }
 
         return {
             latitude,
             longitude,
-            accuracy: Number.isFinite(accuracy) ? accuracy : null,
-            altitude: Number.isFinite(altitude) ? altitude : null,
+            accuracy:
+                Number.isFinite(accuracy)
+                    ? accuracy
+                    : null,
+            altitude:
+                Number.isFinite(altitude)
+                    ? altitude
+                    : null,
             timestamp,
-            source: position.source || "gps"
+            source:
+                position.source || "gps"
         };
     },
 
     requestPosition() {
         if (this.state.busy) {
-            return Promise.resolve(this.getPosition());
+            return Promise.resolve(
+                this.getPosition()
+            );
         }
 
         if (!navigator.geolocation) {
-            const error = new Error(
-                this.translate(
-                    "gps.error.unsupported",
-                    "Location services are not supported."
-                )
-            );
+            const error =
+                new Error(
+                    this.translate(
+                        "gps.error.unsupported",
+                        "Location services are not supported."
+                    )
+                );
 
-            this.handleError(error, "gps:unsupported");
+            this.handleError(
+                error,
+                "gps:unsupported"
+            );
 
             return Promise.reject(error);
         }
@@ -267,80 +299,107 @@ window.CatchTrackGPS = {
 
         this.render();
 
-        return new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    const normalized =
-                        this.normalizePosition({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy,
-                            altitude: position.coords.altitude,
-                            timestamp: position.timestamp,
-                            source: "gps"
-                        });
+        return new Promise(
+            (resolve, reject) => {
 
-                    this.state.busy = false;
-                    this.state.currentPosition = normalized;
+                navigator.geolocation.getCurrentPosition(
 
-                    const saved =
-                        this.savePosition(
-                            normalized,
-                            this.storageKeys.lastPosition
+                    position => {
+
+                        const normalized =
+                            this.normalizePosition({
+                                latitude:
+                                    position.coords.latitude,
+                                longitude:
+                                    position.coords.longitude,
+                                accuracy:
+                                    position.coords.accuracy,
+                                altitude:
+                                    position.coords.altitude,
+                                timestamp:
+                                    position.timestamp,
+                                source:
+                                    "gps"
+                            });
+
+                        this.state.busy =
+                            false;
+
+                        this.state.currentPosition =
+                            normalized;
+
+                        const saved =
+                            this.savePosition(
+                                normalized,
+                                this.storageKeys.lastPosition
+                            );
+
+                        if (!saved) {
+                            this.setMessage(
+                                this.translate(
+                                    "gps.error.storage",
+                                    "Location could not be saved."
+                                ),
+                                "error"
+                            );
+                        } else {
+                            this.setMessage(
+                                this.translate(
+                                    "gps.message.success",
+                                    "Location determined."
+                                ),
+                                "success"
+                            );
+                        }
+
+                        this.setStatus(
+                            "success"
                         );
 
-                    if (!saved) {
+                        this.render();
+
+                        resolve(
+                            normalized
+                        );
+                    },
+
+                    error => {
+
+                        this.state.busy =
+                            false;
+
+                        this.state.lastError =
+                            error;
+
+                        this.setStatus(
+                            "error"
+                        );
+
                         this.setMessage(
-                            this.translate(
-                                "gps.error.storage",
-                                "Location could not be saved."
+                            this.getGeolocationErrorMessage(
+                                error
                             ),
                             "error"
                         );
-                    } else {
-                        this.setMessage(
-                            this.translate(
-                                "gps.message.success",
-                                "Location determined."
-                            ),
-                            "success"
+
+                        this.render();
+
+                        this.handleError(
+                            error,
+                            "gps:geolocation"
                         );
+
+                        reject(error);
+                    },
+
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
                     }
-
-                    this.setStatus("success");
-                    this.render();
-
-                    resolve(normalized);
-                },
-
-                error => {
-                    this.state.busy = false;
-                    this.state.lastError = error;
-
-                    this.setStatus("error");
-
-                    this.setMessage(
-                        this.getGeolocationErrorMessage(error),
-                        "error"
-                    );
-
-                    this.render();
-
-                    this.handleError(
-                        error,
-                        "gps:geolocation"
-                    );
-
-                    reject(error);
-                },
-
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
-                }
-            );
-        });
+                );
+            }
+        );
     },
 
     getGeolocationErrorMessage(error) {
@@ -352,6 +411,7 @@ window.CatchTrackGPS = {
         }
 
         switch (error.code) {
+
             case 1:
                 return this.translate(
                     "gps.error.permission",
@@ -380,6 +440,7 @@ window.CatchTrackGPS = {
 
     saveHomePosition() {
         if (!this.state.currentPosition) {
+
             this.setMessage(
                 this.translate(
                     "gps.message.noPosition",
@@ -388,7 +449,10 @@ window.CatchTrackGPS = {
                 "error"
             );
 
-            this.setStatus("error");
+            this.setStatus(
+                "error"
+            );
+
             this.render();
 
             return false;
@@ -406,6 +470,7 @@ window.CatchTrackGPS = {
             );
 
         if (!saved) {
+
             this.setMessage(
                 this.translate(
                     "gps.error.storage",
@@ -414,13 +479,17 @@ window.CatchTrackGPS = {
                 "error"
             );
 
-            this.setStatus("error");
+            this.setStatus(
+                "error"
+            );
+
             this.render();
 
             return false;
         }
 
-        this.state.homePosition = home;
+        this.state.homePosition =
+            home;
 
         this.setMessage(
             this.translate(
@@ -430,7 +499,10 @@ window.CatchTrackGPS = {
             "success"
         );
 
-        this.setStatus("success");
+        this.setStatus(
+            "success"
+        );
+
         this.render();
 
         return true;
@@ -442,14 +514,17 @@ window.CatchTrackGPS = {
                 this.storageKeys.homePosition
             );
 
-        this.state.homePosition = null;
+        this.state.homePosition =
+            null;
 
         this.setMessage(
             this.translate(
                 "gps.message.deleted",
                 "Home location deleted."
             ),
-            removed ? "success" : "info"
+            removed
+                ? "success"
+                : "info"
         );
 
         this.render();
@@ -458,14 +533,19 @@ window.CatchTrackGPS = {
     },
 
     clearCurrentPosition() {
-        this.state.currentPosition = null;
-        this.state.lastError = null;
+        this.state.currentPosition =
+            null;
+
+        this.state.lastError =
+            null;
 
         this.removeStoredPosition(
             this.storageKeys.lastPosition
         );
 
-        this.setStatus("idle");
+        this.setStatus(
+            "idle"
+        );
 
         this.setMessage(
             this.translate(
@@ -479,34 +559,48 @@ window.CatchTrackGPS = {
     },
 
     calculateDistance(first, second) {
-        const a = this.normalizePosition(first);
-        const b = this.normalizePosition(second);
+        const a =
+            this.normalizePosition(first);
+
+        const b =
+            this.normalizePosition(second);
 
         if (!a || !b) {
             return null;
         }
 
-        const earthRadius = 6371000;
+        const earthRadius =
+            6371000;
 
         const lat1 =
-            a.latitude * Math.PI / 180;
+            a.latitude *
+            Math.PI /
+            180;
 
         const lat2 =
-            b.latitude * Math.PI / 180;
+            b.latitude *
+            Math.PI /
+            180;
 
         const deltaLat =
             (b.latitude - a.latitude) *
-            Math.PI / 180;
+            Math.PI /
+            180;
 
         const deltaLon =
             (b.longitude - a.longitude) *
-            Math.PI / 180;
+            Math.PI /
+            180;
 
         const sinLat =
-            Math.sin(deltaLat / 2);
+            Math.sin(
+                deltaLat / 2
+            );
 
         const sinLon =
-            Math.sin(deltaLon / 2);
+            Math.sin(
+                deltaLon / 2
+            );
 
         const haversine =
             sinLat * sinLat +
@@ -521,7 +615,10 @@ window.CatchTrackGPS = {
                 Math.sqrt(1 - haversine)
             );
 
-        return earthRadius * angular;
+        return (
+            earthRadius *
+            angular
+        );
     },
 
     getDistanceFromHome() {
@@ -533,26 +630,33 @@ window.CatchTrackGPS = {
 
     getPosition() {
         return this.state.currentPosition
-            ? { ...this.state.currentPosition }
+            ? {
+                ...this.state.currentPosition
+            }
             : null;
     },
 
     getCoordinates() {
-        const position = this.getPosition();
+        const position =
+            this.getPosition();
 
         if (!position) {
             return null;
         }
 
         return {
-            latitude: position.latitude,
-            longitude: position.longitude
+            latitude:
+                position.latitude,
+            longitude:
+                position.longitude
         };
     },
 
     getHomePosition() {
         return this.state.homePosition
-            ? { ...this.state.homePosition }
+            ? {
+                ...this.state.homePosition
+            }
             : null;
     },
 
@@ -569,36 +673,62 @@ window.CatchTrackGPS = {
             return `${Math.round(meters)} m`;
         }
 
-        return `${(meters / 1000).toFixed(2)} km`;
+        return `${(
+            meters / 1000
+        ).toFixed(2)} km`;
     },
 
     bindEvents() {
         document
-            .getElementById("gps-update-button")
-            ?.addEventListener("click", () => {
-                this.requestPosition().catch(() => {});
-            });
+            .getElementById(
+                "gps-update-button"
+            )
+            ?.addEventListener(
+                "click",
+                () => {
+                    this.requestPosition()
+                        .catch(() => {});
+                }
+            );
 
         document
-            .getElementById("gps-clear-button")
-            ?.addEventListener("click", () => {
-                this.clearCurrentPosition();
-            });
+            .getElementById(
+                "gps-clear-button"
+            )
+            ?.addEventListener(
+                "click",
+                () => {
+                    this.clearCurrentPosition();
+                }
+            );
 
         document
-            .getElementById("gps-save-home-button")
-            ?.addEventListener("click", () => {
-                this.saveHomePosition();
-            });
+            .getElementById(
+                "gps-save-home-button"
+            )
+            ?.addEventListener(
+                "click",
+                () => {
+                    this.saveHomePosition();
+                }
+            );
 
         document
-            .getElementById("gps-delete-home-button")
-            ?.addEventListener("click", () => {
-                this.deleteHomePosition();
-            });
+            .getElementById(
+                "gps-delete-home-button"
+            )
+            ?.addEventListener(
+                "click",
+                () => {
+                    this.deleteHomePosition();
+                }
+            );
     },
 
-    translate(key, fallback = key) {
+    translate(
+        key,
+        fallback = key
+    ) {
         const manager =
             window.CatchTrackLanguageManager;
 
@@ -606,7 +736,10 @@ window.CatchTrackGPS = {
             manager &&
             typeof manager.t === "function"
         ) {
-            return manager.t(key, fallback);
+            return manager.t(
+                key,
+                fallback
+            );
         }
 
         return fallback;
@@ -622,7 +755,8 @@ window.CatchTrackGPS = {
             return;
         }
 
-        badge.dataset.state = state;
+        badge.dataset.state =
+            state;
 
         badge.textContent =
             this.translate(
@@ -631,7 +765,10 @@ window.CatchTrackGPS = {
             );
     },
 
-    setMessage(message, type = "info") {
+    setMessage(
+        message,
+        type = "info"
+    ) {
         const element =
             document.getElementById(
                 "gps-message"
@@ -641,8 +778,11 @@ window.CatchTrackGPS = {
             return;
         }
 
-        element.textContent = message || "";
-        element.dataset.type = type;
+        element.textContent =
+            message || "";
+
+        element.dataset.type =
+            type;
     },
 
     render() {
@@ -744,16 +884,24 @@ window.CatchTrackGPS = {
         if (accuracy) {
             accuracy.textContent =
                 position &&
-                Number.isFinite(position.accuracy)
-                    ? `±${Math.round(position.accuracy)} m`
+                Number.isFinite(
+                    position.accuracy
+                )
+                    ? `±${Math.round(
+                        position.accuracy
+                    )} m`
                     : "--";
         }
 
         if (altitude) {
             altitude.textContent =
                 position &&
-                Number.isFinite(position.altitude)
-                    ? `${position.altitude.toFixed(1)} m`
+                Number.isFinite(
+                    position.altitude
+                )
+                    ? `${position.altitude.toFixed(
+                        1
+                    )} m`
                     : "--";
         }
 
@@ -797,7 +945,9 @@ window.CatchTrackGPS = {
                         "gps.latitude",
                         "Latitude"
                     )}</span>
-                    <strong>${position.latitude.toFixed(6)}</strong>
+                    <strong>${position.latitude.toFixed(
+                        6
+                    )}</strong>
                 </div>
 
                 <div>
@@ -805,7 +955,9 @@ window.CatchTrackGPS = {
                         "gps.longitude",
                         "Longitude"
                     )}</span>
-                    <strong>${position.longitude.toFixed(6)}</strong>
+                    <strong>${position.longitude.toFixed(
+                        6
+                    )}</strong>
                 </div>
             </div>`;
     },
@@ -830,7 +982,11 @@ window.CatchTrackGPS = {
         const date =
             new Date(timestamp);
 
-        if (Number.isNaN(date.getTime())) {
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
             return "--";
         }
 
@@ -842,12 +998,17 @@ window.CatchTrackGPS = {
                     timeStyle: "medium"
                 }
             ).format(date);
-        } catch (_) {
+        }
+
+        catch (_) {
             return date.toLocaleString();
         }
     },
 
-    handleError(error, source) {
+    handleError(
+        error,
+        source
+    ) {
         const handler =
             window.CatchTrackErrorHandler;
 
@@ -855,7 +1016,10 @@ window.CatchTrackGPS = {
             handler &&
             typeof handler.handle === "function"
         ) {
-            handler.handle(error, source);
+            handler.handle(
+                error,
+                source
+            );
         }
     }
 };
