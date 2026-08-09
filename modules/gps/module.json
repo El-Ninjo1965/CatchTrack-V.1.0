@@ -1,6 +1,6 @@
 {
     "name": "gps",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "status": "active",
     "enabled": true,
     "displayName": "GPS",
@@ -11,6 +11,6 @@
         "css": "gps.css",
         "js": "gps.js"
     },
-    "initializer": "CatchTrackGPS",
+    "initializer": "CatchTrackGPSModule",
     "dependencies": []
 }
