@@ -1,15 +1,14 @@
-# AI_CONTEXT Version 1.6
+# AI_CONTEXT Version 1.8
 # Updated: 2026-08-09
 # CatchTrack – AI Context
 ## 1. Zweck
 Diese Datei ist der zentrale Einstiegspunkt für ChatGPT/AI zur
 Wiederaufnahme der CatchTrack-Entwicklung.
-Bei einer neuen Unterhaltung soll dieser Context zuerst eingelesen
-werden.
-Danach sind die darin genannten Referenzdateien und der aktuelle
-GitHub-Projektstand zu prüfen.
+Bei einer neuen Unterhaltung wird dieser Context zuerst gelesen.
+Danach werden die darin genannten Referenzdateien sowie der
+aktuelle GitHub-Projektstand geprüft.
 Der tatsächliche Projektstand auf GitHub hat Vorrang vor älteren
-Annahmen oder Erinnerungen.
+Annahmen, Erinnerungen oder dokumentierten Planungen.
 —
 # 2. Projekt
 Repository:
@@ -39,14 +38,15 @@ Fangbuch
         ↓
 Auswertung / Hitparade
 
-Module sollen möglichst:
+Module sollen:
 
 * eigenständig funktionieren
 * unabhängig testbar sein
-* klar definierte Schnittstellen besitzen
+* klare Schnittstellen besitzen
 * strukturierte Daten liefern
 * nicht direkt auf interne HTML-Strukturen anderer Module zugreifen
-* später erweiterbar und konfigurierbar sein
+* erweiterbar und konfigurierbar sein
+* von Anfang an multilingual vorbereitet sein
 
 ⸻
 
@@ -56,16 +56,15 @@ ChatGPT arbeitet im CatchTrack-Projekt grundsätzlich lesend.
 
 Der Benutzer übernimmt Änderungen über Working Copy.
 
-ChatGPT darf deshalb nicht behaupten:
+ChatGPT darf nicht behaupten:
 
 * eine Datei geändert zu haben
 * einen Commit erstellt zu haben
 * Änderungen nach GitHub übertragen zu haben
 
-wenn dies nicht tatsächlich über eine verfügbare Schreibfunktion
-erfolgt ist.
+wenn dies nicht tatsächlich erfolgt ist.
 
-Der normale Ablauf lautet:
+Normaler Ablauf:
 
 ChatGPT
   ↓
@@ -83,8 +82,8 @@ ChatGPT prüft Commit
 
 5. Vollständige Dateien
 
-Bei Code- oder Inhaltsänderungen werden grundsätzlich
-vollständige Dateien ausgegeben.
+Bei Code- oder Inhaltsänderungen werden grundsätzlich vollständige
+Dateien ausgegeben.
 
 Keine:
 
@@ -101,17 +100,17 @@ Das gilt insbesondere für:
 * .md
 * Konfigurationsdateien
 
-Wenn mehrere Dateien geändert werden müssen, sollen alle
-vollständigen Ersatzdateien gemeinsam ausgegeben werden.
+Wenn mehrere Dateien geändert werden müssen, werden alle
+vollständigen Ersatzdateien gemeinsam ausgegeben.
 
 ⸻
 
 6. Bestehende Dateien zuerst prüfen
 
-Vor einer Änderung einer bereits vorhandenen Datei gilt:
+Vor einer Änderung einer bereits vorhandenen Datei:
 
 1. aktuelle Datei auf GitHub suchen
-2. zugehörigen Commit prüfen
+2. relevante Commit-Historie prüfen
 3. aktuelle Datei vollständig einlesen
 4. vorhandene Funktionen und Informationen analysieren
 5. Abhängigkeiten prüfen
@@ -128,14 +127,12 @@ Erst verstehen, dann ändern.
 Eine bestehende Datei muss nicht zwanghaft Stück für Stück
 repariert werden.
 
-Nach dem Einlesen ist zu entscheiden:
-
 Variante A – gezielte Aktualisierung
 
 Wenn die vorhandene Struktur sinnvoll und stabil ist:
 
 * vorhandenen Inhalt erhalten
-* notwendige Änderungen ergänzen
+* notwendige Änderungen integrieren
 * vollständige neue Version ausgeben
 
 Variante B – vollständige Neuerstellung
@@ -151,8 +148,8 @@ Wenn die vorhandene Datei:
 
 darf eine vollständige Master-Version erstellt werden.
 
-Dabei müssen alle weiterhin gültigen Informationen,
-Entscheidungen und Regeln übernommen werden.
+Alle weiterhin gültigen Informationen, Entscheidungen und Regeln
+müssen übernommen werden.
 
 Grundsatz:
 
@@ -168,66 +165,66 @@ Wenn der Benutzer sagt:
 
 wird nicht ausschließlich nach dem Dateipfad gesucht.
 
-Die Prüfung erfolgt in dieser Reihenfolge:
+Reihenfolge:
 
 1. Commit-Historie prüfen
-2. nach dem erwarteten Commit suchen
+2. erwarteten Commit suchen
 3. Commit-Namen und Dateinamen berücksichtigen
 4. Commit-SHA prüfen
 5. Commit-Inhalt prüfen
 6. feststellen, ob die Datei Bestandteil des Commits ist
-7. Datei anschließend direkt im Repository suchen
+7. Datei direkt im Repository suchen
+8. aktuellen Dateiinhalt einlesen, wenn relevant
 
 Der Benutzer verwendet häufig den Dateinamen als Commit-Namen.
-
-Beispiel:
-
-fishData.js
-
-kann gleichzeitig der Commit-Name sein.
 
 ⸻
 
 9. Wiederholte GitHub-Prüfung
 
-GitHub bzw. der Connector kann gelegentlich temporäre
-Verbindungsprobleme haben.
-
-Wenn eine Datei laut Benutzer übertragen wurde, aber der erste
-Abruf fehlschlägt:
+Bei temporären GitHub-/Connector-Problemen:
 
 * Prüfung automatisch wiederholen
-* bis zu vier Versuche direkt hintereinander
-* keine Zwischenmeldung
+* bis zu vier Versuche
+* keine unnötige Zwischenmeldung
 * keine zusätzliche Bestätigung verlangen
 
-Wenn der Commit eindeutig bestätigt, dass die Datei übertragen
+Wenn ein Commit eindeutig bestätigt, dass eine Datei übertragen
 wurde, gilt die Übertragung als bestätigt.
 
 ⸻
 
 10. Verhalten bei „OK“
 
-Ein „OK“ des Benutzers bestätigt den vorherigen Schritt.
+Ein „OK“ bestätigt den vorherigen Schritt.
 
 Danach keine unnötige Rückfrage.
 
 Wenn der nächste sinnvolle Schritt selbstständig ermittelt werden
 kann, soll er durchgeführt werden.
 
-Mehrere logisch zusammengehörige Prüfungen sollen möglichst in
-einem Arbeitsgang erfolgen.
+Logisch zusammengehörige Prüfungen sollen möglichst in einem
+Arbeitsgang erfolgen.
 
 ⸻
 
-11. Projektdateien als Referenz
+11. Verbindliche Projekt-Referenzdateien
 
-Je nach Aufgabe prüfen:
+Je nach Aufgabe sind folgende Dateien zu berücksichtigen:
 
+AI_CONTEXT.md
 PROJECT_RULES.md
 PROJECT_KNOWLEDGE.md
 PROJECT_MODULE_PLAN.md
-AI_CONTEXT.md
+PROJECT_STATUS.md
+
+Zusätzlich bei Architekturfragen:
+
+PROJECT_ARCHITECTURE.md
+
+Zusätzlich bei Testfragen:
+
+PROJECT_TEST_PLAN.md
 
 Zusätzlich bei Runtime-/Fehlerfragen:
 
@@ -239,7 +236,81 @@ Die tatsächlichen Dateien auf GitHub haben Vorrang.
 
 ⸻
 
-12. Runtime und Fehler
+12. PROJECT_STATUS.md
+
+PROJECT_STATUS.md ist die zentrale Übersicht über den
+dokumentierten Entwicklungsstand.
+
+Sie beschreibt:
+
+* vorhandene Module
+* Status der Module
+* aktuelle Entwicklungsphase
+* offene Aufgaben
+* bekannte Fehler
+* nächsten Arbeitsschritt
+* geplante Entwicklungsreihenfolge
+
+PROJECT_STATUS.md ersetzt nicht die Prüfung des tatsächlichen
+Repository-Stands.
+
+⸻
+
+13. Statusabgleich
+
+Bei einer Projektfortsetzung muss der dokumentierte Status mit
+dem tatsächlichen GitHub-Stand abgeglichen werden.
+
+Grundsätzlich:
+
+AI_CONTEXT.md
+      ↓
+PROJECT_STATUS.md
+      ↓
+GitHub-Commit-Historie
+      ↓
+tatsächliche Dateien
+      ↓
+aktueller tatsächlicher Stand
+
+Dokumentation beschreibt den erwarteten Stand.
+
+GitHub und die tatsächlichen Dateien bestimmen den tatsächlichen
+Stand.
+
+Wenn PROJECT_STATUS.md ein Modul als fertig bezeichnet, eine
+benötigte Datei aber fehlt, gilt das Modul nicht als fertig.
+
+⸻
+
+14. Versions- und Commitprüfung
+
+Das Erstellungs- oder Änderungsdatum einer Datei dient nur zur
+Orientierung.
+
+Es darf nicht allein zur Bestimmung des aktuellen Standes
+verwendet werden.
+
+Eine ältere Datei kann später geändert worden sein.
+
+Daher:
+
+Dateidatum
+    ≠
+aktueller Dateiinhalt
+    ≠
+letzter relevanter Commit
+
+Für den tatsächlichen Stand zählen:
+
+* Commit-Historie
+* aktueller Commit
+* aktueller Dateiinhalt
+* dokumentierter Status
+
+⸻
+
+15. Runtime und Fehler
 
 Grundlegende Runtime-Kette:
 
@@ -258,20 +329,12 @@ Zusätzlich relevant:
 runtime/error.log
 runtime/runtime_status.json
 
-Eine leere error.log bedeutet nicht automatisch,
-dass keine Fehler vorhanden sind.
-
-Bei Fehleranalysen deshalb auch prüfen:
-
-* errorHandler
-* Runtime Storage
-* Runtime Status
-* localStorage.json
-* Browser LocalStorage, soweit verfügbar
+Bei Fehleranalysen sind möglichst alle relevanten Quellen
+abzugleichen.
 
 ⸻
 
-13. localStorage.json
+16. localStorage.json
 
 localStorage.json ist eine wichtige Diagnose- und
 Persistenzreferenz.
@@ -284,43 +347,37 @@ Sie kann enthalten:
 * persistierte Modul-/Anwendungsdaten
 
 Wenn der Benutzer eine aktualisierte localStorage.json
-über Working Copy überträgt, muss diese bei der nächsten
-Analyse berücksichtigt werden.
+über Working Copy überträgt, muss diese bei der nächsten Analyse
+berücksichtigt werden.
 
 Vor Änderungen an Storage-/Runtime-Dateien muss die aktuelle
 localStorage.json geprüft werden.
 
-Bestehende Daten dürfen nicht unbeabsichtigt überschrieben
-oder durch eine erfundene Struktur ersetzt werden.
+Bestehende Daten dürfen nicht unbeabsichtigt überschrieben oder
+durch eine erfundene Struktur ersetzt werden.
 
 ⸻
 
-14. runtime/error.log
+17. runtime/error.log
 
 runtime/error.log dient als lesbares Runtime-Fehlerprotokoll.
 
-Fehler müssen immer nach Ursache bewertet werden.
+Fehler müssen nach Ursache bewertet werden.
 
-Wenn der Benutzer beim Testen ein Modul mehrfach öffnet,
-kann derselbe Fehler mehrfach protokolliert werden.
-
-Beispiel:
-
-Initializer nicht gefunden: CatchTrackEquipmentModule
-
-Mehrere identische Einträge bedeuten nicht automatisch mehrere
-unterschiedliche Fehler.
+Mehrere identische Einträge können durch wiederholtes Öffnen oder
+Testen eines Moduls entstehen und bedeuten nicht automatisch
+mehrere unterschiedliche Fehler.
 
 ⸻
 
-15. Umgang mit unfertigen Modulen
+18. Umgang mit unfertigen Modulen
 
 Viele vorhandene Module sind derzeit Vorentwicklungen.
 
 Ein Fehler in einem unfertigen Modul bedeutet nicht automatisch,
 dass dieses Modul sofort fertiggestellt werden muss.
 
-Bei einem solchen Fehler prüfen:
+Prüfen:
 
 1. Existiert die Datei?
 2. Ist sie eingebunden?
@@ -334,13 +391,163 @@ Unfertige Module werden nicht unnötig parallel repariert.
 
 ⸻
 
-16. Entwicklungsstrategie
+19. Globale Mehrsprachigkeitsregel
+
+CatchTrack wird von Anfang an multilingual konzipiert.
+
+Die Anwendung darf nicht auf Deutsch oder Englisch als feste
+Sprache beschränkt werden.
+
+Jedes Modul muss multilingual-fähig entwickelt werden.
+
+Die Sprache muss auf zwei Wegen bestimmt werden können:
+
+A – automatische Spracherkennung
+
+Die Anwendung verwendet standardmäßig die vom Endgerät bzw.
+Browser gemeldete bevorzugte Sprache.
+
+Beispiel:
+
+Gerätesprache Deutsch
+        ↓
+CatchTrack Deutsch
+
+B – manuelle Auswahl
+
+Der Benutzer kann die Sprache innerhalb der Anwendung manuell
+auswählen.
+
+Beispiel:
+
+Benutzer wählt English
+        ↓
+CatchTrack English
+
+Priorität
+
+Die manuelle Auswahl des Benutzers hat Vorrang vor der
+automatischen Spracherkennung.
+
+Die gewählte Sprache gilt grundsätzlich für die gesamte
+Anwendung.
+
+⸻
+
+20. Zentrales i18n-/Language-System
+
+Die Sprachlogik wird nicht in jedem Modul separat implementiert.
+
+Langfristig wird ein zentrales Language-/Internationalization-
+System verwendet.
+
+Module greifen auf dieses System zu.
+
+Beispiel:
+
+Language System
+      ↓
+Weather
+GPS
+Tide
+Moon
+Waters
+Equipment
+Fish Data
+Catchbook
+Statistics
+Records
+
+Module dürfen keine eigene, voneinander unabhängige
+Sprachverwaltung entwickeln.
+
+⸻
+
+21. Keine fest codierten UI-Texte
+
+Texte, die dem Benutzer angezeigt werden, sollen nicht unnötig
+direkt in der Programmlogik fest codiert werden.
+
+Dazu gehören insbesondere:
+
+* Menüpunkte
+* Buttons
+* Überschriften
+* Beschriftungen
+* Hinweise
+* Fehlermeldungen
+* Statusmeldungen
+* Dialoge
+* Filter
+* Auswahlwerte
+* Einstellungen
+
+Stattdessen sollen Übersetzungsschlüssel verwendet werden.
+
+Beispiel:
+
+t(„weather.temperature“)
+
+statt:
+
+„Temperature“
+
+Der konkrete Name der Übersetzungsfunktion richtet sich nach
+der später festgelegten Architektur.
+
+⸻
+
+22. Neue Module müssen multilingual vorbereitet sein
+
+Auch wenn das zentrale Language-System zu einem späteren Zeitpunkt
+vollständig implementiert wird, müssen neue Module bereits so
+entwickelt werden, dass die spätere Übersetzung ohne grundlegende
+Änderung der Programmlogik möglich ist.
+
+Daher:
+
+Modul erstellen
+      ↓
+keine Sprache fest verdrahten
+      ↓
+Übersetzungsschlüssel verwenden
+      ↓
+zentrale Sprachlogik
+
+Dies gilt für jedes neue Modul.
+
+⸻
+
+23. Sprache und gespeicherte Daten
+
+Die Sprache der Benutzeroberfläche darf nicht automatisch die
+zugrunde liegenden strukturierten Daten verändern.
+
+Beispiel:
+
+interner Wetterwert:
+pressure = 1013.2
+Deutsch:
+Luftdruck
+English:
+Pressure
+
+Die Daten bleiben sprachneutral.
+
+Nur Darstellung und Benutzeroberfläche werden übersetzt.
+
+Dies ist insbesondere für das spätere Fangbuch und die
+Statistiken wichtig.
+
+⸻
+
+24. Entwicklungsstrategie
 
 Die Entwicklung wird bewusst in zwei Gruppen geteilt.
 
 Gruppe A – unabhängige Basis-/Datenmodule
 
-Diese werden zuerst fertiggestellt.
+Zuerst:
 
 * Wetter
 * GPS
@@ -362,11 +569,9 @@ stabile Schnittstelle
 ↓
 für andere Module nutzbar
 
-⸻
-
 Gruppe B – integrative Module
 
-Diese werden später entwickelt.
+Danach:
 
 * Fish Data
 * Fish Database / Fischkarten
@@ -375,12 +580,9 @@ Diese werden später entwickelt.
 * Records
 * Hitparade
 
-Diese Module sollen die zuvor fertiggestellten Datenquellen
-verwenden.
-
 ⸻
 
-17. Verbindliche Entwicklungsreihenfolge
+25. Verbindliche Entwicklungsreihenfolge
 
 Aktuelle Reihenfolge:
 
@@ -394,19 +596,20 @@ Aktuelle Reihenfolge:
 8. Catchbook
 9. Statistics / Hitparade
 
-Diese Reihenfolge kann geändert werden, wenn eine technische
-Abhängigkeit dies erforderlich macht.
+Die Reihenfolge kann geändert werden, wenn technische
+Abhängigkeiten dies erforderlich machen.
 
-Änderungen müssen jedoch bewusst entschieden und dokumentiert
-werden.
+Änderungen müssen bewusst entschieden und dokumentiert werden.
 
 ⸻
 
-18. Aktueller Entwicklungsstand
+26. Aktueller Entwicklungsstand
 
 Der aktuelle Fokus liegt auf den unabhängigen Basis-Modulen.
 
-Das Wettermodul ist der aktuelle Entwicklungsbereich.
+Aktueller Entwicklungsbereich:
+
+Weather
 
 Danach:
 
@@ -420,7 +623,7 @@ Waters
 ↓
 Equipment
 
-Erst danach:
+Danach:
 
 Fish Data
 ↓
@@ -430,14 +633,35 @@ Statistics / Hitparade
 
 ⸻
 
-19. Wettermodul – Ziel
+27. Weather-Modul
 
-Das Wettermodul soll eigenständig funktionieren und später
+Aktueller tatsächlicher Ordner:
+
+modules/weather/
+├── module.json
+├── weather.js
+├── weather.html
+└── weather.css
+
+Alle tatsächlichen Dateinamen dieses Moduls sind kleingeschrieben.
+
+Nicht vorhandene Varianten wie:
+
+Weather.js
+Weather.html
+Weather.css
+Weather.cs
+
+dürfen nicht als fehlende Dateien behandelt werden.
+
+⸻
+
+28. Wetter – Ziel
+
+Das Weather-Modul soll eigenständig funktionieren und später
 strukturierte Wetterdaten für das Fangbuch bereitstellen.
 
-Es ist nicht nur eine Anzeige.
-
-Es ist eine Datenquelle.
+Es ist nicht nur eine Anzeige, sondern eine Datenquelle.
 
 Grundstruktur:
 
@@ -455,34 +679,27 @@ Catchbook
 
 ⸻
 
-20. Wetter – aktueller Standort
+29. Wetter – aktueller Standort
 
-Beim normalen Aufruf soll das Wetter für den aktuellen
-Aufenthaltsort des Benutzers angezeigt werden.
+Beim normalen Aufruf wird das Wetter für den aktuellen
+Aufenthaltsort des Benutzers angezeigt.
 
 Der Standort wird über GPS bzw. vorhandene
 Standortinformationen ermittelt.
 
-Nicht dauerhaft einen festen Ort programmieren.
+Ein fester Standort darf nicht dauerhaft programmiert werden.
 
 ⸻
 
-21. Wetter – alternative Orte
+30. Wetter – alternative Orte
 
 Der Benutzer soll zusätzlich andere Orte auswählen können.
-
-Beispiele:
-
-* zukünftiger Angelort
-* Reiseort
-* Urlaubsort
-* anderer Wohnort
 
 Mögliche Bedienung:
 
 * Suchfeld
 * Ortssuche
-* Auswahl aus Suchergebnissen
+* Suchergebnisse
 * später optional Favoriten
 
 Die Suche soll mindestens liefern:
@@ -495,7 +712,7 @@ Die Suche soll mindestens liefern:
 
 ⸻
 
-22. Wetterort und Fangort trennen
+31. Wetterort und Fangort trennen
 
 Ein manuell ausgewählter Wetterort darf den späteren Fangort
 nicht automatisch verändern.
@@ -507,11 +724,11 @@ Hua Hin
 Fangort:
 GPS-Position beim tatsächlichen Fang
 
-Beide Informationen müssen unabhängig voneinander bleiben.
+Beide Informationen bleiben unabhängig.
 
 ⸻
 
-23. Wetter – Forecast
+32. Wetter – Forecast
 
 Das Wettermodul soll mindestens sieben Tage anzeigen.
 
@@ -519,12 +736,12 @@ Ziel:
 
 10 Tage
 
-Wenn der Anbieter 10 Tage zuverlässig bereitstellt,
-werden 10 Tage verwendet.
+Wenn der Provider 10 Tage zuverlässig liefert, werden 10 Tage
+verwendet.
 
 Die Darstellung soll grafisch und übersichtlich sein.
 
-Mögliche Tagesinformationen:
+Wichtige Daten:
 
 * Wetter-Symbol
 * Wetterbeschreibung
@@ -541,10 +758,10 @@ Mögliche Tagesinformationen:
 
 ⸻
 
-24. Wetter – wichtige Daten
+33. Wetter – wichtige Daten
 
-Das interne Datenmodell soll bereits die später für das
-Fangbuch benötigten Daten unterstützen.
+Das interne Datenmodell soll bereits die später für das Fangbuch
+benötigten Daten unterstützen.
 
 Wichtige Werte:
 
@@ -575,7 +792,7 @@ angezeigt werden.
 
 ⸻
 
-25. Wetter – Provider
+34. Wetter – Provider
 
 Als erster Provider:
 
@@ -586,11 +803,11 @@ Der Provider muss austauschbar bleiben.
 Provider-spezifische Details dürfen nicht fest mit der
 Darstellung gekoppelt werden.
 
-Die Architektur soll später alternative Anbieter erlauben.
+Die Architektur soll alternative Anbieter erlauben.
 
 ⸻
 
-26. Wetter – API-Konfiguration
+35. Wetter – API-Konfiguration
 
 Die Wetter-API soll langfristig über den Admin-Bereich
 konfigurierbar sein.
@@ -610,53 +827,9 @@ Die Architektur soll trotzdem optionale API-Keys unterstützen.
 
 ⸻
 
-27. Wetter – Datenmodell
-
-Das Modul soll einen standardisierten Wetterdatensatz liefern.
-
-Beispiel:
-
-{
-    location: {
-        name: „Pran Buri“,
-        latitude: 12.38,
-        longitude: 99.90
-    },
-    timestamp: „2026-08-09T10:30:00Z“,
-    current: {
-        temperature: 29.4,
-        feelsLike: 33.1,
-        pressure: 1007.4,
-        humidity: 74,
-        precipitation: 0,
-        precipitationProbability: 10,
-        cloudCover: 62,
-        windSpeed: 12.3,
-        windDirection: 210,
-        windGusts: 19.4,
-        weatherCode: 3,
-        uvIndex: 7.2
-    },
-    astronomy: {
-        sunrise: „...“,
-        sunset: „...“
-    },
-    forecast: [],
-    provider: „open-meteo“
-}
-
-Dies ist ein Architekturbeispiel.
-
-Die tatsächliche Implementierung muss sich an den
-Providerantworten und dem bestehenden Projekt orientieren.
-
-⸻
-
-28. Wetter – Tagescache
+36. Wetter – Tagescache
 
 Das Wettermodul verwendet einen Tagescache.
-
-Kein starrer 30-Minuten-Cache.
 
 Regel:
 
@@ -670,28 +843,18 @@ Der Cache gilt bis:
 
 00:00 Uhr Ortszeit
 
-⸻
+Zusätzlich:
 
-29. Wetter – Cache-Regeln
+* anderer Standort → eigener Cache
+* manueller Refresh → Cache umgehen
+* API-Ausfall → gültigen Cache verwenden
+* kein Cache + API-Ausfall → Fehlerbehandlung
 
-Situation	Verhalten
-erster Abruf heute	API-Abfrage
-weiterer Abruf desselben Standorts heute	Cache verwenden
-anderer Standort	neue API-Abfrage
-manueller Aktualisieren-Befehl	Cache umgehen
-00:00 Uhr Ortszeit	Cache verfällt
-erster Abruf am neuen Tag	neue API-Abfrage
-API nicht erreichbar	gültigen Cache verwenden
-kein Cache vorhanden und API nicht erreichbar	Fehler anzeigen / behandeln
-
-Der Cache ist immer standortbezogen.
-
-Ein Cache für Pran Buri darf nicht als Wettercache für Hua Hin
-verwendet werden.
+Der Cache ist keine Wetterhistorie.
 
 ⸻
 
-30. Wetter – keine permanente Wetterhistorie
+37. Wetter – keine permanente Wetterhistorie
 
 Das Wettermodul soll keine unbegrenzte Wetterhistorie speichern.
 
@@ -701,12 +864,12 @@ Nicht dauerhaft sammeln:
 * alte API-Antworten
 * tägliche Wetterdaten ohne Bezug zu einem Fang
 
-Der Wettercache ist eine technische Optimierung,
-keine Wetterdatenbank.
+Der Wettercache ist eine technische Optimierung und keine
+Wetterdatenbank.
 
 ⸻
 
-31. Wetter – Fangbuch-Snapshot
+38. Wetter – Fangbuch-Snapshot
 
 Wenn später ein Fang gespeichert wird:
 
@@ -716,34 +879,14 @@ aktuellen Wetterdatensatz bestimmen
       ↓
 relevante Wetterdaten in Fangdatensatz übernehmen
 
-Damit entsteht die dauerhafte Wetterhistorie dort,
-wo sie tatsächlich benötigt wird:
+Damit entsteht die dauerhafte Wetterhistorie dort, wo sie
+benötigt wird:
 
 im Fangbuch.
 
-Beispiel:
-
-Fang
-├── Datum
-├── Uhrzeit
-├── GPS
-├── Gewässer
-├── Fisch
-├── Köder
-├── Equipment
-└── Wetter
-    ├── Temperatur
-    ├── Luftdruck
-    ├── Luftfeuchtigkeit
-    ├── Wind
-    ├── Windrichtung
-    ├── Bewölkung
-    ├── Niederschlag
-    └── weitere relevante Werte
-
 ⸻
 
-32. Wetter – Schnittstelle
+39. Wetter – Schnittstelle
 
 Andere Module sollen nicht auf interne Variablen oder
 HTML-Elemente des Wettermoduls zugreifen.
@@ -754,10 +897,10 @@ Beispiel:
 
 CatchTrackWeatherModule.getWeatherData()
 
-Der konkrete Name darf sich an die bestehende CatchTrack-
-Architektur anpassen.
+Der konkrete Name richtet sich nach der bestehenden
+CatchTrack-Architektur.
 
-Wichtig ist die klare Trennung:
+Wichtig ist die Trennung:
 
 Weather intern
       ↓
@@ -767,10 +910,10 @@ andere Module
 
 ⸻
 
-33. Wetter – Fehlerbehandlung
+40. Wetter – Fehlerbehandlung
 
-Wetterfehler werden über die bestehende Runtime-
-Fehlerbehandlung verarbeitet.
+Wetterfehler werden über die bestehende Runtime-Fehlerbehandlung
+verarbeitet.
 
 Grundstruktur:
 
@@ -787,12 +930,12 @@ runtime/error.log
 Ein API-Ausfall darf nicht die gesamte Anwendung zum Absturz
 bringen.
 
-Wenn ein gültiger Tagescache vorhanden ist, soll dieser
-weiter verwendet werden.
+Bei vorhandenem gültigem Tagescache soll dieser weiter verwendet
+werden.
 
 ⸻
 
-34. Wetter – Speicherbegrenzung
+41. Wetter – Speicherbegrenzung
 
 Das Wettermodul soll möglichst wenig dauerhafte Daten erzeugen.
 
@@ -806,48 +949,9 @@ Daher:
 
 ⸻
 
-35. Wetter – Symbole
+42. Fish Data – später
 
-Wetterzustände sollen grafisch dargestellt werden.
-
-Provider-Codes sollen intern auf eine CatchTrack-
-Darstellung abgebildet werden.
-
-Mögliche Zustände:
-
-* Sonne
-* teilweise bewölkt
-* bewölkt
-* Regen
-* starker Regen
-* Gewitter
-* Nebel
-* weitere Providerzustände
-
-Die Benutzeroberfläche soll möglichst unabhängig vom
-Wetteranbieter bleiben.
-
-⸻
-
-36. Wetter – aktueller Abruf
-
-Beim Aufruf des Wettermoduls:
-
-1. Standort feststellen
-2. ausgewählten alternativen Standort berücksichtigen
-3. Tagescache prüfen
-4. falls gültig → Cache verwenden
-5. falls nicht gültig → API abrufen
-6. Forecast und aktuelle Daten anzeigen
-7. standardisierten Datensatz bereitstellen
-
-Es findet keine dauerhafte Hintergrundsammlung statt.
-
-⸻
-
-37. Fish Data – später
-
-Fish Data wird bewusst erst nach den Basis-Modulen entwickelt.
+Fish Data wird erst nach den Basis-Modulen entwickelt.
 
 Langfristig vorgesehen:
 
@@ -883,7 +987,7 @@ Spätere Verknüpfungen:
 
 ⸻
 
-38. Catchbook – später
+43. Catchbook – später
 
 Das Fangbuch wird erst entwickelt, wenn die erforderlichen
 Datenquellen stabil sind.
@@ -907,17 +1011,13 @@ Geplante Daten:
 * Notizen
 
 Das Fangbuch soll die bereits entwickelten Module
-zusammenführen und nicht deren Funktionen duplizieren.
+zusammenführen und deren Funktionen nicht duplizieren.
 
 ⸻
 
-39. Equipment – später
+44. Equipment – später
 
 Equipment wird zunächst als eigenständiges Modul entwickelt.
-
-Ziel:
-
-Verwaltung der verwendeten Angelausrüstung.
 
 Mögliche Bereiche:
 
@@ -935,7 +1035,7 @@ Das Equipment-Modul soll später vom Fangbuch verwendet werden.
 
 ⸻
 
-40. Keine unnötige Parallelentwicklung
+45. Keine unnötige Parallelentwicklung
 
 Während ein Basis-Modul entwickelt wird:
 
@@ -947,7 +1047,7 @@ Ziel ist ein stabiler Unterbau.
 
 ⸻
 
-41. Versionsregel
+46. Versionsregel
 
 Die erste Zeile dieser Datei enthält immer die Version.
 
@@ -963,42 +1063,32 @@ Format:
 
 Aktuelle Version:
 
-1.6
+1.8
 
-Versionierung:
-
-* 1.0 Ausgangsversion
-* 1.1 Projekt-/Regelanpassungen
-* 1.2 Entwicklungsstrategie
-* 1.3 Runtime-/LocalStorage-Regeln
-* 1.4 Modulreihenfolge / Vorentwicklungen
-* 1.5 bestehende Dateien zuerst einlesen / Wetterarchitektur
-* 1.6 Master-Neuordnung und Konsolidierung des gesamten Contexts
+Versionsänderungen müssen dokumentiert werden.
 
 ⸻
 
-42. Änderungsprinzip für diesen AI Context
-
-Auch diese Datei folgt den allgemeinen Dateiregeln.
+47. Änderungsprinzip für diesen AI Context
 
 Vor jeder Änderung:
 
 1. aktuelle GitHub-Version einlesen
-2. aktuelle Versionnummer feststellen
+2. aktuelle Versionsnummer feststellen
 3. vorhandene Informationen prüfen
 4. Änderungen integrieren
 5. Versionsnummer erhöhen
 6. Änderungsdatum aktualisieren
 7. vollständige Datei ausgeben
 
-Wenn die bestehende Struktur schlecht oder beschädigt ist,
-darf eine neue Master-Version erstellt werden.
+Wenn die bestehende Struktur schlecht oder beschädigt ist, darf
+eine neue Master-Version erstellt werden.
 
-Dabei dürfen gültige Projektinformationen nicht verloren gehen.
+Gültige Projektinformationen dürfen dabei nicht verloren gehen.
 
 ⸻
 
-43. Priorität bei widersprüchlichen Informationen
+48. Priorität bei widersprüchlichen Informationen
 
 Bei widersprüchlichen Informationen gilt:
 
@@ -1006,18 +1096,18 @@ Bei widersprüchlichen Informationen gilt:
 2. aktueller Commit
 3. aktueller Runtime-/Teststatus
 4. aktuelle localStorage.json
-5. PROJECT_RULES.md
-6. PROJECT_KNOWLEDGE.md
-7. PROJECT_MODULE_PLAN.md
-8. ältere Dokumentation
-9. Annahmen
+5. PROJECT_STATUS.md
+6. PROJECT_RULES.md
+7. PROJECT_KNOWLEDGE.md
+8. PROJECT_MODULE_PLAN.md
+9. ältere Dokumentation
+10. Annahmen
 
-Bei einem nachweisbaren Widerspruch muss dieser benannt
-und vor einer kritischen Architekturentscheidung geklärt werden.
+Bei einem nachweisbaren Widerspruch muss dieser benannt werden.
 
 ⸻
 
-44. Keine Zugangsdaten
+49. Keine Zugangsdaten
 
 Diese Datei darf niemals enthalten:
 
@@ -1029,19 +1119,11 @@ Diese Datei darf niemals enthalten:
 
 ⸻
 
-45. Aktueller Übergabepunkt
-
-Die Runtime-/Logging-Struktur wurde überprüft.
-
-localStorage.json wird als wichtige Diagnose- und
-Persistenzreferenz behandelt.
-
-Die bisher festgestellten Fehler betreffen überwiegend
-noch nicht fertig entwickelte Module.
+50. Aktueller Übergabepunkt
 
 Der aktuelle Entwicklungsfokus ist:
 
-Wetter
+Weather
 
 Danach:
 
@@ -1050,6 +1132,46 @@ GPS → Tide → Moon → Waters → Equipment
 Danach:
 
 Fish Data → Catchbook → Statistics / Hitparade
+
+⸻
+
+51. Projektfortsetzung in einem neuen Chat
+
+Bei einer neuen Unterhaltung mit CatchTrack:
+
+1. AI_CONTEXT.md lesen
+2. PROJECT_STATUS.md lesen
+3. relevante Projektregeln lesen
+4. relevanten Modulplan lesen
+5. relevante GitHub-Commits prüfen
+6. tatsächliche Dateien prüfen
+7. bei Runtime-Themen localStorage.json,
+    runtime/error.log und runtime/runtime_status.json prüfen
+8. tatsächlichen aktuellen Stand bestimmen
+
+Nicht allein anhand des letzten Gesprächs oder einer alten
+Erinnerung weiterarbeiten.
+
+⸻
+
+52. Grundsatz für den tatsächlichen Projektstand
+
+Der aktuelle CatchTrack-Stand wird immer aus drei Ebenen bestimmt:
+
+Dokumentation
+    +
+GitHub-Historie
+    +
+aktuelle Dateien
+    ↓
+tatsächlicher Projektstand
+
+PROJECT_STATUS.md dient der Orientierung.
+
+GitHub bestätigt, was tatsächlich übertragen wurde.
+
+Der aktuelle Dateiinhalt bestimmt, was tatsächlich vorhanden
+und implementiert ist.
 
 ⸻
 
