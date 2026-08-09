@@ -1,289 +1,132 @@
-<section
-    id="gps-module"
-    class="gps-module"
-    aria-labelledby="gps-title"
->
+<div class="gps-module">
     <header class="gps-header">
         <div>
-            <h1 id="gps-title" data-i18n="gps.title">GPS</h1>
-
-            <p
-                class="gps-subtitle"
-                data-i18n="gps.subtitle"
-            >
-                Standortverwaltung
-            </p>
+            <h1>GPS</h1>
+            <p class="gps-subtitle">Aktueller Standort, Home und Navigation</p>
         </div>
-
-        <span
-            id="gps-status-badge"
-            class="gps-status-badge"
-            data-state="idle"
-        >
-            Bereit
-        </span>
+        <div class="gps-status-badge" id="gps-status-badge" data-state="idle">Bereit</div>
     </header>
-
-    <div
-        id="gps-message"
-        class="gps-message"
-        role="status"
-        aria-live="polite"
-    ></div>
-
-    <section
-        class="gps-card gps-current-card"
-        aria-labelledby="gps-current-title"
-    >
+    <div class="gps-message" id="gps-message"></div>
+    <section class="gps-card">
         <div class="gps-card-header">
             <div>
-                <h2
-                    id="gps-current-title"
-                    data-i18n="gps.current.title"
-                >
-                    Aktueller Standort
-                </h2>
-
-                <span
-                    id="gps-source"
-                    class="gps-source"
-                >
-                    Keine Position
-                </span>
+                <h2>Aktueller Standort</h2>
+                <p class="gps-card-description">
+                    Der Standort wird beim Öffnen automatisch ermittelt.
+                </p>
             </div>
+            <div class="gps-source" id="gps-source">Keine Position</div>
         </div>
-
         <div class="gps-position-grid">
-
             <div class="gps-value">
-                <span class="gps-label">
-                    Breitengrad
-                </span>
-
-                <strong
-                    id="gps-latitude"
-                    class="gps-data"
-                >
-                    --
-                </strong>
+                <span class="gps-label">Breitengrad</span>
+                <strong class="gps-data" id="gps-latitude">--</strong>
             </div>
-
             <div class="gps-value">
-                <span class="gps-label">
-                    Längengrad
-                </span>
-
-                <strong
-                    id="gps-longitude"
-                    class="gps-data"
-                >
-                    --
-                </strong>
+                <span class="gps-label">Längengrad</span>
+                <strong class="gps-data" id="gps-longitude">--</strong>
             </div>
-
             <div class="gps-value">
-                <span class="gps-label">
-                    Genauigkeit
-                </span>
-
-                <strong
-                    id="gps-accuracy"
-                    class="gps-data"
-                >
-                    --
-                </strong>
+                <span class="gps-label">Genauigkeit</span>
+                <strong class="gps-data" id="gps-accuracy">--</strong>
             </div>
-
             <div class="gps-value">
-                <span class="gps-label">
-                    Höhe über Meeresspiegel
-                </span>
-
-                <strong
-                    id="gps-altitude"
-                    class="gps-data"
-                >
-                    --
-                </strong>
+                <span class="gps-label">Höhe über Meeresspiegel</span>
+                <strong class="gps-data" id="gps-altitude">--</strong>
             </div>
-
             <div class="gps-value">
-                <span class="gps-label">
-                    Höhen-Genauigkeit
-                </span>
-
-                <strong
-                    id="gps-altitude-accuracy"
-                    class="gps-data"
-                >
-                    --
-                </strong>
+                <span class="gps-label">Höhengenauigkeit</span>
+                <strong class="gps-data" id="gps-altitude-accuracy">--</strong>
             </div>
-
+            <div class="gps-value">
+                <span class="gps-label">Aufenthaltsdauer</span>
+                <strong class="gps-data" id="gps-stay-duration">--</strong>
+            </div>
             <div class="gps-value gps-value-wide">
-                <span class="gps-label">
-                    Zeitpunkt
-                </span>
-
-                <strong
-                    id="gps-timestamp"
-                    class="gps-data"
-                >
-                    --
-                </strong>
+                <span class="gps-label">Letzte Aktualisierung</span>
+                <strong class="gps-data" id="gps-timestamp">--</strong>
             </div>
-
-            <div class="gps-value gps-value-wide">
-                <span class="gps-label">
-                    Aufenthaltsdauer
-                </span>
-
-                <strong
-                    id="gps-stay-duration"
-                    class="gps-data"
-                >
-                    --
-                </strong>
-            </div>
-
         </div>
-
         <div class="gps-actions">
-
-            <button
-                id="gps-update-button"
-                type="button"
-                class="gps-button gps-button-primary"
-            >
+            <button class="gps-button gps-button-primary" id="gps-update-button" type="button">
                 Standort aktualisieren
             </button>
-
-            <button
-                id="gps-share-button"
-                type="button"
-                class="gps-button gps-button-secondary"
-            >
-                Position teilen
-            </button>
-
-            <button
-                id="gps-route-button"
-                type="button"
-                class="gps-button gps-button-secondary"
-            >
+            <button class="gps-button" id="gps-route-button" type="button">
                 Route
             </button>
-
-            <button
-                id="gps-clear-button"
-                type="button"
-                class="gps-button gps-button-secondary"
-            >
+            <button class="gps-button" id="gps-share-button" type="button">
+                Standort teilen
+            </button>
+            <button class="gps-button" id="gps-clear-button" type="button">
                 Anzeige zurücksetzen
             </button>
-
         </div>
     </section>
-
-    <section
-        class="gps-card gps-home-card"
-        aria-labelledby="gps-home-title"
-    >
+    <section class="gps-card">
         <div class="gps-card-header">
-
             <div>
-                <h2
-                    id="gps-home-title"
-                    data-i18n="gps.home.title"
-                >
-                    Home-Standort
-                </h2>
-
-                <p
-                    class="gps-card-description"
-                    data-i18n="gps.home.description"
-                >
-                    Ein gespeicherter Referenzstandort.
+                <h2>Home Location</h2>
+                <p class="gps-card-description">
+                    Gespeicherter Heimatstandort für die Navigation.
                 </p>
             </div>
-
-            <span
-                id="gps-home-status"
-                class="gps-source"
-            >
-                Nicht gespeichert
-            </span>
-
+            <div class="gps-source" id="gps-home-status">Nicht gespeichert</div>
         </div>
-
-        <div
-            id="gps-home-position"
-            class="gps-home-position"
-        >
-            <span>
-                Kein Home-Standort vorhanden.
-            </span>
+        <div class="gps-home-position" id="gps-home-position">
+            <span>Kein Home-Standort vorhanden.</span>
         </div>
-
         <div class="gps-actions">
-
-            <button
-                id="gps-save-home-button"
-                type="button"
-                class="gps-button gps-button-primary"
-            >
+            <button class="gps-button gps-button-primary" id="gps-save-home-button" type="button">
                 Aktuellen Standort als Home speichern
             </button>
-
-            <button
-                id="gps-home-route-button"
-                type="button"
-                class="gps-button gps-button-secondary"
-            >
+            <button class="gps-button" id="gps-home-route-button" type="button">
                 Route nach Hause
             </button>
-
-            <button
-                id="gps-delete-home-button"
-                type="button"
-                class="gps-button gps-button-danger"
-            >
+            <button class="gps-button gps-button-danger" id="gps-delete-home-button" type="button">
                 Home löschen
             </button>
-
         </div>
     </section>
-
-    <section
-        class="gps-card gps-distance-card"
-        aria-labelledby="gps-distance-title"
-    >
+    <section class="gps-card">
         <div class="gps-card-header">
-
             <div>
-                <h2
-                    id="gps-distance-title"
-                    data-i18n="gps.distance.title"
-                >
-                    Entfernung zu Home
-                </h2>
-
-                <p
-                    class="gps-card-description"
-                    data-i18n="gps.distance.description"
-                >
-                    Entfernung zwischen aktuellem Standort und Home.
+                <h2>Gewässer speichern</h2>
+                <p class="gps-card-description">
+                    Speichert den aktuell ermittelten Standort als neues Gewässer.
+                    Das Gewässer wird nicht automatisch erkannt.
                 </p>
             </div>
-
         </div>
-
-        <div
-            id="gps-distance-value"
-            class="gps-distance-value"
-        >
+        <div class="gps-water-form">
+            <label class="gps-label" for="gps-water-name">
+                Gewässername
+            </label>
+            <input
+                id="gps-water-name"
+                class="gps-input"
+                type="text"
+                maxlength="120"
+                autocomplete="off"
+                placeholder="z. B. Baggersee Düsseldorf-Unterbach"
+            >
+        </div>
+        <div class="gps-actions">
+            <button class="gps-button gps-button-primary" id="gps-save-water-button" type="button">
+                Als Gewässer speichern
+            </button>
+        </div>
+    </section>
+    <section class="gps-card">
+        <div class="gps-card-header">
+            <div>
+                <h2>Entfernung zu Home</h2>
+                <p class="gps-card-description">
+                    Entfernung zwischen aktuellem Standort und gespeicherter Home Location.
+                </p>
+            </div>
+        </div>
+        <div class="gps-distance-value" id="gps-distance-value">
             --
         </div>
     </section>
-
-</section>
+</div>
