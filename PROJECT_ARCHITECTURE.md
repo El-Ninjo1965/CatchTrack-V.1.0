@@ -1,51 +1,46 @@
-CatchTrack V1.0 – PROJECT ARCHITECTURE
-
-Dateiname: PROJECT_ARCHITECTURE.md
-Projekt: CatchTrack V1.0
-Repository: El-Ninjo1965/CatchTrack-V.1.0
-Branch: main
+# CatchTrack V1.0 – PROJECT ARCHITECTURE
+Version: 1.1
 Stand: 09.08.2026
-Status: Initiale Architekturdokumentation
-
-⸻
-
-1. Zweck
-
-Diese Datei beschreibt die technische Architektur von CatchTrack V1.0.
-
-Sie dient dazu, bei jeder Weiterentwicklung eindeutig festzustellen:
-
-* welche Komponenten existieren
-* welche Komponente welche Aufgabe besitzt
-* welche Schnittstellen verwendet werden
-* wo Daten gespeichert werden
-* welche Module voneinander abhängig sind
-* welche Dateien zentrale Bestandteile der Architektur sind
-* welche Strukturen nicht ohne Prüfung verändert werden dürfen
-* welche alten Strukturen nicht mehr verwendet werden sollen
-
+Repository:
+El-Ninjo1965/CatchTrack-V.1.0
+Branch:
+main
+Status:
+AKTUALISIERTE MASTER-ARCHITEKTUR
+==================================================
+1. ZWECK
+==================================================
+Diese Datei beschreibt die technische Architektur von
+CatchTrack V1.0.
+Sie dient dazu, bei jeder Weiterentwicklung eindeutig
+festzustellen:
+- welche Komponenten existieren
+- welche Aufgaben sie besitzen
+- welche Schnittstellen verwendet werden
+- wo Daten gespeichert werden
+- welche Module voneinander abhängig sind
+- welche Dateien zentrale Bestandteile der Architektur sind
+- welche Strukturen nicht ohne Prüfung verändert werden dürfen
+- welche Legacy-Strukturen existieren
+- welche Funktionen zentral bereitgestellt werden
+- wie externe Datenquellen integriert werden
 Diese Datei ist kein Arbeitsplan.
-
-Der Arbeitsplan befindet sich in:
-
+Der Entwicklungsplan befindet sich in:
 PROJECT_MODULE_PLAN.md
-
-Der aktuelle Wissensstand befindet sich in:
-
+Der aktuelle Entwicklungsstatus befindet sich in:
+PROJECT_STATUS.md
+Das gesammelte Projektwissen befindet sich in:
 PROJECT_KNOWLEDGE.md
-
-Die verbindlichen Projektregeln befinden sich in:
-
+Die verbindlichen Arbeitsregeln befinden sich in:
 PROJECT_RULES.md
-
-⸻
-
-2. Architekturprinzip
-
-CatchTrack V1.0 besteht aus einer zentralen Anwendung mit modularer Erweiterungsstruktur.
-
+Die Arbeitsweise für die AI befindet sich in:
+AI_CONTEXT.md
+==================================================
+2. ARCHITEKTURPRINZIP
+==================================================
+CatchTrack V1.0 besteht aus einer zentralen Anwendung mit
+modularer Erweiterungsstruktur.
 Grundprinzip:
-
 Application
 │
 ├── Core
@@ -67,43 +62,63 @@ Application
 │
 ├── Modules
 │
+├── Runtime
+│
 ├── Assets
 │
 └── Libraries
-
-Module sollen möglichst eigenständig arbeiten, aber die vorhandenen Core- und Service-Schnittstellen verwenden.
-
-Eine neue Parallelarchitektur darf nicht eingeführt werden, wenn bereits eine passende zentrale Funktion existiert.
-
-⸻
-
-3. Zentrale Einstiegspunkte
-
-Aktuell relevante zentrale Dateien:
-
+Module arbeiten möglichst eigenständig.
+Sie verwenden jedoch vorhandene zentrale Core- und
+Service-Schnittstellen.
+Es darf keine Parallelarchitektur aufgebaut werden,
+wenn bereits eine geeignete zentrale Funktion existiert.
+==================================================
+3. ZENTRALES ARCHITEKTURPRINZIP
+==================================================
+Die Anwendung folgt grundsätzlich diesem Datenfluss:
+UI
+ ↓
+Module
+ ↓
+Core / Services
+ ↓
+Database / Storage / API
+ ↓
+Daten
+Bei Integrationen:
+Modul A
+ ↓
+definierte Schnittstelle
+ ↓
+Core / Service / Datenquelle
+ ↓
+Modul B
+Direkte Abhängigkeiten zwischen Modulen sollen möglichst
+gering bleiben.
+Gemeinsame Daten werden vorzugsweise über zentrale
+Schnittstellen bereitgestellt.
+==================================================
+4. ZENTRALE EINSTIEGSPUNKTE
+==================================================
+Aktuell relevante Einstiegspunkte:
 index.html
 app.js
-
-Diese Dateien bilden den Einstieg der Anwendung.
-
-Sie dürfen bei Modulentwicklung nicht unnötig umgebaut werden.
-
-Vor Änderungen muss geprüft werden:
-
-* Modulinitialisierung
-* Router
-* Module Manager
-* Language Manager
-* Storage
-* Datenbank
-* globale UI-Struktur
-
-⸻
-
-4. Core
-
-Aktueller Core:
-
+Diese Dateien bilden die zentrale Anwendungsebene.
+Sie dürfen bei der Entwicklung einzelner Module nicht
+unnötig umgebaut werden.
+Vor Änderungen müssen mindestens geprüft werden:
+- Modulinitialisierung
+- Router
+- Module Manager
+- Language Manager
+- Storage
+- Database
+- globale UI-Struktur
+- vorhandene Services
+==================================================
+5. CORE
+==================================================
+Aktuelle zentrale Core-Struktur:
 core/
 ├── api.js
 ├── database.js
@@ -114,346 +129,61 @@ core/
 ├── permissionManager.js
 ├── router.js
 └── storageManager.js
-
-⸻
-
-5. Core-Komponenten
-
-5.1 api.js
-
+Zusätzlich relevant:
+runtime/
+├── error.log
+└── runtime_status.json
+localStorage.json
+==================================================
+6. CORE – API
+==================================================
+Datei:
+core/api.js
 Aufgabe:
-
-* zentrale API-/Kommunikationsfunktionen
-* gemeinsame Schnittstelle für externe Datenquellen
-
-Vor Verwendung in einem Modul:
-
-* vorhandene Funktionen prüfen
-* keine parallele API-Schicht erzeugen
-
-⸻
-
-5.2 database.js
-
+- zentrale Kommunikation
+- externe Datenquellen
+- gemeinsame API-Funktionen
+- Fehlerbehandlung von API-Aufrufen
+Vor Entwicklung einer neuen API-Anbindung:
+1. bestehende API-Funktionen prüfen
+2. vorhandene Provider-Strukturen prüfen
+3. bestehende Fehlerbehandlung prüfen
+4. bestehende Konfiguration prüfen
+Keine unnötige parallele API-Schicht erzeugen.
+==================================================
+7. CORE – DATABASE
+==================================================
+Datei:
+core/database.js
 Aufgabe:
-
-* zentrale Datenbankkommunikation
-* Datenbankzugriff kapseln
-
-Module sollen nicht unnötig eigene Datenbankzugriffe außerhalb der vorgesehenen Architektur implementieren.
-
-⸻
-
-5.3 errorHandler.js
-
-Aufgabe:
-
-* zentrale Fehlerbehandlung
-
-Neue Module sollen Fehler nicht ausschließlich lokal verschlucken.
-
-⸻
-
-5.4 languageManager.js
-
-Aufgabe:
-
-* Sprachverwaltung
-* Übersetzungen
-* zentrale Sprachlogik
-
-Neue sichtbare Texte müssen mit dem vorhandenen Sprachsystem kompatibel sein.
-
-⸻
-
-5.5 moduleInstaller.js
-
-Aufgabe:
-
-* Installation bzw. Verwaltung von Modulen
-
-Vor Änderungen an Moduldefinitionen muss geprüft werden, wie diese Datei die Modulstruktur tatsächlich verarbeitet.
-
-⸻
-
-5.6 moduleManager.js
-
-Aufgabe:
-
-* Laden
-* Aktivieren
-* Verwalten
-* Initialisieren von Modulen
-
-Dies ist eine zentrale Architekturkomponente.
-
-Module dürfen nicht unabhängig davon eine zweite Modulverwaltung implementieren.
-
-⸻
-
-5.7 permissionManager.js
-
-Aufgabe:
-
-* Berechtigungen
-* Zugriffskontrolle
-
-Falls ein Modul besondere Rechte benötigt, muss diese zentrale Funktion geprüft werden.
-
-⸻
-
-5.8 router.js
-
-Aufgabe:
-
-* Navigation
-* Routing
-* Modulwechsel
-
-Neue Module müssen mit dem vorhandenen Routing-Konzept kompatibel sein.
-
-⸻
-
-5.9 storageManager.js
-
-Aufgabe:
-
-* zentrale lokale Speicherung
-* Zugriff auf persistente Daten
-
-Module sollen nicht ohne Grund eigene parallele Storage-Systeme verwenden.
-
-⸻
-
-6. Config
-
-Aktuell:
-
-config/
-├── app.json
-├── languages.json
-└── modules.json
-
-⸻
-
-7. modules.json
-
-config/modules.json beschreibt die konfigurierte Modulstruktur.
-
-Es enthält unter anderem:
-
-* Modul-ID
-* Name
-* Pfad
-* Aktivierungsstatus
-* Abhängigkeiten
-* weitere Modulmetadaten
-
-Wichtig:
-
-Das Vorhandensein einer module.json innerhalb eines Modulordners bedeutet nicht automatisch, dass diese Datei von der aktuellen Architektur verwendet wird.
-
-Die tatsächliche Verwendung muss über:
-
-* Module Manager
-* Module Installer
-* Imports
-* dynamische Imports
-* Referenzen
-* Konfiguration
-
-geprüft werden.
-
-⸻
-
-8. Datenbank
-
-Aktuelle Datenbankstruktur:
-
+- zentraler Datenbankzugriff
+- Datenbankkommunikation kapseln
+- Datenbankfunktionen für Module bereitstellen
+Module sollen keine unnötigen eigenen Datenbankabstraktionen
+erzeugen.
+Vor Änderungen:
+- Tabellen prüfen
+- Felder prüfen
+- Beziehungen prüfen
+- Migrationen prüfen
+- Seed-Daten prüfen
+- bestehende Abfragen prüfen
+==================================================
+8. DATABASE
+==================================================
+Aktuelle Struktur:
 database/
 ├── database.js
 ├── database.sql
 ├── fish_names_seed.sql
 ├── fish_seed.sql
 ├── migrations/
-├── schema.sql
-
-Zusätzlich existieren Datenbankmigrationen.
-
-Die Datenbank ist zentrale Grundlage für die Module.
-
-Vor einer Änderung am Datenmodell muss geprüft werden:
-
-1. bestehende Tabellen
-2. bestehende Felder
-3. bestehende Beziehungen
-4. bestehende Seed-Daten
-5. Migrationen
-6. bereits verwendete Datenbankfunktionen
-7. Abhängigkeiten bestehender Module
-
-Keine Tabelle darf nur für ein einzelnes Modul doppelt angelegt werden, wenn bereits eine passende zentrale Struktur existiert.
-
-⸻
-
-9. Datenfluss
-
-Grundprinzip:
-
-UI
- ↓
-Module
- ↓
-Core / Services
- ↓
-Database / Storage / API
- ↓
-Daten
-
-Bei komplexeren Vorgängen:
-
-Module A
-   ↓
-Core / Service
-   ↓
-Database
-   ↓
-Module B
-
-Direkte Abhängigkeiten zwischen Modulen sollen möglichst gering gehalten werden.
-
-Wenn gemeinsame Daten benötigt werden, ist eine zentrale Schnittstelle zu bevorzugen.
-
-⸻
-
-10. Modularchitektur
-
-Ein Modul kann grundsätzlich aus folgenden Dateien bestehen:
-
-modules/<module>/
-├── module.json
-├── <module>.html
-├── <module>.js
-└── <module>.css
-
-Dies ist lediglich ein mögliches Schema.
-
-Nicht jede Datei muss zwingend vorhanden sein.
-
-Entscheidend ist die tatsächliche Verwendung.
-
-⸻
-
-11. module.json
-
-module.json ist besonders kritisch.
-
-Für jede vorhandene module.json muss geprüft werden:
-
-* wird sie geladen?
-* wer lädt sie?
-* wird sie vom Module Manager verarbeitet?
-* wird sie vom Module Installer verarbeitet?
-* enthält sie Informationen, die an anderer Stelle benötigt werden?
-* ist sie Relikt einer früheren Architektur?
-
-Ergebnis kann sein:
-
-ACTIVE
-MASTER
-LEGACY
-UNUSED
-DELETE CANDIDATE
-
-Keine module.json darf allein aufgrund ihres Namens gelöscht werden.
-
-⸻
-
-12. Services
-
-Vor Entwicklung eines Moduls muss geprüft werden, welche vorhandenen Services verwendet werden können.
-
-Regel:
-
-Vorhandene zentrale Funktion verwenden
-        ↓
-statt
-        ↓
-neue parallele Funktion entwickeln
-
-Dadurch werden:
-
-* doppelte Logik
-* widersprüchliche Daten
-* unnötige Dateien
-* Wartungsprobleme
-
-vermieden.
-
-⸻
-
-13. Speicherarchitektur
-
-Es existieren mehrere Speicherkomponenten.
-
-Daher muss bei jeder neuen Speicherfunktion geprüft werden:
-
-* Datenbank?
-* Storage Manager?
-* lokale Datei?
-* Browser Storage?
-* temporärer Zustand?
-
-Keine neue Speicherlösung einführen, bevor die vorhandenen Möglichkeiten geprüft wurden.
-
-⸻
-
-14. Module und Datenabhängigkeiten
-
-Grundstruktur:
-
-Fish Database
-      │
-      └──────────────┐
-                     ↓
-Equipment ────────→ Catches ←────── Waters
-                     ↑                 ↑
-                     │                 │
-GPS ─────────────────┘                 │
-                                       │
-Maps ←─────────────────────────────────┘
-Weather ──────────────┐
-Tides ────────────────┤
-Moon ─────────────────┤
-Conditions ───────────┤
-Photos ───────────────┤
-                      ↓
-                    Catches
-                      │
-                      ↓
-                 Catchbook
-                      │
-                      ↓
-                 Statistics
-                      │
-                      ↓
-                   Records
-                      │
-                      ↓
-                 Leaderboard
-
-Diese Struktur ist eine Arbeitsarchitektur und muss bei der Implementierung anhand des tatsächlichen Codes bestätigt werden.
-
-⸻
-
-15. Datenbesitzer
-
+└── schema.sql
+Die Datenbank ist eine zentrale Grundlage der Anwendung.
 Grundregel:
-
-Ein Datenobjekt soll einen eindeutigen fachlichen Besitzer haben.
-
+Ein fachliches Datenobjekt besitzt möglichst einen eindeutigen
+Datenbesitzer.
 Beispiele:
-
 Fish
 → Fish Database
 Equipment
@@ -464,124 +194,705 @@ Catch
 → Catches
 Photo
 → Photos
-
-Andere Module greifen auf diese Daten zu, sollen aber nicht unnötig eigene Kopien derselben Stammdaten führen.
-
-⸻
-
-16. Catches als zentrales Datenobjekt
-
-Der Fang (Catch) verbindet viele Module.
-
-Ein Catch kann grundsätzlich enthalten:
-
-* Fischart
-* Datum
-* Uhrzeit
-* Gewicht
-* Länge
-* Gewässer
-* Position
-* Wetter
-* Gezeiten
-* Mond
-* Bedingungen
-* Equipment
-* Köder
-* Fotos
-* Notizen
-
-Daher ist Catches ein zentrales Integrationsmodul.
-
-Änderungen am Catch-Datenmodell müssen besonders sorgfältig geprüft werden.
-
-⸻
-
-17. Entwicklungsreihenfolge
-
-Die genaue Reihenfolge wird in:
-
-PROJECT_MODULE_PLAN.md
-
-geführt.
-
-Die Architektur gibt jedoch folgende Abhängigkeitslogik vor:
-
-Core
+Keine redundanten parallelen Tabellen anlegen, wenn bereits
+eine zentrale Struktur existiert.
+==================================================
+9. CORE – ERROR HANDLER
+==================================================
+Datei:
+core/errorHandler.js
+Aufgabe:
+- zentrale Fehlerbehandlung
+- Fehlerklassifizierung
+- Fehlerprotokollierung
+- kontrollierte Weitergabe
+- Runtime-Integration
+Neue Module sollen Fehler nicht einfach verschlucken.
+Ein Modul darf zusätzliche lokale Fehlerbehandlung besitzen,
+muss aber mit dem zentralen Error-System kompatibel bleiben.
+==================================================
+10. RUNTIME
+==================================================
+Runtime-Daten:
+runtime/error.log
+runtime/runtime_status.json
+Persistenter Anwendungssnapshot:
+localStorage.json
+Grundprinzip:
+Fehler
  ↓
-Database / Storage
+errorHandler
  ↓
-Fish Database
+runtimeStorage / Storage
+ ↓
+LocalStorage
+ ↓
+localStorage.json
+`runtime/error.log` ist die technische Fehlerhistorie.
+`runtime/runtime_status.json` enthält den Runtime-Status.
+`localStorage.json` ist der übertragene Persistenz-/
+Diagnose-Snapshot.
+==================================================
+11. LOCALSTORAGE
+==================================================
+Datei:
+localStorage.json
+Diese Datei ist insbesondere bei Runtime- und Fehleranalysen
+relevant.
+Wenn eine aktualisierte `localStorage.json` über Working Copy
+übertragen wurde, ist diese Version die relevante Grundlage
+für die anschließende Analyse.
+Sie darf nicht als statische Konfigurationsdatei behandelt
+werden.
+Eine Änderung am Storage-System muss berücksichtigen:
+- Datenformat
+- bestehende Einträge
+- Versionierung
+- Migration
+- Fehlerdaten
+- Runtime-Status
+==================================================
+12. CORE – LANGUAGE MANAGER
+==================================================
+Datei:
+core/languageManager.js
+Aufgabe:
+- zentrale Sprachverwaltung
+- Erkennung der Standardsprache
+- manuelle Sprachauswahl
+- Übersetzungen
+- Sprachwechsel
+- Bereitstellung von Übersetzungstexten
+Alle Module müssen dieses zentrale System verwenden.
+Kein Modul soll eine vollständig eigene Sprachverwaltung
+entwickeln.
+==================================================
+13. MULTILINGUALITÄT
+==================================================
+CatchTrack wird von Anfang an multilingual entwickelt.
+Unterstützt werden:
+A) automatische Erkennung der bevorzugten
+   Gerätesprache / Browsersprache
+B) manuelle Sprachauswahl durch den Benutzer
+Priorität:
+manuelle Auswahl
+        >
+automatische Gerätesprache
+Die Sprache gilt grundsätzlich für die gesamte Anwendung.
+==================================================
+14. SPRACHNEUTRALE DATEN
+==================================================
+Interne Daten müssen sprachneutral bleiben.
+Beispiel:
+pressure = 1013.2
+Darstellung:
+Deutsch:
+Luftdruck
+Englisch:
+Pressure
+Datenbankwerte dürfen nicht unnötig an eine einzelne Sprache
+gekoppelt werden.
+==================================================
+15. CORE – MODULE MANAGER
+==================================================
+Datei:
+core/moduleManager.js
+Aufgabe:
+- Module laden
+- Module aktivieren
+- Module initialisieren
+- Modulstatus verwalten
+- Modulabhängigkeiten berücksichtigen
+Dies ist eine zentrale Architekturkomponente.
+Module dürfen keine zweite unabhängige Modulverwaltung
+implementieren.
+==================================================
+16. MODULE INSTALLER
+==================================================
+Datei:
+core/moduleInstaller.js
+Aufgabe:
+- Modulinstallation
+- Modulverwaltung
+- Verarbeitung von Moduldefinitionen
+Vor Änderungen an `module.json` muss geprüft werden:
+- wer die Datei lädt
+- ob sie tatsächlich verwendet wird
+- welche Informationen daraus gelesen werden
+- ob `config/modules.json` maßgeblich ist
+- ob die Datei aus einer älteren Architektur stammt
+==================================================
+17. CONFIG
+==================================================
+Aktuelle zentrale Konfiguration:
+config/
+├── app.json
+├── languages.json
+└── modules.json
+`config/modules.json` ist insbesondere für die konfigurierte
+Modulstruktur relevant.
+Die tatsächliche Verwendung muss immer anhand des aktuellen
+Codes geprüft werden.
+==================================================
+18. MODULE.JSON
+==================================================
+Ein Modul kann grundsätzlich folgende Struktur besitzen:
+modules/<module>/
+├── module.json
+├── <module>.html
+├── <module>.js
+└── <module>.css
+Dies ist kein zwingendes Schema.
+Nicht jedes Modul benötigt alle Dateien.
+Entscheidend ist die tatsächliche Verwendung.
+Für jede `module.json` muss geprüft werden:
+- wird sie geladen?
+- wer lädt sie?
+- wird sie vom Module Manager verwendet?
+- wird sie vom Module Installer verwendet?
+- enthält sie relevante Metadaten?
+- ist sie Legacy?
+Mögliche Status:
+ACTIVE
+MASTER
+LEGACY
+UNUSED
+DELETE CANDIDATE
+==================================================
+19. STORAGE
+==================================================
+Datei:
+core/storageManager.js
+Aufgabe:
+- lokale Speicherung
+- persistente Daten
+- Storage-Zugriff
+- gemeinsame Storage-Schnittstelle
+Vor Einführung einer neuen Speicherlösung muss geprüft
+werden:
+- Database
+- Storage Manager
+- Browser Storage
+- lokale Dateien
+- temporärer Speicher
+- Runtime Storage
+Keine parallele Speicherarchitektur ohne zwingenden Grund.
+==================================================
+20. ROUTER
+==================================================
+Datei:
+core/router.js
+Aufgabe:
+- Navigation
+- Modulwechsel
+- Routing
+- URL-/Ansichtssteuerung
+Neue Module müssen mit dem vorhandenen Routing-System
+kompatibel sein.
+==================================================
+21. PERMISSION MANAGER
+==================================================
+Datei:
+core/permissionManager.js
+Aufgabe:
+- Berechtigungen
+- Zugriffskontrolle
+- Modul-/Funktionsrechte
+Module mit besonderen Berechtigungen verwenden nach
+Möglichkeit diese zentrale Komponente.
+==================================================
+22. SERVICES
+==================================================
+Vor Entwicklung eines Moduls müssen vorhandene Services
+geprüft werden.
+Grundregel:
+bestehende zentrale Funktion
+        ↓
+verwenden / erweitern
+nur wenn ungeeignet:
+neue Funktion entwickeln
+Ziel:
+- keine doppelte Logik
+- keine widersprüchlichen Daten
+- weniger Wartungsaufwand
+- klare Verantwortlichkeiten
+==================================================
+23. MODULARCHITEKTUR
+==================================================
+Ein Modul besitzt grundsätzlich:
+- eigene UI
+- eigene Logik
+- eigenes Styling
+- eigene Moduldefinition, sofern erforderlich
+Ein Modul darf jedoch zentrale Funktionen nicht unnötig
+duplizieren.
+Beispiele:
+Weather
+→ verwendet GPS
+Weather
+→ verwendet API
+Weather
+→ verwendet Error Handler
+Weather
+→ verwendet Language Manager
+Weather
+→ verwendet Storage
+==================================================
+24. DATENBESITZER
+==================================================
+Jedes zentrale Datenobjekt besitzt einen fachlichen Besitzer.
+Beispiele:
+Fish
+→ Fish Database
 Equipment
+→ Equipment
+Water
+→ Waters
+Catch
+→ Catches
+Photo
+→ Photos
+Andere Module greifen auf diese Daten zu.
+Sie führen nicht unnötig eigene Kopien derselben Stammdaten.
+==================================================
+25. CATCHES
+==================================================
+Catches ist eines der zentralen Integrationsobjekte.
+Ein Catch kann enthalten:
+- Fisch
+- Datum
+- Uhrzeit
+- Gewicht
+- Länge
+- Gewässer
+- GPS
+- Wetter
+- Tide
+- Moon
+- Conditions
+- Equipment
+- Köder
+- Fangmethode
+- Fotos
+- Notizen
+Deshalb sind Änderungen am Catch-Datenmodell besonders kritisch.
+==================================================
+26. BASISMODULE
+==================================================
+Die aktuelle Entwicklungsstrategie priorisiert zunächst
+möglichst unabhängige Datenmodule.
+Reihenfolge:
+Weather
+↓
+GPS
+↓
+Tides
+↓
+Moon
+↓
 Waters
+↓
+Equipment
+Danach:
+Fish Data
+↓
+Fish Database
+↓
+Catches
+↓
+Catchbook
+↓
+Statistics
+↓
+Records
+↓
+Leaderboard
+Diese Reihenfolge ist ein Entwicklungsplan und keine starre
+technische Einschränkung.
+==================================================
+27. WEATHER-ARCHITEKTUR
+==================================================
+Pfad:
+modules/weather/
+Aktuelle Dateien:
+modules/weather/
+├── module.json
+├── weather.js
+├── weather.html
+└── weather.css
+Alle Dateinamen sind kleingeschrieben.
+Nicht vorhandene Varianten mit großem Anfangsbuchstaben gelten
+nicht als fehlende Dateien.
+==================================================
+28. WEATHER – DATENFLUSS
+==================================================
+GPS
  ↓
-GPS / Maps
+Latitude / Longitude
+ ↓
+Weather Provider
+ ↓
+Weather Module
+ ↓
+standardisierter Wetterdatensatz
+Der Wetterdatensatz kann später verwendet werden von:
+- Catches
+- Catchbook
+- Statistics
+- AI
+==================================================
+29. WEATHER – PROVIDER
+==================================================
+Vorgesehener erster Provider:
+Open-Meteo
+Die Provider-Schicht muss austauschbar bleiben.
+Später soll der Admin-Bereich ermöglichen:
+- Provider ändern
+- API-URL ändern
+- API-Key hinterlegen
+- Providerparameter ändern
+Ein API-Key darf niemals fest im Frontend-Code eingebaut
+werden, wenn der betreffende Provider einen geheimen Schlüssel
+erfordert.
+==================================================
+30. WEATHER – STANDORT
+==================================================
+Standard:
+GPS
+ ↓
+aktueller Standort
+ ↓
+aktuelles Wetter
+Zusätzlich:
+Benutzer sucht Ort
+ ↓
+ausgewählter Wetterort
+ ↓
+Wetter für diesen Ort
+Wetterort und tatsächlicher Fangort sind unterschiedliche
+Konzepte.
+Eine manuelle Wetterortauswahl darf den späteren Fangort
+nicht verändern.
+==================================================
+31. WEATHER – FORECAST
+==================================================
+Mindestziel:
+7 Tage
+Bevorzugt:
+10 Tage
+Anzuzeigen bzw. intern bereitzustellen:
+- Wetterzustand
+- Wetter-Symbol
+- Temperatur
+- Luftdruck
+- Luftfeuchtigkeit
+- Niederschlag
+- Regenwahrscheinlichkeit
+- Windgeschwindigkeit
+- Windrichtung
+- Windböen
+- Bewölkung
+- UV
+- Sonnenaufgang
+- Sonnenuntergang
+Die Benutzeroberfläche muss übersichtlich bleiben.
+==================================================
+32. WEATHER – CACHE
+==================================================
+Weather verwendet einen Tagescache.
+Grundprinzip:
+erster Abruf des Tages
+ ↓
+API
+ ↓
+Cache
+Der Cache gilt grundsätzlich bis 00:00 Uhr Ortszeit.
+Zusätzlich:
+anderer Standort
+→ eigener Cache
+manueller Refresh
+→ Cache umgehen
+API-Ausfall
+→ gültigen Cache verwenden
+kein Cache + API-Ausfall
+→ kontrollierte Fehlerbehandlung
+Der Cache ist keine Wetterhistorie.
+==================================================
+33. WEATHER – DATENMENGE
+==================================================
+Weather darf keine unnötige dauerhafte Datenhistorie erzeugen.
+Grundsatz:
+- aktuelle Daten beim Aufruf
+- gültiger Tagescache
+- keine unbegrenzte Wetterhistorie
+- keine dauerhafte Speicherung kompletter API-Antworten
+Historische Wetterdaten entstehen später nur dort, wo sie
+fachlich benötigt werden.
+==================================================
+34. WEATHER – FANG-SNAPSHOT
+==================================================
+Beim Speichern eines Fangs:
+Weather
+ ↓
+relevante Werte
+ ↓
+Snapshot
+ ↓
+Catch
+Der Snapshot verhindert, dass spätere Änderungen des
+Wetterproviders historische Fangdaten verändern.
+==================================================
+35. WEATHER – SCHNITTSTELLE
+==================================================
+Andere Module dürfen nicht auf interne Weather-Variablen
+oder DOM-Elemente zugreifen.
+Weather stellt eine definierte öffentliche Schnittstelle bereit.
+Beispiel:
+Weather.getWeatherData()
+Der konkrete Name muss anhand der tatsächlichen Architektur
+festgelegt werden.
+==================================================
+36. GPS
+==================================================
+GPS ist die zentrale Standortquelle.
+Mögliche Aufgaben:
+- aktueller Standort
+- Latitude
+- Longitude
+- Genauigkeit
+- Home-Standort
+- gespeicherte Standorte
+- manuelle Standortauswahl
+- Entfernung
+- Übergabe an Weather
+- Übergabe an Waters
+- Übergabe an Maps
+- Übergabe an Catches
+==================================================
+37. TIDES
+==================================================
+Tides ist eine eigenständige Datenquelle.
+Bereitstellen:
+- aktuelle Tide
+- nächstes Hochwasser
+- nächstes Niedrigwasser
+- Zeitpunkt
+- Wasserstand
+- Standort
+Die Provider-Anbindung muss austauschbar bleiben.
+==================================================
+38. MOON
+==================================================
+Moon liefert:
+- Mondphase
+- Beleuchtungsgrad
+- Mondalter
+- Mondaufgang
+- Monduntergang
+- relevante Standortinformationen
+==================================================
+39. WATERS
+==================================================
+Waters verwaltet Gewässer.
+Mögliche Daten:
+- Name
+- Typ
+- Position
+- Beschreibung
+- Eigenschaften
+- Standort
+- Benutzerzuordnung
+Waters kann später mit GPS, Maps und Catches verbunden werden.
+==================================================
+40. EQUIPMENT
+==================================================
+Equipment verwaltet Angelausrüstung.
+Bereiche:
+- Ruten
+- Rollen
+- Schnüre
+- Vorfächer
+- Haken
+- Köder
+- Kunstköder
+- Zubehör
+- sonstige Ausrüstung
+Equipment wird zunächst eigenständig entwickelt.
+Die spätere Integration erfolgt über Catches/Catchbook.
+==================================================
+41. FISH DATABASE
+==================================================
+Fish Database ist der fachliche Besitzer der Fisch-Stammdaten.
+Mögliche Daten:
+- Name
+- lokale Namen
+- wissenschaftlicher Name
+- Familie
+- Beschreibung
+- Bild
+- Lebensraum
+- Gewässertyp
+- Tiefe
+- Temperatur
+- Köder
+- Fangmethode
+- Saison
+- Schonzeit
+- Mindestgröße
+- typische Größe
+- typisches Gewicht
+==================================================
+42. CATCHBOOK
+==================================================
+Catchbook ist ein Integrationsmodul.
+Es verwendet die Daten der bereits stabilisierten
+Basis-Module.
+Es soll keine eigene parallele Wetter-, GPS-, Tide- oder
+Equipment-Logik enthalten.
+Grundstruktur:
+Basisdaten
  ↓
 Catches
  ↓
 Catchbook
- ↓
-Statistics
+==================================================
+43. STATISTICS
+==================================================
+Statistics verwendet gespeicherte Catch-Daten.
+Mögliche Auswertungen:
+- Fänge
+- Gewicht
+- Länge
+- Arten
+- Gewässer
+- Köder
+- Fangmethoden
+- Wetter
+- Tide
+- Moon
+- Equipment
+- Zeiträume
+==================================================
+44. RECORDS / LEADERBOARD
+==================================================
+Records und Leaderboard verwenden bestätigte Catch-Daten.
+Grundstruktur:
+Catches
  ↓
 Records
  ↓
 Leaderboard
-
-Parallel bzw. ergänzend:
-
-Weather
-Tides
-Moon
-Conditions
-Photos
-
-Systemfunktionen:
-
-Settings
-Export
-Backup
-Safety
-Bluetooth
-AI
-Admin
-
-Die tatsächliche Reihenfolge darf aufgrund des aktuellen GitHub-Stands angepasst werden.
-
-⸻
-
-18. Altarchitektur
-
-Das Repository enthält Dateien und Strukturen aus unterschiedlichen Entwicklungsständen.
-
-Deshalb gilt:
-
-Vorhanden ≠ aktuell
-Vorhanden ≠ verwendet
-Vorhanden ≠ fertig
-
-Eine Datei kann aus einer älteren Version stammen und trotzdem noch im Repository liegen.
-
-Solche Dateien werden zunächst dokumentiert.
-
-Erst nach vollständiger Referenzprüfung werden sie als Löschkandidaten markiert.
-
-⸻
-
-19. Löschregeln
-
-Eine Datei darf erst gelöscht werden, wenn geprüft wurde:
-
+Keine eigenständigen, widersprüchlichen Fangdatenbanken.
+==================================================
+45. PHOTOS
+==================================================
+Photos verwaltet Fangfotos.
+Mögliche Aufgaben:
+- Fotoaufnahme
+- Speicherung
+- Zuordnung
+- Anzeige
+- Löschung
+- mehrere Fotos pro Fang
+Fotos werden einem eindeutigen Datenobjekt zugeordnet.
+==================================================
+46. CONDITIONS
+==================================================
+Conditions verwaltet zusätzliche Angelbedingungen.
+Mögliche Daten:
+- Wind
+- Strömung
+- Sicht
+- Wasserzustand
+- Wassertemperatur
+- manuelle Beobachtungen
+Automatische Werte und Benutzerwerte müssen unterscheidbar
+bleiben.
+==================================================
+47. EXPORT / BACKUP
+==================================================
+Export:
+- JSON
+- CSV
+- vollständiger Export
+- selektiver Export
+Backup:
+- vollständiges Backup
+- Wiederherstellung
+- Integritätsprüfung
+Beide Funktionen greifen auf die zentrale Datenarchitektur zu.
+==================================================
+48. AI
+==================================================
+AI wird auf den zentral gespeicherten Daten aufbauen.
+Mögliche spätere Aufgaben:
+- Fangdatenanalyse
+- Mustererkennung
+- Empfehlungen
+- natürliche Suche
+- statistische Interpretation
+- Assistenz
+AI wird erst nach Stabilisierung der zugrunde liegenden
+Datenarchitektur umfassend integriert.
+==================================================
+49. BLUETOOTH
+==================================================
+Bluetooth ist für spätere externe Sensor-/Geräteintegration
+vorgesehen.
+Mögliche Daten:
+- Bissanzeiger
+- Temperatur
+- weitere Sensorwerte
+Keine konkrete Gerätearchitektur festlegen, bevor die
+Anforderungen geklärt sind.
+==================================================
+50. ADMIN
+==================================================
+Admin verwaltet zentrale Systemeinstellungen.
+Langfristig:
+- API Provider
+- API URLs
+- API Keys
+- Module
+- Sprache
+- Systemdiagnose
+- Datenpflege
+- Backup
+- Runtime
+==================================================
+51. ALTARCHITEKTUR
+==================================================
+Das Repository enthält Dateien aus unterschiedlichen
+Entwicklungsständen.
+Grundsatz:
+Vorhanden
+≠
+aktuell
+Vorhanden
+≠
+verwendet
+Vorhanden
+≠
+fertig
+Eine Datei darf nicht allein aufgrund ihres Alters gelöscht
+werden.
+==================================================
+52. LÖSCHREGEL
+==================================================
+Vor Löschung:
 Datei
  ↓
 globale Referenzsuche
  ↓
-Importprüfung
+Imports
  ↓
-HTML-Prüfung
+dynamische Imports
  ↓
-dynamische Ladeprüfung
+HTML
  ↓
 Module Manager
+ ↓
+Module Installer
  ↓
 Config
  ↓
@@ -594,132 +905,83 @@ Dokumentation
 Git-Historie
  ↓
 Abhängigkeiten
-
-Erst danach:
-
+ ↓
+Löschentscheidung
+Status:
 DELETE CANDIDATE
-        ↓
+↓
 ZUR LÖSCHUNG FREIGEGEBEN
-        ↓
+↓
 LÖSCHEN
-        ↓
-GitHub prüfen
-
-⸻
-
-20. Keine Parallelarchitektur
-
-Folgende Vorgehensweise ist zu vermeiden:
-
-Bestehende Funktion vorhanden
-        ↓
-neue alternative Funktion bauen
-        ↓
-beide existieren
-        ↓
-unklar, welche verwendet wird
-
-Stattdessen:
-
-Bestehende Funktion prüfen
-        ↓
-verwenden / erweitern
-        ↓
-nur wenn ungeeignet:
-neue Funktion definieren
-        ↓
-alte Funktion ggf. später entfernen
-
-⸻
-
-21. Dateiänderungen
-
-Bei Entwicklungsarbeiten sollen vollständige Dateien geliefert werden.
-
-Keine unklaren Teiländerungen wie:
-
-* „ändere Zeile X“
-* „suche diesen Abschnitt“
-* „füge ungefähr dort Code ein“
-
-wenn eine vollständige Ersatzdatei möglich ist.
-
-Ziel:
-
-alte Datei
-     ↓
-vollständige geprüfte Ersatzdatei
-     ↓
-Working Copy
-     ↓
-Commit
-     ↓
-GitHub
-
-⸻
-
-22. Integrationsprüfung
-
-Nach Fertigstellung eines Moduls müssen mindestens geprüft werden:
-
-* Modul wird geladen
-* Navigation funktioniert
-* UI funktioniert
-* Daten werden korrekt gelesen
-* Daten werden korrekt gespeichert
-* Fehler werden behandelt
-* Abhängigkeiten funktionieren
-* Sprache funktioniert
-* mobile Darstellung funktioniert
-* keine alte Parallelfunktion wird versehentlich verwendet
-* keine benötigte Datei wurde als Altlast behandelt
-
-⸻
-
-23. Git als technische Historie
-
+↓
+GitHub erneut prüfen
+==================================================
+53. DATEIÄNDERUNGEN
+==================================================
+Bei Änderungen an bestehenden Dateien gilt:
+1. aktuelle Datei auf GitHub einlesen
+2. Inhalt vollständig verstehen
+3. Abhängigkeiten prüfen
+4. Git-Historie prüfen
+5. bestehende Funktionen erhalten
+6. Änderungen integrieren
+7. vollständige Ersatzdatei erstellen
+8. testen
+9. Working Copy
+10. Commit
+11. GitHub erneut prüfen
+Es werden keine unnötigen Teiländerungen geliefert.
+==================================================
+54. MASTER-NEUERSTELLUNG
+==================================================
+Eine vollständige Neuerstellung ist ausdrücklich erlaubt,
+wenn die bestehende Datei:
+- technisch widersprüchlich ist
+- aus mehreren Entwicklungsständen besteht
+- unnötiges Flickwerk enthält
+- eine saubere Architektur verhindert
+- schwer wartbar ist
+- durch eine konsistente Master-Version ersetzt werden kann
+Die Neuerstellung darf jedoch erst nach dem vollständigen
+Einlesen und Verstehen der vorhandenen Datei erfolgen.
+==================================================
+55. KRITISCHE ARCHITEKTURDATEIEN
+==================================================
+Besonders kritisch sind:
+- index.html
+- app.js
+- core/*
+- database/*
+- config/modules.json
+- config/app.json
+- config/languages.json
+Vor Änderungen müssen Auswirkungen auf alle abhängigen
+Komponenten geprüft werden.
+==================================================
+56. GIT-HISTORIE
+==================================================
 Git liefert:
-
-* Commit-Datum
-* Änderungszeitpunkt
-* Commit-Inhalt
-* Dateiversion
-* Entwicklungsschritte
-
-Bei späteren Prüfungen wird der aktuelle GitHub-Stand mit der Historie verglichen.
-
-Wichtig:
-
-Ein Commit-Datum ist ein Indikator, aber kein alleiniger Beweis für den funktionalen Status.
-
-⸻
-
-24. Architekturänderungen
-
-Eine Änderung an folgenden Komponenten gilt als besonders kritisch:
-
-* app.js
-* index.html
-* core/*
-* database/*
-* config/modules.json
-* config/app.json
-* config/languages.json
-* Module Manager
-* Router
-* Storage Manager
-* Database
-
-Vor solchen Änderungen müssen die Auswirkungen auf alle abhängigen Module geprüft werden.
-
-⸻
-
-25. Architekturentscheidungen
-
-Neue Architekturentscheidungen werden hier dokumentiert.
-
+- Versionen
+- Commit-Daten
+- Änderungen
+- Entwicklungsschritte
+Das Commit-Datum ist jedoch kein alleiniger Beweis für den
+funktionalen Entwicklungsstand.
+Für die Statusbestimmung gilt:
+aktueller Code
++
+Git-Historie
++
+Projektstatus
++
+Tests
++
+Runtime
+==================================================
+57. ARCHITEKTURÄNDERUNGEN
+==================================================
+Neue Architekturentscheidungen werden dokumentiert.
 Format:
-
 Datum:
 Entscheidung:
 Grund:
@@ -727,91 +989,100 @@ Betroffene Dateien:
 Betroffene Module:
 Alternative:
 Folgen:
-
-Aktuell:
-
+Aktuelle Entscheidung:
 09.08.2026
 Entscheidung:
-GitHub ist technische Referenz.
-Working Copy ist operativer Schreibweg.
-ChatGPT übernimmt Analyse, Planung und Dateierstellung.
-
-⸻
-
-26. Offene Architekturfragen
-
-Folgende Punkte müssen beim tatsächlichen Ausbau anhand des Codes geklärt werden:
-
-* tatsächliche Verarbeitung von module.json
-* tatsächliche Rolle von config/modules.json
-* endgültige Modul-Ladearchitektur
-* genaue Service-Struktur
-* tatsächliche Storage-Aufteilung
-* endgültige Datenbankzugriffsschicht
-* tatsächliche Beziehungen zwischen Catches und Zusatzdaten
-* Verwendung vorhandener Legacy-Dateien
-* tatsächliche externe API-Struktur
-* endgültige Integrationspunkte für AI
-* endgültige Bluetooth-Schnittstelle
-
-Diese Punkte werden nicht spekulativ festgelegt.
-
-Sie werden anhand des aktuellen Codes geprüft.
-
-⸻
-
-27. Architektur-Abnahme
-
-Die Architektur gilt als dokumentiert, wenn für jede zentrale Komponente bekannt ist:
-
-* Zweck
-* Dateipfad
-* Eingänge
-* Ausgänge
-* Abhängigkeiten
-* verwendete Daten
-* abhängige Module
-* Status
-* aktuelle oder alte Architektur
-
-⸻
-
-28. Ziel
-
-Die Architektur muss so dokumentiert sein, dass ein späteres erneutes Einlesen von:
-
-PROJECT_RULES.md
-PROJECT_KNOWLEDGE.md
-PROJECT_MODULE_PLAN.md
-PROJECT_ARCHITECTURE.md
-+
-aktueller GitHub-Stand
-+
-Git-Historie
-
-ausreicht, um die technische Struktur von CatchTrack V1.0 zuverlässig zu rekonstruieren.
-
-Damit soll verhindert werden, dass bei längeren Entwicklungsunterbrechungen:
-
-* bereits vorhandene Funktionen neu entwickelt werden
-* falsche Abhängigkeiten angenommen werden
-* Legacy-Code weitergeführt wird
-* fertige Module versehentlich verändert werden
-* Dateien unnötig dupliziert werden
-* Altlasten mit neuer Architektur vermischt werden
-
-⸻
-
-29. Dokumentstatus
-
-Erstellt: 09.08.2026
-
-Status: INITIAL
-
-Nächste Aktualisierung: nach der ersten detaillierten Modul-/Abhängigkeitsprüfung.
-
-Verwandte Dokumente:
-
-PROJECT_RULES.md
-PROJECT_KNOWLEDGE.md
-PROJECT_MODULE_PLAN.md
+GitHub ist die technische Referenz.
+Working Copy ist der operative Schreibweg.
+ChatGPT übernimmt Analyse, Planung und Erstellung vollständiger
+Dateiversionen.
+==================================================
+58. AKTUELLE ENTWICKLUNGSREIHENFOLGE
+==================================================
+Basisphase:
+Weather
+↓
+GPS
+↓
+Tides
+↓
+Moon
+↓
+Waters
+↓
+Equipment
+Integrationsphase:
+Fish Data
+↓
+Fish Database
+↓
+Catches
+↓
+Catchbook
+↓
+Statistics
+↓
+Records
+↓
+Leaderboard
+Ergänzend:
+Maps
+Conditions
+Photos
+Settings
+Admin
+Export
+Backup
+Safety
+Bluetooth
+AI
+Die konkrete Reihenfolge kann anhand technischer
+Abhängigkeiten angepasst werden.
+==================================================
+59. ARCHITEKTURZIEL
+==================================================
+Die Architektur soll gewährleisten:
+- zentrale Datenhaltung
+- klare Verantwortlichkeiten
+- modulare Erweiterbarkeit
+- geringe Kopplung
+- stabile Schnittstellen
+- keine unnötige doppelte Logik
+- Mehrbenutzerfähigkeit
+- Multilingualität
+- sichere Fehlerbehandlung
+- kontrollierte externe API-Anbindung
+- stabile historische Fangdaten
+- wartbare Datenstrukturen
+- mobile Nutzung
+- spätere AI-Integration
+==================================================
+60. AKTUELLER ÜBERGABEPUNKT
+==================================================
+Aktueller technischer Schwerpunkt:
+WEATHER
+Als nächstes:
+GPS
+↓
+TIDES
+↓
+MOON
+↓
+WATERS
+↓
+EQUIPMENT
+Danach:
+FISH DATA
+↓
+FISH DATABASE
+↓
+CATCHES
+↓
+CATCHBOOK
+↓
+STATISTICS
+↓
+RECORDS / LEADERBOARD
+==================================================
+ENDE PROJECT_ARCHITECTURE
+==================================================
