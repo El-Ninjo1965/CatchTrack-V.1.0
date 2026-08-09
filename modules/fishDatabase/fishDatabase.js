@@ -1,93 +1,349 @@
 "use strict";
-
-const CatchTrackFishDatabaseModule = {
-
-    version: "1.1.1",
+/*
+==================================================
+CatchTrack Fish Data Module
+Version 1.0.0
+Zweck:
+- Eigenständiger Fish-Data-Kern
+- Lesen der vorhandenen SQLite-Fischdaten
+- Einmalige Initialisierung
+- Kein mehrfaches Anhängen von HTML
+- Kein mehrfaches Registrieren von Events
+- Vorbereitung für spätere Fischkarten- und
+  Admin-Funktionen
+Wichtig:
+Dieses Modul verändert keine Seed-Daten.
+Es liest ausschließlich die vorhandenen Daten.
+Datei:
+modules/fishDatabase/fishData.js
+==================================================
+*/
+window.CatchTrackFishDataModule = {
+    version: "1.0.0",
     initialized: false,
-
+    eventsBound: false,
+    currentLanguage: "de",
     init() {
         if (this.initialized) {
-            console.warn(
-                "Fish Database: Initialisierung bereits erfolgt."
-            );
-            return;
+            return true;
         }
-
         this.initialized = true;
-
-        console.log(
-            "CatchTrack Fischdatenbank aktiv."
-        );
-
+        this.currentLanguage =
+            this.getLanguage();
         this.bindEvents();
-        this.loadFish();
+        this.render();
+        return true;
     },
-
     getLanguage() {
-        if (
-            window.CatchTrackLanguageManager &&
-            typeof window.CatchTrackLanguageManager.getLanguage === "function"
-        ) {
-            return window.CatchTrackLanguageManager.getLanguage();
-        }
-
-        return (
-            window.CatchTrackSettings?.language ||
-            "de"
-        );
-    },
-
-    escapeHtml(value) {
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    },
-
-    bindEvents() {
-        const button = document.getElementById("save-fish");
-
-        if (!button) {
-            return;
-        }
-
-        button.onclick = () => {
-            this.saveFish();
-        };
-    },
-
-    saveFish() {
-        const name = document
-            .getElementById("fish-name")
-            ?.value
-            .trim();
-
-        const scientificName = document
-            .getElementById("fish-scientific-name")
-            ?.value
-            .trim();
-
-        const family = document
-            .getElementById("fish-family")
-            ?.value
-            .trim();
-
-        const description = document
-            .getElementById("fish-description")
-            ?.value
-            .trim();
-
-        if (!name || !scientificName) {
-            alert(
-                "Name und wissenschaftlicher Name erforderlich."
-            );
-            return;
-        }
-
         try {
-            CatchTrackDatabase.execute(
+            if (
+                window.CatchTrackLanguageManager &&
+                typeof
+                    window.CatchTrackLanguageManager
+                        .getLanguage === "function"
+            ) {
+                return String(
+                    window.CatchTrackLanguageManager
+                        .getLanguage()
+                );
+            }
+        }
+        catch (error) {
+            console.warn(
+                "Fish Data: Sprache konnte nicht ermittelt werden.",
+                error
+            );
+        }
+        return "de";
+    },
+    getDatabase() {
+        if (
+            !window.CatchTrackDatabase
+        ) {
+            return null;
+        }
+        if (
+            typeof
+                window.CatchTrackDatabase
+                    .isReady === "function"
+        ) {
+            if (
+                !window.CatchTrackDatabase
+                    .isReady()
+            ) {
+                return null;
+            }
+        }
+        return window.CatchTrackDatabase;
+    },
+    bindEvents() {
+        if (this.eventsBound) {
+            return;
+        }
+        const saveButton =
+            document.getElementById(
+                "save-fish"
+            );
+        if (saveButton) {
+            saveButton.onclick =
+                () => {
+                    this.saveFish();
+                };
+        }
+        this.eventsBound = true;
+    },
+    render() {
+        const list =
+            document.getElementById(
+                "fish-list"
+            );
+        if (!list) {
+            return false;
+        }
+        const database =
+            this.getDatabase();
+        if (!database) {
+            list.innerHTML = `
+                <p>
+                    Fischdatenbank wird geladen...
+                </p>
+            `;
+            return false;
+        }
+        const fishes =
+            this.getFishes();
+        this.renderFishList(
+            list,
+            fishes
+        );
+        return true;
+    },
+    getFishes() {
+        const database =
+            this.getDatabase();
+        if (!database) {
+            return [];
+        }
+        try {
+            return database.query(
+                `
+                SELECT
+                    fish.id,
+                    fish.scientific_name,
+                    fish.family,
+                    fish.minimum_size,
+                    fish.record_weight,
+                    fish.description,
+                    fish.image,
+                    fish.verified,
+                    COALESCE(
+                        fish_names.name,
+                        fish.scientific_name
+                    ) AS name
+                FROM fish
+                LEFT JOIN fish_names
+                    ON fish_names.fish_id =
+                        fish.id
+                    AND fish_names.language = ?
+                ORDER BY
+                    name COLLATE NOCASE ASC,
+                    fish.id ASC
+                `,
+                [
+                    this.currentLanguage
+                ]
+            );
+        }
+        catch (error) {
+            console.error(
+                "Fish Data: Fehler beim Lesen der Fischdaten.",
+                error
+            );
+            return [];
+        }
+    },
+    renderFishList(
+        container,
+        fishes
+    ) {
+        /*
+         * Wichtig:
+         * Der Container wird immer vollständig
+         * ersetzt.
+         *
+         * Dadurch werden niemals alte
+         * Render-Ergebnisse angehängt.
+         */
+        if (!Array.isArray(fishes)) {
+            fishes = [];
+        }
+        if (fishes.length === 0) {
+            container.innerHTML = `
+                <p>
+                    Keine Fischdaten vorhanden.
+                </p>
+            `;
+            return;
+        }
+        const html =
+            fishes
+                .map(
+                    fish =>
+                        this.createFishCard(
+                            fish
+                        )
+                )
+                .join("");
+        container.innerHTML = html;
+    },
+    createFishCard(fish) {
+        const id =
+            this.escapeHtml(
+                fish.id
+            );
+        const name =
+            this.escapeHtml(
+                fish.name
+            );
+        const scientificName =
+            this.escapeHtml(
+                fish.scientific_name
+            );
+        const family =
+            this.escapeHtml(
+                fish.family || ""
+            );
+        const description =
+            this.escapeHtml(
+                fish.description || ""
+            );
+        const minimumSize =
+            fish.minimum_size !== null &&
+            fish.minimum_size !== undefined
+                ? this.escapeHtml(
+                    fish.minimum_size
+                )
+                : "";
+        const recordWeight =
+            fish.record_weight !== null &&
+            fish.record_weight !== undefined
+                ? this.escapeHtml(
+                    fish.record_weight
+                )
+                : "";
+        return `
+            <article
+                class="fish-database-item"
+                data-fish-id="${id}"
+            >
+                <h3>
+                    ${name}
+                </h3>
+                <p>
+                    <strong>
+                        Wissenschaftlich:
+                    </strong>
+                    ${scientificName}
+                </p>
+                ${
+                    family
+                        ? `
+                            <p>
+                                <strong>
+                                    Familie:
+                                </strong>
+                                ${family}
+                            </p>
+                        `
+                        : ""
+                }
+                ${
+                    minimumSize
+                        ? `
+                            <p>
+                                <strong>
+                                    Mindestgröße:
+                                </strong>
+                                ${minimumSize}
+                            </p>
+                        `
+                        : ""
+                }
+                ${
+                    recordWeight
+                        ? `
+                            <p>
+                                <strong>
+                                    Rekordgewicht:
+                                </strong>
+                                ${recordWeight}
+                            </p>
+                        `
+                        : ""
+                }
+                ${
+                    description
+                        ? `
+                            <p>
+                                ${description}
+                            </p>
+                        `
+                        : ""
+                }
+            </article>
+        `;
+    },
+    saveFish() {
+        const database =
+            this.getDatabase();
+        if (!database) {
+            console.error(
+                "Fish Data: Datenbank ist nicht bereit."
+            );
+            return false;
+        }
+        const name =
+            this.getInputValue(
+                "fish-name"
+            );
+        const scientificName =
+            this.getInputValue(
+                "fish-scientific-name"
+            );
+        const family =
+            this.getInputValue(
+                "fish-family"
+            );
+        const description =
+            this.getInputValue(
+                "fish-description"
+            );
+        if (
+            !name ||
+            !scientificName
+        ) {
+            alert(
+                "Name und wissenschaftlicher Name sind erforderlich."
+            );
+            return false;
+        }
+        try {
+            /*
+             * Keine INSERT-Operation über
+             * execute().
+             *
+             * Für Schreiboperationen wird direkt
+             * die vorhandene SQLite-Verbindung
+             * verwendet.
+             */
+            const connection =
+                database.getConnection();
+            if (!connection) {
+                throw new Error(
+                    "Keine SQLite-Verbindung verfügbar."
+                );
+            }
+            connection.run(
                 `
                 INSERT OR IGNORE INTO fish
                 (
@@ -97,7 +353,12 @@ const CatchTrackFishDatabaseModule = {
                     verified
                 )
                 VALUES
-                (?,?,?,1)
+                (
+                    ?,
+                    ?,
+                    ?,
+                    1
+                );
                 `,
                 [
                     scientificName,
@@ -105,55 +366,61 @@ const CatchTrackFishDatabaseModule = {
                     description
                 ]
             );
-
-            const fish = CatchTrackDatabase.query(
-                `
-                SELECT id
-                FROM fish
-                WHERE scientific_name = ?
-                `,
-                [scientificName]
-            );
-
-            if (!fish.length) {
-                console.error(
-                    "Fish Database: Fisch konnte nicht angelegt werden.",
-                    scientificName
-                );
-                return;
-            }
-
-            const fishId = fish[0].id;
-            const language = this.getLanguage();
-
-            const existingName =
-                CatchTrackDatabase.query(
+            const fishRows =
+                database.query(
                     `
-                    SELECT id
+                    SELECT
+                        id
+                    FROM fish
+                    WHERE scientific_name = ?
+                    LIMIT 1;
+                    `,
+                    [
+                        scientificName
+                    ]
+                );
+            if (
+                !fishRows.length
+            ) {
+                throw new Error(
+                    "Fisch konnte nach dem Speichern nicht gefunden werden."
+                );
+            }
+            const fishId =
+                fishRows[0].id;
+            const existingName =
+                database.query(
+                    `
+                    SELECT
+                        id
                     FROM fish_names
-                    WHERE fish_id = ?
-                    AND language = ?
+                    WHERE
+                        fish_id = ?
+                        AND language = ?
+                    LIMIT 1;
                     `,
                     [
                         fishId,
-                        language
+                        this.currentLanguage
                     ]
                 );
-
-            if (existingName.length) {
-                CatchTrackDatabase.execute(
+            if (
+                existingName.length
+            ) {
+                connection.run(
                     `
                     UPDATE fish_names
                     SET name = ?
-                    WHERE id = ?
+                    WHERE id = ?;
                     `,
                     [
                         name,
                         existingName[0].id
                     ]
                 );
-            } else {
-                CatchTrackDatabase.execute(
+            }
+            else {
+                connection.run(
                     `
                     INSERT INTO fish_names
                     (
@@ -162,149 +429,104 @@ const CatchTrackFishDatabaseModule = {
                         name
                     )
                     VALUES
-                    (?,?,?)
+                    (
+                        ?,
+                        ?,
+                        ?
+                    );
                     `,
                     [
                         fishId,
-                        language,
+                        this.currentLanguage,
                         name
                     ]
                 );
             }
-
+            database.saveDatabase();
             this.clearForm();
-            this.loadFish();
-
-        } catch (error) {
+            this.render();
+            return true;
+        }
+        catch (error) {
             console.error(
-                "Fish Database: Fehler beim Speichern.",
+                "Fish Data: Fehler beim Speichern.",
                 error
             );
+            return false;
         }
     },
-
-    loadFish() {
-        const list =
-            document.getElementById("fish-list");
-
-        if (!list) {
-            return;
-        }
-
-        try {
-            const fishes =
-                CatchTrackDatabase.query(
-                    `
-                    SELECT
-                        fish.id,
-                        fish.scientific_name,
-                        fish.family,
-                        fish.description,
-                        COALESCE(
-                            names.name,
-                            fish.scientific_name
-                        ) AS name
-                    FROM fish
-                    LEFT JOIN fish_names AS names
-                        ON fish.id = names.fish_id
-                        AND names.language = ?
-                    ORDER BY name
-                    `,
-                    [this.getLanguage()]
-                );
-
-            if (!fishes.length) {
-                list.innerHTML = `
-                    <p>Keine Fische vorhanden.</p>
-                `;
-                return;
-            }
-
-            const html = fishes
-                .map(fish => `
-                    <div
-                        class="fish-database-item"
-                        data-fish-id="${this.escapeHtml(fish.id)}"
-                    >
-                        <h3>
-                            ${this.escapeHtml(fish.name)}
-                        </h3>
-
-                        <p>
-                            Wissenschaftlich:
-                            ${this.escapeHtml(
-                                fish.scientific_name
-                            )}
-                        </p>
-
-                        <p>
-                            Familie:
-                            ${this.escapeHtml(
-                                fish.family || ""
-                            )}
-                        </p>
-
-                        <p>
-                            ${this.escapeHtml(
-                                fish.description || ""
-                            )}
-                        </p>
-                    </div>
-                `)
-                .join("");
-
-            /*
-             * Immer den vorhandenen Listeninhalt vollständig
-             * ersetzen. Dadurch können alte Renderungen nicht
-             * angehängt oder vervielfacht werden.
-             */
-            if (list.innerHTML !== html) {
-                list.innerHTML = html;
-            }
-
-        } catch (error) {
-            console.error(
-                "Fish Database: Fehler beim Laden.",
-                error
+    getInputValue(id) {
+        const element =
+            document.getElementById(
+                id
             );
-
-            list.innerHTML = `
-                <p>
-                    Fehler beim Laden der Fischdaten.
-                </p>
-            `;
+        if (!element) {
+            return "";
         }
+        return String(
+            element.value || ""
+        ).trim();
     },
-
     clearForm() {
-        [
+        const ids = [
             "fish-name",
             "fish-scientific-name",
             "fish-family",
             "fish-description"
-        ].forEach(id => {
-            const field =
-                document.getElementById(id);
-
-            if (field) {
-                field.value = "";
+        ];
+        ids.forEach(
+            id => {
+                const element =
+                    document.getElementById(
+                        id
+                    );
+                if (element) {
+                    element.value = "";
+                }
             }
-        });
+        );
+    },
+    escapeHtml(value) {
+        return String(
+            value ?? ""
+        )
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+    },
+    refresh() {
+        this.currentLanguage =
+            this.getLanguage();
+        return this.render();
     }
 };
-
-window.CatchTrackFishDatabaseModule =
-    CatchTrackFishDatabaseModule;
-
 /*
 ==================================================
-ENDE DATEI
-
-CatchTrack V1.0
-modules/fishDatabase/fishDatabase.js
-
-Version 1.1.1
-Vollständige Ersatzdatei
-Schutz gegen Mehrfachinitialisierung
+Kein automatischer Dauer-Loop.
+Das Modul wird vom CatchTrack Module Manager
+initialisiert.
+Falls es bereits geladen wurde, kann es über
+folgende Schnittstelle erneut aktualisiert werden:
+CatchTrackFishDataModule.refresh()
 ==================================================
 */
+console.log(
+    "CatchTrack Fish Data Module V1.0.0 geladen."
+);
