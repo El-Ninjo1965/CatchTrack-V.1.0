@@ -1,93 +1,184 @@
-<section class="gps-container">
-
-
-    <h1>
-
-        GPS Position
-
-    </h1>
-
-
-
-
-
-    <div class="gps-card">
-
-
-        <button
-
-            id="get-gps-position"
-
-        >
-
-            Aktuelle Position ermitteln
-
-        </button>
-
-
-
-
-
-        <div id="gps-result">
-
-
-            <p>
-
-                Keine Position geladen.
-
+<section
+    id="gps-module"
+    class="gps-module"
+    aria-labelledby="gps-title"
+>
+    <header class="gps-header">
+        <div>
+            <h1 id="gps-title" data-i18n="gps.title">GPS</h1>
+            <p class="gps-subtitle" data-i18n="gps.subtitle">
+                Standortverwaltung
             </p>
-
-
         </div>
 
+        <span
+            id="gps-status-badge"
+            class="gps-status-badge"
+            data-state="idle"
+            data-i18n="gps.status.idle"
+        >
+            Bereit
+        </span>
+    </header>
 
+    <div
+        id="gps-message"
+        class="gps-message"
+        role="status"
+        aria-live="polite"
+    ></div>
 
-    </div>
+    <section
+        class="gps-card gps-current-card"
+        aria-labelledby="gps-current-title"
+    >
+        <div class="gps-card-header">
+            <h2 id="gps-current-title" data-i18n="gps.current.title">
+                Aktueller Standort
+            </h2>
 
+            <span
+                id="gps-source"
+                class="gps-source"
+                data-i18n="gps.source.none"
+            >
+                Keine Position
+            </span>
+        </div>
 
+        <div class="gps-position-grid">
+            <div class="gps-value">
+                <span class="gps-label" data-i18n="gps.latitude">
+                    Breitengrad
+                </span>
+                <strong id="gps-latitude" class="gps-data">--</strong>
+            </div>
 
+            <div class="gps-value">
+                <span class="gps-label" data-i18n="gps.longitude">
+                    Längengrad
+                </span>
+                <strong id="gps-longitude" class="gps-data">--</strong>
+            </div>
 
+            <div class="gps-value">
+                <span class="gps-label" data-i18n="gps.accuracy">
+                    Genauigkeit
+                </span>
+                <strong id="gps-accuracy" class="gps-data">--</strong>
+            </div>
 
-    <div class="gps-info">
+            <div class="gps-value">
+                <span class="gps-label" data-i18n="gps.altitude">
+                    Höhe
+                </span>
+                <strong id="gps-altitude" class="gps-data">--</strong>
+            </div>
 
+            <div class="gps-value gps-value-wide">
+                <span class="gps-label" data-i18n="gps.timestamp">
+                    Zeitpunkt
+                </span>
+                <strong id="gps-timestamp" class="gps-data">--</strong>
+            </div>
+        </div>
 
-        <h2>
+        <div class="gps-actions">
+            <button
+                id="gps-update-button"
+                type="button"
+                class="gps-button gps-button-primary"
+                data-i18n="gps.action.update"
+            >
+                Standort ermitteln
+            </button>
 
-            Verwendung
+            <button
+                id="gps-clear-button"
+                type="button"
+                class="gps-button gps-button-secondary"
+                data-i18n="gps.action.clear"
+            >
+                Anzeige zurücksetzen
+            </button>
+        </div>
+    </section>
 
-        </h2>
+    <section
+        class="gps-card gps-home-card"
+        aria-labelledby="gps-home-title"
+    >
+        <div class="gps-card-header">
+            <div>
+                <h2 id="gps-home-title" data-i18n="gps.home.title">
+                    Home-Standort
+                </h2>
 
+                <p
+                    class="gps-card-description"
+                    data-i18n="gps.home.description"
+                >
+                    Ein gespeicherter Referenzstandort.
+                </p>
+            </div>
 
-        <p>
+            <span
+                id="gps-home-status"
+                class="gps-source"
+                data-i18n="gps.home.none"
+            >
+                Nicht gespeichert
+            </span>
+        </div>
 
-            GPS Daten können später
+        <div id="gps-home-position" class="gps-home-position">
+            <span data-i18n="gps.home.empty">
+                Kein Home-Standort vorhanden.
+            </span>
+        </div>
 
-            automatisch mit Fängen,
+        <div class="gps-actions">
+            <button
+                id="gps-save-home-button"
+                type="button"
+                class="gps-button gps-button-primary"
+                data-i18n="gps.action.saveHome"
+            >
+                Aktuellen Standort als Home speichern
+            </button>
 
-            Gewässern und Karten
+            <button
+                id="gps-delete-home-button"
+                type="button"
+                class="gps-button gps-button-danger"
+                data-i18n="gps.action.deleteHome"
+            >
+                Home löschen
+            </button>
+        </div>
+    </section>
 
-            verknüpft werden.
+    <section
+        class="gps-card gps-distance-card"
+        aria-labelledby="gps-distance-title"
+    >
+        <div class="gps-card-header">
+            <div>
+                <h2 id="gps-distance-title" data-i18n="gps.distance.title">
+                    Entfernung
+                </h2>
 
-        </p>
+                <p
+                    class="gps-card-description"
+                    data-i18n="gps.distance.description"
+                >
+                    Entfernung zwischen aktuellem Standort und Home.
+                </p>
+            </div>
+        </div>
 
-
-    </div>
-
-
-
+        <div id="gps-distance-value" class="gps-distance-value">
+            --
+        </div>
+    </section>
 </section>
-
-
-
-
-
-<!--
-==================================================
-ENDE DATEI
-
-CatchTrack Master Edition V1.0
-modules/gps/gps.html
-
-Version 1.0 Final Master
-==================================================
--->
