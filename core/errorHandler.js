@@ -1,92 +1,177 @@
-const CatchTrackErrorHandler = {
-    version: "1.1",
+"use strict";
+
+window.CatchTrackErrorHandler = {
+
+    version: "1.2.0",
+
     errors: [],
+
     logFile: "runtime/error.log",
+
+
     init() {
+
         window.addEventListener(
             "error",
             (event) => {
+
                 this.handle(
                     event.error || event.message,
                     "window"
                 );
+
             }
         );
+
+
         window.addEventListener(
             "unhandledrejection",
             (event) => {
+
                 this.handle(
                     event.reason,
                     "unhandledrejection"
                 );
+
             }
         );
+
+
         console.log(
-            "CatchTrack Error Handler bereit."
+            "CatchTrack Error Handler V1.2.0 bereit."
         );
+
     },
+
+
     handle(error, source = "unknown") {
+
         const entry = {
+
             level: "ERROR",
-            message: error?.message || String(error),
+
+            message:
+                error?.message ||
+                String(error),
+
             source: source,
-            timestamp: new Date()
-                .toISOString()
+
+            timestamp:
+                new Date().toISOString()
+
         };
+
+
         if (error?.stack) {
-            entry.stack = error.stack;
+
+            entry.stack =
+                error.stack;
+
         }
-        this.errors.push(entry);
+
+
+        this.errors.push(
+            entry
+        );
+
+
         console.error(
             "CatchTrack Fehler:",
             entry
         );
-        this.writeToLog(entry);
-        return entry;
-    },
-    writeToLog(entry) {
-        const line =
-            `[${entry.timestamp}] ` +
-            `${entry.level} ` +
-            `${entry.source}: ` +
-            `${entry.message}` +
-            (entry.stack
-                ? `\n${entry.stack}`
-                : "") +
-            "\n";
-        /*
-         * Die Runtime-Logdatei wird später über die zentrale
-         * Runtime-/Storage-Infrastruktur persistent geschrieben.
-         *
-         * Bis diese Infrastruktur implementiert ist, bleibt
-         * der Fehler zusätzlich im lokalen Speicher erhalten.
-         */
+
+
+        this.writeToLog(
+            entry
+        );
+
+
         if (
-            typeof window !== "undefined" &&
-            window.CatchTrackRuntimeLogger &&
-            typeof window.CatchTrackRuntimeLogger.write === "function"
+            window.CatchTrackRuntimeStatus &&
+            typeof
+                window.CatchTrackRuntimeStatus.registerError ===
+                "function"
         ) {
-            window.CatchTrackRuntimeLogger.write(line);
+
+            window.CatchTrackRuntimeStatus.registerError(
+                entry
+            );
+
         }
+
+
+        return entry;
+
     },
+
+
+    writeToLog(entry) {
+
+        if (
+            window.CatchTrackRuntimeStorage &&
+            typeof
+                window.CatchTrackRuntimeStorage.writeLog ===
+                "function"
+        ) {
+
+            window.CatchTrackRuntimeStorage.writeLog(
+                entry
+            );
+
+            return;
+
+        }
+
+
+        console.warn(
+            "Runtime Storage noch nicht verfügbar. " +
+            "Fehler bleibt im Error Handler gespeichert."
+        );
+
+    },
+
+
     getErrors() {
-        return [...this.errors];
+
+        return [
+            ...this.errors
+        ];
+
     },
+
+
     getLastError() {
-        if (this.errors.length === 0) {
+
+        if (
+            this.errors.length === 0
+        ) {
+
             return null;
+
         }
+
+
         return this.errors[
             this.errors.length - 1
         ];
+
     },
+
+
     clear() {
+
         this.errors = [];
+
     }
+
 };
+
+
 document.addEventListener(
     "DOMContentLoaded",
     () => {
+
         CatchTrackErrorHandler.init();
+
     }
 );
