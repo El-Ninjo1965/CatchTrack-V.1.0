@@ -1,7 +1,2187 @@
+===== modules/gps/module.json =====
+
 {
     "name": "gps",
-    "version": "1.0",
+    "version": "2.0.0",
     "status": "active",
     "enabled": true,
-    "description": "GPS Standortverwaltung"
+    "displayName": "GPS",
+    "description": "GPS Standortverwaltung",
+    "path": "modules/gps/",
+    "files": {
+        "html": "gps.html",
+        "css": "gps.css",
+        "js": "gps.js"
+    },
+    "initializer": "CatchTrackGPS",
+    "dependencies": []
 }
+
+
+===== modules/gps/gps.html =====
+
+<section
+    id="gps-module"
+    class="gps-module"
+    aria-labelledby="gps-title"
+>
+
+    <header class="gps-header">
+
+        <div>
+            <h1
+                id="gps-title"
+                data-i18n="gps.title"
+            >
+                GPS
+            </h1>
+
+            <p
+                class="gps-subtitle"
+                data-i18n="gps.subtitle"
+            >
+                Standortverwaltung
+            </p>
+        </div>
+
+        <span
+            id="gps-status-badge"
+            class="gps-status-badge"
+            data-state="idle"
+            data-i18n="gps.status.idle"
+        >
+            Bereit
+        </span>
+
+    </header>
+
+
+    <div
+        id="gps-message"
+        class="gps-message"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+
+    <section
+        class="gps-card gps-current-card"
+        aria-labelledby="gps-current-title"
+    >
+
+        <div class="gps-card-header">
+
+            <h2
+                id="gps-current-title"
+                data-i18n="gps.current.title"
+            >
+                Aktueller Standort
+            </h2>
+
+            <span
+                id="gps-source"
+                class="gps-source"
+                data-i18n="gps.source.none"
+            >
+                Keine Position
+            </span>
+
+        </div>
+
+
+        <div class="gps-position-grid">
+
+            <div class="gps-value">
+
+                <span
+                    class="gps-label"
+                    data-i18n="gps.latitude"
+                >
+                    Breitengrad
+                </span>
+
+                <strong
+                    id="gps-latitude"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="gps-value">
+
+                <span
+                    class="gps-label"
+                    data-i18n="gps.longitude"
+                >
+                    Längengrad
+                </span>
+
+                <strong
+                    id="gps-longitude"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="gps-value">
+
+                <span
+                    class="gps-label"
+                    data-i18n="gps.accuracy"
+                >
+                    Genauigkeit
+                </span>
+
+                <strong
+                    id="gps-accuracy"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="gps-value">
+
+                <span
+                    class="gps-label"
+                    data-i18n="gps.altitude"
+                >
+                    Höhe
+                </span>
+
+                <strong
+                    id="gps-altitude"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+
+            </div>
+
+
+            <div class="gps-value gps-value-wide">
+
+                <span
+                    class="gps-label"
+                    data-i18n="gps.timestamp"
+                >
+                    Zeitpunkt
+                </span>
+
+                <strong
+                    id="gps-timestamp"
+                    class="gps-data"
+                >
+                    --
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="gps-actions">
+
+            <button
+                id="gps-update-button"
+                type="button"
+                class="gps-button gps-button-primary"
+                data-i18n="gps.action.update"
+            >
+                Standort ermitteln
+            </button>
+
+            <button
+                id="gps-clear-button"
+                type="button"
+                class="gps-button gps-button-secondary"
+                data-i18n="gps.action.clear"
+            >
+                Anzeige zurücksetzen
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section
+        class="gps-card gps-home-card"
+        aria-labelledby="gps-home-title"
+    >
+
+        <div class="gps-card-header">
+
+            <div>
+
+                <h2
+                    id="gps-home-title"
+                    data-i18n="gps.home.title"
+                >
+                    Home-Standort
+                </h2>
+
+                <p
+                    class="gps-card-description"
+                    data-i18n="gps.home.description"
+                >
+                    Ein gespeicherter Referenzstandort.
+                </p>
+
+            </div>
+
+            <span
+                id="gps-home-status"
+                class="gps-source"
+                data-i18n="gps.home.none"
+            >
+                Nicht gespeichert
+            </span>
+
+        </div>
+
+
+        <div
+            id="gps-home-position"
+            class="gps-home-position"
+        >
+
+            <span data-i18n="gps.home.empty">
+                Kein Home-Standort vorhanden.
+            </span>
+
+        </div>
+
+
+        <div class="gps-actions">
+
+            <button
+                id="gps-save-home-button"
+                type="button"
+                class="gps-button gps-button-primary"
+                data-i18n="gps.action.saveHome"
+            >
+                Aktuellen Standort als Home speichern
+            </button>
+
+            <button
+                id="gps-delete-home-button"
+                type="button"
+                class="gps-button gps-button-danger"
+                data-i18n="gps.action.deleteHome"
+            >
+                Home löschen
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section
+        class="gps-card gps-distance-card"
+        aria-labelledby="gps-distance-title"
+    >
+
+        <div class="gps-card-header">
+
+            <div>
+
+                <h2
+                    id="gps-distance-title"
+                    data-i18n="gps.distance.title"
+                >
+                    Entfernung
+                </h2>
+
+                <p
+                    class="gps-card-description"
+                    data-i18n="gps.distance.description"
+                >
+                    Entfernung zwischen aktuellem Standort und Home.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="gps-distance-value"
+            class="gps-distance-value"
+        >
+            --
+        </div>
+
+    </section>
+
+</section>
+
+
+===== modules/gps/gps.css =====
+
+.gps-module {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.gps-module *,
+.gps-module *::before,
+.gps-module *::after {
+    box-sizing: border-box;
+}
+
+.gps-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.gps-header h1 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.2;
+}
+
+.gps-subtitle {
+    margin: 6px 0 0;
+    opacity: 0.7;
+}
+
+.gps-status-badge,
+.gps-source {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 30px;
+    padding: 5px 10px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.gps-status-badge[data-state="idle"] {
+    opacity: 0.7;
+}
+
+.gps-status-badge[data-state="loading"] {
+    font-weight: 600;
+}
+
+.gps-status-badge[data-state="success"] {
+    font-weight: 600;
+}
+
+.gps-status-badge[data-state="error"] {
+    font-weight: 600;
+}
+
+.gps-message {
+    min-height: 24px;
+    margin-bottom: 14px;
+    padding: 0 2px;
+    font-size: 14px;
+}
+
+.gps-message:empty {
+    display: none;
+}
+
+.gps-message[data-type="error"] {
+    font-weight: 600;
+}
+
+.gps-message[data-type="success"] {
+    font-weight: 600;
+}
+
+.gps-message[data-type="info"] {
+    opacity: 0.8;
+}
+
+.gps-card {
+    margin-bottom: 18px;
+    padding: 18px;
+    border: 1px solid rgba(127, 127, 127, 0.3);
+    border-radius: 14px;
+    background: rgba(127, 127, 127, 0.06);
+}
+
+.gps-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.gps-card h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.3;
+}
+
+.gps-card-description {
+    margin: 6px 0 0;
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+.gps-position-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.gps-value {
+    min-width: 0;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(127, 127, 127, 0.08);
+}
+
+.gps-value-wide {
+    grid-column: 1 / -1;
+}
+
+.gps-label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+.gps-data {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.gps-home-position {
+    min-height: 44px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(127, 127, 127, 0.08);
+}
+
+.gps-home-coordinate {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.gps-home-coordinate div {
+    min-width: 0;
+}
+
+.gps-home-coordinate span {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.gps-home-coordinate strong {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.gps-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.gps-button {
+    min-height: 42px;
+    padding: 9px 14px;
+    border: 1px solid currentColor;
+    border-radius: 9px;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.gps-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.gps-button-primary {
+    font-weight: 600;
+}
+
+.gps-button-danger {
+    font-weight: 600;
+}
+
+.gps-distance-value {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(127, 127, 127, 0.08);
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+
+    .gps-module {
+        padding: 14px;
+    }
+
+    .gps-header,
+    .gps-card-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .gps-position-grid,
+    .gps-home-coordinate {
+        grid-template-columns: 1fr;
+    }
+
+    .gps-value-wide {
+        grid-column: auto;
+    }
+
+    .gps-button {
+        width: 100%;
+    }
+
+}
+
+
+===== modules/gps/gps.js =====
+
+"use strict";
+
+
+window.CatchTrackGPS = {
+
+    version: "2.0.0",
+
+    storageKeys: {
+        lastPosition:
+            "gps:lastPosition",
+
+        homePosition:
+            "gps:homePosition"
+    },
+
+    state: {
+        initialized: false,
+        busy: false,
+        currentPosition: null,
+        homePosition: null,
+        lastError: null
+    },
+
+
+    init() {
+
+        if (
+            this.state.initialized
+        ) {
+
+            return;
+
+        }
+
+
+        this.state.initialized =
+            true;
+
+
+        this.registerTranslations();
+
+        this.loadStoredState();
+
+        this.bindEvents();
+
+        this.render();
+
+    },
+
+
+    registerTranslations() {
+
+        const languageManager =
+            window.CatchTrackLanguageManager;
+
+        if (
+            !languageManager ||
+            typeof languageManager.register !==
+            "function"
+        ) {
+
+            return;
+
+        }
+
+
+        languageManager.register(
+            "de",
+            {
+
+                "gps.title":
+                    "GPS",
+
+                "gps.subtitle":
+                    "Standortverwaltung",
+
+                "gps.status.idle":
+                    "Bereit",
+
+                "gps.status.loading":
+                    "Standort wird ermittelt",
+
+                "gps.status.success":
+                    "Position verfügbar",
+
+                "gps.status.error":
+                    "Fehler",
+
+                "gps.current.title":
+                    "Aktueller Standort",
+
+                "gps.source.none":
+                    "Keine Position",
+
+                "gps.source.gps":
+                    "GPS / Browser",
+
+                "gps.source.saved":
+                    "Gespeichert",
+
+                "gps.latitude":
+                    "Breitengrad",
+
+                "gps.longitude":
+                    "Längengrad",
+
+                "gps.accuracy":
+                    "Genauigkeit",
+
+                "gps.altitude":
+                    "Höhe",
+
+                "gps.timestamp":
+                    "Zeitpunkt",
+
+                "gps.action.update":
+                    "Standort ermitteln",
+
+                "gps.action.clear":
+                    "Anzeige zurücksetzen",
+
+                "gps.home.title":
+                    "Home-Standort",
+
+                "gps.home.description":
+                    "Ein gespeicherter Referenzstandort.",
+
+                "gps.home.none":
+                    "Nicht gespeichert",
+
+                "gps.home.saved":
+                    "Gespeichert",
+
+                "gps.home.empty":
+                    "Kein Home-Standort vorhanden.",
+
+                "gps.action.saveHome":
+                    "Aktuellen Standort als Home speichern",
+
+                "gps.action.deleteHome":
+                    "Home löschen",
+
+                "gps.distance.title":
+                    "Entfernung",
+
+                "gps.distance.description":
+                    "Entfernung zwischen aktuellem Standort und Home.",
+
+                "gps.message.requesting":
+                    "Standort wird ermittelt …",
+
+                "gps.message.success":
+                    "Standort wurde ermittelt.",
+
+                "gps.message.saved":
+                    "Home-Standort wurde gespeichert.",
+
+                "gps.message.deleted":
+                    "Home-Standort wurde gelöscht.",
+
+                "gps.message.cleared":
+                    "Anzeige wurde zurückgesetzt.",
+
+                "gps.message.noPosition":
+                    "Es ist kein aktueller Standort vorhanden.",
+
+                "gps.message.noHome":
+                    "Es ist kein Home-Standort gespeichert.",
+
+                "gps.error.unsupported":
+                    "Dieser Browser unterstützt keine Standortbestimmung.",
+
+                "gps.error.permission":
+                    "Der Zugriff auf den Standort wurde verweigert.",
+
+                "gps.error.unavailable":
+                    "Der Standort ist derzeit nicht verfügbar.",
+
+                "gps.error.timeout":
+                    "Die Standortbestimmung hat zu lange gedauert.",
+
+                "gps.error.unknown":
+                    "Der Standort konnte nicht ermittelt werden.",
+
+                "gps.error.storage":
+                    "Der Standort konnte nicht gespeichert werden."
+
+            }
+        );
+
+
+        languageManager.register(
+            "en",
+            {
+
+                "gps.title":
+                    "GPS",
+
+                "gps.subtitle":
+                    "Location management",
+
+                "gps.status.idle":
+                    "Ready",
+
+                "gps.status.loading":
+                    "Determining location",
+
+                "gps.status.success":
+                    "Position available",
+
+                "gps.status.error":
+                    "Error",
+
+                "gps.current.title":
+                    "Current location",
+
+                "gps.source.none":
+                    "No position",
+
+                "gps.source.gps":
+                    "GPS / Browser",
+
+                "gps.source.saved":
+                    "Saved",
+
+                "gps.latitude":
+                    "Latitude",
+
+                "gps.longitude":
+                    "Longitude",
+
+                "gps.accuracy":
+                    "Accuracy",
+
+                "gps.altitude":
+                    "Altitude",
+
+                "gps.timestamp":
+                    "Timestamp",
+
+                "gps.action.update":
+                    "Get location",
+
+                "gps.action.clear":
+                    "Clear display",
+
+                "gps.home.title":
+                    "Home location",
+
+                "gps.home.description":
+                    "A saved reference location.",
+
+                "gps.home.none":
+                    "Not saved",
+
+                "gps.home.saved":
+                    "Saved",
+
+                "gps.home.empty":
+                    "No home location saved.",
+
+                "gps.action.saveHome":
+                    "Save current location as home",
+
+                "gps.action.deleteHome":
+                    "Delete home",
+
+                "gps.distance.title":
+                    "Distance",
+
+                "gps.distance.description":
+                    "Distance between current location and home.",
+
+                "gps.message.requesting":
+                    "Determining location …",
+
+                "gps.message.success":
+                    "Location determined.",
+
+                "gps.message.saved":
+                    "Home location saved.",
+
+                "gps.message.deleted":
+                    "Home location deleted.",
+
+                "gps.message.cleared":
+                    "Display cleared.",
+
+                "gps.message.noPosition":
+                    "No current location is available.",
+
+                "gps.message.noHome":
+                    "No home location is saved.",
+
+                "gps.error.unsupported":
+                    "This browser does not support location services.",
+
+                "gps.error.permission":
+                    "Location access was denied.",
+
+                "gps.error.unavailable":
+                    "The location is currently unavailable.",
+
+                "gps.error.timeout":
+                    "Location detection timed out.",
+
+                "gps.error.unknown":
+                    "The location could not be determined.",
+
+                "gps.error.storage":
+                    "The location could not be saved."
+
+            }
+        );
+
+    },
+
+
+    loadStoredState() {
+
+        const storage =
+            window.CatchTrackStorageManager;
+
+        if (
+            !storage ||
+            typeof storage.load !==
+            "function"
+        ) {
+
+            return;
+
+        }
+
+
+        this.state.currentPosition =
+            this.normalizePosition(
+                storage.load(
+                    this.storageKeys.lastPosition
+                )
+            );
+
+
+        this.state.homePosition =
+            this.normalizePosition(
+                storage.load(
+                    this.storageKeys.homePosition
+                )
+            );
+
+    },
+
+
+    savePosition(
+        position,
+        key
+    ) {
+
+        const storage =
+            window.CatchTrackStorageManager;
+
+        if (
+            !storage ||
+            typeof storage.save !==
+            "function"
+        ) {
+
+            return false;
+
+        }
+
+
+        return storage.save(
+            key,
+            position
+        );
+
+    },
+
+
+    removeStoredPosition(
+        key
+    ) {
+
+        const storage =
+            window.CatchTrackStorageManager;
+
+        if (
+            !storage ||
+            typeof storage.remove !==
+            "function"
+        ) {
+
+            return false;
+
+        }
+
+
+        return storage.remove(
+            key
+        );
+
+    },
+
+
+    normalizePosition(
+        position
+    ) {
+
+        if (
+            !position ||
+            typeof position !==
+            "object"
+        ) {
+
+            return null;
+
+        }
+
+
+        const latitude =
+            Number(
+                position.latitude
+            );
+
+        const longitude =
+            Number(
+                position.longitude
+            );
+
+
+        if (
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude) ||
+            latitude < -90 ||
+            latitude > 90 ||
+            longitude < -180 ||
+            longitude > 180
+        ) {
+
+            return null;
+
+        }
+
+
+        const accuracy =
+            Number(
+                position.accuracy
+            );
+
+
+        const altitude =
+            Number(
+                position.altitude
+            );
+
+
+        const timestamp =
+            position.timestamp;
+
+
+        return {
+
+            latitude,
+
+            longitude,
+
+            accuracy:
+                Number.isFinite(
+                    accuracy
+                )
+                    ? accuracy
+                    : null,
+
+            altitude:
+                Number.isFinite(
+                    altitude
+                )
+                    ? altitude
+                    : null,
+
+            timestamp:
+                timestamp
+                    ? new Date(
+                        timestamp
+                    ).toISOString()
+                    : new Date().toISOString(),
+
+            source:
+                position.source ||
+                "gps"
+
+        };
+
+    },
+
+
+    requestPosition() {
+
+        if (
+            this.state.busy
+        ) {
+
+            return Promise.resolve(
+                this.state.currentPosition
+            );
+
+        }
+
+
+        if (
+            !navigator.geolocation
+        ) {
+
+            const error =
+                new Error(
+                    this.translate(
+                        "gps.error.unsupported"
+                    )
+                );
+
+            this.handleError(
+                error,
+                "gps:unsupported"
+            );
+
+            return Promise.reject(
+                error
+            );
+
+        }
+
+
+        this.state.busy =
+            true;
+
+        this.state.lastError =
+            null;
+
+        this.setStatus(
+            "loading"
+        );
+
+        this.setMessage(
+            this.translate(
+                "gps.message.requesting"
+            ),
+            "info"
+        );
+
+        this.render();
+
+
+        return new Promise(
+            (
+                resolve,
+                reject
+            ) => {
+
+                navigator.geolocation.getCurrentPosition(
+
+                    position => {
+
+                        const normalized =
+                            this.normalizePosition(
+                                {
+
+                                    latitude:
+                                        position.coords.latitude,
+
+                                    longitude:
+                                        position.coords.longitude,
+
+                                    accuracy:
+                                        position.coords.accuracy,
+
+                                    altitude:
+                                        position.coords.altitude,
+
+                                    timestamp:
+                                        position.timestamp,
+
+                                    source:
+                                        "gps"
+
+                                }
+                            );
+
+
+                        this.state.busy =
+                            false;
+
+                        this.state.currentPosition =
+                            normalized;
+
+
+                        const saved =
+                            this.savePosition(
+                                normalized,
+                                this.storageKeys.lastPosition
+                            );
+
+
+                        if (
+                            !saved
+                        ) {
+
+                            this.setMessage(
+                                this.translate(
+                                    "gps.error.storage"
+                                ),
+                                "error"
+                            );
+
+                        }
+
+                        else {
+
+                            this.setMessage(
+                                this.translate(
+                                    "gps.message.success"
+                                ),
+                                "success"
+                            );
+
+                        }
+
+
+                        this.setStatus(
+                            "success"
+                        );
+
+                        this.render();
+
+                        resolve(
+                            normalized
+                        );
+
+                    },
+
+                    error => {
+
+                        this.state.busy =
+                            false;
+
+                        this.state.lastError =
+                            error;
+
+                        const message =
+                            this.getGeolocationErrorMessage(
+                                error
+                            );
+
+                        this.setStatus(
+                            "error"
+                        );
+
+                        this.setMessage(
+                            message,
+                            "error"
+                        );
+
+                        this.render();
+
+                        this.handleError(
+                            error,
+                            "gps:geolocation"
+                        );
+
+                        reject(
+                            error
+                        );
+
+                    },
+
+                    {
+
+                        enableHighAccuracy:
+                            true,
+
+                        timeout:
+                            15000,
+
+                        maximumAge:
+                            0
+
+                    }
+
+                );
+
+            }
+        );
+
+    },
+
+
+    getGeolocationErrorMessage(
+        error
+    ) {
+
+        if (
+            !error
+        ) {
+
+            return this.translate(
+                "gps.error.unknown"
+            );
+
+        }
+
+
+        switch (
+            error.code
+        ) {
+
+            case 1:
+
+                return this.translate(
+                    "gps.error.permission"
+                );
+
+            case 2:
+
+                return this.translate(
+                    "gps.error.unavailable"
+                );
+
+            case 3:
+
+                return this.translate(
+                    "gps.error.timeout"
+                );
+
+            default:
+
+                return this.translate(
+                    "gps.error.unknown"
+                );
+
+        }
+
+    },
+
+
+    saveHomePosition() {
+
+        if (
+            !this.state.currentPosition
+        ) {
+
+            this.setMessage(
+                this.translate(
+                    "gps.message.noPosition"
+                ),
+                "error"
+            );
+
+            this.setStatus(
+                "error"
+            );
+
+            this.render();
+
+            return false;
+
+        }
+
+
+        const home =
+            {
+
+                ...this.state.currentPosition,
+
+                source:
+                    "saved"
+
+            };
+
+
+        const saved =
+            this.savePosition(
+                home,
+                this.storageKeys.homePosition
+            );
+
+
+        if (
+            !saved
+        ) {
+
+            this.setMessage(
+                this.translate(
+                    "gps.error.storage"
+                ),
+                "error"
+            );
+
+            this.setStatus(
+                "error"
+            );
+
+            this.render();
+
+            return false;
+
+        }
+
+
+        this.state.homePosition =
+            home;
+
+
+        this.setMessage(
+            this.translate(
+                "gps.message.saved"
+            ),
+            "success"
+        );
+
+        this.setStatus(
+            "success"
+        );
+
+        this.render();
+
+        return true;
+
+    },
+
+
+    deleteHomePosition() {
+
+        const removed =
+            this.removeStoredPosition(
+                this.storageKeys.homePosition
+            );
+
+
+        this.state.homePosition =
+            null;
+
+
+        this.setMessage(
+            this.translate(
+                "gps.message.deleted"
+            ),
+            removed
+                ? "success"
+                : "info"
+        );
+
+        this.render();
+
+        return removed;
+
+    },
+
+
+    clearCurrentPosition() {
+
+        this.state.currentPosition =
+            null;
+
+        this.state.lastError =
+            null;
+
+        this.removeStoredPosition(
+            this.storageKeys.lastPosition
+        );
+
+        this.setStatus(
+            "idle"
+        );
+
+        this.setMessage(
+            this.translate(
+                "gps.message.cleared"
+            ),
+            "info"
+        );
+
+        this.render();
+
+    },
+
+
+    calculateDistance(
+        first,
+        second
+    ) {
+
+        const a =
+            this.normalizePosition(
+                first
+            );
+
+        const b =
+            this.normalizePosition(
+                second
+            );
+
+
+        if (
+            !a ||
+            !b
+        ) {
+
+            return null;
+
+        }
+
+
+        const earthRadius =
+            6371000;
+
+        const lat1 =
+            a.latitude *
+            Math.PI /
+            180;
+
+        const lat2 =
+            b.latitude *
+            Math.PI /
+            180;
+
+        const deltaLat =
+            (
+                b.latitude -
+                a.latitude
+            ) *
+            Math.PI /
+            180;
+
+        const deltaLon =
+            (
+                b.longitude -
+                a.longitude
+            ) *
+            Math.PI /
+            180;
+
+
+        const sinLat =
+            Math.sin(
+                deltaLat / 2
+            );
+
+        const sinLon =
+            Math.sin(
+                deltaLon / 2
+            );
+
+
+        const haversine =
+            sinLat * sinLat +
+            Math.cos(lat1) *
+            Math.cos(lat2) *
+            sinLon * sinLon;
+
+
+        const angular =
+            2 *
+            Math.atan2(
+                Math.sqrt(
+                    haversine
+                ),
+                Math.sqrt(
+                    1 -
+                    haversine
+                )
+            );
+
+
+        return (
+            earthRadius *
+            angular
+        );
+
+    },
+
+
+    getDistanceFromHome() {
+
+        return this.calculateDistance(
+            this.state.currentPosition,
+            this.state.homePosition
+        );
+
+    },
+
+
+    getPosition() {
+
+        return this.state.currentPosition
+            ? {
+                ...this.state.currentPosition
+            }
+            : null;
+
+    },
+
+
+    getCoordinates() {
+
+        const position =
+            this.getPosition();
+
+        if (
+            !position
+        ) {
+
+            return null;
+
+        }
+
+        return {
+
+            latitude:
+                position.latitude,
+
+            longitude:
+                position.longitude
+
+        };
+
+    },
+
+
+    getHomePosition() {
+
+        return this.state.homePosition
+            ? {
+                ...this.state.homePosition
+            }
+            : null;
+
+    },
+
+
+    getDistanceFromHomeMeters() {
+
+        return this.getDistanceFromHome();
+
+    },
+
+
+    formatDistance(
+        meters
+    ) {
+
+        if (
+            !Number.isFinite(
+                meters
+            )
+        ) {
+
+            return "--";
+
+        }
+
+
+        if (
+            meters < 1000
+        ) {
+
+            return `${Math.round(meters)} m`;
+
+        }
+
+
+        return `${(
+            meters / 1000
+        ).toFixed(2)} km`;
+
+    },
+
+
+    bindEvents() {
+
+        const updateButton =
+            document.getElementById(
+                "gps-update-button"
+            );
+
+        const clearButton =
+            document.getElementById(
+                "gps-clear-button"
+            );
+
+        const saveHomeButton =
+            document.getElementById(
+                "gps-save-home-button"
+            );
+
+        const deleteHomeButton =
+            document.getElementById(
+                "gps-delete-home-button"
+            );
+
+
+        updateButton?.addEventListener(
+            "click",
+            () => {
+
+                this.requestPosition()
+                    .catch(
+                        () => {}
+                    );
+
+            }
+        );
+
+
+        clearButton?.addEventListener(
+            "click",
+            () => {
+
+                this.clearCurrentPosition();
+
+            }
+        );
+
+
+        saveHomeButton?.addEventListener(
+            "click",
+            () => {
+
+                this.saveHomePosition();
+
+            }
+        );
+
+
+        deleteHomeButton?.addEventListener(
+            "click",
+            () => {
+
+                this.deleteHomePosition();
+
+            }
+        );
+
+
+        const languageManager =
+            window.CatchTrackLanguageManager;
+
+        if (
+            languageManager
+        ) {
+
+            const originalApply =
+                languageManager.apply;
+
+            if (
+                typeof originalApply ===
+                "function" &&
+                !languageManager.__catchTrackGPSWrapped
+            ) {
+
+                languageManager.apply =
+                    function (
+                        root = document
+                    ) {
+
+                        const result =
+                            originalApply.call(
+                                this,
+                                root
+                            );
+
+                        if (
+                            window.CatchTrackGPS &&
+                            window.CatchTrackGPS.state.initialized
+                        ) {
+
+                            window.CatchTrackGPS.renderDynamicText();
+
+                        }
+
+                        return result;
+
+                    };
+
+                languageManager.__catchTrackGPSWrapped =
+                    true;
+
+            }
+
+        }
+
+    },
+
+
+    translate(
+        key,
+        fallback = key
+    ) {
+
+        const manager =
+            window.CatchTrackLanguageManager;
+
+        if (
+            manager &&
+            typeof manager.t ===
+            "function"
+        ) {
+
+            return manager.t(
+                key,
+                fallback
+            );
+
+        }
+
+        return fallback;
+
+    },
+
+
+    setStatus(
+        state
+    ) {
+
+        const badge =
+            document.getElementById(
+                "gps-status-badge"
+            );
+
+        if (
+            !badge
+        ) {
+
+            return;
+
+        }
+
+
+        badge.dataset.state =
+            state;
+
+
+        badge.textContent =
+            this.translate(
+                `gps.status.${state}`,
+                state
+            );
+
+    },
+
+
+    setMessage(
+        message,
+        type = "info"
+    ) {
+
+        const element =
+            document.getElementById(
+                "gps-message"
+            );
+
+        if (
+            !element
+        ) {
+
+            return;
+
+        }
+
+
+        element.textContent =
+            message || "";
+
+        element.dataset.type =
+            type;
+
+    },
+
+
+    render() {
+
+        this.renderPosition();
+
+        this.renderHome();
+
+        this.renderDistance();
+
+        this.setStatus(
+            this.state.busy
+                ? "loading"
+                : this.state.lastError
+                    ? "error"
+                    : this.state.currentPosition
+                        ? "success"
+                        : "idle"
+        );
+
+        this.renderDynamicText();
+
+    },
+
+
+    renderDynamicText() {
+
+        const source =
+            document.getElementById(
+                "gps-source"
+            );
+
+        if (
+            source
+        ) {
+
+            source.textContent =
+                this.state.currentPosition
+                    ? this.translate(
+                        this.state.currentPosition.source ===
+                        "saved"
+                            ? "gps.source.saved"
+                            : "gps.source.gps"
+                    )
+                    : this.translate(
+                        "gps.source.none"
+                    );
+
+        }
+
+
+        const homeStatus =
+            document.getElementById(
+                "gps-home-status"
+            );
+
+        if (
+            homeStatus
+        ) {
+
+            homeStatus.textContent =
+                this.state.homePosition
+                    ? this.translate(
+                        "gps.home.saved"
+                    )
+                    : this.translate(
+                        "gps.home.none"
+                    );
+
+        }
+
+    },
+
+
+    renderPosition() {
+
+        const position =
+            this.state.currentPosition;
+
+
+        const latitude =
+            document.getElementById(
+                "gps-latitude"
+            );
+
+        const longitude =
+            document.getElementById(
+                "gps-longitude"
+            );
+
+        const accuracy =
+            document.getElementById(
+                "gps-accuracy"
+            );
+
+        const altitude =
+            document.getElementById(
+                "gps-altitude"
+            );
+
+        const timestamp =
+            document.getElementById(
+                "gps-timestamp"
+            );
+
+
+        if (
+            latitude
+        ) {
+
+            latitude.textContent =
+                position
+                    ? position.latitude.toFixed(6)
+                    : "--";
+
+        }
+
+
+        if (
+            longitude
+        ) {
+
+            longitude.textContent =
+                position
+                    ? position.longitude.toFixed(6)
+                    : "--";
+
+        }
+
+
+        if (
+            accuracy
+        ) {
+
+            accuracy.textContent =
+                position &&
+                Number.isFinite(
+                    position.accuracy
+                )
+                    ? `±${Math.round(
+                        position.accuracy
+                    )} m`
+                    : "--";
+
+        }
+
+
+        if (
+            altitude
+        ) {
+
+            altitude.textContent =
+                position &&
+                Number.isFinite(
+                    position.altitude
+                )
+                    ? `${position.altitude.toFixed(1)} m`
+                    : "--";
+
+        }
+
+
+        if (
+            timestamp
+        ) {
+
+            timestamp.textContent =
+                position
+                    ? this.formatTimestamp(
+                        position.timestamp
+                    )
+                    : "--";
+
+        }
+
+    },
+
+
+    renderHome() {
+
+        const container =
+            document.getElementById(
+                "gps-home-position"
+            );
+
+        if (
+            !container
+        ) {
+
+            return;
+
+        }
+
+
+        const position =
+            this.state.homePosition;
+
+
+        if (
+            !position
+        ) {
+
+            container.innerHTML =
+                `<span>${this.translate(
+                    "gps.home.empty"
+                )}</span>`;
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+
+            `<div class="gps-home-coordinate">
+                <div>
+                    <span>${this.translate(
+                        "gps.latitude"
+                    )}</span>
+                    <strong>${position.latitude.toFixed(
+                        6
+                    )}</strong>
+                </div>
+                <div>
+                    <span>${this.translate(
+                        "gps.longitude"
+                    )}</span>
+                    <strong>${position.longitude.toFixed(
+                        6
+                    )}</strong>
+                </div>
+            </div>`;
+
+    },
+
+
+    renderDistance() {
+
+        const element =
+            document.getElementById(
+                "gps-distance-value"
+            );
+
+        if (
+            !element
+        ) {
+
+            return;
+
+        }
+
+
+        const distance =
+            this.getDistanceFromHome();
+
+
+        element.textContent =
+            this.formatDistance(
+                distance
+            );
+
+    },
+
+
+    formatTimestamp(
+        timestamp
+    ) {
+
+        const date =
+            new Date(
+                timestamp
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return "--";
+
+        }
+
+
+        try {
+
+            return new Intl.DateTimeFormat(
+                undefined,
+                {
+
+                    dateStyle:
+                        "short",
+
+                    timeStyle:
+                        "medium"
+
+                }
+            ).format(
+                date
+            );
+
+        }
+
+        catch (_) {
+
+            return date.toLocaleString();
+
+        }
+
+    },
+
+
+    handleError(
+        error,
+        source
+    ) {
+
+        if (
+            window.CatchTrackErrorHandler &&
+            typeof
+                CatchTrackErrorHandler.handle ===
+                "function"
+        ) {
+
+            CatchTrackErrorHandler.handle(
+                error,
+                source
+            );
+
+        }
+
+    }
+
+};
