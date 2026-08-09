@@ -1,1466 +1,912 @@
-CatchTrack V1.0 – PROJECT MODULE PLAN
-
-Dateiname: PROJECT_MODULE_PLAN.md
-Projekt: CatchTrack V1.0
-Repository: El-Ninjo1965/CatchTrack-V.1.0
-Branch: main
-Planstatus: AKTUALISIERTE MASTERFASSUNG
-Plan erstellt: 09.08.2026
-Letzte Prüfung: 09.08.2026
-
-⸻
-
+# CatchTrack V1.0 – PROJECT MODULE PLAN
+# Version 1.1
+# Stand: 09.08.2026
+Dateiname:
+PROJECT_MODULE_PLAN.md
+Projekt:
+CatchTrack V1.0
+Repository:
+El-Ninjo1965/CatchTrack-V.1.0
+Branch:
+main
+Planstatus:
+AKTUALISIERTE MASTERFASSUNG
+==================================================
 1. ZWECK DIESER DATEI
-
-Diese Datei ist der verbindliche chronologische Entwicklungs-,
-Integrations- und Bereinigungsplan für die Module von CatchTrack V1.0.
-
+==================================================
+Diese Datei ist der verbindliche Entwicklungs-, Integrations- und
+Bereinigungsplan für die Module von CatchTrack V1.0.
 Sie dient gleichzeitig als:
-
-* To-do-Liste
-* Modulreihenfolge
-* Abhängigkeitsübersicht
-* Datei-Inventar
-* Entwicklungsfortschrittskontrolle
-* Altlasten-/Löschliste
-* Abnahmeprotokoll
-* historische Referenz für den Entwicklungsstand
-
+- To-do-Liste
+- Modulreihenfolge
+- Abhängigkeitsübersicht
+- Datei-Inventar
+- Entwicklungsfortschrittskontrolle
+- Altlasten-/Löschliste
+- Abnahmeplan
+- historische Referenz
 Der Plan wird während der Entwicklung fortlaufend aktualisiert.
-
 Der tatsächliche Zustand des Projekts wird immer mit dem aktuellen
-Stand des GitHub-Repositories abgeglichen.
-
-⸻
-
-2. VERBINDLICHE PROJEKTQUELLEN
-
-Für Entscheidungen gilt folgende Priorität:
-
+GitHub-Repository abgeglichen.
+==================================================
+2. VERBINDLICHE REFERENZEN
+==================================================
+Für die Projektarbeit werden insbesondere berücksichtigt:
 1. PROJECT_RULES.md
 2. aktueller GitHub-Dateistand
 3. PROJECT_MODULE_PLAN.md
 4. PROJECT_KNOWLEDGE.md
-5. PROJECT_ARCHITECTURE.md
-6. PROJECT_TEST_PLAN.md
-7. AI_CONTEXT.md
-8. Git-Commit-Historie
-9. frühere Chat-Verläufe
-
-GitHub ist die technische Referenz für den tatsächlich vorhandenen Code.
-
-Die Git-Historie wird zur zeitlichen Einordnung verwendet.
-
+5. PROJECT_STATUS.md
+6. PROJECT_ARCHITECTURE.md
+7. PROJECT_TEST_PLAN.md
+8. AI_CONTEXT.md
+9. Git-Commit-Historie
+GitHub ist die technische Referenz für den tatsächlich vorhandenen
+Code.
+Die Git-Historie dient zusätzlich zur zeitlichen Einordnung.
 Ein vorhandener Commit bedeutet nicht automatisch, dass eine Datei
-zu diesem Zeitpunkt funktional fertiggestellt wurde.
-
-⸻
-
-3. ARBEITSWEISE
-
-3.1 Rollenverteilung
-
-ChatGPT / GitHub-Connector
-
-ChatGPT übernimmt:
-
-* Lesen des GitHub-Repositories
-* Analyse vorhandener Dateien
-* Analyse von Abhängigkeiten
-* Ermittlung des Entwicklungsstands
-* Erstellung vollständiger Dateien
-* Erstellung von Ersatzdateien
-* technische Planung
-* Prüfung nach erfolgten Änderungen
-* Aktualisierung des Arbeitsplans auf Basis des GitHub-Stands
-* Prüfung der Commit-Historie
-* Abgleich von Projektstatus und tatsächlichem Repository-Zustand
-
-Working Copy
-
-Die tatsächlichen Änderungen am Projekt werden durch den Benutzer
-über Working Copy vorgenommen.
-
-Working Copy ist der operative Schreibweg zum GitHub-Repository.
-
-Der GitHub-Zugriff von ChatGPT wird für die Projektarbeit als
-Referenz- und Prüfzugriff verwendet.
-
-Es ist nicht notwendig, in späteren Antworten darauf hinzuweisen,
-dass ChatGPT keine Schreibänderungen vorgenommen hat.
-
-⸻
-
-4. GRUNDREGEL FÜR BESTEHENDE DATEIEN
-
-Eine vorhandene Datei wird niemals allein aufgrund ihres Dateinamens
-als fertig betrachtet.
-
-Für jede vorhandene Datei ist zu prüfen:
-
-* tatsächlicher Inhalt
-* tatsächliche Verwendung
-* Imports
-* Exports
-* Referenzen
-* Einbindung in HTML
-* Einbindung über Module/Loader
-* Verwendung durch Core
-* Verwendung durch Services
-* Verwendung durch andere Module
-* Datenbankabhängigkeiten
-* Git-Historie
-* tatsächlicher Funktionsumfang
-
-Eine alte Datei kann daher sein:
-
-* MASTER / fertig
-* funktional und weiter auszubauen
-* Grundgerüst
-* Platzhalter
-* Altversion
-* unbenutzt
-* Altlast
-* Löschkandidat
-
-⸻
-
-5. STATUSSYSTEM
-
-Folgende Statuswerte werden verbindlich verwendet:
-
-Status
-Bedeutung
-
+funktional fertiggestellt wurde.
+==================================================
+3. GRUNDREGEL FÜR BESTEHENDE DATEIEN
+==================================================
+Vor der Änderung einer bestehenden Datei:
+1. aktuelle Datei auf GitHub lesen
+2. vollständigen Inhalt analysieren
+3. Imports und Exports prüfen
+4. Referenzen prüfen
+5. Loader-/Modul-Einbindung prüfen
+6. Core-Abhängigkeiten prüfen
+7. Service-Abhängigkeiten prüfen
+8. Datenbankabhängigkeiten prüfen
+9. Git-Historie prüfen
+10. tatsächlichen Funktionsumfang bestimmen
+Erst danach wird entschieden, ob:
+- aktualisiert
+- erweitert
+- repariert
+- oder vollständig neu erstellt
+wird.
+Eine vollständige Master-Neuerstellung ist ausdrücklich erlaubt,
+wenn sie technisch sinnvoller ist als Flickwerk.
+==================================================
+4. STATUSSYSTEM
+==================================================
 TODO
 noch nicht begonnen
-
 ANALYSE
 Bestand wird untersucht
-
 SKELETT
 Grundstruktur vorhanden
-
 IN ARBEIT
 funktionale Entwicklung läuft
-
 ABHÄNGIG
-wartet auf anderes Modul / Funktion
-
+wartet auf ein anderes Modul / eine andere Funktion
 TEST
 Entwicklung abgeschlossen, Tests laufen
-
 MASTER
 vollständig fertig und freigegeben
-
-ALT
-alte Version / nicht mehr Bestandteil der neuen Architektur
-
+ACTIVE
+vorhanden und weiterhin relevant, aber noch nicht vollständig
+LEGACY
+ältere Version / alte Architektur
 LÖSCHKANDIDAT
-als unbenutzt identifiziert, Löschung noch nicht freigegeben
-
+wahrscheinlich nicht mehr benötigt
 ZUR LÖSCHUNG FREIGEGEBEN
-Löschung nach erfolgreicher Prüfung erlaubt
-
+Abhängigkeiten geprüft, Löschung möglich
 GELÖSCHT
 aus dem Projekt entfernt
-
-⸻
-
-6. DATEI-STATUS
-
-Für jede Datei wird zusätzlich unterschieden:
-
+==================================================
+5. DATEISTATUS
+==================================================
 MASTER
-
-Die Datei gehört zur aktuellen Architektur und ist funktional
-abgeschlossen.
-
+Aktuelle Architektur und funktional abgeschlossen.
 ACTIVE
-
-Die Datei wird weiterhin benötigt, ist aber noch nicht vollständig
-fertig.
-
+Aktuelle Architektur, aber noch in Entwicklung.
 LEGACY
-
-Die Datei stammt aus einer älteren Projektversion oder Architektur.
-
+Aus älterer Architektur.
 UNUSED
-
-Die Datei ist vorhanden, wird aber nachweislich nicht verwendet.
-
+Vorhanden, aber nachweislich nicht verwendet.
 DELETE CANDIDATE
-
-Die Datei kann nach erfolgreicher Abhängigkeitsprüfung entfernt werden.
-
-⸻
-
-7. STEP 1
-
-ABGESCHLOSSEN
-
-Der definierte Abschluss von STEP 1 ist das Weather-Modul.
-
-Gemäß PROJECT_RULES.md beginnt STEP 2 nach dem Weather-Meilenstein.
-
-Weather wird deshalb nicht automatisch erneut entwickelt.
-
-Eine spätere Änderung an Weather erfolgt nur bei:
-
-* ausdrücklich angeforderter Änderung
-* notwendiger Fehlerkorrektur
-* nachgewiesener Integrationsnotwendigkeit
-
-⸻
-
-8. STEP 2 – MODULREALISIERUNG
-
-STEP 2 dient dem vollständigen Aufbau der noch nicht fertiggestellten
-Module.
-
-Die Reihenfolge richtet sich NICHT ausschließlich nach Alphabet.
-
-Entscheidend sind:
-
-1. Datenbankabhängigkeiten
-2. Core-Abhängigkeiten
-3. gemeinsame Services
-4. Modulabhängigkeiten
-5. Datenfluss
-6. Benutzerworkflow
-7. Integrationsaufwand
-8. Testbarkeit
-
-Vor jedem Modul erfolgt eine konkrete Datei- und
-Abhängigkeitsprüfung.
-
-Erst danach beginnt die eigentliche Implementierung.
-
-⸻
-
-9. TATSÄCHLICHER MODULBESTAND AUF GITHUB
-
-Am 09.08.2026 wurden im Verzeichnis:
-
-modules/
-
-folgende 21 Modulordner festgestellt:
-
-1. admin
-2. ai
-3. backup
-4. bluetooth
-5. catchbook
-6. catches
-7. conditions
-8. equipment
-9. export
-10. fishDatabase
-11. gps
-12. leaderboard
-13. maps
-14. moon
-15. photos
-16. records
-17. safety
-18. settings
-19. start
-20. statistics
-21. tides
-22. waters
-23. weather
-
-Korrektur zum bisherigen Plan:
-
-Das tatsächliche Verzeichnis für die Fischdatenbank lautet:
-
-modules/fishDatabase/
-
-Nicht:
-
-modules/fish/
-
-Die Schreibweise fishDatabase ist Bestandteil der aktuellen
-Repository-Struktur und muss beibehalten werden.
-
-⸻
-
-10. GRUPPE A – GRUNDDATEN
-
-Diese Module bilden die Datenbasis für viele andere Module.
-
-A1 – FISH DATABASE
-
-Pfad:
-
-modules/fishDatabase/
-
-Aufgaben:
-
-* Fischartenverwaltung
-* Datenbankanbindung
-* Seed-Daten verwenden
-* Suche
-* Auswahl
-* Bearbeitung
-* Anzeige
-* Übergabe an Catches
-* Sprachabhängige Namen
-* Pflege von Fisch-Stammdaten
-
-Abhängigkeiten:
-
-* Database
-* Storage
-* Language Manager
-
-Aktuell vorhandene Dateien:
-
-* fishDatabase.html
-* fishDatabase.css
-* fishDatabase.js
-* module.json
-
-Aktueller Status:
-
-SKELETT / BESTAND PRÜFEN
-
-Besonderer Befund:
-
-fishDatabase.js enthält bereits funktionale Datenbankzugriffe
-auf die Tabellen:
-
-* fish
-* fish_names
-
-und verwendet:
-
-* CatchTrackDatabase
-* CatchTrackSettings.language
-
-Die Datei ist daher nicht als leere Platzhalterdatei zu behandeln.
-
-Vor der Implementierung müssen alle vier vorhandenen Dateien
-vollständig analysiert und gegen Core, Database, Language Manager,
-Module Manager und tatsächliche Datenbankstruktur geprüft werden.
-
-Das Modul ist der vorgesehene erste Kandidat für STEP 2.
-
-⸻
-
-A2 – EQUIPMENT
-
-Pfad:
-
-modules/equipment/
-
-Aufgaben:
-
-* Angelgerät
-* Ruten
-* Rollen
-* Schnüre
-* Haken
-* Köder
-* sonstiges Equipment
-* Zuordnung zu Fängen
-
-Abhängigkeiten:
-
-* Database
-* Storage
-* Catches
-
-Status:
-
-SKELETT
-
-⸻
-
-A3 – WATERS
-
-Pfad:
-
-modules/waters/
-
-Aufgaben:
-
-* Gewässerverwaltung
-* Gewässerdetails
-* GPS-Koordinaten
-* Gewässertyp
-* Zuordnung von Fängen
-* spätere Verbindung mit Karten/GPS
-
-Abhängigkeiten:
-
-* Database
-* GPS
-* Maps
-* Catches
-
-Status:
-
-SKELETT
-
-⸻
-
-11. GRUPPE B – ERFASSUNG
-
-B1 – CATCHES
-
-Pfad:
-
-modules/catches/
-
-Bestehende Funktionalität ist vorhanden.
-
+Kann nach Abhängigkeitsprüfung entfernt werden.
+==================================================
+6. NEUE ENTWICKLUNGSSTRATEGIE
+==================================================
+Die ursprüngliche Planung wird zugunsten einer technisch
+sinnvolleren Reihenfolge angepasst.
+Grundidee:
+Zuerst werden möglichst unabhängige Module fertiggestellt.
+Danach werden die Module entwickelt, die mehrere Datenquellen
+miteinander verbinden.
+Insbesondere das Fangbuch soll erst dann vollständig aufgebaut
+werden, wenn seine Datenquellen stabil verfügbar sind.
+==================================================
+7. GRUPPE A – UNABHÄNGIGE BASISMODULE
+==================================================
+Aktuelle Reihenfolge:
+A1 Weather
+A2 GPS
+A3 Tides
+A4 Moon
+A5 Waters
+A6 Equipment
+Diese Module sollen möglichst eigenständig funktionieren.
 Ziel:
-
-* vollständige Fangerfassung
-* Fischart
-* Gewicht
-* Länge
-* Datum/Zeit
-* Gewässer
-* Position
-* Wetter
-* Gezeiten
-* Mond
-* Köder
-* Equipment
-* Fotos
-* Notizen
-* Bedingungen
-
-Abhängigkeiten:
-
-* Fish Database
-* Waters
-* Equipment
-* GPS
-* Weather
-* Tides
-* Moon
-* Photos
-* Conditions
-* Database
-
-Status:
-
-ACTIVE
-
-Bestehende funktionierende Bestandteile erhalten.
-
-⸻
-
-B2 – CATCHBOOK
-
+Modul
+↓
+Datenmodell
+↓
+Schnittstelle
+↓
+Fehlerbehandlung
+↓
+Test
+↓
+MASTER
+↓
+spätere Integration
+==================================================
+8. WEATHER
+==================================================
 Pfad:
-
-modules/catchbook/
-
-Aufgaben:
-
-* Fänge anzeigen
-* suchen
-* filtern
-* sortieren
-* Detailansicht
-* Fang bearbeiten
-* Fang löschen
-* Übergang zu Statistiken
-
-Abhängigkeiten:
-
-* Catches
-* Database
-* Statistics
-
-Status:
-
-ACTIVE
-
-⸻
-
-12. GRUPPE C – STANDORT UND UMWELT
-
-C1 – GPS
-
-Pfad:
-
-modules/gps/
-
-Aufgaben:
-
-* Standortermittlung
-* Koordinaten
-* Genauigkeit
-* Standort speichern
-* Übergabe an Catch
-* Übergabe an Waters
-* Übergabe an Maps
-
-Abhängigkeiten:
-
-* Browser Geolocation API
-* Catches
-* Waters
-* Maps
-
-Status:
-
-ACTIVE
-
-⸻
-
-C2 – MAPS
-
-Pfad:
-
-modules/maps/
-
-Aufgaben:
-
-* Kartenanzeige
-* Fangpositionen
-* Gewässerpositionen
-* aktuelle Position
-* Navigation/Positionsdarstellung
-
-Abhängigkeiten:
-
-* GPS
-* Waters
-* Catches
-
-Status:
-
-SKELETT
-
-⸻
-
-C3 – CONDITIONS
-
-Pfad:
-
-modules/conditions/
-
-Aufgaben:
-
-* Angelbedingungen
-* Wasserbedingungen
-* Wind
-* Strömung
-* Sicht
-* Temperatur
-* manuelle Bedingungen
-* Zuordnung zum Fang
-
-Abhängigkeiten:
-
-* Catches
-* Weather
-* Waters
-
-Status:
-
-SKELETT
-
-⸻
-
-C4 – TIDES
-
-Pfad:
-
-modules/tides/
-
-Aufgaben:
-
-* Gezeiten
-* Hochwasser
-* Niedrigwasser
-* Zeitpunkte
-* Höhe
-* Zuordnung zum Fang
-
-Abhängigkeiten:
-
-* GPS / Waters
-* externe Gezeitenquelle
-* Catches
-
-Status:
-
-SKELETT / ALTBESTAND PRÜFEN
-
-⸻
-
-C5 – MOON
-
-Pfad:
-
-modules/moon/
-
-Aufgaben:
-
-* Mondphase
-* Mondalter
-* Beleuchtung
-* relevante Fangzeitdaten
-* Zuordnung zum Fang
-
-Abhängigkeiten:
-
-* Datum/Zeit
-* Catches
-
-Status:
-
-ACTIVE
-
-⸻
-
-C6 – WEATHER
-
-Pfad:
-
 modules/weather/
-
-STEP-1-Meilenstein.
-
-Status:
-
-MASTER / STEP-1-REFERENZ
-
-Nicht erneut aufbauen.
-
-⸻
-
-13. GRUPPE D – MEDIEN UND ZUSATZDATEN
-
-D1 – PHOTOS
-
+Vorhandene Dateien:
+- module.json
+- weather.js
+- weather.html
+- weather.css
+Wichtig:
+Alle Dateinamen sind kleingeschrieben.
+Nicht vorhandene Varianten wie:
+- Weather.js
+- Weather.html
+- Weather.css
+- Weather.cs
+dürfen nicht als fehlend betrachtet werden.
+STATUS:
+IN ARBEIT
+ZIEL:
+Weather wird als eigenständige Datenquelle fertiggestellt.
+Funktionen:
+- aktuellen Standort verwenden
+- Wetter für aktuellen Standort anzeigen
+- alternative Orte suchen
+- Forecast mindestens 7 Tage
+- Ziel 10 Tage
+- Wetter-Symbole
+- Temperatur
+- Luftdruck
+- Luftfeuchtigkeit
+- Niederschlag
+- Regenwahrscheinlichkeit
+- Windgeschwindigkeit
+- Windrichtung
+- Windböen
+- Bewölkung
+- UV
+- Sonnenaufgang
+- Sonnenuntergang
+DATENQUELLE:
+Vorgesehener erster Provider:
+Open-Meteo
+Provider muss austauschbar bleiben.
+API-KONFIGURATION:
+Langfristig über Admin konfigurierbar:
+- Provider
+- API-URL
+- API-Key
+- Forecast-Einstellungen
+- weitere Providerparameter
+CACHE:
+Tagescache.
+Grundregel:
+Erster Abruf des Tages
+↓
+API
+↓
+Cache
+Gültigkeit grundsätzlich bis 00:00 Uhr Ortszeit.
+Zusätzlich:
+- anderer Standort = eigener Cache
+- manueller Refresh = Cache umgehen
+- API-Ausfall = gültigen Cache verwenden
+DAUERHAFTE DATEN:
+Keine unbegrenzte Wetterhistorie.
+Dauerhafte Wetterdaten werden später beim Speichern eines Fangs
+als Wetter-Snapshot im Fangdatensatz gespeichert.
+SCHNITTSTELLE:
+Weather soll einen standardisierten Wetterdatensatz liefern.
+Andere Module greifen nicht direkt auf interne Weather-Variablen
+oder HTML-Elemente zu.
+FERTIGSTELLUNGSKRITERIEN:
+- Provider funktioniert
+- Standort funktioniert
+- Ortssuche funktioniert
+- Forecast funktioniert
+- relevante Daten werden geliefert
+- Cache funktioniert
+- Fehlerbehandlung funktioniert
+- Schnittstelle definiert
+- Runtime integriert
+- multilingual vorbereitet
+- Test erfolgreich
+==================================================
+9. GPS
+==================================================
 Pfad:
-
-modules/photos/
-
-Aufgaben:
-
-* Fotoaufnahme
-* Dateiverwaltung
-* Fangzuordnung
-* mehrere Fotos pro Fang
-* Anzeige
-* Löschen
-* Speicherung
-
-Abhängigkeiten:
-
-* Catches
-* Storage
-* Browser/File APIs
-
-Status:
-
+modules/gps/
+STATUS:
+SKELETT / IN ARBEIT
+ZIEL:
+Zentrale Standortquelle für CatchTrack.
+Funktionen:
+- aktuellen Standort ermitteln
+- Latitude
+- Longitude
+- Genauigkeit
+- Standort speichern
+- Home-Standort
+- manuelle Standortauswahl
+- Standortbearbeitung
+- Entfernungsberechnung
+- Übergabe an Weather
+- Übergabe an Waters
+- Übergabe an Maps
+- Übergabe an Catchbook
+ABHÄNGIGKEITEN:
+- Browser Geolocation API
+- Core
+- Storage
+FERTIGSTELLUNGSKRITERIEN:
+- Standort zuverlässig ermitteln
+- Berechtigungen behandeln
+- Fehlerfälle behandeln
+- standardisiertes Datenmodell
+- öffentliche Schnittstelle
+- Tests
+- multilingual vorbereitet
+==================================================
+10. TIDES
+==================================================
+Pfad:
+modules/tides/
+STATUS:
+SKELETT / ANALYSE
+ZIEL:
+Standortabhängige Gezeitendaten.
+Funktionen:
+- aktuelle Tide
+- nächstes Hochwasser
+- nächstes Niedrigwasser
+- Zeitpunkt
+- Wasserstand
+- Standort
+- spätere Übergabe an Fangbuch
+ABHÄNGIGKEITEN:
+- GPS
+- Waters
+- Tide-Provider
+API:
+Provider soll austauschbar und später über Admin konfigurierbar
+sein.
+==================================================
+11. MOON
+==================================================
+Pfad:
+modules/moon/
+STATUS:
 ACTIVE
-
-⸻
-
-D2 – SAFETY
-
+ZIEL:
+- Mondphase
+- Beleuchtungsgrad
+- Mondalter
+- Mondaufgang
+- Monduntergang
+- relevante Fangzeitinformationen
+ABHÄNGIGKEITEN:
+- Datum
+- Uhrzeit
+- gegebenenfalls GPS
+==================================================
+12. WATERS
+==================================================
 Pfad:
-
-modules/safety/
-
-Aufgaben:
-
-* Sicherheitsinformationen
-* Notfallinformationen
-* Standortinformationen
-* relevante Warnungen
-
-Abhängigkeiten:
-
-* GPS
-* Settings
-
-Status:
-
+modules/waters/
+STATUS:
 SKELETT
-
-⸻
-
-14. GRUPPE E – AUSWERTUNG
-
-E1 – STATISTICS
-
+ZIEL:
+Zentrale Verwaltung von Gewässern.
+Funktionen:
+- Gewässer anlegen
+- Gewässer bearbeiten
+- Gewässer löschen
+- Gewässertyp
+- Beschreibung
+- Koordinaten
+- Standort
+- Suche
+- GPS-Nähe
+- spätere Zuordnung zu Fängen
+ABHÄNGIGKEITEN:
+- Database
+- GPS
+- Maps
+- Catches
+==================================================
+13. EQUIPMENT
+==================================================
 Pfad:
-
-modules/statistics/
-
-Aufgaben:
-
-* Fangstatistik
-* Fangzahlen
-* Gewicht
-* Durchschnitt
-* Arten
-* Gewässer
-* Zeiträume
-* Köder
-* Equipment
-* Wetter
-* weitere Auswertungen
-
-Abhängigkeiten:
-
-* Catches
-* Fish Database
-* Waters
-* Equipment
-* Weather
-* Tides
-* Moon
-* Conditions
-
-Status:
-
-ACTIVE
-
-⸻
-
-E2 – RECORDS
-
-Pfad:
-
-modules/records/
-
-Aufgaben:
-
-* persönliche Rekorde
-* größte Fische
-* schwerste Fänge
-* längste Fänge
-* Artenrekorde
-* Gewässerrekorde
-
-Abhängigkeiten:
-
-* Catches
-* Fish Database
-* Statistics
-
-Status:
-
+modules/equipment/
+STATUS:
 SKELETT
-
-⸻
-
-E3 – LEADERBOARD
-
+ZIEL:
+Eigenständige Verwaltung der Angelausrüstung.
+Bereiche:
+- Ruten
+- Rollen
+- Schnüre
+- Vorfächer
+- Haken
+- Köder
+- Kunstköder
+- Zubehör
+- sonstiges Equipment
+WICHTIG:
+Equipment wird zuerst eigenständig fertiggestellt.
+Erst danach erfolgt die vollständige Integration in das
+Fangbuch.
+==================================================
+14. GRUPPE B – FISCHDATEN
+==================================================
+Nach Abschluss der unabhängigen Basis-Module:
+B1 Fish Database
 Pfad:
-
-modules/leaderboard/
-
-Aufgaben:
-
-* Ranglisten
-* Rekordvergleich
-* Zeitraumfilter
-* Artenvergleich
-* Gewässervergleich
-
-Abhängigkeiten:
-
-* Records
-* Statistics
-* Catches
-
-Status:
-
-SKELETT
-
-⸻
-
-15. GRUPPE F – SYSTEMFUNKTIONEN
-
-F1 – SETTINGS
-
-Pfad:
-
-modules/settings/
-
-Aufgaben:
-
-* Benutzereinstellungen
-* Sprache
-* Theme
-* Einheiten
-* Standortoptionen
-* Datenoptionen
-* Moduloptionen
-
-Abhängigkeiten:
-
-* Core
-* Language Manager
-* Storage
-
-Status:
-
-ACTIVE
-
-⸻
-
-F2 – EXPORT
-
-Pfad:
-
-modules/export/
-
-Aufgaben:
-
-* JSON Export
-* CSV Export
-* vollständiger Datenexport
-* optional selektiver Export
-
-Abhängigkeiten:
-
-* Database
-* Storage
-
-Status:
-
-SKELETT
-
-⸻
-
-F3 – BACKUP
-
-Pfad:
-
-modules/backup/
-
-Aufgaben:
-
-* vollständiges Backup
-* Wiederherstellung
-* Validierung
-* Backup-Dateien
-* Importkontrolle
-
-Abhängigkeiten:
-
-* Database
-* Storage
-* Export
-
-Status:
-
-ACTIVE / AUSBAU
-
-⸻
-
-F4 – BLUETOOTH
-
-Pfad:
-
-modules/bluetooth/
-
-Aufgaben:
-
-* Bluetooth-Geräte
-* Verbindung
-* Geräteverwaltung
-* Sensordaten
-* spätere Erweiterbarkeit
-
-Abhängigkeiten:
-
-* Browser Bluetooth API
-* Settings
-* ggf. externe Geräte
-
-Status:
-
-SKELETT
-
-⸻
-
-F5 – AI
-
-Pfad:
-
-modules/ai/
-
-Aufgaben:
-
-* spätere KI-Funktionen
-* Fangdatenanalyse
-* Empfehlungen
-* Mustererkennung
-* Auswertung
-
-Abhängigkeiten:
-
-* Catches
-* Statistics
-* Weather
-* Conditions
-* Fish Database
-
-Status:
-
-SKELETT
-
-AI wird erst nach ausreichender Datenbasis sinnvoll vollständig
-implementiert.
-
-⸻
-
-16. GRUPPE G – ADMINISTRATION
-
-G1 – START
-
-Pfad:
-
-modules/start/
-
-Aufgaben:
-
-* Startoberfläche
-* Modulübersicht
-* Status
-* Navigation
-
-Status:
-
-ACTIVE
-
-⸻
-
-G2 – ADMIN
-
-Pfad:
-
-modules/admin/
-
-Aufgaben:
-
-* Systemverwaltung
-* Diagnose
-* Modulstatus
-* Datenbankstatus
-* Wartungsfunktionen
-* Runtime-Status
-* Fehlerdiagnose
-
-Status:
-
-SKELETT / ACTIVE
-
-⸻
-
-17. MODULABHÄNGIGKEITEN
-
-Vereinfachte Hauptabhängigkeiten:
-
-CORE
- │
- ├── Database
- ├── Storage
- ├── Language
- ├── Router
- ├── Runtime Status
- └── Module Manager
-        │
-        └── Module
-              │
-              ├── Fish Database
-              │
-              ├── Equipment
-              │
-              ├── Waters
-              │     ├── GPS
-              │     └── Maps
-              │
-              ├── Catches
-              │     ├── Fish Database
-              │     ├── Equipment
-              │     ├── Waters
-              │     ├── GPS
-              │     ├── Weather
-              │     ├── Tides
-              │     ├── Moon
-              │     ├── Conditions
-              │     └── Photos
-              │
-              ├── Catchbook
-              │
-              ├── Statistics
-              │     └── Records
-              │           └── Leaderboard
-              │
-              ├── Export
-              │     └── Backup
-              │
-              ├── Settings
-              │
-              ├── Safety
-              │
-              ├── Bluetooth
-              │
-              └── AI
-
-Diese Darstellung ist eine Arbeitsabhängigkeit und wird beim
-tatsächlichen Implementieren anhand des Codes überprüft und
-gegebenenfalls angepasst.
-
-⸻
-
-18. DATEIEN JE MODUL
-
-Als erwartete Standardstruktur wird zunächst geprüft:
-
-modules/<module>/
-├── module.json
-├── <module>.html
-├── <module>.js
-└── <module>.css
-
-Dies ist KEINE automatische Aussage, dass jede dieser Dateien
-benötigt wird.
-
-Jede Datei wird einzeln geprüft.
-
-Insbesondere module.json wird auf tatsächliche Verwendung geprüft.
-
-Wenn eine Datei:
-
-* nicht importiert wird
-* nicht geladen wird
-* nicht vom Module Manager verwendet wird
-* keine Runtime-Funktion bereitstellt
-* nicht von einem anderen Modul benötigt wird
-
-wird sie als mögliche Altlast markiert.
-
-Die tatsächliche Dateistruktur auf GitHub hat Vorrang vor diesem
-Standardschema.
-
-⸻
-
-19. AKTUELLE MODULE.JSON-INTEGRATION
-
-Die aktuelle:
-
-config/modules.json
-
-enthält eine zentrale Moduldefinition.
-
-Dort werden unter anderem:
-
-* Modulname
-* Anzeigename
-* Pfad
-* HTML-Datei
-* CSS-Datei
-* JS-Datei
-* Initializer
-* enabled-Status
-
-definiert.
-
-Daraus folgt:
-
-Eine module.json darf NICHT allein deshalb als Altlast betrachtet
-werden, weil sie nicht in config/modules.json aufgeführt ist.
-
-Die tatsächliche Verwendung muss über:
-
-* Module Manager
-* Module Installer
-* dynamische Loader
-* direkte Imports
-* sonstige Referenzen
-
-geprüft werden.
-
-⸻
-
-20. ALTlastenprüfung
-
-Vor jeder Löschung müssen folgende Punkte geprüft werden:
-
-* globale Suche nach Dateiname
-* globale Suche nach Funktionen
-* HTML-Referenzen
-* JavaScript-Imports
-* dynamische Imports
-* Module Manager
-* Module Installer
-* Router
-* Config
-* modules.json
-* Service-Abhängigkeiten
-* Core-Abhängigkeiten
-* Datenbankreferenzen
-* Dokumentation
-* Tests
-* Git-Historie
-
-Erst danach darf der Status auf:
-
-ZUR LÖSCHUNG FREIGEGEBEN
-
-gesetzt werden.
-
-⸻
-
-21. GEPLANTE LÖSCHLISTE
-
-Diese Liste wird zunächst bewusst vorläufig geführt.
-
-Noch nicht freigegebene Kandidaten:
-
-Datei/Ordner
-Grund
-Status
-
-alte module.json-Dateien
-mögliche Altarchitektur
-PRÜFEN
-
-alte HTML-Dateien
-mögliche Vorgängerversion
-PRÜFEN
-
-alte JS-Dateien
-mögliche Vorgängerversion
-PRÜFEN
-
-nicht referenzierte CSS-Dateien
-mögliche Altlast
-PRÜFEN
-
-Keine Datei darf allein aufgrund dieses Plans gelöscht werden.
-
-⸻
-
-22. MODUL-ABNAHME
-
-Ein Modul gilt erst als MASTER, wenn:
-
-* alle vorgesehenen Funktionen implementiert sind
-* Datenbankzugriff funktioniert
-* Speichermechanismus funktioniert
-* Sprache berücksichtigt wird
-* Modul korrekt geladen wird
-* Navigation funktioniert
-* vorhandene Core-Schnittstellen verwendet werden
-* keine unnötige Parallelarchitektur eingeführt wurde
-* Abhängigkeiten funktionieren
-* Fehlerfälle behandelt werden
-* mobile Darstellung funktioniert
-* vorhandene Altdateien geprüft wurden
-* Löschkandidaten dokumentiert wurden
-* Modul erfolgreich getestet wurde
-* Runtime-Status geprüft wurde
-* Error-Log geprüft wurde
-
-⸻
-
-23. DATEI-ABNAHME
-
-Eine Datei gilt als fertig, wenn:
-
-* sie Bestandteil der aktuellen Architektur ist
-* sie vollständig implementiert ist
-* sie keine Platzhalterfunktion mehr enthält
-* sie keine unnötigen alten Strukturen enthält
-* ihre Abhängigkeiten korrekt sind
-* sie mit dem aktuellen Datenmodell funktioniert
-* sie mit dem Module Manager kompatibel ist
-* sie keine bekannten offenen Fehler enthält
-
-⸻
-
-24. ÄNDERUNGSPROTOKOLL
-
-Jede abgeschlossene Entwicklungsstufe wird hier dokumentiert.
-
-Format:
-
-Datum:
-Modul:
-Dateien:
-Status vorher:
-Status nachher:
-Abhängigkeiten:
-Altlasten geprüft:
-Löschkandidaten:
-Git-Commit:
-Bemerkungen:
-
-Beispiel:
-
-Datum: DD.MM.YYYY
-Modul: Fish Database
-Dateien: ...
-Status vorher: SKELETT
-Status nachher: MASTER
-Abhängigkeiten: Database, Storage, Language
-Altlasten geprüft: JA
-Löschkandidaten: ...
-Git-Commit: ...
-Bemerkungen: ...
-
-⸻
-
-25. FORTSCHRITTSREGEL
-
-Nach jeder abgeschlossenen Entwicklungsstufe:
-
-1. Benutzer übernimmt die Dateien über Working Copy.
-2. Benutzer commitet/pusht nach GitHub.
-3. GitHub wird erneut eingelesen.
-4. tatsächlicher Dateistand wird geprüft.
-5. Commit-Datum wird ermittelt.
-6. Änderungen werden mit diesem Plan abgeglichen.
-7. erledigte Punkte werden auf MASTER gesetzt.
-8. nicht mehr benötigte Dateien werden als Löschkandidaten dokumentiert.
-9. AI_CONTEXT.md wird auf den neuen Übergabepunkt aktualisiert.
-10. erst danach beginnt die nächste Entwicklungsstufe.
-
-⸻
-
-26. WICHTIGE REGEL ZUR HISTORIE
-
-Das Änderungsdatum einer Datei dient als Kontrollinformation.
-
-Es entscheidet jedoch nicht allein über den Fertigstellungsstatus.
-
-Maßgeblich ist:
-
-GitHub-Dateistand
-+
-Dateiinhalt
-+
-Referenzen
-+
-Abhängigkeiten
-+
-Git-Historie
-+
-Projektregeln
-+
-Runtime-/Teststatus
-
-Erst die Kombination dieser Informationen bestimmt den tatsächlichen
-Status.
-
-⸻
-
-27. AKTUELLER PLANSTATUS
-
-STEP 1:
-
-ABGESCHLOSSEN
-
-Weather:
-
-MASTER / STEP-1-MEILENSTEIN
-
-STEP 2:
-
-BEREIT FÜR MODULENTWICKLUNG
-
-Aktuell noch nicht vollständig fertiggestellte Module:
-
-* Fish Database
-* Equipment
-* Waters
-* Catches
-* Catchbook
-* GPS
-* Maps
-* Conditions
-* Tides
-* Moon
-* Photos
-* Safety
-* Statistics
-* Records
-* Leaderboard
-* Settings
-* Export
-* Backup
-* Bluetooth
-* AI
-* Start
-* Admin
-
-Diese Liste beschreibt den Entwicklungsbereich und bedeutet nicht,
-dass sämtliche vorhandenen Dateien dieser Module neu erstellt werden
-müssen.
-
-⸻
-
-28. AKTUELLER ERSTER ENTWICKLUNGSKANDIDAT
-
-Modul:
-
-FISH DATABASE
-
-Pfad:
-
 modules/fishDatabase/
-
-Begründung:
-
-* grundlegende Stammdatenbasis
-* geringe direkte Modulabhängigkeiten
-* Datenbanktabellen bereits vorhanden
-* Seed-Daten vorhanden
-* aktueller Code bereits vorhanden
-* Catches benötigt die Fischdaten
-* spätere Module können darauf aufbauen
-
-Vor Beginn der Implementierung sind vollständig zu prüfen:
-
-* fishDatabase.html
-* fishDatabase.css
-* fishDatabase.js
-* module.json
-* config/modules.json
-* core/moduleManager.js
-* core/moduleInstaller.js
-* core/database.js
-* core/storageManager.js
-* core/languageManager.js
-* database/schema.sql
-* database/fish_seed.sql
-* database/fish_names_seed.sql
-* relevante Git-Commits
-
-Erst nach dieser Prüfung wird entschieden, welche Dateien:
-
-* MASTER übernommen werden können
-* vollständig ersetzt werden müssen
-* neu erstellt werden müssen
-* als Altlast markiert werden
-* später gelöscht werden können
-
-⸻
-
-29. NÄCHSTER ENTWICKLUNGSSCHRITT
-
-Vor Beginn der eigentlichen Programmierung des ersten Moduls wird
-eine vollständige Datei-/Abhängigkeitsprüfung durchgeführt.
-
-Dabei wird festgestellt:
-
-* welche Dateien bereits vorhanden sind
-* welche davon verwendbar sind
-* welche ersetzt werden müssen
-* welche neu erstellt werden müssen
-* welche Funktionen fehlen
-* welche Datenbanktabellen benötigt werden
-* welche Core-/Service-Funktionen benötigt werden
-* welche anderen Module benötigt werden
-* welche alten Dateien später gelöscht werden können
-
-Erst danach wird das Modul vollständig implementiert.
-
-⸻
-
-30. ARBEITSPRINZIP
-
-Keine unnötige Neuentwicklung.
-
-Keine parallele Altarchitektur.
-
-Keine halbfertigen Ersatzdateien.
-
-Keine Löschung ohne Abhängigkeitsprüfung.
-
-Keine Änderung eines abgeschlossenen Masters ohne ausdrücklichen
-Grund.
-
-Jede fertige Entwicklungsstufe muss anhand des GitHub-Stands später
-eindeutig nachvollziehbar sein.
-
-Nach Möglichkeit werden bei Änderungen vollständige Ersatzdateien
-bereitgestellt.
-
-⸻
-
-31. ZIEL
-
-Am Ende von STEP 2 muss eindeutig nachvollziehbar sein:
-
-Welche Module existieren?
-
-Welche Module sind MASTER?
-
-Welche Dateien gehören tatsächlich zur aktuellen Architektur?
-
-Welche Dateien sind Altlasten?
-
-Welche Dateien wurden gelöscht?
-
-Welche Abhängigkeiten bestehen?
-
-Welche Datenbankfunktionen werden verwendet?
-
-Wann wurde jedes Modul fertiggestellt?
-
-Welcher Git-Commit enthält die Fertigstellung?
-
-Damit muss ein späteres erneutes Einlesen dieses Dokuments zusammen
-mit dem aktuellen GitHub-Repository ausreichen, um den
-Projektfortschritt eindeutig zu rekonstruieren.
-
-⸻
-
-32. STATUS
-
-Plan aktualisiert am:
-
-09.08.2026
-
-STEP 1 – Weather:
-
-ABGESCHLOSSEN
-
-STEP 2 – Modulrealisierung:
-
-BEREIT
-
-Aktueller Fokus:
-
-FISH DATABASE
-
-Aktueller Arbeitsschritt:
-
-Vollständige Bestands-, Datei- und Abhängigkeitsprüfung des
-Fish-Database-Moduls.
-
-Noch keine neue Moduldatei wird erstellt, bevor diese Prüfung
-abgeschlossen ist.
-
-Nächster Schritt nach der Prüfung:
-
-Festlegung der vollständigen Masterdateien für Fish Database.
-
+STATUS:
+SKELETT / BESTAND PRÜFEN
+Vorhandene Dateien laut bisheriger Prüfung:
+- fishDatabase.html
+- fishDatabase.css
+- fishDatabase.js
+- module.json
+Bereits vorhandene Funktionalität darf nicht als leeres
+Skelett behandelt werden.
+fishDatabase.js enthält bereits Datenbankzugriffe auf:
+- fish
+- fish_names
+und verwendet unter anderem:
+- CatchTrackDatabase
+- CatchTrackSettings.language
+Vor Weiterentwicklung:
+- alle vier Dateien lesen
+- Core prüfen
+- Database prüfen
+- Language Manager prüfen
+- Module Manager prüfen
+- tatsächliche Tabellen prüfen
+- bestehende Funktionen erhalten
+ZIEL:
+Zentrale Fisch-Stammdaten.
+Mögliche Daten:
+- deutscher Name
+- lokale Namen
+- wissenschaftlicher Name
+- Familie
+- Beschreibung
+- Bild
+- Lebensraum
+- Gewässertyp
+- Tiefe
+- Wassertemperatur
+- Köder
+- Fangmethode
+- beste Fangzeit
+- Saison
+- Schonzeit
+- Mindestgröße
+- typische Größe
+- typisches Gewicht
+==================================================
+15. GRUPPE C – FANGERFASSUNG
+==================================================
+C1 Catches
+Pfad:
+modules/catches/
+STATUS:
+ACTIVE
+Bestehende Funktionalität wird erhalten.
+Ziel:
+- Fisch
+- Gewicht
+- Länge
+- Datum
+- Uhrzeit
+- Gewässer
+- GPS
+- Wetter
+- Tide
+- Mond
+- Equipment
+- Köder
+- Fangmethode
+- Fotos
+- Notizen
+- Bedingungen
+ABHÄNGIGKEITEN:
+- Fish Database
+- Waters
+- Equipment
+- GPS
+- Weather
+- Tides
+- Moon
+- Photos
+- Conditions
+- Database
+==================================================
+16. CATCHBOOK
+==================================================
+Pfad:
+modules/catchbook/
+STATUS:
+ACTIVE / INTEGRATION OFFEN
+Das Fangbuch ist ein Integrationsmodul.
+Es soll erst vollständig fertiggestellt werden, wenn die
+relevanten Basisdaten stabil verfügbar sind.
+Funktionen:
+- Fänge anzeigen
+- suchen
+- filtern
+- sortieren
+- Detailansicht
+- bearbeiten
+- löschen
+- Statistiken aufrufen
+Datenquellen:
+- Catches
+- Fish Database
+- GPS
+- Waters
+- Weather
+- Tides
+- Moon
+- Equipment
+- Photos
+- Conditions
+WICHTIG:
+Das Fangbuch darf Funktionen der Basis-Module nicht duplizieren.
+==================================================
+17. GRUPPE D – KARTEN UND BEDINGUNGEN
+==================================================
+D1 Maps
+Pfad:
+modules/maps/
+STATUS:
+SKELETT
+Abhängigkeiten:
+- GPS
+- Waters
+- Catches
+D2 Conditions
+Pfad:
+modules/conditions/
+STATUS:
+SKELETT
+Mögliche Daten:
+- Wind
+- Strömung
+- Sicht
+- Wassertemperatur
+- Wasserzustand
+- manuelle Bedingungen
+==================================================
+18. PHOTOS
+==================================================
+Pfad:
+modules/photos/
+STATUS:
+ACTIVE
+Ziel:
+- Fotoaufnahme
+- Speicherung
+- Fangzuordnung
+- mehrere Fotos
+- Anzeige
+- Löschen
+Abhängigkeiten:
+- Catches
+- Storage
+- Browser/File APIs
+==================================================
+19. SAFETY
+==================================================
+Pfad:
+modules/safety/
+STATUS:
+SKELETT
+Ziel:
+- Sicherheitsinformationen
+- Notfallinformationen
+- Standort
+- Warnungen
+Abhängigkeiten:
+- GPS
+- Settings
+==================================================
+20. STATISTICS
+==================================================
+Pfad:
+modules/statistics/
+STATUS:
+SKELETT / ACTIVE
+Das Modul wird erst nach Aufbau einer ausreichenden
+Fangdatenbasis vollständig entwickelt.
+Mögliche Auswertungen:
+- Anzahl Fänge
+- Gewicht
+- Länge
+- Fischarten
+- Gewässer
+- Köder
+- Fangmethoden
+- Wetter
+- Tide
+- Mond
+- Equipment
+- Zeiträume
+==================================================
+21. RECORDS
+==================================================
+Pfad:
+modules/records/
+STATUS:
+SKELETT
+Ziel:
+- persönliche Rekorde
+- größte Fische
+- schwerste Fänge
+- längste Fänge
+- Artenrekorde
+- Gewässerrekorde
+Abhängigkeiten:
+- Catches
+- Fish Database
+- Statistics
+==================================================
+22. LEADERBOARD / HITPARADE
+==================================================
+Pfad:
+modules/leaderboard/
+STATUS:
+SKELETT
+Grundlage:
+Catchbook
+↓
+Records
+↓
+Leaderboard
+Wird erst nach stabilem Fangbuch entwickelt.
+==================================================
+23. SETTINGS
+==================================================
+Pfad:
+modules/settings/
+STATUS:
+ACTIVE
+Aufgaben:
+- Sprache
+- Theme
+- Einheiten
+- Standortoptionen
+- Datenoptionen
+- Moduloptionen
+WICHTIG:
+Die Spracheinstellung ist Teil der globalen Architektur.
+==================================================
+24. MULTILINGUALITÄT
+==================================================
+Alle Module müssen multilingual vorbereitet werden.
+Unterstützt werden:
+1. automatische Gerätesprache
+2. manuelle Sprachauswahl
+Manuelle Auswahl hat Vorrang.
+Die Module verwenden langfristig ein zentrales Language-/i18n-
+System.
+Keine eigene Sprachverwaltung pro Modul.
+Keine unnötig fest codierten UI-Texte.
+Interne Daten bleiben sprachneutral.
+==================================================
+25. EXPORT
+==================================================
+Pfad:
+modules/export/
+STATUS:
+SKELETT
+Ziel:
+- JSON Export
+- CSV Export
+- vollständiger Datenexport
+- optional selektiver Export
+Abhängigkeiten:
+- Database
+- Storage
+==================================================
+26. BACKUP
+==================================================
+Pfad:
+modules/backup/
+STATUS:
+SKELETT
+Ziel:
+- vollständiges Backup
+- Wiederherstellung
+- Validierung
+- Integritätsprüfung
+Abhängigkeiten:
+- Database
+- Storage
+==================================================
+27. BLUETOOTH
+==================================================
+Pfad:
+modules/bluetooth/
+STATUS:
+SKELETT
+Ziel:
+Spätere Integration externer Angel-/Sensorgeräte.
+Mögliche Daten:
+- Bissanzeiger
+- Temperatur
+- weitere Sensoren
+Keine konkrete Geräteintegration, bevor die Architektur
+definiert ist.
+==================================================
+28. AI
+==================================================
+Pfad:
+modules/ai/
+STATUS:
+SKELETT
+Ziel:
+Spätere intelligente Auswertung und Assistenz.
+Mögliche Funktionen:
+- Fangdatenanalyse
+- Mustererkennung
+- Empfehlungen
+- natürliche Suche
+- Auswertung historischer Daten
+AI wird nicht vor der Stabilisierung der zugrunde liegenden
+Datenstrukturen priorisiert.
+==================================================
+29. ADMIN
+==================================================
+Pfad:
+modules/admin/
+STATUS:
+ACTIVE
+Langfristige Aufgaben:
+- Benutzerverwaltung
+- Provider-Konfiguration
+- API-Konfiguration
+- Datenpflege
+- Systemdiagnose
+- Backup
+- Sprachverwaltung
+- Modulverwaltung
+==================================================
+30. START
+==================================================
+Pfad:
+modules/start/
+STATUS:
+ACTIVE
+Startmodul bleibt die zentrale Einstiegsebene der Anwendung.
+==================================================
+31. DATENFLUSS
+==================================================
+Grunddaten:
+GPS
+Weather
+Tides
+Moon
+Waters
+Equipment
+Fish Database
+↓
+Catches
+↓
+Catchbook
+↓
+Statistics
+Records
+Leaderboard
+==================================================
+32. WEATHER-DATENFLUSS
+==================================================
+GPS
+↓
+Latitude / Longitude
+↓
+Weather Provider
+↓
+Weather Module
+↓
+standardisierter Wetterdatensatz
+↓
+Catches / Catchbook
+Beim Speichern eines Fangs:
+Weather
+↓
+relevanter Snapshot
+↓
+Fangdatensatz
+Dadurch bleiben historische Wetterbedingungen eines Fangs
+unabhängig von späteren Änderungen des Wetterdienstes erhalten.
+==================================================
+33. AUTOMATISCHE DATEN
+==================================================
+Automatisch ermittelte Daten gelten zunächst als Vorschläge.
+Der Benutzer muss relevante Werte korrigieren können.
+Das betrifft insbesondere:
+- GPS
+- Gewässer
+- Wetter
+- Tide
+- Mond
+- Datum
+- Uhrzeit
+==================================================
+34. HISTORISCHE DATEN
+==================================================
+Bereits gespeicherte Fänge dürfen durch spätere Änderungen
+externer Datenanbieter nicht rückwirkend verändert werden.
+Beim Speichern eines Fangs werden relevante externe Daten
+als Snapshot übernommen.
+==================================================
+35. RUNTIME / FEHLER
+==================================================
+Bei jedem Modul müssen Fehler über das zentrale Runtime-System
+behandelt werden.
+Grundstruktur:
+Fehler
+↓
+core/errorHandler.js
+↓
+core/runtimeStorage.js
+↓
+LocalStorage
+↓
+localStorage.json
+Zusätzlich:
+runtime/error.log
+runtime/runtime_status.json
+API-Fehler dürfen nicht zum Absturz der gesamten Anwendung
+führen.
+Wo sinnvoll:
+gültiger Cache
+↓
+weiterverwenden
+statt:
+API-Fehler
+↓
+App-Absturz
+==================================================
+36. SPEICHERUNG
+==================================================
+Keine unnötige dauerhafte Speicherung großer externer
+API-Antworten.
+Besonders Wetter:
+- Tagescache
+- keine unbegrenzte Historie
+- Fang-Snapshot nur bei gespeichertem Fang
+==================================================
+37. TESTSTRATEGIE
+==================================================
+Jedes Modul wird zunächst isoliert getestet.
 Danach:
-
-Implementierung
-→ Working Copy
-→ GitHub Commit
-→ GitHub-Prüfung
-→ Statusaktualisierung
-→ AI_CONTEXT-Aktualisierung
-→ nächstes Modul.
+Modul
+↓
+Schnittstelle
+↓
+abhängiges Modul
+↓
+Integrationstest
+Ein Modul gilt erst als MASTER, wenn:
+- Dateien vollständig
+- Funktionen vollständig
+- Schnittstellen stabil
+- Fehlerbehandlung stabil
+- Runtime integriert
+- Speicherverhalten geprüft
+- Mehrsprachigkeit vorbereitet
+- Tests bestanden
+==================================================
+38. COMMIT- UND STATUSABGLEICH
+==================================================
+Nach einer Änderung:
+1. Benutzer übernimmt Datei in Working Copy
+2. Benutzer commitet
+3. GitHub-Commit wird geprüft
+4. betroffene Datei wird erneut gelesen
+5. PROJECT_STATUS.md wird gegebenenfalls aktualisiert
+6. PROJECT_MODULE_PLAN.md wird gegebenenfalls aktualisiert
+Ein Commit allein bedeutet nicht automatisch:
+MASTER.
+==================================================
+39. AKTUELLE PRIORITÄT
+==================================================
+AKTUELL:
+1. WEATHER
+DANACH:
+2. GPS
+3. TIDES
+4. MOON
+5. WATERS
+6. EQUIPMENT
+DANACH:
+7. FISH DATABASE
+8. CATCHES
+9. CATCHBOOK
+10. STATISTICS
+11. RECORDS
+12. LEADERBOARD
+==================================================
+40. WICHTIGER PLANUNGSWECHSEL
+==================================================
+Die frühere Planung behandelte Weather als abgeschlossenen
+STEP-1-Meilenstein.
+Dieser Punkt ist überholt.
+Der aktuelle Plan lautet:
+Weather wird jetzt zuerst vollständig geprüft und stabilisiert.
+Danach werden die weiteren unabhängigen Basis-Module
+fertiggestellt.
+Erst anschließend beginnt die intensive Integration in
+Fischdatenbank und Fangbuch.
+==================================================
+41. AKTUELLER NÄCHSTER SCHRITT
+==================================================
+Weather vollständig prüfen.
+Dateien:
+modules/weather/module.json
+modules/weather/weather.js
+modules/weather/weather.html
+modules/weather/weather.css
+Prüfung:
+1. Dateiinhalt
+2. Architektur
+3. Loader
+4. Provider
+5. Standort
+6. Datenmodell
+7. Forecast
+8. Cache
+9. Runtime
+10. Error Handling
+11. Schnittstelle
+12. Mehrsprachigkeit
+13. Speicherverhalten
+14. Benutzeroberfläche
+Danach vollständige Master-Version erstellen, sofern erforderlich.
+==================================================
+42. ABSOLUTE REGEL
+==================================================
+Nicht vom Dateinamen auf den Entwicklungsstand schließen.
+Nicht von einem Commit auf die Funktionalität schließen.
+Nicht unfertige Module unnötig parallel bearbeiten.
+Nicht bestehende funktionierende Funktionen zerstören.
+Vor Änderungen immer:
+LESEN
+↓
+VERSTEHEN
+↓
+ABHÄNGIGKEITEN PRÜFEN
+↓
+PLANEN
+↓
+VOLLSTÄNDIGE DATEI ERSTELLEN
+↓
+TESTEN
+↓
+COMMIT PRÜFEN
+==================================================
+ENDE PROJECT_MODULE_PLAN
+==================================================
