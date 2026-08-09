@@ -4,14 +4,16 @@ Dateiname: PROJECT_MODULE_PLAN.md
 Projekt: CatchTrack V1.0
 Repository: El-Ninjo1965/CatchTrack-V.1.0
 Branch: main
-Planstatus: Initialfassung
+Planstatus: AKTUALISIERTE MASTERFASSUNG
 Plan erstellt: 09.08.2026
+Letzte Prüfung: 09.08.2026
 
 ⸻
 
-1. Zweck dieser Datei
+1. ZWECK DIESER DATEI
 
-Diese Datei ist der verbindliche chronologische Entwicklungs-, Integrations- und Bereinigungsplan für die Module von CatchTrack V1.0.
+Diese Datei ist der verbindliche chronologische Entwicklungs-,
+Integrations- und Bereinigungsplan für die Module von CatchTrack V1.0.
 
 Sie dient gleichzeitig als:
 
@@ -26,11 +28,12 @@ Sie dient gleichzeitig als:
 
 Der Plan wird während der Entwicklung fortlaufend aktualisiert.
 
-Der tatsächliche Zustand des Projekts wird immer mit dem aktuellen Stand des GitHub-Repositories abgeglichen.
+Der tatsächliche Zustand des Projekts wird immer mit dem aktuellen
+Stand des GitHub-Repositories abgeglichen.
 
 ⸻
 
-2. Verbindliche Projektquellen
+2. VERBINDLICHE PROJEKTQUELLEN
 
 Für Entscheidungen gilt folgende Priorität:
 
@@ -38,18 +41,22 @@ Für Entscheidungen gilt folgende Priorität:
 2. aktueller GitHub-Dateistand
 3. PROJECT_MODULE_PLAN.md
 4. PROJECT_KNOWLEDGE.md
-5. Git-Commit-Historie
-6. frühere Chat-Verläufe
+5. PROJECT_ARCHITECTURE.md
+6. PROJECT_TEST_PLAN.md
+7. AI_CONTEXT.md
+8. Git-Commit-Historie
+9. frühere Chat-Verläufe
 
 GitHub ist die technische Referenz für den tatsächlich vorhandenen Code.
 
 Die Git-Historie wird zur zeitlichen Einordnung verwendet.
 
-Ein vorhandener Commit bedeutet nicht automatisch, dass eine Datei zu diesem Zeitpunkt funktional fertiggestellt wurde.
+Ein vorhandener Commit bedeutet nicht automatisch, dass eine Datei
+zu diesem Zeitpunkt funktional fertiggestellt wurde.
 
 ⸻
 
-3. Arbeitsweise
+3. ARBEITSWEISE
 
 3.1 Rollenverteilung
 
@@ -66,22 +73,28 @@ ChatGPT übernimmt:
 * technische Planung
 * Prüfung nach erfolgten Änderungen
 * Aktualisierung des Arbeitsplans auf Basis des GitHub-Stands
+* Prüfung der Commit-Historie
+* Abgleich von Projektstatus und tatsächlichem Repository-Zustand
 
 Working Copy
 
-Die tatsächlichen Änderungen am Projekt werden durch den Benutzer über Working Copy vorgenommen.
+Die tatsächlichen Änderungen am Projekt werden durch den Benutzer
+über Working Copy vorgenommen.
 
 Working Copy ist der operative Schreibweg zum GitHub-Repository.
 
-Der GitHub-Zugriff von ChatGPT wird für die Projektarbeit als Referenz- und Prüfzugriff verwendet.
+Der GitHub-Zugriff von ChatGPT wird für die Projektarbeit als
+Referenz- und Prüfzugriff verwendet.
 
-Es ist nicht notwendig, in späteren Antworten darauf hinzuweisen, dass ChatGPT keine Schreibänderungen vorgenommen hat.
+Es ist nicht notwendig, in späteren Antworten darauf hinzuweisen,
+dass ChatGPT keine Schreibänderungen vorgenommen hat.
 
 ⸻
 
-4. Grundregel für bestehende Dateien
+4. GRUNDREGEL FÜR BESTEHENDE DATEIEN
 
-Eine vorhandene Datei wird niemals allein aufgrund ihres Dateinamens als fertig betrachtet.
+Eine vorhandene Datei wird niemals allein aufgrund ihres Dateinamens
+als fertig betrachtet.
 
 Für jede vorhandene Datei ist zu prüfen:
 
@@ -112,36 +125,61 @@ Eine alte Datei kann daher sein:
 
 ⸻
 
-5. Statussystem
+5. STATUSSYSTEM
 
 Folgende Statuswerte werden verbindlich verwendet:
 
-Status	Bedeutung
-TODO	noch nicht begonnen
-ANALYSE	Bestand wird untersucht
-SKELETT	Grundstruktur vorhanden
-IN ARBEIT	funktionale Entwicklung läuft
-ABHÄNGIG	wartet auf anderes Modul / Funktion
-TEST	Entwicklung abgeschlossen, Tests laufen
-MASTER	vollständig fertig und freigegeben
-ALT	alte Version / nicht mehr Bestandteil der neuen Architektur
-LÖSCHKANDIDAT	als unbenutzt identifiziert, Löschung noch nicht freigegeben
-ZUR LÖSCHUNG FREIGEGEBEN	Löschung nach erfolgreicher Prüfung erlaubt
-GELÖSCHT	aus dem Projekt entfernt
+Status
+Bedeutung
+
+TODO
+noch nicht begonnen
+
+ANALYSE
+Bestand wird untersucht
+
+SKELETT
+Grundstruktur vorhanden
+
+IN ARBEIT
+funktionale Entwicklung läuft
+
+ABHÄNGIG
+wartet auf anderes Modul / Funktion
+
+TEST
+Entwicklung abgeschlossen, Tests laufen
+
+MASTER
+vollständig fertig und freigegeben
+
+ALT
+alte Version / nicht mehr Bestandteil der neuen Architektur
+
+LÖSCHKANDIDAT
+als unbenutzt identifiziert, Löschung noch nicht freigegeben
+
+ZUR LÖSCHUNG FREIGEGEBEN
+Löschung nach erfolgreicher Prüfung erlaubt
+
+GELÖSCHT
+aus dem Projekt entfernt
 
 ⸻
 
-6. Datei-Status
+6. DATEI-STATUS
 
 Für jede Datei wird zusätzlich unterschieden:
 
 MASTER
 
-Die Datei gehört zur aktuellen Architektur und ist funktional abgeschlossen.
+Die Datei gehört zur aktuellen Architektur und ist funktional
+abgeschlossen.
 
 ACTIVE
 
-Die Datei wird weiterhin benötigt, ist aber noch nicht vollständig fertig.
+Die Datei wird weiterhin benötigt, ist aber noch nicht vollständig
+fertig.
 
 LEGACY
 
@@ -159,7 +197,7 @@ Die Datei kann nach erfolgreicher Abhängigkeitsprüfung entfernt werden.
 
 7. STEP 1
 
-Abgeschlossen
+ABGESCHLOSSEN
 
 Der definierte Abschluss von STEP 1 ist das Weather-Modul.
 
@@ -175,9 +213,10 @@ Eine spätere Änderung an Weather erfolgt nur bei:
 
 ⸻
 
-8. STEP 2 – Modulrealisierung
+8. STEP 2 – MODULREALISIERUNG
 
-STEP 2 dient dem vollständigen Aufbau der noch nicht fertiggestellten Module.
+STEP 2 dient dem vollständigen Aufbau der noch nicht fertiggestellten
+Module.
 
 Die Reihenfolge richtet sich NICHT ausschließlich nach Alphabet.
 
@@ -192,19 +231,69 @@ Entscheidend sind:
 7. Integrationsaufwand
 8. Testbarkeit
 
+Vor jedem Modul erfolgt eine konkrete Datei- und
+Abhängigkeitsprüfung.
+
+Erst danach beginnt die eigentliche Implementierung.
+
 ⸻
 
-9. Geplante Modulgruppen
+9. TATSÄCHLICHER MODULBESTAND AUF GITHUB
 
-GRUPPE A – Grunddaten
+Am 09.08.2026 wurden im Verzeichnis:
+
+modules/
+
+folgende 21 Modulordner festgestellt:
+
+1. admin
+2. ai
+3. backup
+4. bluetooth
+5. catchbook
+6. catches
+7. conditions
+8. equipment
+9. export
+10. fishDatabase
+11. gps
+12. leaderboard
+13. maps
+14. moon
+15. photos
+16. records
+17. safety
+18. settings
+19. start
+20. statistics
+21. tides
+22. waters
+23. weather
+
+Korrektur zum bisherigen Plan:
+
+Das tatsächliche Verzeichnis für die Fischdatenbank lautet:
+
+modules/fishDatabase/
+
+Nicht:
+
+modules/fish/
+
+Die Schreibweise fishDatabase ist Bestandteil der aktuellen
+Repository-Struktur und muss beibehalten werden.
+
+⸻
+
+10. GRUPPE A – GRUNDDATEN
 
 Diese Module bilden die Datenbasis für viele andere Module.
 
-A1 – Fish Database
+A1 – FISH DATABASE
 
 Pfad:
 
-modules/fish/
+modules/fishDatabase/
 
 Aufgaben:
 
@@ -216,6 +305,8 @@ Aufgaben:
 * Bearbeitung
 * Anzeige
 * Übergabe an Catches
+* Sprachabhängige Namen
+* Pflege von Fisch-Stammdaten
 
 Abhängigkeiten:
 
@@ -223,13 +314,41 @@ Abhängigkeiten:
 * Storage
 * Language Manager
 
-Status:
+Aktuell vorhandene Dateien:
 
-SKELETT
+* fishDatabase.html
+* fishDatabase.css
+* fishDatabase.js
+* module.json
+
+Aktueller Status:
+
+SKELETT / BESTAND PRÜFEN
+
+Besonderer Befund:
+
+fishDatabase.js enthält bereits funktionale Datenbankzugriffe
+auf die Tabellen:
+
+* fish
+* fish_names
+
+und verwendet:
+
+* CatchTrackDatabase
+* CatchTrackSettings.language
+
+Die Datei ist daher nicht als leere Platzhalterdatei zu behandeln.
+
+Vor der Implementierung müssen alle vier vorhandenen Dateien
+vollständig analysiert und gegen Core, Database, Language Manager,
+Module Manager und tatsächliche Datenbankstruktur geprüft werden.
+
+Das Modul ist der vorgesehene erste Kandidat für STEP 2.
 
 ⸻
 
-A2 – Equipment
+A2 – EQUIPMENT
 
 Pfad:
 
@@ -258,7 +377,7 @@ SKELETT
 
 ⸻
 
-A3 – Waters
+A3 – WATERS
 
 Pfad:
 
@@ -286,9 +405,9 @@ SKELETT
 
 ⸻
 
-10. GRUPPE B – Erfassung
+11. GRUPPE B – ERFASSUNG
 
-B1 – Catches
+B1 – CATCHES
 
 Pfad:
 
@@ -335,7 +454,7 @@ Bestehende funktionierende Bestandteile erhalten.
 
 ⸻
 
-B2 – Catchbook
+B2 – CATCHBOOK
 
 Pfad:
 
@@ -364,7 +483,7 @@ ACTIVE
 
 ⸻
 
-11. GRUPPE C – Standort und Umwelt
+12. GRUPPE C – STANDORT UND UMWELT
 
 C1 – GPS
 
@@ -395,7 +514,7 @@ ACTIVE
 
 ⸻
 
-C2 – Maps
+C2 – MAPS
 
 Pfad:
 
@@ -421,7 +540,7 @@ SKELETT
 
 ⸻
 
-C3 – Conditions
+C3 – CONDITIONS
 
 Pfad:
 
@@ -450,7 +569,7 @@ SKELETT
 
 ⸻
 
-C4 – Tides
+C4 – TIDES
 
 Pfad:
 
@@ -477,7 +596,7 @@ SKELETT / ALTBESTAND PRÜFEN
 
 ⸻
 
-C5 – Moon
+C5 – MOON
 
 Pfad:
 
@@ -502,7 +621,7 @@ ACTIVE
 
 ⸻
 
-C6 – Weather
+C6 – WEATHER
 
 Pfad:
 
@@ -518,9 +637,9 @@ Nicht erneut aufbauen.
 
 ⸻
 
-12. GRUPPE D – Medien und Zusatzdaten
+13. GRUPPE D – MEDIEN UND ZUSATZDATEN
 
-D1 – Photos
+D1 – PHOTOS
 
 Pfad:
 
@@ -548,7 +667,7 @@ ACTIVE
 
 ⸻
 
-D2 – Safety
+D2 – SAFETY
 
 Pfad:
 
@@ -572,9 +691,9 @@ SKELETT
 
 ⸻
 
-13. GRUPPE E – Auswertung
+14. GRUPPE E – AUSWERTUNG
 
-E1 – Statistics
+E1 – STATISTICS
 
 Pfad:
 
@@ -611,7 +730,7 @@ ACTIVE
 
 ⸻
 
-E2 – Records
+E2 – RECORDS
 
 Pfad:
 
@@ -638,7 +757,7 @@ SKELETT
 
 ⸻
 
-E3 – Leaderboard
+E3 – LEADERBOARD
 
 Pfad:
 
@@ -664,9 +783,9 @@ SKELETT
 
 ⸻
 
-14. GRUPPE F – Systemfunktionen
+15. GRUPPE F – SYSTEMFUNKTIONEN
 
-F1 – Settings
+F1 – SETTINGS
 
 Pfad:
 
@@ -694,7 +813,7 @@ ACTIVE
 
 ⸻
 
-F2 – Export
+F2 – EXPORT
 
 Pfad:
 
@@ -718,7 +837,7 @@ SKELETT
 
 ⸻
 
-F3 – Backup
+F3 – BACKUP
 
 Pfad:
 
@@ -744,7 +863,7 @@ ACTIVE / AUSBAU
 
 ⸻
 
-F4 – Bluetooth
+F4 – BLUETOOTH
 
 Pfad:
 
@@ -796,13 +915,14 @@ Status:
 
 SKELETT
 
-AI wird erst nach ausreichender Datenbasis sinnvoll vollständig implementiert.
+AI wird erst nach ausreichender Datenbasis sinnvoll vollständig
+implementiert.
 
 ⸻
 
-15. GRUPPE G – Administration
+16. GRUPPE G – ADMINISTRATION
 
-G1 – Start
+G1 – START
 
 Pfad:
 
@@ -821,7 +941,7 @@ ACTIVE
 
 ⸻
 
-G2 – Admin
+G2 – ADMIN
 
 Pfad:
 
@@ -834,6 +954,8 @@ Aufgaben:
 * Modulstatus
 * Datenbankstatus
 * Wartungsfunktionen
+* Runtime-Status
+* Fehlerdiagnose
 
 Status:
 
@@ -841,7 +963,7 @@ SKELETT / ACTIVE
 
 ⸻
 
-16. MODULABHÄNGIGKEITEN
+17. MODULABHÄNGIGKEITEN
 
 Vereinfachte Hauptabhängigkeiten:
 
@@ -851,12 +973,15 @@ CORE
  ├── Storage
  ├── Language
  ├── Router
+ ├── Runtime Status
  └── Module Manager
         │
         └── Module
               │
               ├── Fish Database
+              │
               ├── Equipment
+              │
               ├── Waters
               │     ├── GPS
               │     └── Maps
@@ -889,13 +1014,15 @@ CORE
               │
               └── AI
 
-Diese Darstellung ist eine Arbeitsabhängigkeit und wird beim tatsächlichen Implementieren anhand des Codes überprüft und gegebenenfalls angepasst.
+Diese Darstellung ist eine Arbeitsabhängigkeit und wird beim
+tatsächlichen Implementieren anhand des Codes überprüft und
+gegebenenfalls angepasst.
 
 ⸻
 
-17. DATEIEN JE MODUL
+18. DATEIEN JE MODUL
 
-Für jedes Modul werden grundsätzlich folgende Bestandteile geprüft:
+Als erwartete Standardstruktur wird zunächst geprüft:
 
 modules/<module>/
 ├── module.json
@@ -903,7 +1030,8 @@ modules/<module>/
 ├── <module>.js
 └── <module>.css
 
-Dies ist KEINE automatische Aussage, dass jede dieser Dateien benötigt wird.
+Dies ist KEINE automatische Aussage, dass jede dieser Dateien
+benötigt wird.
 
 Jede Datei wird einzeln geprüft.
 
@@ -911,17 +1039,58 @@ Insbesondere module.json wird auf tatsächliche Verwendung geprüft.
 
 Wenn eine Datei:
 
-* nicht importiert wird,
-* nicht geladen wird,
-* nicht vom Module Manager verwendet wird,
-* keine Runtime-Funktion bereitstellt,
-* nicht von einem anderen Modul benötigt wird,
+* nicht importiert wird
+* nicht geladen wird
+* nicht vom Module Manager verwendet wird
+* keine Runtime-Funktion bereitstellt
+* nicht von einem anderen Modul benötigt wird
 
 wird sie als mögliche Altlast markiert.
 
+Die tatsächliche Dateistruktur auf GitHub hat Vorrang vor diesem
+Standardschema.
+
 ⸻
 
-18. ALTlastenprüfung
+19. AKTUELLE MODULE.JSON-INTEGRATION
+
+Die aktuelle:
+
+config/modules.json
+
+enthält eine zentrale Moduldefinition.
+
+Dort werden unter anderem:
+
+* Modulname
+* Anzeigename
+* Pfad
+* HTML-Datei
+* CSS-Datei
+* JS-Datei
+* Initializer
+* enabled-Status
+
+definiert.
+
+Daraus folgt:
+
+Eine module.json darf NICHT allein deshalb als Altlast betrachtet
+werden, weil sie nicht in config/modules.json aufgeführt ist.
+
+Die tatsächliche Verwendung muss über:
+
+* Module Manager
+* Module Installer
+* dynamische Loader
+* direkte Imports
+* sonstige Referenzen
+
+geprüft werden.
+
+⸻
+
+20. ALTlastenprüfung
 
 Vor jeder Löschung müssen folgende Punkte geprüft werden:
 
@@ -931,6 +1100,7 @@ Vor jeder Löschung müssen folgende Punkte geprüft werden:
 * JavaScript-Imports
 * dynamische Imports
 * Module Manager
+* Module Installer
 * Router
 * Config
 * modules.json
@@ -949,23 +1119,37 @@ gesetzt werden.
 
 ⸻
 
-19. GEPLANTE LÖSCHLISTE
+21. GEPLANTE LÖSCHLISTE
 
-Diese Liste wird zunächst bewusst leer bzw. vorläufig geführt.
+Diese Liste wird zunächst bewusst vorläufig geführt.
 
-Noch nicht freigegebene Kandidaten
+Noch nicht freigegebene Kandidaten:
 
-Datei/Ordner	Grund	Status
-alte module.json-Dateien	mögliche Altarchitektur	PRÜFEN
-alte HTML-Dateien	mögliche Vorgängerversion	PRÜFEN
-alte JS-Dateien	mögliche Vorgängerversion	PRÜFEN
-nicht referenzierte CSS-Dateien	mögliche Altlast	PRÜFEN
+Datei/Ordner
+Grund
+Status
+
+alte module.json-Dateien
+mögliche Altarchitektur
+PRÜFEN
+
+alte HTML-Dateien
+mögliche Vorgängerversion
+PRÜFEN
+
+alte JS-Dateien
+mögliche Vorgängerversion
+PRÜFEN
+
+nicht referenzierte CSS-Dateien
+mögliche Altlast
+PRÜFEN
 
 Keine Datei darf allein aufgrund dieses Plans gelöscht werden.
 
 ⸻
 
-20. MODUL-ABNAHME
+22. MODUL-ABNAHME
 
 Ein Modul gilt erst als MASTER, wenn:
 
@@ -983,10 +1167,12 @@ Ein Modul gilt erst als MASTER, wenn:
 * vorhandene Altdateien geprüft wurden
 * Löschkandidaten dokumentiert wurden
 * Modul erfolgreich getestet wurde
+* Runtime-Status geprüft wurde
+* Error-Log geprüft wurde
 
 ⸻
 
-21. DATEI-ABNAHME
+23. DATEI-ABNAHME
 
 Eine Datei gilt als fertig, wenn:
 
@@ -996,12 +1182,12 @@ Eine Datei gilt als fertig, wenn:
 * sie keine unnötigen alten Strukturen enthält
 * ihre Abhängigkeiten korrekt sind
 * sie mit dem aktuellen Datenmodell funktioniert
-* sie mit dem Modul Manager kompatibel ist
+* sie mit dem Module Manager kompatibel ist
 * sie keine bekannten offenen Fehler enthält
 
 ⸻
 
-22. ÄNDERUNGSPROTOKOLL
+24. ÄNDERUNGSPROTOKOLL
 
 Jede abgeschlossene Entwicklungsstufe wird hier dokumentiert.
 
@@ -1033,7 +1219,7 @@ Bemerkungen: ...
 
 ⸻
 
-23. FORTSCHRITTSREGEL
+25. FORTSCHRITTSREGEL
 
 Nach jeder abgeschlossenen Entwicklungsstufe:
 
@@ -1045,11 +1231,12 @@ Nach jeder abgeschlossenen Entwicklungsstufe:
 6. Änderungen werden mit diesem Plan abgeglichen.
 7. erledigte Punkte werden auf MASTER gesetzt.
 8. nicht mehr benötigte Dateien werden als Löschkandidaten dokumentiert.
-9. erst danach beginnt die nächste Entwicklungsstufe.
+9. AI_CONTEXT.md wird auf den neuen Übergabepunkt aktualisiert.
+10. erst danach beginnt die nächste Entwicklungsstufe.
 
 ⸻
 
-24. WICHTIGE REGEL ZUR HISTORIE
+26. WICHTIGE REGEL ZUR HISTORIE
 
 Das Änderungsdatum einer Datei dient als Kontrollinformation.
 
@@ -1068,12 +1255,15 @@ Abhängigkeiten
 Git-Historie
 +
 Projektregeln
++
+Runtime-/Teststatus
 
-Erst die Kombination dieser Informationen bestimmt den tatsächlichen Status.
+Erst die Kombination dieser Informationen bestimmt den tatsächlichen
+Status.
 
 ⸻
 
-25. AKTUELLER PLANSTATUS
+27. AKTUELLER PLANSTATUS
 
 STEP 1:
 
@@ -1112,13 +1302,63 @@ Aktuell noch nicht vollständig fertiggestellte Module:
 * Start
 * Admin
 
-Diese Liste beschreibt den Entwicklungsbereich und bedeutet nicht, dass sämtliche vorhandenen Dateien dieser Module neu erstellt werden müssen.
+Diese Liste beschreibt den Entwicklungsbereich und bedeutet nicht,
+dass sämtliche vorhandenen Dateien dieser Module neu erstellt werden
+müssen.
 
 ⸻
 
-26. NÄCHSTER ENTWICKLUNGSSCHRITT
+28. AKTUELLER ERSTER ENTWICKLUNGSKANDIDAT
 
-Vor Beginn der eigentlichen Programmierung wird für das erste Modul eine vollständige Datei-/Abhängigkeitsprüfung durchgeführt.
+Modul:
+
+FISH DATABASE
+
+Pfad:
+
+modules/fishDatabase/
+
+Begründung:
+
+* grundlegende Stammdatenbasis
+* geringe direkte Modulabhängigkeiten
+* Datenbanktabellen bereits vorhanden
+* Seed-Daten vorhanden
+* aktueller Code bereits vorhanden
+* Catches benötigt die Fischdaten
+* spätere Module können darauf aufbauen
+
+Vor Beginn der Implementierung sind vollständig zu prüfen:
+
+* fishDatabase.html
+* fishDatabase.css
+* fishDatabase.js
+* module.json
+* config/modules.json
+* core/moduleManager.js
+* core/moduleInstaller.js
+* core/database.js
+* core/storageManager.js
+* core/languageManager.js
+* database/schema.sql
+* database/fish_seed.sql
+* database/fish_names_seed.sql
+* relevante Git-Commits
+
+Erst nach dieser Prüfung wird entschieden, welche Dateien:
+
+* MASTER übernommen werden können
+* vollständig ersetzt werden müssen
+* neu erstellt werden müssen
+* als Altlast markiert werden
+* später gelöscht werden können
+
+⸻
+
+29. NÄCHSTER ENTWICKLUNGSSCHRITT
+
+Vor Beginn der eigentlichen Programmierung des ersten Moduls wird
+eine vollständige Datei-/Abhängigkeitsprüfung durchgeführt.
 
 Dabei wird festgestellt:
 
@@ -1136,7 +1376,7 @@ Erst danach wird das Modul vollständig implementiert.
 
 ⸻
 
-27. ARBEITSPRINZIP
+30. ARBEITSPRINZIP
 
 Keine unnötige Neuentwicklung.
 
@@ -1146,34 +1386,81 @@ Keine halbfertigen Ersatzdateien.
 
 Keine Löschung ohne Abhängigkeitsprüfung.
 
-Keine Änderung eines abgeschlossenen Masters ohne ausdrücklichen Grund.
+Keine Änderung eines abgeschlossenen Masters ohne ausdrücklichen
+Grund.
 
-Jede fertige Entwicklungsstufe muss anhand des GitHub-Stands später eindeutig nachvollziehbar sein.
+Jede fertige Entwicklungsstufe muss anhand des GitHub-Stands später
+eindeutig nachvollziehbar sein.
+
+Nach Möglichkeit werden bei Änderungen vollständige Ersatzdateien
+bereitgestellt.
 
 ⸻
 
-28. ZIEL
+31. ZIEL
 
 Am Ende von STEP 2 muss eindeutig nachvollziehbar sein:
 
 Welche Module existieren?
+
 Welche Module sind MASTER?
+
 Welche Dateien gehören tatsächlich zur aktuellen Architektur?
+
 Welche Dateien sind Altlasten?
+
 Welche Dateien wurden gelöscht?
+
 Welche Abhängigkeiten bestehen?
+
 Welche Datenbankfunktionen werden verwendet?
+
 Wann wurde jedes Modul fertiggestellt?
+
 Welcher Git-Commit enthält die Fertigstellung?
 
-Damit muss ein späteres erneutes Einlesen dieses Dokuments zusammen mit dem aktuellen GitHub-Repository ausreichen, um den Projektfortschritt eindeutig zu rekonstruieren.
+Damit muss ein späteres erneutes Einlesen dieses Dokuments zusammen
+mit dem aktuellen GitHub-Repository ausreichen, um den
+Projektfortschritt eindeutig zu rekonstruieren.
 
 ⸻
 
-29. STATUS
+32. STATUS
 
-Initialer Plan erstellt am 09.08.2026.
+Plan aktualisiert am:
 
-STEP 2 – Modulrealisierung: BEREIT
+09.08.2026
 
-Nächster Schritt: Modulreihenfolge anhand der tatsächlichen Abhängigkeiten und des aktuellen GitHub-Codes final bestätigen und anschließend das erste Modul vollständig bearbeiten.
+STEP 1 – Weather:
+
+ABGESCHLOSSEN
+
+STEP 2 – Modulrealisierung:
+
+BEREIT
+
+Aktueller Fokus:
+
+FISH DATABASE
+
+Aktueller Arbeitsschritt:
+
+Vollständige Bestands-, Datei- und Abhängigkeitsprüfung des
+Fish-Database-Moduls.
+
+Noch keine neue Moduldatei wird erstellt, bevor diese Prüfung
+abgeschlossen ist.
+
+Nächster Schritt nach der Prüfung:
+
+Festlegung der vollständigen Masterdateien für Fish Database.
+
+Danach:
+
+Implementierung
+→ Working Copy
+→ GitHub Commit
+→ GitHub-Prüfung
+→ Statusaktualisierung
+→ AI_CONTEXT-Aktualisierung
+→ nächstes Modul.
