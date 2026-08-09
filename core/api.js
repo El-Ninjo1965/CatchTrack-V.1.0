@@ -1,33 +1,56 @@
-const CatchTrackAPI = {
+"use strict";
 
-    version: "1.0",
 
+window.CatchTrackAPI = {
+
+    version: "2.0.0",
+
+    services: {},
 
     requests: [],
+
+    maxRequestHistory: 100,
+
+    initialized: false,
 
 
     init() {
 
-        console.log(
-            "CatchTrack API bereit."
-        );
+        if (
+            this.initialized
+        ) {
+
+            return;
+
+        }
+
+
+        this.initialized =
+            true;
 
     },
 
 
-    registerRequest(request) {
+    register(
+        name,
+        handler
+    ) {
 
-        if (!request) {
-
-            console.warn(
-                "Ungültige Anfrage."
-            );
+        if (
+            !name ||
+            typeof handler !==
+            "function"
+        ) {
 
             return false;
+
         }
 
 
-        this.requests.push(request);
+        this.services[
+            name
+        ] =
+            handler;
 
 
         return true;
@@ -35,49 +58,160 @@ const CatchTrackAPI = {
     },
 
 
-    getRequests() {
+    unregister(name) {
 
-        return this.requests;
+        delete this.services[
+            name
+        ];
+
+        return true;
 
     },
 
 
-    send(action, data = {}) {
+    has(name) {
+
+        return typeof this.services[
+            name
+        ] === "function";
+
+    },
+
+
+    async call(
+        name,
+        payload = {},
+        options = {}
+    ) {
+
+        const handler =
+            this.services[
+                name
+            ];
+
+
+        if (
+            typeof handler !==
+            "function"
+        ) {
+
+            const error =
+                new Error(
+                    `API-Service nicht gefunden: ${name}`
+                );
+
+
+            this.recordError(
+                name,
+                error
+            );
+
+
+            throw error;
+
+        }
+
 
         const request = {
 
-            action: action,
+            service: name,
 
-            data: data,
+            payload,
 
-            timestamp: new Date()
-                .toISOString()
+            timestamp:
+                new Date().toISOString()
 
         };
 
 
-        this.registerRequest(request);
-
-
-        console.log(
-            "API Anfrage:",
+        this.requests.push(
             request
         );
 
 
-        return request;
+        if (
+            this.requests.length >
+            this.maxRequestHistory
+        ) {
+
+            this.requests =
+                this.requests.slice(
+                    -this.maxRequestHistory
+                );
+
+        }
+
+
+        try {
+
+            return await handler(
+                payload,
+                options
+            );
+
+        }
+
+        catch (error) {
+
+            this.recordError(
+                name,
+                error
+            );
+
+            throw error;
+
+        }
+
+    },
+
+
+    send(
+        action,
+        data = {}
+    ) {
+
+        return this.call(
+            action,
+            data
+        );
+
+    },
+
+
+    recordError(
+        service,
+        error
+    ) {
+
+        if (
+            window.CatchTrackErrorHandler
+        ) {
+
+            CatchTrackErrorHandler.handle(
+                error,
+                `api:${service}`
+            );
+
+        }
+
+    },
+
+
+    getServices() {
+
+        return Object.keys(
+            this.services
+        );
+
+    },
+
+
+    getRequests() {
+
+        return [
+            ...this.requests
+        ];
 
     }
 
 };
-
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        CatchTrackAPI.init();
-
-    }
-);
