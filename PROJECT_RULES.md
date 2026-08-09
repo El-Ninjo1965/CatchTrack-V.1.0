@@ -1039,7 +1039,7 @@ Bei zukünftigen Bestandsaufnahmen soll der letzte relevante Commit deshalb auto
 
 —
 
-## Vollständige Ersatzdateien
+## Nach Möglichkeit Vollständige Ersatzdateien
 
 Bei jeder Änderung oder Neuerstellung einer Projektdatei wird grundsätzlich immer die vollständige Datei ausgegeben.
 
