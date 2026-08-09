@@ -1,4 +1,4 @@
-# PROJECT_STATUS Version 1.0
+# PROJECT_STATUS Version 1.1
 # Updated: 2026-08-09
 # CatchTrack – Project Status
 ## 1. Zweck
@@ -11,12 +11,17 @@ Sie dokumentiert:
 - welche Fehler bekannt sind
 - welche Arbeiten noch ausstehen
 - welches Modul als Nächstes bearbeitet wird
+- welche Module bereits als Datenquelle für spätere
+  Integrationen vorbereitet sind
 Diese Datei ist eine Statusübersicht.
 Die detaillierten Entwicklungsregeln befinden sich in:
 - `AI_CONTEXT.md`
 - `PROJECT_RULES.md`
 - `PROJECT_KNOWLEDGE.md`
 - `PROJECT_MODULE_PLAN.md`
+Der tatsächliche Repository-Stand wird zusätzlich anhand der
+GitHub-Commit-Historie und der tatsächlich vorhandenen Dateien
+geprüft.
 —
 # 2. Projekt
 Repository:
@@ -37,8 +42,8 @@ Commit
   ↓
 GitHub-Prüfung
 
-ChatGPT besitzt für dieses Projekt grundsätzlich keine
-direkten Schreibrechte.
+ChatGPT besitzt für dieses Projekt grundsätzlich keine direkten
+Schreibrechte.
 
 ⸻
 
@@ -53,6 +58,7 @@ Runtime Storage	vorhanden
 LocalStorage-Persistenz	vorhanden
 Runtime Error Log	vorhanden
 Runtime Status	vorhanden
+Multilingualitäts-Konzept	festgelegt
 Weather-Modul	Vorentwicklung / aktueller Fokus
 GPS	Vorentwicklung
 Tide	Vorentwicklung
@@ -95,8 +101,6 @@ definierte Schnittstelle
 ↓
 bereit für spätere Integration
 
-⸻
-
 Gruppe B – integrative Module
 
 Diese Module werden danach bearbeitet:
@@ -114,10 +118,10 @@ verwenden.
 
 5. Warum diese Reihenfolge?
 
-Die Datenmodule wie Wetter, GPS, Tide und Moon sind technisch
+Datenmodule wie Wetter, GPS, Tide und Moon sind technisch
 relativ unabhängig.
 
-Das Fangbuch dagegen muss später zahlreiche Datenquellen
+Das Fangbuch muss dagegen später zahlreiche Datenquellen
 miteinander verbinden.
 
 Beispiel:
@@ -144,9 +148,88 @@ entwickelt.
 
 ⸻
 
-6. Runtime / Core
+6. Globale Mehrsprachigkeit
 
-Vorhanden
+CatchTrack wird von Anfang an multilingual entwickelt.
+
+Die Anwendung darf nicht auf Deutsch oder Englisch beschränkt
+werden.
+
+Jedes Modul muss später mehrsprachig nutzbar sein.
+
+Die Sprache wird auf zwei Wegen bestimmt:
+
+Automatisch
+
+Die bevorzugte Sprache des Endgerätes bzw. Browsers wird
+automatisch erkannt.
+
+Manuell
+
+Der Benutzer kann innerhalb der Anwendung eine Sprache auswählen.
+
+Die manuelle Auswahl hat Vorrang vor der automatischen
+Erkennung.
+
+Gerätesprache
+      ↓
+automatische Sprache
+      ↓
+CatchTrack
+oder:
+Benutzer wählt Sprache
+      ↓
+manuelle Sprache
+      ↓
+CatchTrack
+
+Die Spracheinstellung gilt grundsätzlich für die gesamte
+Anwendung.
+
+⸻
+
+7. Zentrales Sprachsystem
+
+Die einzelnen Module dürfen keine eigene, voneinander
+unabhängige Sprachlogik entwickeln.
+
+Langfristig wird ein zentrales Language-/i18n-System verwendet.
+
+Es betrifft unter anderem:
+
+* Menüs
+* Buttons
+* Überschriften
+* Beschriftungen
+* Hinweise
+* Fehlermeldungen
+* Statusmeldungen
+* Dialoge
+* Filter
+* Einstellungen
+* Auswahlwerte
+
+Keine unnötig fest codierten Benutzertexte.
+
+Die interne Datenstruktur bleibt sprachneutral.
+
+Beispiel:
+
+interner Wert:
+pressure = 1013.2
+Deutsch:
+Luftdruck
+English:
+Pressure
+
+Neue Module müssen bereits bei ihrer Erstellung für dieses
+System vorbereitet werden.
+
+⸻
+
+8. Runtime / Core
+
+Vorhanden:
 
 core/
 ├── errorHandler.js
@@ -164,7 +247,7 @@ localStorage.json
 
 ⸻
 
-7. Runtime-Status
+9. Runtime-Status
 
 Das Runtime-System kann Fehler und Statusinformationen
 persistieren.
@@ -183,19 +266,18 @@ localStorage.json
 
 Der Runtime-Bereich gilt grundsätzlich als vorhanden.
 
-Eine vollständige technische Endabnahme erfolgt später,
-wenn die einzelnen Module stabil integriert sind.
+Eine vollständige technische Endabnahme erfolgt später, wenn
+die einzelnen Module stabil integriert sind.
 
 ⸻
 
-8. Bekannte Runtime-Fehler
+10. Bekannte Runtime-Fehler
 
 Beim Testen wurden unter anderem Initializer-Fehler
 protokolliert.
 
 Beispiele:
 
-Initializer nicht gefunden:
 CatchTrackFishDatabaseModule
 CatchTrackEquipmentModule
 CatchTrackGPSModule
@@ -207,12 +289,20 @@ CatchTrackRecordsModule
 Diese Fehler stammen überwiegend aus noch nicht fertig
 entwickelten Vorentwicklungen.
 
-Sie werden deshalb momentan nicht automatisch als
-kritische Core-Fehler behandelt.
+Sie werden deshalb momentan nicht automatisch als kritische
+Core-Fehler behandelt.
+
+Vor einer endgültigen Bewertung wird geprüft:
+
+* ob das Modul bereits fertig sein soll
+* ob der Initializer tatsächlich erwartet wird
+* ob die Datei vorhanden ist
+* ob das Modul bereits eingebunden sein muss
+* ob der Fehler durch die aktuelle Testaktion ausgelöst wurde
 
 ⸻
 
-9. localStorage.json
+11. localStorage.json
 
 localStorage.json ist vorhanden.
 
@@ -232,7 +322,7 @@ Diagnosegrundlage.
 
 ⸻
 
-10. Weather-Modul
+12. Weather-Modul
 
 Aktueller Ordner:
 
@@ -242,20 +332,20 @@ modules/weather/
 ├── weather.html
 └── weather.css
 
-Alle Dateinamen sind in Kleinschreibung.
+Alle Dateinamen sind kleingeschrieben.
 
-Es existieren keine erforderlichen Varianten:
+Nicht vorhandene Varianten wie:
 
 Weather.js
 Weather.html
 Weather.css
 Weather.cs
 
-Diese werden nicht als fehlende Dateien behandelt.
+werden nicht als fehlende Dateien behandelt.
 
 ⸻
 
-11. Weather – aktueller Entwicklungsstand
+13. Weather – aktueller Entwicklungsstand
 
 Das Weather-Modul ist der aktuelle Entwicklungsschwerpunkt.
 
@@ -266,23 +356,23 @@ Vorhanden:
 * HTML
 * CSS
 
-Noch erforderlich:
+Noch vollständig zu prüfen bzw. fertigzustellen:
 
-* vollständige Funktionsprüfung
-* Provider-Anbindung prüfen
-* Standortermittlung prüfen
-* Ortssuche prüfen
-* Forecast prüfen
-* Wetterdatenmodell prüfen
-* Cache prüfen
-* Fehlerbehandlung prüfen
-* Schnittstelle für andere Module definieren
-* Darstellung testen
-* Runtime-Integration testen
+* Provider-Anbindung
+* Standortermittlung
+* Ortssuche
+* Forecast
+* Wetterdatenmodell
+* Cache
+* Fehlerbehandlung
+* öffentliche Schnittstelle
+* Darstellung
+* Runtime-Integration
+* vollständiger Test
 
 ⸻
 
-12. Weather – Ziel
+14. Weather – Ziel
 
 Das Wettermodul soll:
 
@@ -303,7 +393,7 @@ Das Wettermodul soll:
 
 ⸻
 
-13. Weather – Standort
+15. Weather – Standort
 
 Standard:
 
@@ -323,9 +413,12 @@ Wetter für diesen Ort
 
 Wetterort und tatsächlicher Fangort müssen getrennt bleiben.
 
+Ein manuell ausgewählter Wetterort darf den späteren Fangort
+nicht verändern.
+
 ⸻
 
-14. Weather – Provider
+16. Weather – Provider
 
 Vorgesehener erster Provider:
 
@@ -341,9 +434,62 @@ Langfristig soll der Admin-Bereich ermöglichen:
 * Forecast-Einstellungen ändern
 * weitere Providerparameter konfigurieren
 
+Open-Meteo benötigt zunächst keinen API-Key.
+
+Die Architektur muss trotzdem optionale API-Keys unterstützen.
+
 ⸻
 
-15. Weather – Cache
+17. Weather – relevante Daten
+
+Das interne Wetterdatenmodell soll mindestens die später für
+das Fangbuch benötigten Werte unterstützen:
+
+* Temperatur
+* gefühlte Temperatur
+* Wetterzustand
+* Wettercode
+* Wetter-Symbol
+* Niederschlag
+* Regenwahrscheinlichkeit
+* Luftdruck
+* Luftfeuchtigkeit
+* Windgeschwindigkeit
+* Windrichtung
+* Windböen
+* Bewölkung
+* UV-Index
+* Sonnenaufgang
+* Sonnenuntergang
+* Latitude
+* Longitude
+* Ortsname
+* Zeitpunkt
+* Provider
+
+Nicht jeder interne Wert muss dauerhaft auf der Oberfläche
+angezeigt werden.
+
+⸻
+
+18. Weather – Forecast
+
+Mindestens:
+
+7 Tage
+
+Ziel:
+
+10 Tage
+
+Die Darstellung soll grafisch und übersichtlich erfolgen.
+
+Die vom Provider gelieferten Wetter-Symbole sollen verwendet
+werden, soweit technisch sinnvoll.
+
+⸻
+
+19. Weather – Cache
 
 Vorgesehen ist ein Tagescache.
 
@@ -370,12 +516,25 @@ Der Cache ist keine Wetterhistorie.
 
 ⸻
 
-16. Weather – Fangbuch-Integration
+20. Weather – Datenmenge
 
-Das Wettermodul soll später einen strukturierten Datensatz
-bereitstellen.
+Das Wettermodul soll keine unnötige dauerhafte Datenmenge
+erzeugen.
 
-Beispiel:
+Daher:
+
+* nur aktuelle Daten beim Aufruf bzw. gültigen Tagescache
+* keine unbegrenzte Wetterhistorie
+* keine dauerhafte Speicherung kompletter API-Antworten
+* dauerhafte Wetterdaten später nur im Zusammenhang mit
+    gespeicherten Fängen
+
+⸻
+
+21. Weather – Fangbuch-Integration
+
+Das Weather-Modul soll später einen standardisierten
+Wetterdatensatz bereitstellen.
 
 Weather Module
       ↓
@@ -386,65 +545,28 @@ Catchbook
 Beim Speichern eines Fangs werden die relevanten Wetterdaten
 als Snapshot in den Fangdatensatz übernommen.
 
-Damit entsteht die dauerhafte Wetterhistorie automatisch
-über tatsächlich gespeicherte Fänge.
+Damit entsteht die dauerhafte Wetterhistorie über tatsächlich
+gespeicherte Fänge.
 
 ⸻
 
-17. Weather – offene Arbeiten
+22. Weather – öffentliche Schnittstelle
 
-Priorität 1
+Andere Module sollen nicht auf interne Variablen oder
+HTML-Elemente des Weather-Moduls zugreifen.
 
-Aktuelle vier Weather-Dateien vollständig einlesen:
+Es soll eine definierte öffentliche Schnittstelle geben.
 
-module.json
-weather.js
-weather.html
-weather.css
+Beispiel:
 
-Priorität 2
+CatchTrackWeatherModule.getWeatherData()
 
-Bestehende Architektur analysieren.
-
-Priorität 3
-
-Provider-Anbindung prüfen.
-
-Priorität 4
-
-Standortermittlung prüfen.
-
-Priorität 5
-
-Ortssuche prüfen.
-
-Priorität 6
-
-Forecast prüfen.
-
-Priorität 7
-
-Wetterdatenmodell definieren bzw. stabilisieren.
-
-Priorität 8
-
-Tagescache implementieren bzw. prüfen.
-
-Priorität 9
-
-Runtime-/Error-Handling prüfen.
-
-Priorität 10
-
-öffentliche Weather-Schnittstelle definieren.
-
-Priorität 11
-
-Gesamttest.
+Der konkrete Name richtet sich nach der bestehenden
+CatchTrack-Architektur.
 
 ⸻
 
-18. GPS
+23. GPS
 
 Status:
 
@@ -455,14 +577,16 @@ Zukünftige Aufgaben:
 * aktuelle Position bestimmen
 * Latitude / Longitude liefern
 * Standortdaten standardisieren
-* Berechtigung / Fehler behandeln
-* Schnittstelle für andere Module
+* Berechtigungen behandeln
+* Fehler behandeln
+* öffentliche Schnittstelle
 * Weather-Anbindung
-* später Catchbook-Anbindung
+* spätere Catchbook-Anbindung
+* multilingual nutzbar
 
 ⸻
 
-19. Tide
+24. Tide
 
 Status:
 
@@ -470,7 +594,7 @@ Vorentwicklung
 
 Zukünftige Aufgaben:
 
-* Tide Provider prüfen
+* Tide-Provider prüfen
 * API-Konfiguration
 * Standortabhängigkeit
 * aktuelle Tide
@@ -481,11 +605,12 @@ Zukünftige Aufgaben:
 * Höhe
 * Datenmodell
 * Schnittstelle
-* später Catchbook-Anbindung
+* spätere Catchbook-Anbindung
+* multilingual nutzbar
 
 ⸻
 
-20. Moon
+25. Moon
 
 Status:
 
@@ -500,11 +625,12 @@ Zukünftige Aufgaben:
 * Standortabhängigkeit
 * Datenmodell
 * Schnittstelle
-* später Catchbook-Anbindung
+* spätere Catchbook-Anbindung
+* multilingual nutzbar
 
 ⸻
 
-21. Waters
+26. Waters
 
 Status:
 
@@ -516,12 +642,13 @@ Zukünftige Aufgaben:
 * Gewässertypen
 * Standorte
 * Eigenschaften
-* spätere Verbindung mit GPS
+* Verbindung mit GPS
 * spätere Verbindung mit Fangbuch
+* multilingual nutzbar
 
 ⸻
 
-22. Equipment
+27. Equipment
 
 Status:
 
@@ -548,9 +675,11 @@ Equipment
     ↓
 Catchbook
 
+Auch Equipment muss vollständig multilingual vorbereitet sein.
+
 ⸻
 
-23. Fish Data
+28. Fish Data
 
 Status:
 
@@ -581,7 +710,7 @@ Geplante Daten:
 
 ⸻
 
-24. Fish Database / Fischkarten
+29. Fish Database / Fischkarten
 
 Status:
 
@@ -598,7 +727,7 @@ Basis-Modulphase.
 
 ⸻
 
-25. Catchbook / Fangbuch
+30. Catchbook / Fangbuch
 
 Status:
 
@@ -636,9 +765,12 @@ Geplante Fangdaten:
 * Fotos
 * Notizen
 
+Das Fangbuch soll die bereits entwickelten Module
+zusammenführen und deren Funktionen nicht duplizieren.
+
 ⸻
 
-26. Statistics
+31. Statistics
 
 Status:
 
@@ -664,7 +796,7 @@ Mögliche spätere Auswertungen:
 
 ⸻
 
-27. Records / Hitparade
+32. Records / Hitparade
 
 Status:
 
@@ -682,25 +814,25 @@ Hitparade
 
 ⸻
 
-28. Was aktuell NICHT gemacht wird
+33. Was aktuell NICHT gemacht wird
 
-Solange die Basis-Module nicht fertig sind:
+Solange die Basis-Module nicht stabil sind:
 
 * keine vollständige Catchbook-Integration
-* keine umfangreiche Fish Database-Integration
+* keine umfangreiche Fish-Database-Integration
 * keine vollständige Hitparade
 * keine komplexen Statistiken
 * keine parallele Fertigstellung aller Vorentwicklungen
 
 ⸻
 
-29. Nächster konkreter Arbeitsschritt
+34. Nächster konkreter Arbeitsschritt
 
-Der nächste Arbeitsschritt ist:
+Aktuell:
 
 WEATHER MODUL
 
-Zuerst vollständig einlesen:
+Zuerst vollständig prüfen:
 
 modules/weather/module.json
 modules/weather/weather.js
@@ -713,17 +845,23 @@ Danach:
 2. bestehende Funktionen erfassen
 3. fehlende Funktionen bestimmen
 4. Abhängigkeiten prüfen
-5. notwendige Änderungen planen
-6. vollständige Ersatzdateien erstellen
-7. Benutzer übernimmt Dateien über Working Copy
-8. Commit prüfen
-9. Weather-Modul testen
-10. Fehler bereinigen
-11. Weather als stabile Basis markieren
+5. Datenmodell prüfen
+6. Provider prüfen
+7. Standort prüfen
+8. Forecast prüfen
+9. Cache prüfen
+10. Runtime-/Error-Handling prüfen
+11. öffentliche Schnittstelle definieren
+12. vollständige Ersatzdateien erstellen
+13. Benutzer übernimmt Dateien über Working Copy
+14. Commit prüfen
+15. Weather testen
+16. Fehler bereinigen
+17. Weather als stabile Basis markieren
 
 ⸻
 
-30. Statusdefinitionen
+35. Statusdefinitionen
 
 Status	Bedeutung
 VORHANDEN	Datei/Modul existiert
@@ -736,7 +874,7 @@ ABGESCHLOSSEN	vollständig entwickelt und integriert
 
 ⸻
 
-31. Abschlusskriterium für Basis-Module
+36. Abschlusskriterium für Basis-Module
 
 Ein Basis-Modul gilt erst als STABIL, wenn:
 
@@ -750,54 +888,107 @@ Ein Basis-Modul gilt erst als STABIL, wenn:
 * Cache-/Speicherverhalten geprüft wurde
 * Benutzeroberfläche funktioniert
 * keine unnötige Datenhistorie erzeugt wird
+* Mehrsprachigkeit vorbereitet ist
+* automatische Gerätesprache unterstützt werden kann
+* manuelle Sprachauswahl unterstützt werden kann
 
 ⸻
 
-32. Abschlusskriterium für Integrationsmodule
+37. Abschlusskriterium für Integrationsmodule
 
 Ein Integrationsmodul gilt erst als abgeschlossen, wenn:
 
 * alle benötigten Basis-Module stabil sind
 * Schnittstellen funktionieren
 * Daten korrekt übernommen werden
-* keine Daten dupliziert oder widersprüchlich gespeichert werden
+* keine Daten unnötig dupliziert werden
+* keine widersprüchlichen Daten entstehen
 * Runtime-/Error-System integriert ist
 * persistierte Daten korrekt funktionieren
 * vollständiger Funktionstest erfolgreich ist
+* Mehrsprachigkeit vollständig berücksichtigt ist
 
 ⸻
 
-33. Aktueller Projektpfad
+38. Projektstatus und GitHub-Abgleich
 
-WEATHER
-   ↓
+PROJECT_STATUS.md beschreibt den dokumentierten Entwicklungsstand.
+
+Der tatsächliche Stand muss zusätzlich anhand von:
+
+1. GitHub-Commit-Historie
+2. aktuellen Dateien
+3. aktuellem Dateiinhalt
+4. Runtime-/Teststatus
+5. localStorage.json
+
+geprüft werden.
+
+Grundsatz:
+
+Dokumentation
+     +
+GitHub-Historie
+     +
+aktuelle Dateien
+     ↓
+tatsächlicher Projektstand
+
+Ein Eintrag in dieser Datei darf nicht allein als Beweis gelten,
+dass eine Datei tatsächlich auf GitHub vorhanden oder fertig ist.
+
+⸻
+
+39. Änderungsprinzip
+
+Auch diese Datei wird nicht unnötig komplett neu erfunden.
+
+Vor einer Aktualisierung:
+
+1. vorhandene PROJECT_STATUS.md einlesen
+2. aktuelle Version feststellen
+3. vorhandene Informationen erhalten
+4. tatsächlichen GitHub-Stand berücksichtigen
+5. neue Erkenntnisse integrieren
+6. widersprüchliche Informationen korrigieren
+7. Version erhöhen
+8. Änderungsdatum aktualisieren
+9. vollständige Datei ausgeben
+
+Wenn die bestehende Struktur technisch keinen Sinn mehr ergibt,
+darf eine vollständige Master-Version erstellt werden.
+
+⸻
+
+40. Aktueller Übergabepunkt
+
+Aktueller Fokus:
+
+Weather
+
+Danach:
+
 GPS
-   ↓
-TIDE
-   ↓
-MOON
-   ↓
-WATERS
-   ↓
-EQUIPMENT
-   ↓
-FISH DATA
-   ↓
-CATCHBOOK
-   ↓
-STATISTICS / HITPARADE
+↓
+Tide
+↓
+Moon
+↓
+Waters
+↓
+Equipment
 
-⸻
+Danach:
 
-34. Aktueller Übergabepunkt
-
-Aktuell bearbeiten: WEATHER
-
-Der nächste Schritt nach dem Statusdokument ist daher nicht
-Fish Database oder Catchbook.
-
-Zuerst wird das vorhandene Weather-Modul vollständig
-analysiert und stabilisiert.
+Fish Data
+↓
+Fish Database
+↓
+Catchbook
+↓
+Statistics
+↓
+Records / Hitparade
 
 ⸻
 
