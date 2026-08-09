@@ -1,29 +1,84 @@
-const CatchTrackPermissionManager = {
+"use strict";
 
-    version: "1.0",
+
+window.CatchTrackPermissionManager = {
+
+    version: "2.0.0",
 
     permissions: {},
+
+    initialized: false,
 
 
     init() {
 
-        console.log(
-            "CatchTrack Permission Manager bereit."
-        );
+        if (
+            this.initialized
+        ) {
+
+            return;
+
+        }
+
+
+        this.initialized =
+            true;
+
+
+        const stored =
+            window.CatchTrackStorageManager
+                ?.load(
+                    "permissions",
+                    {}
+                );
+
+
+        if (
+            stored &&
+            typeof stored ===
+            "object"
+        ) {
+
+            this.permissions =
+                {
+                    ...stored
+                };
+
+        }
 
     },
 
 
-    setPermission(name, value) {
+    setPermission(
+        name,
+        value,
+        persist = true
+    ) {
 
-        this.permissions[name] = value;
+        if (!name) {
+
+            return false;
+
+        }
 
 
-        console.log(
-            "Berechtigung gesetzt:",
-            name,
-            value
-        );
+        this.permissions[
+            name
+        ] =
+            value;
+
+
+        if (
+            persist &&
+            window.CatchTrackStorageManager
+        ) {
+
+            CatchTrackStorageManager.save(
+                "permissions",
+                this.permissions
+            );
+
+        }
 
 
         return true;
@@ -33,33 +88,31 @@ const CatchTrackPermissionManager = {
 
     getPermission(name) {
 
-        return this.permissions[name] ?? false;
+        return (
+            this.permissions[
+                name
+            ] ??
+            false
+        );
 
     },
 
 
     check(name) {
 
-        return this.getPermission(name);
+        return !!this.getPermission(
+            name
+        );
 
     },
 
 
     getAll() {
 
-        return this.permissions;
+        return {
+            ...this.permissions
+        };
 
     }
 
 };
-
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        CatchTrackPermissionManager.init();
-
-    }
-);
