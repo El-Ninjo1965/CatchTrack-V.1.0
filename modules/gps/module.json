@@ -1,10 +1,10 @@
 {
     "name": "gps",
-    "version": "2.0.0",
+    "version": "2.3.0",
     "status": "active",
     "enabled": true,
     "displayName": "GPS",
-    "description": "GPS Standortverwaltung",
+    "description": "GPS Standortverwaltung und Navigation",
     "path": "modules/gps/",
     "files": {
         "html": "gps.html",
