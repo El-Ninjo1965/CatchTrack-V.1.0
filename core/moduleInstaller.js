@@ -1,256 +1,220 @@
 "use strict";
 
 
-const CatchTrackModuleInstaller = {
+window.CatchTrackModuleInstaller = {
 
+    version: "2.0.0",
 
-    version: "1.0",
+    installedModules: {},
 
-
-    installedModules: [],
-
+    initialized: false,
 
 
     init() {
 
+        if (
+            this.initialized
+        ) {
 
-        console.log(
-
-            "CatchTrack Module Installer bereit."
-
-        );
-
-
-    },
-
-
-
-    scanModule(module) {
-
-
-        if (!module) {
-
-
-            return false;
-
+            return;
 
         }
 
 
-
-        const required = [
-
-
-            "name",
-
-            "path",
-
-            "files",
-
-            "initializer"
+        this.initialized =
+            true;
 
 
-        ];
+        const stored =
+            window.CatchTrackStorageManager
+                ?.load(
+                    "installed_modules",
+                    {}
+                );
 
 
+        if (
+            stored &&
+            typeof stored ===
+            "object"
+        ) {
 
-        return required.every(
+            this.installedModules =
+                {
+                    ...stored
+                };
 
-            item =>
-
-            module[item]
-
-        );
-
+        }
 
     },
 
 
+    validate(module) {
 
-    installModule(module) {
+        if (
+            !module ||
+            typeof module !==
+            "object"
+        ) {
+
+            return {
+
+                valid: false,
+
+                errors: [
+                    "Moduldefinition fehlt."
+
+                ]
+
+            };
+
+        }
 
 
-        if (!this.scanModule(module)) {
+        const errors = [];
 
 
-            console.warn(
+        if (!module.name) {
 
-                "Ungültiges Modul:",
+            errors.push(
+                "name fehlt."
+            );
 
+        }
+
+
+        if (!module.path) {
+
+            errors.push(
+                "path fehlt."
+            );
+
+        }
+
+
+        if (
+            !module.files ||
+            !module.files.html ||
+            !module.files.css ||
+            !module.files.js
+        ) {
+
+            errors.push(
+                "HTML/CSS/JS-Dateidefinition fehlt."
+            );
+
+        }
+
+
+        if (!module.initializer) {
+
+            errors.push(
+                "initializer fehlt."
+            );
+
+        }
+
+
+        return {
+
+            valid:
+                errors.length === 0,
+
+            errors
+
+        };
+
+    },
+
+
+    install(
+        module
+    ) {
+
+        const result =
+            this.validate(
                 module
-
             );
 
 
-            return false;
+        if (!result.valid) {
 
+            return false;
 
         }
 
 
+        this.installedModules[
+            module.name
+        ] = {
 
-        const exists =
+            name:
+                module.name,
 
-        this.installedModules.some(
+            version:
+                module.version ||
+                "1.0.0",
 
-            item =>
-
-            item.name === module.name
-
-        );
-
-
-
-        if (exists) {
-
-
-            return false;
-
-
-        }
-
-
-
-        this.installedModules.push(
-
-            {
-
-                name: module.name,
-
-                version: module.version || "1.0",
-
-                installed: true,
-
-                installedAt:
-
+            installedAt:
                 new Date().toISOString()
 
-            }
-
-        );
+        };
 
 
-
-        console.log(
-
-            "Modul installiert:",
-
-            module.name
-
-        );
-
+        this.persist();
 
 
         return true;
 
-
     },
 
 
+    uninstall(name) {
 
-    uninstallModule(name) {
+        delete this.installedModules[
+            name
+        ];
 
 
-        this.installedModules =
-
-        this.installedModules.filter(
-
-            module =>
-
-            module.name !== name
-
-        );
-
+        this.persist();
 
 
         return true;
 
-
     },
-
 
 
     isInstalled(name) {
 
-
-        return this.installedModules.some(
-
-            module =>
-
-            module.name === name
-
-        );
-
+        return !!this.installedModules[
+            name
+        ];
 
     },
-
 
 
     getInstalledModules() {
 
-
-        return this.installedModules;
-
+        return {
+            ...this.installedModules
+        };
 
     },
 
 
+    persist() {
 
-    prepareDatabase(module) {
+        if (
+            window.CatchTrackStorageManager
+        ) {
 
-
-        if (!module.database) {
-
-
-            return false;
-
+            CatchTrackStorageManager.save(
+                "installed_modules",
+                this.installedModules
+            );
 
         }
 
-
-
-        console.log(
-
-            "Datenbank Vorbereitung:",
-
-            module.name
-
-        );
-
-
-
-        return true;
-
-
     }
-
 
 };
-
-
-
-document.addEventListener(
-
-    "DOMContentLoaded",
-
-    () => {
-
-
-        CatchTrackModuleInstaller.init();
-
-
-    }
-
-);
-
-
-/*
-==================================================
-ENDE DATEI
-
-CatchTrack Master Edition V1.0
-core/moduleInstaller.js
-
-Version 1.0
-==================================================
-*/
