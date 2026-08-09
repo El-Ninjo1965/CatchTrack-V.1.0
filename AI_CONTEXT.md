@@ -1,3 +1,6 @@
+# AI_CONTEXT Version 1.1
+# Updated: 2026-08-09
+
 # CatchTrack – AI Context
 
 ## Zweck
@@ -109,9 +112,6 @@ Bei jeder Wiederaufnahme zusätzlich prüfen:
 
 Die Commit-Historie dient als zusätzliche Fortschrittsreferenz.
 
-Jeder vom Benutzer einzeln hochgeladene und benannte Commit
-kann als zusätzliche Fortschrittsmarke verwendet werden.
-
 Der Benutzer verwendet grundsätzlich den Dateinamen als
 Commit-Namen.
 
@@ -146,20 +146,19 @@ abgleichen.
 ## 8. GitHub-Zugriff und Schreibrechte
 
 Die GitHub-Anbindung von ChatGPT wird grundsätzlich als
-**lesender Zugriff** behandelt.
+lesender Zugriff behandelt.
 
 ChatGPT soll nicht davon ausgehen, dass Schreibrechte auf
 das Repository vorhanden sind.
 
 Der Benutzer führt Änderungen am Repository über
-**Working Copy** auf dem iPad durch.
+Working Copy auf dem iPad durch.
 
 Daher gilt:
 
 - ChatGPT liest Dateien und Projektstände von GitHub.
 - ChatGPT prüft Commits und Dateien auf GitHub.
-- ChatGPT erstellt keine Voraussetzung dafür, dass Dateien
-  direkt auf GitHub geschrieben werden können.
+- ChatGPT schreibt grundsätzlich nicht direkt in das Repository.
 - Änderungen werden vom Benutzer manuell über Working Copy
   übernommen.
 - Anschließend erstellt der Benutzer den GitHub-Commit.
@@ -181,19 +180,75 @@ die Datei anschließend auf GitHub geprüft werden soll, ist
 zunächst davon auszugehen, dass die Datei vom Benutzer
 ordnungsgemäß hochgeladen und committed wurde.
 
-Wenn der erste GitHub-Abruf:
+Die Prüfung erfolgt verbindlich in dieser Reihenfolge.
+
+### Schritt 1 – Commit-Historie prüfen
+
+Zuerst wird die GitHub-Commit-Historie geprüft.
+
+Dabei wird nach dem erwarteten Dateinamen bzw. Commit-Namen
+gesucht.
+
+Beispiel:
+
+Erwartete Datei:
+
+`fishData.js`
+
+Erwarteter Commit:
+
+`fishData.js`
+
+Es wird geprüft:
+
+- ob der Commit vorhanden ist
+- Commit-Nachricht
+- Commit-Datum
+- Commit-Uhrzeit
+- Commit-SHA
+- geänderte Dateien
+- gegebenenfalls Commit-Diff
+
+Der Commit ist damit die erste Übermittlungsreferenz.
+
+### Schritt 2 – Commit verifizieren
+
+Wenn ein passender Commit gefunden wurde, wird geprüft,
+ob die erwartete Datei tatsächlich Bestandteil dieses
+Commits ist.
+
+Damit wird unterschieden zwischen:
+
+- Commit vorhanden und Datei enthalten
+- Commit vorhanden, aber andere Datei geändert
+- falscher bzw. älterer Commit
+- Commit nicht vorhanden
+
+### Schritt 3 – Datei direkt abrufen
+
+Erst danach wird die Datei anhand ihres tatsächlichen
+Repository-Pfades direkt abgerufen.
+
+Beispiel:
+
+`modules/fishDatabase/fishData.js`
+
+Wenn der direkte Abruf einen vorübergehenden Fehler liefert,
+wird die Abfrage automatisch wiederholt.
+
+### Wiederholungsregel
+
+Bei:
 
 - 404 / Not Found
 - Timeout
-- leere oder unvollständige Ergebnisse
-- offensichtlicher Verbindungsfehler
-- vorübergehender Connector-Fehler
+- leerem Ergebnis
+- unvollständigem Ergebnis
+- Connector-Fehler
+- offensichtlichem temporärem GitHub-Problem
 
-liefert, darf daraus nicht sofort geschlossen werden, dass die
-Datei nicht vorhanden ist.
-
-Die GitHub-Abfrage wird automatisch bis zu **viermal direkt
-hintereinander** wiederholt.
+werden bis zu **vier Abrufversuche direkt hintereinander**
+durchgeführt.
 
 Die Wiederholungen erfolgen:
 
@@ -201,19 +256,36 @@ Die Wiederholungen erfolgen:
 - ohne Rückfrage
 - unmittelbar hintereinander
 
-Erst wenn alle vier Versuche erfolglos sind, wird dem Benutzer
-gemeldet, dass die Datei über die GitHub-Verbindung nicht
+### Schritt 4 – Commit als Fallback
+
+Wenn der Commit eindeutig vorhanden ist und die Datei im
+Commit nachweisbar ist, der direkte Dateiabruf aber weiterhin
+fehlschlägt, gilt die Datei als übermittelt, sofern der
+Commit die Datei eindeutig enthält.
+
+In diesem Fall darf nicht vorschnell behauptet werden,
+dass die Datei nicht übertragen wurde.
+
+Der Commit dient dann als maßgebliche Übermittlungsreferenz.
+
+### Schritt 5 – Ergebnis
+
+Erfolgreich:
+
+**Commit vorhanden + Datei im Commit vorhanden + Datei direkt
+abrufbar**
+
+oder:
+
+**Commit vorhanden + Datei eindeutig im Commit enthalten,
+direkter Abruf trotz Wiederholungen nicht möglich**
+
+Nicht übertragen:
+
+**Kein passender Commit + Datei nicht auffindbar**
+
+Erst dann wird dem Benutzer mitgeteilt, dass die Datei nicht
 verifiziert werden konnte.
-
-Bei erfolgreichem Abruf werden anschließend:
-
-1. Dateiinhalt
-2. aktueller Branch
-3. relevanter Commit
-4. Commit-Nachricht
-5. geänderte Datei
-
-geprüft.
 
 —
 
@@ -226,7 +298,7 @@ und committed.
 
 Bei Änderungen bestehender Dateien:
 
-1. aktuelle Datei aus GitHub einlesen
+1. aktuelle Datei aus GitHub lesen
 2. Abhängigkeiten prüfen
 3. Projektplan prüfen
 4. vollständige Datei erstellen
@@ -235,8 +307,8 @@ Bei Änderungen bestehender Dateien:
 7. Benutzer erstellt den GitHub-Commit
 8. anschließend GitHub-Stand und Commit prüfen
 
-Der Benutzer möchte grundsätzlich **vollständige
-Ersatzdateien**.
+Der Benutzer möchte grundsätzlich vollständige
+Ersatzdateien.
 
 Keine:
 
@@ -254,7 +326,7 @@ Nach Möglichkeit immer die komplette fertige Datei liefern.
 ## 11. Vollständige Dateien als verbindliche Regel
 
 Wenn eine bestehende Datei geändert werden soll, wird nach
-Möglichkeit immer die **vollständige aktuelle Ersatzdatei**
+Möglichkeit immer die vollständige aktuelle Ersatzdatei
 ausgegeben.
 
 Dies gilt insbesondere für:
@@ -273,10 +345,10 @@ Dies gilt insbesondere für:
 - `PROJECT_MODULE_PLAN.md`
 
 Wenn `AI_CONTEXT.md` geändert wird, muss dem Benutzer immer
-die **vollständige Datei** ausgegeben werden.
+die vollständige Datei ausgegeben werden.
 
 Wenn `PROJECT_RULES.md` geändert wird, muss dem Benutzer immer
-die **vollständige Datei** ausgegeben werden.
+die vollständige Datei ausgegeben werden.
 
 Der Benutzer soll dadurch eine Datei in Working Copy
 vollständig ersetzen können, ohne manuell einzelne Stellen
@@ -569,7 +641,43 @@ zur administrierbaren CMS-artigen Fischdatenverwaltung.
 
 —
 
-## 19. Wichtig
+## 19. Versionsverwaltung dieser Datei
+
+Die erste Zeile dieser Datei enthält immer die aktuelle
+Version.
+
+Format:
+
+`# AI_CONTEXT Version X.Y`
+
+Zusätzlich enthält die zweite Zeile das Datum der letzten
+inhaltlichen Änderung:
+
+`# Updated: YYYY-MM-DD`
+
+Bei jeder inhaltlichen Änderung wird die Versionsnummer
+erhöht.
+
+Beispiele:
+
+- `1.0` = Ausgangsversion
+- `1.1` = kleinere Regel- oder Inhaltsänderung
+- `1.2` = weitere kleinere Änderung
+- `2.0` = größere strukturelle Änderung
+
+Damit kann beim Einlesen jederzeit festgestellt werden,
+welche Fassung aktuell ist.
+
+Bei einer Änderung von `AI_CONTEXT.md` muss die neue
+Versionsnummer in der vollständigen Ersatzdatei aktualisiert
+werden.
+
+Die Versionsnummer ersetzt nicht die GitHub-Commit-Historie,
+sondern ergänzt sie.
+
+—
+
+## 20. Wichtig
 
 Diese Datei ist ein Lesefahrplan.
 
