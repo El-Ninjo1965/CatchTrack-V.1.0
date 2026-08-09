@@ -109,6 +109,9 @@ Bei jeder Wiederaufnahme zusätzlich prüfen:
 
 Die Commit-Historie dient als zusätzliche Fortschrittsreferenz.
 
+Jeder vom Benutzer einzeln hochgeladene und benannte Commit
+kann als zusätzliche Fortschrittsmarke verwendet werden.
+
 —
 
 ## 7. Arbeitsreihenfolge bei Wiederaufnahme
@@ -147,11 +150,289 @@ Bei Änderungen bestehender Dateien:
 6. Benutzer erstellt den GitHub-Commit
 7. anschließend GitHub-Stand und Commit prüfen
 
-Keine Änderungen an GitHub durch ChatGPT voraussetzen.
+Der Benutzer möchte grundsätzlich vollständige Ersatzdateien
+und keine Teiländerungen, Patch-Anweisungen oder
+„ersetze diesen Abschnitt“-Anweisungen.
+
+Nach Möglichkeit immer die komplette fertige Datei liefern.
+
+Wenn der Benutzer „OK“ sagt, gilt die vorherige Anweisung als
+bestätigt bzw. ausgeführt. Nicht erneut fragen, ob der
+bestätigte Schritt ausgeführt werden soll, sondern direkt mit
+dem nächsten sinnvollen Arbeitsschritt fortfahren.
 
 —
 
-## 9. Wichtig
+## 9. Entwicklungsprinzip
+
+CatchTrack soll langfristig modular aufgebaut werden.
+
+Neue Module sollen nach Möglichkeit:
+
+- eigenständig funktionieren
+- klar definierte Schnittstellen besitzen
+- die zentrale Datenbank verwenden
+- mit anderen Modulen kommunizieren können
+- mehrsprachig vorbereitet sein
+- erweiterbar sein
+- keine unnötigen Abhängigkeiten erzeugen
+
+Die Module sollen langfristig so aufgebaut werden, dass sie
+nicht nur eine feste Anzeige darstellen.
+
+Insbesondere Daten- und Inhaltsmodule sollen später über eine
+zentrale Admin-Oberfläche administrierbar sein.
+
+Das betrifft nach Möglichkeit:
+
+- Inhalte
+- Texte
+- Beschriftungen
+- Eingabefelder
+- Feldtypen
+- Kategorien
+- Reihenfolgen
+- aktivierte/deaktivierte Felder
+- weitere konfigurierbare Eigenschaften
+
+Dabei soll die Architektur eher einem modularen CMS bzw.
+E-Commerce-System entsprechen als einer Sammlung fest
+programmierter Einzelansichten.
+
+Die erste Implementierung eines Moduls soll trotzdem zunächst
+klein, stabil und testbar bleiben.
+
+Nicht gleichzeitig unnötig viele Erweiterungen einbauen.
+
+—
+
+## 10. Fish Data – neuer Entwicklungsplan
+
+### Ziel
+
+Das bisherige Fish-Database-Modul wird nicht weiter durch
+kleinteilige Reparaturen erweitert.
+
+Stattdessen wird ein neues, eigenständiges Fish-Data-Modul
+aufgebaut.
+
+Geplante Datei:
+
+`modules/fishDatabase/fishData.js`
+
+Die bisherige:
+
+`modules/fishDatabase/fishDatabase.js`
+
+wird zunächst nicht gelöscht.
+
+Sie bleibt als Rückfall- bzw. Vergleichsversion erhalten,
+bis das neue Modul stabil funktioniert.
+
+### Ziel des Fish-Data-Moduls
+
+Fish Data soll langfristig die zentrale Fischdatenbank bzw.
+Fischkarten-Funktion von CatchTrack bilden.
+
+Ein Fischdatensatz kann später unter anderem enthalten:
+
+- deutscher Name
+- weitere lokale Namen
+- wissenschaftlicher Name
+- Familie
+- Beschreibung
+- Bild
+- Lebensraum
+- Gewässertyp
+- bevorzugte Tiefe
+- bevorzugte Wassertemperatur
+- Köder
+- Fangmethoden
+- beste Fangzeit
+- Tageszeit
+- Saison
+- Schonzeit
+- Mindestgröße
+- typische Größe
+- typisches Gewicht
+- weitere fischereiliche Eigenschaften
+- eigene Fangdaten bzw. Verknüpfungen zum Fangbuch
+
+Die tatsächlichen Datenfelder werden schrittweise festgelegt
+und nicht unnötig vorab fest verdrahtet.
+
+### Entwicklungsstufen
+
+#### Stufe 1 – Stabiler Kern
+
+Zuerst muss das neue Modul:
+
+- fehlerfrei geladen werden
+- nur einmal initialisiert werden
+- keine Endlosschleifen erzeugen
+- keine Datensätze mehrfach rendern
+- vorhandene Fischdaten korrekt lesen
+- eine einfache Fischliste bzw. Fischansicht darstellen
+- mit der vorhandenen Datenbank kompatibel bleiben
+
+Erst wenn dieser Kern stabil funktioniert, folgt die nächste
+Stufe.
+
+#### Stufe 2 – Fischkarte
+
+Danach:
+
+- Fischübersicht
+- einzelne Fischkarte
+- Detailansicht
+- strukturierte Darstellung der Eigenschaften
+- Bilder
+- übersichtliche Kategorien
+
+#### Stufe 3 – Erweiterte Fischdaten
+
+Danach schrittweise:
+
+- Köder
+- Tiefe
+- Fangzeit
+- Saison
+- Gewässer
+- Lebensraum
+- Fangmethoden
+- weitere fischereiliche Informationen
+
+#### Stufe 4 – Administration
+
+Danach wird die Administration aufgebaut.
+
+Ziel:
+
+Fischdaten sollen nicht mehr ausschließlich im JavaScript
+fest programmiert sein.
+
+Die Admin-Oberfläche soll später ermöglichen:
+
+- Fische anlegen
+- Fische bearbeiten
+- Fische löschen/deaktivieren
+- Texte bearbeiten
+- Felder verwalten
+- Eigenschaften verwalten
+- Kategorien verwalten
+- Reihenfolge bestimmen
+- Inhalte aktivieren/deaktivieren
+
+#### Stufe 5 – CMS-artige Erweiterbarkeit
+
+Langfristig soll das System ermöglichen, neue Eigenschaften
+möglichst über die Administration hinzuzufügen, ohne jedes
+Mal die komplette Frontend-Logik neu programmieren zu müssen.
+
+Dabei wird zwischen:
+
+- Daten
+- Darstellung
+- Konfiguration
+- Administration
+
+getrennt.
+
+—
+
+## 11. Fish Data – wichtige Architekturregel
+
+Fish Data darf nicht nur eine statische HTML-Anzeige sein.
+
+Das Modul soll als eigenständige Funktion innerhalb von
+CatchTrack arbeiten.
+
+Datenhaltung, Datenzugriff und Darstellung sollen so weit
+wie sinnvoll getrennt werden.
+
+Andere CatchTrack-Module sollen später auf die Fischdaten
+zugreifen können.
+
+Insbesondere das Fangbuch soll später eine Fischart aus
+Fish Data auswählen bzw. mit einem Fang verknüpfen können.
+
+—
+
+## 12. Umgang mit bestehenden Dateien
+
+Bestehende funktionierende Dateien werden nicht unnötig
+verändert.
+
+Vor jeder Änderung:
+
+1. aktuelle Datei aus GitHub lesen
+2. Abhängigkeiten feststellen
+3. prüfen, ob die Datei tatsächlich geändert werden muss
+4. erst danach eine vollständige Ersatzdatei erstellen
+
+Bei einem neuen Modul möglichst eine neue Datei verwenden,
+anstatt eine funktionierende Altdatei immer wieder umzubauen.
+
+Alte Dateien werden erst entfernt, wenn:
+
+- die neue Implementierung funktioniert
+- alle Abhängigkeiten umgestellt wurden
+- die alte Datei nicht mehr benötigt wird
+- der Schritt dokumentiert wurde
+
+—
+
+## 13. Test- und Fortschrittsverfahren
+
+Nach jeder wichtigen Datei:
+
+1. vollständige Datei erstellen
+2. Benutzer übernimmt sie über Working Copy
+3. Benutzer erstellt einen eindeutigen GitHub-Commit
+4. GitHub-Commit prüfen
+5. Datei auf GitHub erneut einlesen
+6. Funktion testen
+7. Fehler dokumentieren
+8. erst danach nächsten Entwicklungsschritt beginnen
+
+Die GitHub-Commit-Historie ist dabei eine zusätzliche
+Fortschrittsreferenz.
+
+Der Commit-Name des Benutzers kann als Hinweis darauf
+verwendet werden, welche Datei bzw. welcher Arbeitsschritt
+zuletzt übertragen wurde.
+
+—
+
+## 14. Aktueller Übergabepunkt
+
+Das Basisskelett des Projekts steht.
+
+Die bisherige Fish-Database-Implementierung zeigte beim Test
+mehrfach wiederholte Fischdatensätze und anschließend eine
+weiße Seite.
+
+Deshalb wird die Fish-Funktion nicht weiter auf Basis der
+bisherigen `fishDatabase.js` schrittweise repariert.
+
+Der nächste Entwicklungsabschnitt ist:
+
+**NEU: FISH DATA**
+
+Geplante erste Datei:
+
+`modules/fishDatabase/fishData.js`
+
+Ziel der ersten Version:
+
+**stabiler, eigenständiger Fish-Data-Kern.**
+
+Danach schrittweise Ausbau zur Fischkarte und anschließend
+zur administrierbaren CMS-artigen Fischdatenverwaltung.
+
+—
+
+## 15. Wichtig
 
 Diese Datei ist ein Lesefahrplan.
 
@@ -168,24 +449,17 @@ tatsächliche GitHub-Datei
 >
 GitHub-Commit-Historie
 >
-Projektstatus
+aktueller Runtime-/Teststatus
+>
+Projektwissensstand
 >
 Projektplan
 >
 ältere Dokumentation
 
+Die tatsächliche Projektstruktur und die tatsächlich auf
+GitHub vorhandenen Dateien haben Vorrang vor Annahmen.
+
 —
 
-## 10. Aktueller Übergabepunkt
-
-Das Basisskelett des Projekts steht.
-
-Die nächste Hauptphase ist:
-
-MODULE
-
-Die Module werden chronologisch anhand von
-`PROJECT_MODULE_PLAN.md` bearbeitet.
-
-Vor Beginn eines neuen Moduls müssen dessen Abhängigkeiten
-und vorhandene Altdateien geprüft werden.
+## Ende AI_CONTEXT
