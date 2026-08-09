@@ -1,38 +1,75 @@
-const CatchTrackStorageManager = {
+"use strict";
 
-    version: "1.0",
 
-    storageType: "localStorage",
+window.CatchTrackStorageManager = {
+
+    version: "2.0.0",
+
+    prefix:
+        "catchtrack:",
+
+    initialized: false,
 
 
     init() {
 
-        console.log(
-            "CatchTrack Storage Manager bereit."
+        if (
+            this.initialized
+        ) {
+
+            return;
+
+        }
+
+
+        this.initialized =
+            true;
+
+    },
+
+
+    buildKey(key) {
+
+        return (
+            this.prefix +
+            String(key)
         );
 
     },
 
 
-    save(key, value) {
+    save(
+        key,
+        value
+    ) {
 
         try {
 
             localStorage.setItem(
-                key,
+
+                this.buildKey(key),
+
                 JSON.stringify(value)
+
             );
 
 
             return true;
 
-        } catch (error) {
+        }
 
-            console.error(
-                "Speicherfehler:",
-                error
-            );
+        catch (error) {
 
+            if (
+                window.CatchTrackErrorHandler
+            ) {
+
+                CatchTrackErrorHandler.handle(
+                    error,
+                    "storage:save"
+                );
+
+            }
 
             return false;
 
@@ -41,28 +78,48 @@ const CatchTrackStorageManager = {
     },
 
 
-    load(key) {
+    load(
+        key,
+        fallback = null
+    ) {
 
         try {
 
             const value =
-                localStorage.getItem(key);
+                localStorage.getItem(
+                    this.buildKey(key)
+                );
 
 
-            return value
-                ? JSON.parse(value)
-                : null;
+            if (
+                value === null
+            ) {
+
+                return fallback;
+
+            }
 
 
-        } catch (error) {
-
-            console.error(
-                "Ladefehler:",
-                error
+            return JSON.parse(
+                value
             );
 
+        }
 
-            return null;
+        catch (error) {
+
+            if (
+                window.CatchTrackErrorHandler
+            ) {
+
+                CatchTrackErrorHandler.handle(
+                    error,
+                    "storage:load"
+                );
+
+            }
+
+            return fallback;
 
         }
 
@@ -71,21 +128,83 @@ const CatchTrackStorageManager = {
 
     remove(key) {
 
-        localStorage.removeItem(key);
+        try {
+
+            localStorage.removeItem(
+                this.buildKey(key)
+            );
+
+            return true;
+
+        }
+
+        catch (error) {
+
+            return false;
+
+        }
+
+    },
+
+
+    has(key) {
+
+        try {
+
+            return (
+                localStorage.getItem(
+                    this.buildKey(key)
+                ) !== null
+            );
+
+        }
+
+        catch (error) {
+
+            return false;
+
+        }
+
+    },
+
+
+    clearNamespace() {
+
+        const keys = [];
+
+        for (
+            let index = 0;
+            index < localStorage.length;
+            index++
+        ) {
+
+            const key =
+                localStorage.key(index);
+
+            if (
+                key &&
+                key.startsWith(
+                    this.prefix
+                )
+            ) {
+
+                keys.push(key);
+
+            }
+
+        }
+
+
+        keys.forEach(
+            key =>
+                localStorage.removeItem(
+                    key
+                )
+        );
+
 
         return true;
 
     }
 
 };
-
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        CatchTrackStorageManager.init();
-
-    }
-);
