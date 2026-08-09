@@ -1004,3 +1004,74 @@ Dann die vollständige betroffene Datei erstellen.
 Nach der Übertragung über Working Copy den neuen GitHub-Stand erneut prüfen.
 
 Erst danach mit dem nächsten Arbeitsschritt fortfahren.
+
+—
+
+## GitHub-Commit-Historie als Fortschrittsreferenz
+
+Da jede bearbeitete Datei einzeln über Working Copy nach GitHub übertragen und committed wird, gilt die Git-Commit-Historie als zusätzliche Referenz für den tatsächlichen Projektfortschritt.
+
+Bei jeder weiteren Projektprüfung ist daher:
+
+1. der aktuelle Dateistand auf `main` zu prüfen
+2. die Commit-Historie der betreffenden Datei zu prüfen
+3. Datum und Uhrzeit des letzten relevanten Commits zu berücksichtigen
+4. die Commit-Nachricht zur Identifikation der bearbeiteten Datei/Funktion heranzuziehen
+5. der Commit-Verlauf mit den Projektstatus- und Planungsdateien sowie dem tatsächlichen Dateistand abzugleichen
+
+Da grundsätzlich jede Datei einzeln committed wird, kann anhand der Historie nachvollzogen werden, welche Datei zuletzt bearbeitet wurde.
+
+Ein einzelner Commit gilt jedoch NICHT automatisch als Nachweis dafür, dass eine Funktion vollständig fertiggestellt ist.
+
+Entscheidend ist immer die Kombination aus:
+
+GitHub-Dateistand
++
+Commit-Historie
++
+Projektplan
++
+Projektregeln
++
+tatsächliche Funktionalität.
+
+Bei zukünftigen Bestandsaufnahmen soll der letzte relevante Commit deshalb automatisch als zusätzliche Fortschrittsreferenz berücksichtigt werden.
+
+—
+
+## Vollständige Ersatzdateien
+
+Bei jeder Änderung oder Neuerstellung einer Projektdatei wird grundsätzlich immer die vollständige Datei ausgegeben.
+
+Es werden keine:
+
+- Teilstücke
+- Codefragmente
+- Such-und-Ersetze-Anweisungen
+- einzelnen anzufügenden Passagen
+- Zeilenänderungen
+- Patch-Anweisungen
+
+als Arbeitsgrundlage verwendet.
+
+Der Benutzer übernimmt die von ChatGPT bereitgestellte vollständige Datei anschließend über Working Copy in das Projekt und erstellt den entsprechenden GitHub-Commit.
+
+Arbeitsablauf:
+
+CHATGPT
+↓
+VOLLSTÄNDIGE MASTERDATEI
+↓
+WORKING COPY
+↓
+GITHUB COMMIT
+
+Diese Vorgehensweise dient der Vermeidung von:
+
+- vergessenen Änderungen
+- falschen Einfügepositionen
+- doppelten Codeabschnitten
+- beschädigten Dateien
+- Versionsabweichungen zwischen ChatGPT und GitHub
+
+Wenn eine bestehende Datei geändert werden muss, wird zuerst die aktuelle Datei aus GitHub eingelesen und anschließend eine vollständige neue Version dieser Datei ausgegeben.
