@@ -1,68 +1,233 @@
-const CatchTrackRouter = {
+"use strict";
 
-    version: "1.0",
 
-    routes: [],
+window.CatchTrackRouter = {
+
+    version: "2.0.0",
+
+    routes: new Map(),
 
     currentRoute: null,
+
+    initialized: false,
 
 
     init() {
 
-        console.log(
-            "CatchTrack Router bereit."
+        if (
+            this.initialized
+        ) {
+
+            return;
+
+        }
+
+
+        this.initialized =
+            true;
+
+
+        window.addEventListener(
+            "hashchange",
+            () => {
+
+                this.handleHash();
+
+            }
         );
 
-    },
 
-
-    register(route, handler) {
-
-        this.routes.push({
-
-            route: route,
-
-            handler: handler
-
-        });
-
-
-        return true;
+        this.handleHash();
 
     },
 
 
-    navigate(route) {
+    normalize(route) {
 
-        const target =
-            this.routes.find(
-                item => item.route === route
-            );
+        let value =
+            String(route || "")
+                .trim();
 
 
-        if (!target) {
+        if (
+            !value
+        ) {
 
-            console.warn(
-                "Route nicht gefunden:",
-                route
-            );
+            return "/";
+
+        }
+
+
+        if (
+            !value.startsWith("/")
+        ) {
+
+            value =
+                "/" + value;
+
+        }
+
+
+        return value;
+
+    },
+
+
+    register(
+        route,
+        handler,
+        options = {}
+    ) {
+
+        const normalized =
+            this.normalize(route);
+
+
+        if (
+            typeof handler !==
+            "function"
+        ) {
 
             return false;
 
         }
 
 
-        this.currentRoute = route;
+        this.routes.set(
+            normalized,
+            {
+                handler,
+
+                title:
+                    options.title ||
+                    null
+            }
+        );
 
 
-        if (typeof target.handler === "function") {
+        return true;
 
-            target.handler();
+    },
+
+
+    unregister(route) {
+
+        return this.routes.delete(
+            this.normalize(route)
+        );
+
+    },
+
+
+    navigate(
+        route,
+        options = {}
+    ) {
+
+        const normalized =
+            this.normalize(route);
+
+
+        if (
+            options.replace
+        ) {
+
+            history.replaceState(
+                {},
+                "",
+                `#${normalized}`
+            );
+
+        }
+
+        else {
+
+            window.location.hash =
+                normalized;
 
         }
 
 
-        return true;
+        return this.dispatch(
+            normalized
+        );
+
+    },
+
+
+    handleHash() {
+
+        const hash =
+            window.location.hash
+                .replace(
+                    /^#/,
+                    ""
+                );
+
+
+        const route =
+            this.normalize(
+                hash || "/"
+            );
+
+
+        this.dispatch(
+            route
+        );
+
+    },
+
+
+    dispatch(route) {
+
+        const target =
+            this.routes.get(
+                route
+            );
+
+
+        if (!target) {
+
+            this.currentRoute =
+                route;
+
+            return false;
+
+        }
+
+
+        this.currentRoute =
+            route;
+
+
+        try {
+
+            target.handler(
+                route
+            );
+
+
+            return true;
+
+        }
+
+        catch (error) {
+
+            if (
+                window.CatchTrackErrorHandler
+            ) {
+
+                CatchTrackErrorHandler.handle(
+                    error,
+                    `router:${route}`
+                );
+
+            }
+
+
+            return false;
+
+        }
 
     },
 
@@ -71,17 +236,15 @@ const CatchTrackRouter = {
 
         return this.currentRoute;
 
+    },
+
+
+    getRoutes() {
+
+        return Array.from(
+            this.routes.keys()
+        );
+
     }
 
 };
-
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        CatchTrackRouter.init();
-
-    }
-);
