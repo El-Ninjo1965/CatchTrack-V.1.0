@@ -1,4 +1,4 @@
-CatchTrack – AI CONTEXT
+CatchTrack – AI_CONTEXT.md
 
 1. Zweck dieser Datei
 
@@ -10,7 +10,7 @@ Der tatsächlich vorhandene GitHub-Dateistand hat grundsätzlich Vorrang vor äl
 
 ⸻
 
-2. Verbindliche Priorität der Informationsquellen
+2. Priorität der Informationsquellen
 
 Bei jeder technischen Aufgabe gilt folgende Reihenfolge:
 
@@ -20,12 +20,10 @@ Bei jeder technischen Aufgabe gilt folgende Reihenfolge:
 4. PROJECT_STATUS.md
 5. PROJECT_RULES.md
 6. PROJECT_MODULE_PLAN.md
-7. Diese Datei
+7. AI_CONTEXT.md
 8. Ältere Chatverläufe und frühere Annahmen
 
 Bei Widersprüchen ist der tatsächliche aktuelle GitHub-Stand maßgeblich.
-
-Es darf nichts aus älteren Gesprächen als weiterhin gültig angenommen werden, wenn der aktuelle Projektstand etwas anderes zeigt.
 
 ⸻
 
@@ -47,8 +45,8 @@ Dabei sind einzubeziehen:
 * CSS
 * JavaScript
 * JSON
-* Konfigurationen
 * Daten-/Service-Dateien
+* Konfigurationen
 * Unterordner
 * sonstige Dateien
 * Altbestände
@@ -79,32 +77,23 @@ Löschungen müssen ausdrücklich als Löschkandidaten ausgewiesen werden.
 
 5. Core-Master – verbindlicher Freeze
 
-Der zentrale CatchTrack-Core wurde als Master-Version konsolidiert.
+Der zentrale CatchTrack-Core wird als Master-Version konsolidiert.
 
-Der Core gilt ab diesem Stand als:
+Nach ausdrücklicher Fertigstellung gilt:
 
 CORE MASTER
 STATUS: ABGESCHLOSSEN / FROZEN
 
-Die folgenden Dateien sind Bestandteil des Core-Masters:
+Zum Core-Master gehören insbesondere:
 
 index.html
 app.js
-core/storageManager.js
-core/languageManager.js
-core/permissionManager.js
-core/api.js
-core/router.js
-core/moduleInstaller.js
-core/moduleManager.js
-core/runtimeStorage.js
-core/runtimeStatus.js
-core/errorHandler.js
+core/*
 database/database.js
 database/schema.sql
-database/migrations/001_initial.sql
-database/migrations/002_users.sql
-database/migrations/003_core_master.sql
+database/migrations/*
+
+Die tatsächlich vorhandenen Dateien haben Vorrang vor dieser beispielhaften Auflistung.
 
 Diese Dateien dürfen bei der Entwicklung einzelner Fachmodule nicht unnötig neu erstellt, ersetzt oder verändert werden.
 
@@ -125,7 +114,7 @@ Eine Änderung des Core-Masters ist nur zulässig, wenn eine konkrete technische
 
 Beispiele:
 
-* ein bisher nicht vorgesehener globaler Dienst wird benötigt
+* eine bisher nicht vorgesehene globale Funktion wird benötigt
 * eine bestehende Schnittstelle ist nachweislich fehlerhaft
 * eine Sicherheits- oder Datenintegritätsproblematik wird festgestellt
 * eine globale Architekturentscheidung wird ausdrücklich geändert
@@ -137,7 +126,7 @@ Vor einer Core-Änderung muss ausdrücklich festgestellt werden:
 
 CORE-ÄNDERUNG ERFORDERLICH
 
-Anschließend muss die Änderung begründet und als eigener Arbeitsschritt behandelt werden.
+Die Änderung wird anschließend begründet und als eigener Arbeitsschritt behandelt.
 
 ⸻
 
@@ -160,7 +149,7 @@ Dazu gehören insbesondere:
 
 Ein einzelnes Fachmodul darf nicht dazu führen, dass app.js bei jedem Modulwechsel erweitert wird.
 
-Die Module müssen über die vorhandenen Core-Schnittstellen eingebunden werden.
+Module müssen über die vorhandenen Core-Schnittstellen eingebunden werden.
 
 ⸻
 
@@ -174,8 +163,6 @@ Die Datei wird nicht für jedes neue Modul verändert.
 
 Bereits vorhandene zentrale Datenstrukturen müssen wiederverwendet werden.
 
-Ein Modul darf nicht einfach zusätzliche zentrale Tabellen in schema.sql verlangen.
-
 Wenn eine neue Datenbankstruktur für ein Modul tatsächlich erforderlich ist, wird dafür eine eigene Migration verwendet.
 
 ⸻
@@ -184,13 +171,7 @@ Wenn eine neue Datenbankstruktur für ein Modul tatsächlich erforderlich ist, w
 
 CatchTrack verwendet ein migrationsbasiertes Datenbanksystem.
 
-Aktuelle Migrationen:
-
-database/migrations/001_initial.sql
-database/migrations/002_users.sql
-database/migrations/003_core_master.sql
-
-Diese Migrationen sind Bestandteil der Datenbankhistorie.
+Vorhandene Migrationen sind Bestandteil der Datenbankhistorie.
 
 Sie dürfen nicht nachträglich verändert oder gelöscht werden, nur weil spätere Versionen die Struktur erweitern.
 
@@ -218,9 +199,7 @@ Jedes Fachmodul befindet sich unter:
 
 modules/[MODULNAME]/
 
-Ein Modul ist grundsätzlich eigenständig.
-
-Typische Struktur:
+Eine mögliche Struktur ist beispielsweise:
 
 modules/
 └── gps/
@@ -271,7 +250,7 @@ Dazu können gehören:
 * Abhängigkeiten
 * weitere Modulmetadaten
 
-Die tatsächliche bestehende Definition hat Vorrang.
+Die tatsächlich bestehende Definition hat Vorrang.
 
 ⸻
 
@@ -323,7 +302,7 @@ Modulspezifische Datenbankerweiterungen werden über Migrationen vorgenommen.
 
 Automatisch ermittelte Daten sind grundsätzlich als:
 
-Vorschlag
+VORSCHLAG
 
 zu behandeln, sofern sie nicht ausdrücklich als verlässlich und endgültig definiert wurden.
 
@@ -361,7 +340,7 @@ GPS-Daten können anderen Modulen zur Verfügung gestellt werden.
 
 Insbesondere das Fangmodul kann einen GPS-Snapshot speichern.
 
-Die bereits vorbereiteten GPS-Felder im zentralen Fangdatensatz dürfen nicht unnötig dupliziert werden.
+Bereits vorhandene zentrale GPS-Felder dürfen nicht unnötig dupliziert werden.
 
 GPS ist daher nicht automatisch gleichbedeutend mit einer eigenen zentralen GPS-Tabelle.
 
@@ -409,7 +388,7 @@ Beispiel:
 
 GPS sollte nicht nur eine Oberfläche darstellen, sondern eine klare Datenstruktur bereitstellen.
 
-Beispielhafte konzeptionelle Struktur:
+Konzeptionell:
 
 GPS Service
     ↓
@@ -439,7 +418,7 @@ Ziel:
 
 ein Modul
 → vollständig
-→ getestet
+→ geprüft
 → abgeschlossen
 → nächstes Modul
 
@@ -447,7 +426,7 @@ ein Modul
 
 21. Arbeitsablauf bei jedem neuen Modul
 
-Schritt 1 – Referenzen
+Schritt 1 – Referenzen einlesen
 
 Zuerst werden die aktuellen Projektdateien gelesen:
 
@@ -460,7 +439,7 @@ Danach werden nur die für das Modul relevanten Referenzdateien gelesen.
 
 ⸻
 
-Schritt 2 – tatsächlichen Projektstand prüfen
+Schritt 2 – Tatsächlichen Projektstand prüfen
 
 Zu prüfen sind:
 
@@ -473,7 +452,7 @@ Zu prüfen sind:
 
 ⸻
 
-Schritt 3 – vollständigen Modulordner prüfen
+Schritt 3 – Vollständigen Modulordner prüfen
 
 Der komplette Ordner:
 
@@ -563,7 +542,7 @@ Keine unvollständigen Patch-Fragmente, wenn eine vollständige Master-Datei sin
 
 Wenn mehrere Dateien gleichzeitig erstellt oder ersetzt werden müssen, werden sie möglichst gemeinsam in einer Ausgabe geliefert.
 
-Der Benutzer soll nicht vier oder sechs aufeinanderfolgende Antworten mit jeweils einer einzelnen Datei erhalten.
+Der Benutzer soll nicht mehrere aufeinanderfolgende Antworten mit jeweils einer einzelnen Datei erhalten.
 
 Stattdessen:
 
@@ -580,13 +559,62 @@ module.json
 
 werden möglichst gemeinsam ausgegeben.
 
-Die Anzahl der Dateien ist nicht begrenzt.
-
 Diese Regel gilt verbindlich für alle weiteren Entwicklungsarbeiten.
 
 ⸻
 
-26. Keine unnötigen Wiederholungen
+26. OK-Regel / Arbeitsschritt-Bestätigung
+
+Wenn der Assistent Dateien zum Hochladen, Speichern oder Ersetzen bereitstellt und der Benutzer anschließend:
+
+OK
+
+antwortet, bedeutet dies:
+
+Der Benutzer hat seinen Arbeitsschritt ausgeführt.
+
+Der Assistent wartet danach nicht erneut auf eine Aufforderung zur Kontrolle.
+
+Stattdessen wird automatisch der aktuelle GitHub-Stand geprüft.
+
+Dabei ist zu kontrollieren:
+
+* Datei vorhanden?
+* erwarteter Inhalt vorhanden?
+* Änderung tatsächlich übernommen?
+* Commit vorhanden?
+* Commit-SHA vorhanden?
+* relevante Abhängigkeiten intakt?
+* Projektstruktur weiterhin korrekt?
+
+Wenn alles korrekt ist:
+
+→ nächsten vorgesehenen Arbeitsschritt ausführen
+
+Wenn etwas nicht korrekt ist:
+
+→ konkret mitteilen, was fehlt oder nicht stimmt
+→ keinen nächsten Entwicklungsschritt vortäuschen
+
+Die Reihenfolge der Arbeitsschritte bleibt erhalten.
+
+Damit gilt:
+
+Assistent:
+„Datei hochladen und speichern.“
+Benutzer:
+„OK“
+Bedeutung:
+Datei wurde vom Benutzer hochgeladen/gespeichert.
+→ GitHub automatisch prüfen.
+→ Ergebnis feststellen.
+→ mit dem vorgesehenen nächsten Schritt fortfahren.
+
+Diese Regel ist verbindlich.
+
+⸻
+
+27. Keine unnötigen Wiederholungen
 
 Bereits bestätigte und abgeschlossene Dateien werden nicht erneut vollständig ausgegeben, sofern keine Änderung erforderlich ist.
 
@@ -594,7 +622,7 @@ Insbesondere der Core-Master wird nicht bei jedem Modul erneut produziert.
 
 ⸻
 
-27. Löschregeln
+28. Löschregeln
 
 Eine Datei darf nicht stillschweigend gelöscht werden.
 
@@ -620,7 +648,7 @@ aufgeführt werden.
 
 ⸻
 
-28. Aktueller Core-Löschkandidat
+29. Aktueller bekannter Core-Löschkandidat
 
 Der derzeit bekannte redundante Altbestand ist:
 
@@ -637,15 +665,17 @@ Die Datei bleibt bis zur ausdrücklichen Löschung als Altbestand bestehen.
 
 ⸻
 
-29. GitHub-Commit-Regel
+30. GitHub-Commit-Regel
 
-Nach einer Entwicklung gilt:
-
-Die Dateien gelten erst dann als tatsächlich im Projektstand angekommen, wenn sie auf GitHub überprüft wurden.
+Nach einer Entwicklung gelten Dateien erst dann als tatsächlich im Projektstand angekommen, wenn sie auf GitHub überprüft wurden.
 
 Nach Mitteilung:
 
 Commit erfolgt
+
+oder nach einem bestätigenden:
+
+OK
 
 wird erneut geprüft:
 
@@ -662,7 +692,7 @@ Es darf niemals behauptet werden, eine Datei sei auf GitHub übertragen worden, 
 
 ⸻
 
-30. Projektfortschritt
+31. Projektfortschritt
 
 Der aktuelle Fortschritt wird primär in:
 
@@ -685,7 +715,7 @@ aktueller Projektfortschritt
 
 ⸻
 
-31. Arbeitsprinzip ab dem Core-Freeze
+32. Arbeitsprinzip ab dem Core-Freeze
 
 Ab dem abgeschlossenen Core-Master gilt:
 
@@ -717,7 +747,7 @@ Core-Änderung ausdrücklich feststellen
 
 ⸻
 
-32. Verbindliche Grundregel
+33. Verbindliche Grundregel
 
 Die technische Leitlinie für CatchTrack lautet:
 
@@ -731,5 +761,7 @@ Neue Funktionen sauber kapseln.
 Core stabil halten.
 Module einzeln vollständig fertigstellen.
 Aktuellen GitHub-Stand als Wahrheit behandeln.
+Nach „OK“ den GitHub-Stand automatisch prüfen.
+Nach erfolgreicher Prüfung ohne erneute Aufforderung fortfahren.
 
 Diese Regeln gelten für die weitere CatchTrack-Entwicklung verbindlich.
