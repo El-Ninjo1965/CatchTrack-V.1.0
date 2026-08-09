@@ -1,4 +1,4 @@
-AI_CONTEXT Version 2.1
+AI_CONTEXT Version 2.2
 Updated: 2026-08-09
 CatchTrack – AI Context
 
@@ -119,7 +119,13 @@ Das gilt insbesondere für:
 * Konfigurationsdateien
 
 Wenn mehrere Dateien geändert werden müssen, werden alle
-vollständigen Ersatzdateien gemeinsam ausgegeben.
+vollständigen Ersatzdateien gemeinsam in einer Antwort ausgegeben.
+
+Jede Datei soll möglichst in genau einem vollständigen Copyblock
+stehen.
+
+Es sollen nicht mehrere aufeinanderfolgende Antworten notwendig
+sein, um zusammengehörende Dateien zu übernehmen.
 
 ⸻
 
@@ -214,12 +220,27 @@ wurde, gilt die Übertragung als bestätigt.
 
 10. Verhalten bei „OK“
 
-Ein „OK“ bestätigt den vorherigen Schritt.
+„OK“ ist eine verbindliche Arbeitsbestätigung.
 
-Danach keine unnötige Rückfrage.
+Ein „OK“ bedeutet:
+
+* Der unmittelbar vorherige Arbeitsschritt wurde vom Benutzer
+    erledigt.
+* Die bereitgestellte Datei wurde übernommen, wenn zuvor eine
+    Dateiübernahme vorgesehen war.
+* Ein vorgesehener Upload oder Commit wurde durchgeführt, wenn
+    dies der unmittelbar vorherige Arbeitsschritt war.
+* Der nächste logisch notwendige Arbeitsschritt soll unmittelbar
+    begonnen werden.
+
+Nach einem eindeutigen „OK“ darf nicht erneut gefragt werden,
+ob der vorherige Schritt durchgeführt wurde.
 
 Wenn der nächste sinnvolle Schritt selbstständig ermittelt werden
-kann, soll er durchgeführt werden.
+kann, wird direkt fortgefahren.
+
+Bei einem vorherigen GitHub-Upload oder Commit wird vor der
+technischen Weiterarbeit der aktuelle GitHub-Stand geprüft.
 
 Logisch zusammengehörige Prüfungen sollen möglichst in einem
 Arbeitsgang erfolgen.
@@ -1292,7 +1313,7 @@ Updated: YYYY-MM-DD
 
 Aktuelle Version:
 
-2.1
+2.2
 
 Versionsänderungen müssen dokumentiert werden.
 
@@ -1881,26 +1902,264 @@ Wenn eine vollständige Datei als Ersatzdatei ausgegeben wird,
 muss sie grundsätzlich möglichst in einem einzigen Copyblock
 ausgegeben werden.
 
-Bevorzugtes Format:
-
-vollständiger Dateiinhalt
-
-Es soll nicht unnötig auf mehrere Blöcke aufgeteilt werden.
-
-Nur wenn technische Größen- oder Ausgabegrenzen einen einzelnen
-Block verhindern, darf die Datei auf zwei oder mehr Blöcke
-aufgeteilt werden.
-
 Bei mehreren Dateien eines Moduls gilt:
 
-Alle Dateien werden vollständig und gemeinsam ausgegeben.
+Alle Dateien werden vollständig und gemeinsam in derselben
+Antwort ausgegeben.
+
+Es soll nicht vorkommen, dass beispielsweise sechs zusammen-
+gehörende Dateien über sechs aufeinanderfolgende Antworten
+verteilt werden.
 
 Ziel ist, dass der Benutzer die Dateien direkt übernehmen und
 in Working Copy kopieren kann.
 
 ⸻
 
-78. Verbindlicher Grundsatz
+78. Gemeinsame Ausgabe zusammengehörender Dateien
+
+Wenn mehrere Dateien technisch zusammengehören, werden sie
+möglichst vollständig gemeinsam ausgegeben.
+
+Beispiel:
+
+ZU ERSETZEN:
+
+modules/gps/module.json
+modules/gps/gps.html
+modules/gps/gps.css
+modules/gps/gps.js
+
+Dann:
+
+Datei 1 – module.json
+[vollständiger Copyblock]
+
+Datei 2 – gps.html
+[vollständiger Copyblock]
+
+Datei 3 – gps.css
+[vollständiger Copyblock]
+
+Datei 4 – gps.js
+[vollständiger Copyblock]
+
+Nicht:
+
+eine Datei
+↓
+Benutzer übernimmt
+↓
+nächste Antwort
+↓
+zweite Datei
+↓
+Benutzer übernimmt
+↓
+nächste Antwort
+
+Alle zusammengehörenden Dateien sollen in einer Antwort
+bereitgestellt werden.
+
+⸻
+
+79. Keine unnötigen Wiederholungen bei Dateiausgaben
+
+Eine bereits als fertig übergebene Datei wird nicht erneut
+vollständig ausgegeben, solange sie nicht tatsächlich geändert
+werden muss.
+
+Bei einem Folgearbeitsschritt werden nur die Dateien ausgegeben,
+die:
+
+* neu erstellt werden müssen
+* tatsächlich ersetzt werden müssen
+* oder deren Inhalt sich tatsächlich geändert hat.
+
+Unveränderte Dateien werden in der Übersicht als UNVERÄNDERT
+aufgeführt, aber nicht erneut als Copyblock ausgegeben.
+
+⸻
+
+80. Verbindlicher Arbeitsablauf mit „OK“
+
+Der Benutzer arbeitet die von ChatGPT bereitgestellten Dateien
+über Working Copy und GitHub ab.
+
+Daher gilt:
+
+ChatGPT erstellt vollständige Dateien
+↓
+Benutzer übernimmt die Dateien
+↓
+Benutzer lädt / committet sie
+↓
+Benutzer schreibt „OK“
+↓
+ChatGPT betrachtet den vorherigen Arbeitsschritt als erledigt
+↓
+ChatGPT prüft bei einem GitHub-Schritt den aktuellen Stand
+↓
+ChatGPT fährt mit dem nächsten logischen Schritt fort
+
+„OK“ ist keine Aufforderung zu einer erneuten Bestätigung.
+
+Wenn der vorherige Schritt beispielsweise die Übernahme einer
+Datei war, bedeutet „OK“, dass diese Übernahme erfolgt ist.
+
+Wenn der vorherige Schritt ein Commit war, bedeutet „OK“, dass
+der Benutzer diesen Commit durchgeführt hat.
+
+Der tatsächliche GitHub-Stand wird anschließend trotzdem
+technisch geprüft, bevor daraus weitere Aussagen über den
+Repository-Stand abgeleitet werden.
+
+⸻
+
+81. Arbeitsablauf bei mehreren Dateien
+
+Wenn mehrere Dateien gemeinsam erstellt oder ersetzt werden:
+
+1. vollständigen Änderungsumfang feststellen
+2. alle betroffenen Dateien analysieren
+3. Abhängigkeiten zwischen den Dateien prüfen
+4. Master-Versionen gemeinsam erstellen
+5. alle Dateien in einer Antwort ausgeben
+6. jede Datei möglichst in genau einem Copyblock
+7. Benutzer übernimmt alle Dateien
+8. Benutzer bestätigt mit „OK“
+9. aktuellen GitHub-Stand prüfen
+10. erst danach nächsten Arbeitsschritt beginnen
+
+Dadurch sollen unnötige Zwischenübertragungen und wiederholte
+Dateiausgaben vermieden werden.
+
+⸻
+
+82. Abschluss eines Modul-Arbeitsschritts
+
+Nach Abschluss der Entwicklung eines Moduls muss die Ausgabe
+grundsätzlich eine vollständige Übersicht enthalten:
+
+ZU ERSETZEN
+
+* Dateien
+
+NEU ZU ERSTELLEN
+
+* Dateien
+
+LÖSCHKANDIDATEN
+
+* Dateien
+* kurze Begründung
+
+UNVERÄNDERT
+
+* Dateien
+
+Danach werden alle zu ersetzenden und neu zu erstellenden Dateien
+vollständig und gemeinsam ausgegeben.
+
+Möglichst jede Datei in genau einem Copyblock.
+
+⸻
+
+83. Nach dem Benutzer-Commit
+
+Wenn der Benutzer nach einer Dateiübernahme oder einem
+Entwicklungsschritt „OK“ meldet und der vorherige Schritt einen
+GitHub-Commit voraussetzte, wird der aktuelle GitHub-Stand erneut
+geprüft.
+
+Dabei sind zu kontrollieren:
+
+* Datei vorhanden
+* aktueller Dateiinhalt
+* Commit
+* Commit-SHA
+* relevante Abhängigkeiten
+* Modulstruktur
+
+Anschließend wird der tatsächlich erreichte Stand bestätigt.
+
+⸻
+
+84. Keine stillschweigenden Löschungen
+
+Dateien dürfen nicht stillschweigend gelöscht werden.
+
+Wenn eine Datei nicht mehr benötigt wird:
+
+1. Datei prüfen
+2. Referenzen prüfen
+3. Altbestand feststellen
+4. als LÖSCHKANDIDAT aufführen
+5. Begründung nennen
+
+Die Löschung erfolgt erst nach ausdrücklicher Entscheidung bzw.
+dem dafür vorgesehenen Benutzer-Arbeitsschritt.
+
+⸻
+
+85. Keine unnötige Core-Änderung durch Module
+
+Ein Fachmodul darf grundsätzlich keine Änderungen an:
+
+* app.js
+* zentraler Datenbankarchitektur
+* schema.sql
+* zentralem Module Manager
+* zentralem Runtime-System
+* zentralem Language-System
+
+erzwingen.
+
+Wenn eine solche Änderung notwendig erscheint, muss zuerst
+geprüft werden, ob die Funktion nicht über eine vorhandene
+Core-Schnittstelle gelöst werden kann.
+
+Nur wenn eine echte zentrale Architekturänderung erforderlich
+ist, darf der Core angepasst werden.
+
+⸻
+
+86. Core-Master vor Fachmodulen
+
+Der Core-Master wird als einmaliger grundlegender
+Konsolidierungsschritt durchgeführt.
+
+Danach werden Fachmodule auf den stabilen Core-Schnittstellen
+aufgebaut.
+
+Ziel:
+
+Core
+↓
+stabile APIs / Services
+↓
+GPS
+Weather
+Tide
+Moon
+Waters
+Equipment
+…
+↓
+integrative Module
+
+Ein neues Fachmodul soll möglichst nur:
+
+* seinen eigenen Modulordner
+* seine eigenen Daten
+* seine eigene Konfiguration
+* und gegebenenfalls seine eigene Migration
+
+benötigen.
+
+⸻
+
+87. Verbindlicher Grundsatz
 
 Bei jedem Modul zuerst den tatsächlichen Ordner prüfen.
 
@@ -1916,10 +2175,16 @@ Arbeitsgang als abgestimmte Master-Version erstellen.
 Am Ende alle zu ersetzenden, neu zu erstellenden und eventuell
 löschbaren Dateien gemeinsam auflisten.
 
-Vollständige Dateien möglichst immer in einem einzigen Copyblock
+Vollständige Dateien möglichst immer in einer einzigen Antwort
 ausgeben.
 
-Erst danach zum nächsten Modul wechseln.
+„OK“ bedeutet: vorherigen Arbeitsschritt als erledigt behandeln
+und mit dem nächsten logischen Schritt fortfahren.
+
+Nach einem GitHub-relevanten Arbeitsschritt wird der tatsächliche
+GitHub-Stand geprüft.
+
+Erst danach wird der nächste technische Arbeitsschritt begonnen.
 
 ⸻
 
