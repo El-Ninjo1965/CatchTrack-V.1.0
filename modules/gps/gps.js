@@ -850,9 +850,11 @@ window.CatchTrackGPSModule = {
     formatTimestamp(timestamp) {
         const date =
             new Date(timestamp);
-        if (Number.isNaN(
-            date.getTime()
-        )) {
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
             return "--";
         }
         try {
