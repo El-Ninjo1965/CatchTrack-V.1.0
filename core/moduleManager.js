@@ -1,618 +1,599 @@
 "use strict";
 
-
 window.CatchTrackModuleManager = {
 
-
-    version: "1.2.2",
-
+    version: "1.3.0",
 
     modules: [],
 
-
     activeModules: [],
-
 
     currentModule: null,
 
-
     loadedScripts: {},
-
 
     loadedStyles: {},
 
+    moduleStatus: {},
 
 
     init() {
 
-
         console.log(
-
-            "CatchTrack ModuleManager V1.2.2 bereit."
-
+            "CatchTrack ModuleManager V1.3.0 bereit."
         );
 
-
     },
-
 
 
     loadModules(modules) {
 
-
         this.modules =
-
-        Array.isArray(modules)
-
-        ? modules
-
-        : [];
-
-
+            Array.isArray(modules)
+                ? modules
+                : [];
 
         this.activeModules =
+            this.modules.filter(
+                module =>
+                    module.enabled === true
+            );
 
-        this.modules.filter(
+        this.moduleStatus = {};
 
-            module =>
+        this.modules.forEach(
+            module => {
 
-            module.enabled === true
+                this.moduleStatus[module.name] = {
 
+                    name: module.name,
+
+                    displayName:
+                        module.displayName ||
+                        module.name,
+
+                    enabled:
+                        module.enabled === true,
+
+                    loaded: false,
+
+                    initialized: false,
+
+                    error: null
+
+                };
+
+            }
         );
-
-
 
         this.createMenu();
 
-
-
         if (
-
             this.activeModules.length
-
         ) {
 
-
             this.loadModule(
-
                 this.activeModules[0]
-
             );
-
 
         }
 
-
     },
-
 
 
     createMenu() {
 
-
         let menu =
-
-        document.getElementById(
-
-            "catchtrack-menu"
-
-        );
-
-
+            document.getElementById(
+                "catchtrack-menu"
+            );
 
         if (menu) {
 
-
             menu.remove();
-
 
         }
 
-
-
         menu =
-
-        document.createElement(
-
-            "nav"
-
-        );
-
+            document.createElement(
+                "nav"
+            );
 
         menu.id =
-
-        "catchtrack-menu";
-
-
+            "catchtrack-menu";
 
         this.activeModules.forEach(
-
             module => {
 
-
                 const button =
-
-                document.createElement(
-
-                    "button"
-
-                );
-
-
+                    document.createElement(
+                        "button"
+                    );
 
                 button.type =
-
-                "button";
-
-
+                    "button";
 
                 button.textContent =
-
-                module.displayName
-
-                ||
-
-                module.name;
-
-
+                    module.displayName ||
+                    module.name;
 
                 button.onclick = () => {
 
+                    if (
+                        module.name === "catches"
+                    ) {
 
-    if (
+                        localStorage.removeItem(
+                            "catchEditId"
+                        );
 
-        module.name === "catches"
+                        if (
+                            window.CatchTrackCatchesModule
+                        ) {
 
-    ) {
+                            CatchTrackCatchesModule.initialized =
+                                false;
 
+                        }
 
-        localStorage.removeItem(
+                    }
 
-            "catchEditId"
-
-        );
-
-
-        if (
-
-            window.CatchTrackCatchesModule
-
-        ) {
-
-
-            CatchTrackCatchesModule.initialized = false;
-
-
-        }
-
-
-    }
-
-
-
-    this.loadModule(
-
-        module
-
-    );
-
+                    this.loadModule(
+                        module
+                    );
 
                 };
 
-
-
                 menu.appendChild(
-
                     button
-
                 );
 
-
             }
-
         );
-
-
 
         const app =
-
-        document.getElementById(
-
-            "app"
-
-        );
-
-
+            document.getElementById(
+                "app"
+            );
 
         if (app) {
 
-
             app.parentNode.insertBefore(
-
                 menu,
-
                 app
-
             );
 
-
         }
-
 
     },
 
 
-
     async loadModule(module) {
 
+        const name =
+            module?.name || "unknown";
+
+        this.currentModule =
+            module;
+
+        this.updateModuleStatus(
+            name,
+            {
+                loaded: false,
+                initialized: false,
+                error: null
+            }
+        );
 
         try {
 
-
-            this.currentModule = module;
-
-
-
             const app =
+                document.getElementById(
+                    "app"
+                );
 
-            document.getElementById(
+            if (!app) {
 
-                "app"
+                throw new Error(
+                    "App container nicht gefunden."
+                );
 
-            );
-
-
+            }
 
             const htmlResponse =
+                await fetch(
+                    module.path +
+                    module.files.html
+                );
 
-            await fetch(
+            if (!htmlResponse.ok) {
 
-                module.path +
+                throw new Error(
+                    `HTML konnte nicht geladen werden: ${module.path}${module.files.html}`
+                );
 
-                module.files.html
-
-            );
-
-
+            }
 
             app.innerHTML =
-
-            await htmlResponse.text();
-
-
+                await htmlResponse.text();
 
             await this.loadStyle(
-
                 module
-
             );
-
-
 
             await this.loadScript(
-
                 module
-
             );
 
-
+            this.updateModuleStatus(
+                name,
+                {
+                    loaded: true
+                }
+            );
 
             this.initializeModule(
-
                 module
-
             );
-
 
         }
 
         catch(error) {
 
-
-            console.error(
-
-                "Modul laden Fehler:",
-
-                error
-
+            this.updateModuleStatus(
+                name,
+                {
+                    error:
+                        error?.message ||
+                        String(error)
+                }
             );
 
+            if (
+                window.CatchTrackErrorHandler &&
+                typeof
+                    window.CatchTrackErrorHandler.handle ===
+                    "function"
+            ) {
+
+                window.CatchTrackErrorHandler.handle(
+                    error,
+                    `module:${name}`
+                );
+
+            }
+
+            else {
+
+                console.error(
+                    "Modul laden Fehler:",
+                    error
+                );
+
+            }
 
         }
 
-
     },
-
 
 
     loadStyle(module) {
 
-
         return new Promise(
-
-            resolve => {
-
+            (resolve, reject) => {
 
                 const path =
-
-                module.path +
-
-                module.files.css;
-
-
+                    module.path +
+                    module.files.css;
 
                 if (
-
                     this.loadedStyles[path]
-
                 ) {
-
 
                     resolve();
 
                     return;
 
-
                 }
 
-
-
                 const link =
-
-                document.createElement(
-
-                    "link"
-
-                );
-
-
+                    document.createElement(
+                        "link"
+                    );
 
                 link.rel =
-
-                "stylesheet";
-
-
+                    "stylesheet";
 
                 link.href =
-
-                path;
-
-
+                    path;
 
                 link.onload = () => {
 
-
-                    this.loadedStyles[path] = true;
-
+                    this.loadedStyles[path] =
+                        true;
 
                     resolve();
 
-
                 };
-
-
 
                 link.onerror = () => {
 
+                    const error =
+                        new Error(
+                            `CSS konnte nicht geladen werden: ${path}`
+                        );
 
-                    console.warn(
+                    if (
+                        window.CatchTrackErrorHandler &&
+                        typeof
+                            window.CatchTrackErrorHandler.handle ===
+                            "function"
+                    ) {
 
-                        "CSS Fehler:",
+                        window.CatchTrackErrorHandler.handle(
+                            error,
+                            `module:${module.name}:css`
+                        );
 
-                        path
+                    }
 
-                    );
-
-
-                    resolve();
-
+                    reject(error);
 
                 };
 
-
-
                 document.head.appendChild(
-
                     link
-
                 );
 
-
             }
-
         );
 
-
     },
-
 
 
     loadScript(module) {
 
-
         return new Promise(
-
-            resolve => {
-
+            (resolve, reject) => {
 
                 const path =
-
-                module.path +
-
-                module.files.js;
-
-
+                    module.path +
+                    module.files.js;
 
                 if (
-
                     this.loadedScripts[path]
-
                 ) {
 
-
                     resolve();
-
 
                     return;
 
-
                 }
 
-
-
                 const script =
-
-                document.createElement(
-
-                    "script"
-
-                );
-
-
+                    document.createElement(
+                        "script"
+                    );
 
                 script.src =
-
-                path;
-
-
+                    path;
 
                 script.onload = () => {
 
-
-                    this.loadedScripts[path] = true;
-
+                    this.loadedScripts[path] =
+                        true;
 
                     resolve();
 
-
                 };
-
-
 
                 script.onerror = () => {
 
+                    const error =
+                        new Error(
+                            `JavaScript konnte nicht geladen werden: ${path}`
+                        );
 
-                    console.error(
+                    if (
+                        window.CatchTrackErrorHandler &&
+                        typeof
+                            window.CatchTrackErrorHandler.handle ===
+                            "function"
+                    ) {
 
-                        "JS Fehler:",
+                        window.CatchTrackErrorHandler.handle(
+                            error,
+                            `module:${module.name}:js`
+                        );
 
-                        path
+                    }
 
-                    );
-
-
-                    resolve();
-
+                    reject(error);
 
                 };
 
-
-
                 document.body.appendChild(
-
                     script
-
                 );
 
-
             }
-
         );
-
 
     },
 
 
-
     initializeModule(module) {
 
-
         const name =
-
-        module.initializer;
-
-
+            module.initializer;
 
         if (
-
             name &&
-
             window[name] &&
-
             typeof window[name].init ===
-
-            "function"
-
+                "function"
         ) {
 
+            try {
 
-            window[name].init();
+                window[name].init();
 
+                this.updateModuleStatus(
+                    module.name,
+                    {
+                        initialized: true
+                    }
+                );
 
+                console.log(
+                    "Modul gestartet:",
+                    module.name
+                );
 
-            console.log(
+            }
 
-                "Modul gestartet:",
+            catch(error) {
 
-                module.name
+                this.updateModuleStatus(
+                    module.name,
+                    {
+                        initialized: false,
+                        error:
+                            error?.message ||
+                            String(error)
+                    }
+                );
 
-            );
+                if (
+                    window.CatchTrackErrorHandler &&
+                    typeof
+                        window.CatchTrackErrorHandler.handle ===
+                        "function"
+                ) {
 
+                    window.CatchTrackErrorHandler.handle(
+                        error,
+                        `module:${module.name}:initializer`
+                    );
+
+                }
+
+            }
 
         }
 
         else {
 
+            const error =
+                new Error(
+                    `Initializer nicht gefunden: ${name || "unbekannt"}`
+                );
 
-            console.warn(
-
-                "Initializer nicht gefunden:",
-
-                name
-
+            this.updateModuleStatus(
+                module.name,
+                {
+                    initialized: false,
+                    error: error.message
+                }
             );
 
+            if (
+                window.CatchTrackErrorHandler &&
+                typeof
+                    window.CatchTrackErrorHandler.handle ===
+                    "function"
+            ) {
+
+                window.CatchTrackErrorHandler.handle(
+                    error,
+                    `module:${module.name}:initializer`
+                );
+
+            }
 
         }
 
+    },
+
+
+    updateModuleStatus(name, changes = {}) {
+
+        if (
+            !this.moduleStatus[name]
+        ) {
+
+            this.moduleStatus[name] = {
+
+                name: name,
+
+                loaded: false,
+
+                initialized: false,
+
+                error: null
+
+            };
+
+        }
+
+        Object.assign(
+            this.moduleStatus[name],
+            changes
+        );
+
+        this.publishRuntimeStatus();
 
     },
 
+
+    publishRuntimeStatus() {
+
+        if (
+            window.CatchTrackRuntimeStatus &&
+            typeof
+                window.CatchTrackRuntimeStatus.updateModules ===
+                "function"
+        ) {
+
+            window.CatchTrackRuntimeStatus.updateModules(
+                this.moduleStatus
+            );
+
+        }
+
+    },
 
 
     getModules() {
 
-
         return this.modules;
-
 
     },
 
 
-
     getActiveModules() {
-
 
         return this.activeModules;
 
+    },
+
+
+    getModuleStatus() {
+
+        return {
+            ...this.moduleStatus
+        };
 
     }
-
 
 };
 
 
-
 document.addEventListener(
-
     "DOMContentLoaded",
-
     () => {
-
 
         CatchTrackModuleManager.init();
 
-
     }
-
 );
