@@ -2,10 +2,22 @@
 
 const CatchTrackFishDatabaseModule = {
 
-    version: "1.1.0",
+    version: "1.1.1",
+    initialized: false,
 
     init() {
-        console.log("CatchTrack Fischdatenbank aktiv.");
+        if (this.initialized) {
+            console.warn(
+                "Fish Database: Initialisierung bereits erfolgt."
+            );
+            return;
+        }
+
+        this.initialized = true;
+
+        console.log(
+            "CatchTrack Fischdatenbank aktiv."
+        );
 
         this.bindEvents();
         this.loadFish();
@@ -37,11 +49,13 @@ const CatchTrackFishDatabaseModule = {
     bindEvents() {
         const button = document.getElementById("save-fish");
 
-        if (button) {
-            button.onclick = () => {
-                this.saveFish();
-            };
+        if (!button) {
+            return;
         }
+
+        button.onclick = () => {
+            this.saveFish();
+        };
     },
 
     saveFish() {
@@ -66,7 +80,9 @@ const CatchTrackFishDatabaseModule = {
             .trim();
 
         if (!name || !scientificName) {
-            alert("Name und wissenschaftlicher Name erforderlich.");
+            alert(
+                "Name und wissenschaftlicher Name erforderlich."
+            );
             return;
         }
 
@@ -110,18 +126,19 @@ const CatchTrackFishDatabaseModule = {
             const fishId = fish[0].id;
             const language = this.getLanguage();
 
-            const existingName = CatchTrackDatabase.query(
-                `
-                SELECT id
-                FROM fish_names
-                WHERE fish_id = ?
-                AND language = ?
-                `,
-                [
-                    fishId,
-                    language
-                ]
-            );
+            const existingName =
+                CatchTrackDatabase.query(
+                    `
+                    SELECT id
+                    FROM fish_names
+                    WHERE fish_id = ?
+                    AND language = ?
+                    `,
+                    [
+                        fishId,
+                        language
+                    ]
+                );
 
             if (existingName.length) {
                 CatchTrackDatabase.execute(
@@ -167,32 +184,34 @@ const CatchTrackFishDatabaseModule = {
     },
 
     loadFish() {
-        const list = document.getElementById("fish-list");
+        const list =
+            document.getElementById("fish-list");
 
         if (!list) {
             return;
         }
 
         try {
-            const fishes = CatchTrackDatabase.query(
-                `
-                SELECT
-                    fish.id,
-                    fish.scientific_name,
-                    fish.family,
-                    fish.description,
-                    COALESCE(
-                        names.name,
-                        fish.scientific_name
-                    ) AS name
-                FROM fish
-                LEFT JOIN fish_names AS names
-                    ON fish.id = names.fish_id
-                    AND names.language = ?
-                ORDER BY name
-                `,
-                [this.getLanguage()]
-            );
+            const fishes =
+                CatchTrackDatabase.query(
+                    `
+                    SELECT
+                        fish.id,
+                        fish.scientific_name,
+                        fish.family,
+                        fish.description,
+                        COALESCE(
+                            names.name,
+                            fish.scientific_name
+                        ) AS name
+                    FROM fish
+                    LEFT JOIN fish_names AS names
+                        ON fish.id = names.fish_id
+                        AND names.language = ?
+                    ORDER BY name
+                    `,
+                    [this.getLanguage()]
+                );
 
             if (!fishes.length) {
                 list.innerHTML = `
@@ -201,32 +220,47 @@ const CatchTrackFishDatabaseModule = {
                 return;
             }
 
-            list.innerHTML = fishes
+            const html = fishes
                 .map(fish => `
-                    <div class="fish-database-item"
-                         data-fish-id="${this.escapeHtml(fish.id)}">
-
+                    <div
+                        class="fish-database-item"
+                        data-fish-id="${this.escapeHtml(fish.id)}"
+                    >
                         <h3>
                             ${this.escapeHtml(fish.name)}
                         </h3>
 
                         <p>
                             Wissenschaftlich:
-                            ${this.escapeHtml(fish.scientific_name)}
+                            ${this.escapeHtml(
+                                fish.scientific_name
+                            )}
                         </p>
 
                         <p>
                             Familie:
-                            ${this.escapeHtml(fish.family || "")}
+                            ${this.escapeHtml(
+                                fish.family || ""
+                            )}
                         </p>
 
                         <p>
-                            ${this.escapeHtml(fish.description || "")}
+                            ${this.escapeHtml(
+                                fish.description || ""
+                            )}
                         </p>
-
                     </div>
                 `)
                 .join("");
+
+            /*
+             * Immer den vorhandenen Listeninhalt vollständig
+             * ersetzen. Dadurch können alte Renderungen nicht
+             * angehängt oder vervielfacht werden.
+             */
+            if (list.innerHTML !== html) {
+                list.innerHTML = html;
+            }
 
         } catch (error) {
             console.error(
@@ -248,9 +282,9 @@ const CatchTrackFishDatabaseModule = {
             "fish-scientific-name",
             "fish-family",
             "fish-description"
-        ]
-        .forEach(id => {
-            const field = document.getElementById(id);
+        ].forEach(id => {
+            const field =
+                document.getElementById(id);
 
             if (field) {
                 field.value = "";
@@ -269,7 +303,8 @@ ENDE DATEI
 CatchTrack V1.0
 modules/fishDatabase/fishDatabase.js
 
-Version 1.1.0
+Version 1.1.1
 Vollständige Ersatzdatei
+Schutz gegen Mehrfachinitialisierung
 ==================================================
 */
