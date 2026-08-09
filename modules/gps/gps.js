@@ -1,10 +1,11 @@
 "use strict";
 window.CatchTrackGPSModule = {
-    version: "2.4.0",
+    version: "2.5.0",
     storageKeys: {
         lastPosition: "gps:lastPosition",
         homePosition: "gps:homePosition",
-        stayState: "gps:stayState"
+        stayState: "gps:stayState",
+        waters: "waters:entries"
     },
     stayToleranceMeters: 50,
     state: {
@@ -24,40 +25,34 @@ window.CatchTrackGPSModule = {
     },
     loadStoredState() {
         const storage = window.CatchTrackStorageManager;
-        if (!storage || typeof storage.load !== "function") {
-            return;
-        }
-        this.state.currentPosition =
-            this.normalizePosition(
-                storage.load(this.storageKeys.lastPosition, null)
-            );
-        this.state.homePosition =
-            this.normalizePosition(
-                storage.load(this.storageKeys.homePosition, null)
-            );
-        this.state.stayState =
-            this.normalizeStayState(
-                storage.load(this.storageKeys.stayState, null)
-            );
+        if (!storage || typeof storage.load !== "function") return;
+        this.state.currentPosition = this.normalizePosition(
+            storage.load(this.storageKeys.lastPosition, null)
+        );
+        this.state.homePosition = this.normalizePosition(
+            storage.load(this.storageKeys.homePosition, null)
+        );
+        this.state.stayState = this.normalizeStayState(
+            storage.load(this.storageKeys.stayState, null)
+        );
     },
     saveData(key, value) {
         const storage = window.CatchTrackStorageManager;
-        if (!storage || typeof storage.save !== "function") {
-            return false;
-        }
+        if (!storage || typeof storage.save !== "function") return false;
         return storage.save(key, value);
+    },
+    loadData(key, fallback = null) {
+        const storage = window.CatchTrackStorageManager;
+        if (!storage || typeof storage.load !== "function") return fallback;
+        return storage.load(key, fallback);
     },
     removeData(key) {
         const storage = window.CatchTrackStorageManager;
-        if (!storage || typeof storage.remove !== "function") {
-            return false;
-        }
+        if (!storage || typeof storage.remove !== "function") return false;
         return storage.remove(key);
     },
     normalizePosition(position) {
-        if (!position || typeof position !== "object") {
-            return null;
-        }
+        if (!position || typeof position !== "object") return null;
         const latitude = Number(position.latitude);
         const longitude = Number(position.longitude);
         if (
@@ -93,9 +88,7 @@ window.CatchTrackGPSModule = {
         };
     },
     normalizeStayState(stayState) {
-        if (!stayState || typeof stayState !== "object") {
-            return null;
-        }
+        if (!stayState || typeof stayState !== "object") return null;
         const latitude = Number(stayState.latitude);
         const longitude = Number(stayState.longitude);
         const startedAt = new Date(stayState.startedAt);
@@ -123,10 +116,7 @@ window.CatchTrackGPSModule = {
             this.state.lastError = error;
             this.setStatus("error");
             this.setMessage(
-                this.translate(
-                    "gps.error.unsupported",
-                    "Dieser Browser unterstützt keine Standortbestimmung."
-                ),
+                "Dieser Browser unterstützt keine Standortbestimmung.",
                 "error"
             );
             this.render();
@@ -137,27 +127,23 @@ window.CatchTrackGPSModule = {
         this.state.lastError = null;
         this.setStatus("loading");
         this.setMessage(
-            this.translate(
-                "gps.message.requesting",
-                "Standort wird ermittelt …"
-            ),
+            "Standort wird ermittelt …",
             "info"
         );
         this.render();
         return new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(
                 position => {
-                    const normalized =
-                        this.normalizePosition({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy,
-                            altitude: position.coords.altitude,
-                            altitudeAccuracy:
-                                position.coords.altitudeAccuracy,
-                            timestamp: position.timestamp,
-                            source: "gps"
-                        });
+                    const normalized = this.normalizePosition({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        altitudeAccuracy:
+                            position.coords.altitudeAccuracy,
+                        timestamp: position.timestamp,
+                        source: "gps"
+                    });
                     this.state.busy = false;
                     this.state.lastError = null;
                     this.updateStayState(normalized);
@@ -172,10 +158,7 @@ window.CatchTrackGPSModule = {
                     );
                     this.setStatus("success");
                     this.setMessage(
-                        this.translate(
-                            "gps.message.success",
-                            "Standort wurde aktualisiert."
-                        ),
+                        "Standort wurde aktualisiert.",
                         "success"
                     );
                     this.render();
@@ -205,9 +188,7 @@ window.CatchTrackGPSModule = {
         });
     },
     updateStayState(position) {
-        if (!position) {
-            return;
-        }
+        if (!position) return;
         const now = new Date().toISOString();
         if (!this.state.stayState) {
             this.state.stayState = {
@@ -217,12 +198,10 @@ window.CatchTrackGPSModule = {
             };
             return;
         }
-        const reference = {
-            latitude: this.state.stayState.latitude,
-            longitude: this.state.stayState.longitude
-        };
-        const distance =
-            this.calculateDistance(position, reference);
+        const distance = this.calculateDistance(
+            position,
+            this.state.stayState
+        );
         if (
             Number.isFinite(distance) &&
             distance > this.stayToleranceMeters
@@ -235,14 +214,12 @@ window.CatchTrackGPSModule = {
         }
     },
     getStayDurationSeconds() {
-        if (
-            !this.state.stayState ||
-            !this.state.stayState.startedAt
-        ) {
+        if (!this.state.stayState?.startedAt) {
             return null;
         }
-        const startedAt =
-            new Date(this.state.stayState.startedAt);
+        const startedAt = new Date(
+            this.state.stayState.startedAt
+        );
         if (Number.isNaN(startedAt.getTime())) {
             return null;
         }
@@ -254,17 +231,13 @@ window.CatchTrackGPSModule = {
         );
     },
     formatDuration(seconds) {
-        if (!Number.isFinite(seconds)) {
-            return "--";
-        }
-        const totalMinutes =
-            Math.floor(seconds / 60);
-        const days =
-            Math.floor(totalMinutes / 1440);
-        const hours =
-            Math.floor((totalMinutes % 1440) / 60);
-        const minutes =
-            totalMinutes % 60;
+        if (!Number.isFinite(seconds)) return "--";
+        const totalMinutes = Math.floor(seconds / 60);
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor(
+            (totalMinutes % 1440) / 60
+        );
+        const minutes = totalMinutes % 60;
         if (days > 0) {
             return `${days} T ${hours} h ${minutes} min`;
         }
@@ -275,42 +248,24 @@ window.CatchTrackGPSModule = {
     },
     getGeolocationErrorMessage(error) {
         if (!error) {
-            return this.translate(
-                "gps.error.unknown",
-                "Der Standort konnte nicht ermittelt werden."
-            );
+            return "Der Standort konnte nicht ermittelt werden.";
         }
         switch (error.code) {
             case 1:
-                return this.translate(
-                    "gps.error.permission",
-                    "Der Zugriff auf den Standort wurde verweigert."
-                );
+                return "Der Zugriff auf den Standort wurde verweigert.";
             case 2:
-                return this.translate(
-                    "gps.error.unavailable",
-                    "Der Standort ist derzeit nicht verfügbar."
-                );
+                return "Der Standort ist derzeit nicht verfügbar.";
             case 3:
-                return this.translate(
-                    "gps.error.timeout",
-                    "Die Standortbestimmung hat zu lange gedauert."
-                );
+                return "Die Standortbestimmung hat zu lange gedauert.";
             default:
-                return this.translate(
-                    "gps.error.unknown",
-                    "Der Standort konnte nicht ermittelt werden."
-                );
+                return "Der Standort konnte nicht ermittelt werden.";
         }
     },
     saveHomePosition() {
         if (!this.state.currentPosition) {
             this.setStatus("error");
             this.setMessage(
-                this.translate(
-                    "gps.message.noPosition",
-                    "Es ist kein aktueller Standort vorhanden."
-                ),
+                "Es ist kein aktueller Standort vorhanden.",
                 "error"
             );
             this.render();
@@ -320,18 +275,15 @@ window.CatchTrackGPSModule = {
             ...this.state.currentPosition,
             source: "home"
         };
-        const saved =
-            this.saveData(
+        if (
+            !this.saveData(
                 this.storageKeys.homePosition,
                 home
-            );
-        if (!saved) {
+            )
+        ) {
             this.setStatus("error");
             this.setMessage(
-                this.translate(
-                    "gps.error.storage",
-                    "Der Standort konnte nicht gespeichert werden."
-                ),
+                "Der Standort konnte nicht gespeichert werden.",
                 "error"
             );
             this.render();
@@ -340,10 +292,7 @@ window.CatchTrackGPSModule = {
         this.state.homePosition = home;
         this.setStatus("success");
         this.setMessage(
-            this.translate(
-                "gps.message.saved",
-                "Home-Standort wurde gespeichert."
-            ),
+            "Home-Standort wurde gespeichert.",
             "success"
         );
         this.render();
@@ -355,10 +304,7 @@ window.CatchTrackGPSModule = {
         );
         this.state.homePosition = null;
         this.setMessage(
-            this.translate(
-                "gps.message.deleted",
-                "Home-Standort wurde gelöscht."
-            ),
+            "Home-Standort wurde gelöscht.",
             "success"
         );
         this.render();
@@ -372,10 +318,7 @@ window.CatchTrackGPSModule = {
         );
         this.setStatus("idle");
         this.setMessage(
-            this.translate(
-                "gps.message.cleared",
-                "Anzeige wurde zurückgesetzt."
-            ),
+            "Anzeige wurde zurückgesetzt.",
             "info"
         );
         this.render();
@@ -383,9 +326,7 @@ window.CatchTrackGPSModule = {
     calculateDistance(first, second) {
         const a = this.normalizePosition(first);
         const b = this.normalizePosition(second);
-        if (!a || !b) {
-            return null;
-        }
+        if (!a || !b) return null;
         const earthRadius = 6371000;
         const latitude1 =
             a.latitude * Math.PI / 180;
@@ -406,13 +347,14 @@ window.CatchTrackGPSModule = {
             Math.cos(latitude1) *
             Math.cos(latitude2) *
             sinLongitude * sinLongitude;
-        const angularDistance =
+        return (
+            earthRadius *
             2 *
             Math.atan2(
                 Math.sqrt(value),
                 Math.sqrt(1 - value)
-            );
-        return earthRadius * angularDistance;
+            )
+        );
     },
     getDistanceFromHome() {
         return this.calculateDistance(
@@ -427,30 +369,23 @@ window.CatchTrackGPSModule = {
     },
     getCoordinates() {
         const position = this.getPosition();
-        if (!position) {
-            return null;
-        }
-        return {
-            latitude: position.latitude,
-            longitude: position.longitude
-        };
+        return position
+            ? {
+                latitude: position.latitude,
+                longitude: position.longitude
+            }
+            : null;
     },
     getHomePosition() {
         return this.state.homePosition
             ? { ...this.state.homePosition }
             : null;
     },
-    getDistanceFromHomeMeters() {
-        return this.getDistanceFromHome();
-    },
     formatDistance(meters) {
-        if (!Number.isFinite(meters)) {
-            return "--";
-        }
-        if (meters < 1000) {
-            return `${Math.round(meters)} m`;
-        }
-        return `${(meters / 1000).toFixed(2)} km`;
+        if (!Number.isFinite(meters)) return "--";
+        return meters < 1000
+            ? `${Math.round(meters)} m`
+            : `${(meters / 1000).toFixed(2)} km`;
     },
     shareCurrentPosition() {
         const position = this.getPosition();
@@ -474,10 +409,7 @@ window.CatchTrackGPSModule = {
             typeof navigator.share === "function"
         ) {
             return navigator.share({
-                title: this.translate(
-                    "gps.share.title",
-                    "CatchTrack Position"
-                ),
+                title: "CatchTrack Position",
                 text,
                 url
             });
@@ -497,18 +429,11 @@ window.CatchTrackGPSModule = {
             )
         );
     },
-    /*
-     * Öffnet die aktuelle Position als Kartenposition.
-     * Es wird KEINE Route zum eigenen Standort gestartet.
-     */
     openCurrentLocation() {
         const position = this.getPosition();
         if (!position) {
             this.setMessage(
-                this.translate(
-                    "gps.message.noPosition",
-                    "Es ist kein aktueller Standort vorhanden."
-                ),
+                "Es ist kein aktueller Standort vorhanden.",
                 "error"
             );
             return Promise.reject(
@@ -517,22 +442,14 @@ window.CatchTrackGPSModule = {
                 )
             );
         }
-        const latitude =
-            position.latitude.toFixed(6);
-        const longitude =
-            position.longitude.toFixed(6);
         const url =
-            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                `${latitude},${longitude}`
-            )}`;
+            `https://www.google.com/maps/search/?api=1&query=` +
+            encodeURIComponent(
+                `${position.latitude.toFixed(6)},${position.longitude.toFixed(6)}`
+            );
         window.location.href = url;
         return Promise.resolve(url);
     },
-    /*
-     * Startet eine Navigation zu einem Ziel.
-     * Der aktuelle Standort des Gerätes wird dabei
-     * von der Kartenanwendung als Ausgangspunkt verwendet.
-     */
     navigateTo(latitude, longitude) {
         const lat = Number(latitude);
         const lon = Number(longitude);
@@ -553,32 +470,19 @@ window.CatchTrackGPSModule = {
         const destination =
             `${lat.toFixed(6)},${lon.toFixed(6)}`;
         const url =
-            `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                destination
-            )}`;
+            `https://www.google.com/maps/dir/?api=1&destination=` +
+            encodeURIComponent(destination);
         window.location.href = url;
         return Promise.resolve(url);
     },
-    /*
-     * "Route" zeigt den aktuellen Standort auf der Karte.
-     * Es wird keine sinnlose Route vom Standort zum
-     * gleichen Standort erzeugt.
-     */
     navigateToCurrentPosition() {
         return this.openCurrentLocation();
     },
-    /*
-     * "Route nach Hause" navigiert zur gespeicherten
-     * Home-Position.
-     */
     navigateToHome() {
         const home = this.getHomePosition();
         if (!home) {
             this.setMessage(
-                this.translate(
-                    "gps.message.noHome",
-                    "Es ist kein Home-Standort gespeichert."
-                ),
+                "Es ist kein Home-Standort gespeichert.",
                 "error"
             );
             return Promise.reject(
@@ -592,182 +496,201 @@ window.CatchTrackGPSModule = {
             home.longitude
         );
     },
-    bindEvents() {
-        const updateButton =
-            document.getElementById(
-                "gps-update-button"
-            );
-        if (
-            updateButton &&
-            !updateButton.dataset.bound
-        ) {
-            updateButton.addEventListener(
-                "click",
-                () => {
-                    this.requestPosition()
-                        .catch(() => {});
-                }
-            );
-            updateButton.dataset.bound = "true";
-        }
-        const clearButton =
-            document.getElementById(
-                "gps-clear-button"
-            );
-        if (
-            clearButton &&
-            !clearButton.dataset.bound
-        ) {
-            clearButton.addEventListener(
-                "click",
-                () => {
-                    this.clearCurrentPosition();
-                }
-            );
-            clearButton.dataset.bound = "true";
-        }
-        const saveHomeButton =
-            document.getElementById(
-                "gps-save-home-button"
-            );
-        if (
-            saveHomeButton &&
-            !saveHomeButton.dataset.bound
-        ) {
-            saveHomeButton.addEventListener(
-                "click",
-                () => {
-                    this.saveHomePosition();
-                }
-            );
-            saveHomeButton.dataset.bound = "true";
-        }
-        const deleteHomeButton =
-            document.getElementById(
-                "gps-delete-home-button"
-            );
-        if (
-            deleteHomeButton &&
-            !deleteHomeButton.dataset.bound
-        ) {
-            deleteHomeButton.addEventListener(
-                "click",
-                () => {
-                    this.deleteHomePosition();
-                }
-            );
-            deleteHomeButton.dataset.bound = "true";
-        }
-        const shareButton =
-            document.getElementById(
-                "gps-share-button"
-            );
-        if (
-            shareButton &&
-            !shareButton.dataset.bound
-        ) {
-            shareButton.addEventListener(
-                "click",
-                () => {
-                    this.shareCurrentPosition()
-                        .catch(
-                            error => {
-                                this.handleError(
-                                    error,
-                                    "gps:share"
-                                );
-                            }
-                        );
-                }
-            );
-            shareButton.dataset.bound = "true";
-        }
-        const routeButton =
-            document.getElementById(
-                "gps-route-button"
-            );
-        if (
-            routeButton &&
-            !routeButton.dataset.bound
-        ) {
-            routeButton.addEventListener(
-                "click",
-                () => {
-                    this.navigateToCurrentPosition()
-                        .catch(
-                            error => {
-                                this.handleError(
-                                    error,
-                                    "gps:navigate-current"
-                                );
-                            }
-                        );
-                }
-            );
-            routeButton.dataset.bound = "true";
-        }
-        const homeRouteButton =
-            document.getElementById(
-                "gps-home-route-button"
-            );
-        if (
-            homeRouteButton &&
-            !homeRouteButton.dataset.bound
-        ) {
-            homeRouteButton.addEventListener(
-                "click",
-                () => {
-                    this.navigateToHome()
-                        .catch(
-                            error => {
-                                this.handleError(
-                                    error,
-                                    "gps:navigate-home"
-                                );
-                            }
-                        );
-                }
-            );
-            homeRouteButton.dataset.bound = "true";
-        }
+    getWaters() {
+        const value = this.loadData(
+            this.storageKeys.waters,
+            []
+        );
+        return Array.isArray(value)
+            ? value
+            : [];
     },
-    translate(key, fallback = key) {
-        const manager =
-            window.CatchTrackLanguageManager;
-        if (
-            manager &&
-            typeof manager.t === "function"
-        ) {
-            return manager.t(key, fallback);
+    createWaterId() {
+        return (
+            `water-${Date.now()}-` +
+            Math.random()
+                .toString(36)
+                .slice(2, 8)
+        );
+    },
+    saveCurrentPositionAsWater() {
+        const position = this.getPosition();
+        const input =
+            document.getElementById(
+                "gps-water-name"
+            );
+        const name =
+            input
+                ? input.value.trim()
+                : "";
+        if (!position) {
+            this.setStatus("error");
+            this.setMessage(
+                "Zuerst muss ein aktueller GPS-Standort vorhanden sein.",
+                "error"
+            );
+            this.render();
+            return false;
         }
-        return fallback;
+        if (!name) {
+            this.setStatus("error");
+            this.setMessage(
+                "Bitte einen Namen für das Gewässer eingeben.",
+                "error"
+            );
+            input?.focus();
+            this.render();
+            return false;
+        }
+        const waters =
+            this.getWaters();
+        const record = {
+            id: this.createWaterId(),
+            name,
+            latitude: position.latitude,
+            longitude: position.longitude,
+            altitude: position.altitude,
+            accuracy: position.accuracy,
+            timestamp: position.timestamp,
+            createdAt: new Date().toISOString(),
+            source: "gps"
+        };
+        waters.push(record);
+        if (
+            !this.saveData(
+                this.storageKeys.waters,
+                waters
+            )
+        ) {
+            this.setStatus("error");
+            this.setMessage(
+                "Das Gewässer konnte nicht gespeichert werden.",
+                "error"
+            );
+            this.render();
+            return false;
+        }
+        if (input) {
+            input.value = "";
+        }
+        this.setStatus("success");
+        this.setMessage(
+            `Gewässer „${name}" wurde gespeichert.`,
+            "success"
+        );
+        this.render();
+        return record;
+    },
+    bindEvents() {
+        const bind = (
+            id,
+            handler
+        ) => {
+            const element =
+                document.getElementById(id);
+            if (
+                !element ||
+                element.dataset.bound
+            ) {
+                return;
+            }
+            element.addEventListener(
+                "click",
+                handler
+            );
+            element.dataset.bound =
+                "true";
+        };
+        bind(
+            "gps-update-button",
+            () =>
+                this.requestPosition()
+                    .catch(() => {})
+        );
+        bind(
+            "gps-clear-button",
+            () =>
+                this.clearCurrentPosition()
+        );
+        bind(
+            "gps-save-home-button",
+            () =>
+                this.saveHomePosition()
+        );
+        bind(
+            "gps-delete-home-button",
+            () =>
+                this.deleteHomePosition()
+        );
+        bind(
+            "gps-share-button",
+            () =>
+                this.shareCurrentPosition()
+                    .catch(error =>
+                        this.handleError(
+                            error,
+                            "gps:share"
+                        )
+                    )
+        );
+        bind(
+            "gps-route-button",
+            () =>
+                this.navigateToCurrentPosition()
+                    .catch(error =>
+                        this.handleError(
+                            error,
+                            "gps:navigate-current"
+                        )
+                    )
+        );
+        bind(
+            "gps-home-route-button",
+            () =>
+                this.navigateToHome()
+                    .catch(error =>
+                        this.handleError(
+                            error,
+                            "gps:navigate-home"
+                        )
+                    )
+        );
+        bind(
+            "gps-save-water-button",
+            () =>
+                this.saveCurrentPositionAsWater()
+        );
     },
     setStatus(state) {
         const badge =
             document.getElementById(
                 "gps-status-badge"
             );
-        if (!badge) {
-            return;
-        }
-        badge.dataset.state = state;
+        if (!badge) return;
+        badge.dataset.state =
+            state;
+        const labels = {
+            idle: "Bereit",
+            loading: "Ermittle Standort …",
+            success: "Aktuell",
+            error: "Fehler"
+        };
         badge.textContent =
-            this.translate(
-                `gps.status.${state}`,
-                state
-            );
+            labels[state] || state;
     },
-    setMessage(message, type = "info") {
+    setMessage(
+        message,
+        type = "info"
+    ) {
         const element =
             document.getElementById(
                 "gps-message"
             );
-        if (!element) {
-            return;
-        }
+        if (!element) return;
         element.textContent =
             message || "";
-        element.dataset.type = type;
+        element.dataset.type =
+            type;
     },
     render() {
         this.renderPosition();
@@ -793,14 +716,8 @@ window.CatchTrackGPSModule = {
         if (source) {
             source.textContent =
                 this.state.currentPosition
-                    ? this.translate(
-                        "gps.source.gps",
-                        "GPS"
-                    )
-                    : this.translate(
-                        "gps.source.none",
-                        "Keine Position"
-                    );
+                    ? "GPS"
+                    : "Keine Position";
         }
         const homeStatus =
             document.getElementById(
@@ -809,147 +726,107 @@ window.CatchTrackGPSModule = {
         if (homeStatus) {
             homeStatus.textContent =
                 this.state.homePosition
-                    ? this.translate(
-                        "gps.home.saved",
-                        "Gespeichert"
-                    )
-                    : this.translate(
-                        "gps.home.none",
-                        "Nicht gespeichert"
-                    );
+                    ? "Gespeichert"
+                    : "Nicht gespeichert";
         }
     },
     renderPosition() {
         const position =
             this.state.currentPosition;
-        const latitude =
-            document.getElementById(
-                "gps-latitude"
-            );
-        const longitude =
-            document.getElementById(
-                "gps-longitude"
-            );
-        const accuracy =
-            document.getElementById(
-                "gps-accuracy"
-            );
-        const altitude =
-            document.getElementById(
-                "gps-altitude"
-            );
-        const altitudeAccuracy =
-            document.getElementById(
-                "gps-altitude-accuracy"
-            );
-        const timestamp =
-            document.getElementById(
-                "gps-timestamp"
-            );
-        if (latitude) {
-            latitude.textContent =
-                position
-                    ? position.latitude.toFixed(6)
-                    : "--";
-        }
-        if (longitude) {
-            longitude.textContent =
-                position
-                    ? position.longitude.toFixed(6)
-                    : "--";
-        }
-        if (accuracy) {
-            accuracy.textContent =
-                position &&
-                Number.isFinite(position.accuracy)
-                    ? `±${Math.round(
-                        position.accuracy
-                    )} m`
-                    : "--";
-        }
-        if (altitude) {
-            altitude.textContent =
-                position &&
-                Number.isFinite(position.altitude)
-                    ? `${position.altitude.toFixed(1)} m`
-                    : "--";
-        }
-        if (altitudeAccuracy) {
-            altitudeAccuracy.textContent =
-                position &&
-                Number.isFinite(
+        const set = (
+            id,
+            value
+        ) => {
+            const element =
+                document.getElementById(id);
+            if (element) {
+                element.textContent =
+                    value;
+            }
+        };
+        set(
+            "gps-latitude",
+            position
+                ? position.latitude.toFixed(6)
+                : "--"
+        );
+        set(
+            "gps-longitude",
+            position
+                ? position.longitude.toFixed(6)
+                : "--"
+        );
+        set(
+            "gps-accuracy",
+            position &&
+            Number.isFinite(position.accuracy)
+                ? `±${Math.round(position.accuracy)} m`
+                : "--"
+        );
+        set(
+            "gps-altitude",
+            position &&
+            Number.isFinite(position.altitude)
+                ? `${position.altitude.toFixed(1)} m`
+                : "--"
+        );
+        set(
+            "gps-altitude-accuracy",
+            position &&
+            Number.isFinite(
+                position.altitudeAccuracy
+            )
+                ? `±${Math.round(
                     position.altitudeAccuracy
+                )} m`
+                : "--"
+        );
+        set(
+            "gps-timestamp",
+            position
+                ? this.formatTimestamp(
+                    position.timestamp
                 )
-                    ? `±${Math.round(
-                        position.altitudeAccuracy
-                    )} m`
-                    : "--";
-        }
-        if (timestamp) {
-            timestamp.textContent =
-                position
-                    ? this.formatTimestamp(
-                        position.timestamp
-                    )
-                    : "--";
-        }
+                : "--"
+        );
     },
     renderStayDuration() {
         const element =
             document.getElementById(
                 "gps-stay-duration"
             );
-        if (!element) {
-            return;
+        if (element) {
+            element.textContent =
+                this.formatDuration(
+                    this.getStayDurationSeconds()
+                );
         }
-        element.textContent =
-            this.formatDuration(
-                this.getStayDurationSeconds()
-            );
     },
     renderHome() {
         const container =
             document.getElementById(
                 "gps-home-position"
             );
-        if (!container) {
-            return;
-        }
+        if (!container) return;
         const position =
             this.state.homePosition;
         if (!position) {
             container.innerHTML =
-                `<span>${this.translate(
-                    "gps.home.empty",
-                    "Kein Home-Standort vorhanden."
-                )}</span>`;
+                "<span>Kein Home-Standort vorhanden.</span>";
             return;
         }
         container.innerHTML =
             `<div class="gps-home-coordinate">
                 <div>
-                    <span>${this.translate(
-                        "gps.latitude",
-                        "Breitengrad"
-                    )}</span>
-                    <strong>${position.latitude.toFixed(
-                        6
-                    )}</strong>
+                    <span>Breitengrad</span>
+                    <strong>${position.latitude.toFixed(6)}</strong>
                 </div>
                 <div>
-                    <span>${this.translate(
-                        "gps.longitude",
-                        "Längengrad"
-                    )}</span>
-                    <strong>${position.longitude.toFixed(
-                        6
-                    )}</strong>
+                    <span>Längengrad</span>
+                    <strong>${position.longitude.toFixed(6)}</strong>
                 </div>
                 <div>
-                    <span>${this.translate(
-                        "gps.altitude",
-                        "Höhe über Meeresspiegel"
-                    )}</span>
+                    <span>Höhe über Meeresspiegel</span>
                     <strong>${
                         Number.isFinite(position.altitude)
                             ? `${position.altitude.toFixed(1)} m`
@@ -963,17 +840,19 @@ window.CatchTrackGPSModule = {
             document.getElementById(
                 "gps-distance-value"
             );
-        if (!element) {
-            return;
+        if (element) {
+            element.textContent =
+                this.formatDistance(
+                    this.getDistanceFromHome()
+                );
         }
-        element.textContent =
-            this.formatDistance(
-                this.getDistanceFromHome()
-            );
     },
     formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
-        if (Number.isNaN(date.getTime())) {
+        const date =
+            new Date(timestamp);
+        if (Number.isNaN(
+            date.getTime()
+        )) {
             return "--";
         }
         try {
@@ -988,14 +867,21 @@ window.CatchTrackGPSModule = {
             return date.toLocaleString();
         }
     },
-    handleError(error, source) {
+    handleError(
+        error,
+        source
+    ) {
         const handler =
             window.CatchTrackErrorHandler;
         if (
             handler &&
-            typeof handler.handle === "function"
+            typeof handler.handle ===
+                "function"
         ) {
-            handler.handle(error, source);
+            handler.handle(
+                error,
+                source
+            );
         }
     }
 };
