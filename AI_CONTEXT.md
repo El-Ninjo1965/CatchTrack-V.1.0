@@ -112,6 +112,16 @@ Die Commit-Historie dient als zusätzliche Fortschrittsreferenz.
 Jeder vom Benutzer einzeln hochgeladene und benannte Commit
 kann als zusätzliche Fortschrittsmarke verwendet werden.
 
+Der Benutzer verwendet grundsätzlich den Dateinamen als
+Commit-Namen.
+
+Beispiel:
+
+`fishData.js`
+
+Der Commit-Name kann deshalb direkt als Hinweis darauf
+verwendet werden, welche Datei zuletzt übertragen wurde.
+
 —
 
 ## 7. Arbeitsreihenfolge bei Wiederaufnahme
@@ -133,7 +143,81 @@ abgleichen.
 
 —
 
-## 8. Dateiarbeit
+## 8. GitHub-Zugriff und Schreibrechte
+
+Die GitHub-Anbindung von ChatGPT wird grundsätzlich als
+**lesender Zugriff** behandelt.
+
+ChatGPT soll nicht davon ausgehen, dass Schreibrechte auf
+das Repository vorhanden sind.
+
+Der Benutzer führt Änderungen am Repository über
+**Working Copy** auf dem iPad durch.
+
+Daher gilt:
+
+- ChatGPT liest Dateien und Projektstände von GitHub.
+- ChatGPT prüft Commits und Dateien auf GitHub.
+- ChatGPT erstellt keine Voraussetzung dafür, dass Dateien
+  direkt auf GitHub geschrieben werden können.
+- Änderungen werden vom Benutzer manuell über Working Copy
+  übernommen.
+- Anschließend erstellt der Benutzer den GitHub-Commit.
+- Danach prüft ChatGPT den neuen Stand wieder auf GitHub.
+
+Falls ein Schreibversuch über die GitHub-Anbindung mit
+fehlenden Berechtigungen, insbesondere HTTP 403, abgelehnt
+wird, darf nicht behauptet werden, dass die Änderung
+durchgeführt wurde.
+
+Die Änderung muss dann über Working Copy erfolgen.
+
+—
+
+## 9. GitHub-Verifikation nach „OK“
+
+Wenn der Benutzer nach einer Dateiübertragung „OK“ sagt und
+die Datei anschließend auf GitHub geprüft werden soll, ist
+zunächst davon auszugehen, dass die Datei vom Benutzer
+ordnungsgemäß hochgeladen und committed wurde.
+
+Wenn der erste GitHub-Abruf:
+
+- 404 / Not Found
+- Timeout
+- leere oder unvollständige Ergebnisse
+- offensichtlicher Verbindungsfehler
+- vorübergehender Connector-Fehler
+
+liefert, darf daraus nicht sofort geschlossen werden, dass die
+Datei nicht vorhanden ist.
+
+Die GitHub-Abfrage wird automatisch bis zu **viermal direkt
+hintereinander** wiederholt.
+
+Die Wiederholungen erfolgen:
+
+- ohne Zwischenmeldung
+- ohne Rückfrage
+- unmittelbar hintereinander
+
+Erst wenn alle vier Versuche erfolglos sind, wird dem Benutzer
+gemeldet, dass die Datei über die GitHub-Verbindung nicht
+verifiziert werden konnte.
+
+Bei erfolgreichem Abruf werden anschließend:
+
+1. Dateiinhalt
+2. aktueller Branch
+3. relevanter Commit
+4. Commit-Nachricht
+5. geänderte Datei
+
+geprüft.
+
+—
+
+## 10. Dateiarbeit
 
 Der Benutzer arbeitet über Working Copy.
 
@@ -145,25 +229,78 @@ Bei Änderungen bestehender Dateien:
 1. aktuelle Datei aus GitHub einlesen
 2. Abhängigkeiten prüfen
 3. Projektplan prüfen
-4. vollständige Datei nach Möglichkeit ausgeben
-5. Benutzer übernimmt die Datei über Working Copy
-6. Benutzer erstellt den GitHub-Commit
-7. anschließend GitHub-Stand und Commit prüfen
+4. vollständige Datei erstellen
+5. vollständige Datei dem Benutzer zur Übernahme geben
+6. Benutzer übernimmt die Datei über Working Copy
+7. Benutzer erstellt den GitHub-Commit
+8. anschließend GitHub-Stand und Commit prüfen
 
-Der Benutzer möchte grundsätzlich vollständige Ersatzdateien
-und keine Teiländerungen, Patch-Anweisungen oder
-„ersetze diesen Abschnitt“-Anweisungen.
+Der Benutzer möchte grundsätzlich **vollständige
+Ersatzdateien**.
+
+Keine:
+
+- Teiländerungen
+- Patch-Anweisungen
+- „Ersetze diesen Abschnitt“-Anweisungen
+- unvollständigen Codeblöcke
+
+wenn eine vollständige Ersatzdatei möglich ist.
 
 Nach Möglichkeit immer die komplette fertige Datei liefern.
 
-Wenn der Benutzer „OK“ sagt, gilt die vorherige Anweisung als
-bestätigt bzw. ausgeführt. Nicht erneut fragen, ob der
-bestätigte Schritt ausgeführt werden soll, sondern direkt mit
-dem nächsten sinnvollen Arbeitsschritt fortfahren.
+—
+
+## 11. Vollständige Dateien als verbindliche Regel
+
+Wenn eine bestehende Datei geändert werden soll, wird nach
+Möglichkeit immer die **vollständige aktuelle Ersatzdatei**
+ausgegeben.
+
+Dies gilt insbesondere für:
+
+- JavaScript
+- HTML
+- CSS
+- JSON
+- Markdown
+- Konfigurationsdateien
+- Projektregeln
+- Projektdokumentation
+- `AI_CONTEXT.md`
+- `PROJECT_RULES.md`
+- `PROJECT_KNOWLEDGE.md`
+- `PROJECT_MODULE_PLAN.md`
+
+Wenn `AI_CONTEXT.md` geändert wird, muss dem Benutzer immer
+die **vollständige Datei** ausgegeben werden.
+
+Wenn `PROJECT_RULES.md` geändert wird, muss dem Benutzer immer
+die **vollständige Datei** ausgegeben werden.
+
+Der Benutzer soll dadurch eine Datei in Working Copy
+vollständig ersetzen können, ohne manuell einzelne Stellen
+suchen oder ergänzen zu müssen.
 
 —
 
-## 9. Entwicklungsprinzip
+## 12. Verhalten bei „OK“
+
+Wenn der Benutzer „OK“ sagt, gilt die vorherige Anweisung als
+bestätigt bzw. ausgeführt.
+
+Nicht erneut fragen, ob der bestätigte Schritt ausgeführt
+werden soll.
+
+Stattdessen direkt mit dem nächsten sinnvollen Arbeitsschritt
+fortfahren.
+
+Wenn nach einem „OK“ eine GitHub-Prüfung vorgesehen ist,
+wird diese selbstständig durchgeführt.
+
+—
+
+## 13. Entwicklungsprinzip
 
 CatchTrack soll langfristig modular aufgebaut werden.
 
@@ -206,7 +343,7 @@ Nicht gleichzeitig unnötig viele Erweiterungen einbauen.
 
 —
 
-## 10. Fish Data – neuer Entwicklungsplan
+## 14. Fish Data – neuer Entwicklungsplan
 
 ### Ziel
 
@@ -340,7 +477,7 @@ getrennt.
 
 —
 
-## 11. Fish Data – wichtige Architekturregel
+## 15. Fish Data – wichtige Architekturregel
 
 Fish Data darf nicht nur eine statische HTML-Anzeige sein.
 
@@ -358,7 +495,7 @@ Fish Data auswählen bzw. mit einem Fang verknüpfen können.
 
 —
 
-## 12. Umgang mit bestehenden Dateien
+## 16. Umgang mit bestehenden Dateien
 
 Bestehende funktionierende Dateien werden nicht unnötig
 verändert.
@@ -382,13 +519,13 @@ Alte Dateien werden erst entfernt, wenn:
 
 —
 
-## 13. Test- und Fortschrittsverfahren
+## 17. Test- und Fortschrittsverfahren
 
 Nach jeder wichtigen Datei:
 
 1. vollständige Datei erstellen
 2. Benutzer übernimmt sie über Working Copy
-3. Benutzer erstellt einen eindeutigen GitHub-Commit
+3. Benutzer erstellt einen GitHub-Commit
 4. GitHub-Commit prüfen
 5. Datei auf GitHub erneut einlesen
 6. Funktion testen
@@ -398,13 +535,13 @@ Nach jeder wichtigen Datei:
 Die GitHub-Commit-Historie ist dabei eine zusätzliche
 Fortschrittsreferenz.
 
-Der Commit-Name des Benutzers kann als Hinweis darauf
-verwendet werden, welche Datei bzw. welcher Arbeitsschritt
-zuletzt übertragen wurde.
+Der Commit-Name des Benutzers entspricht grundsätzlich dem
+Dateinamen und kann deshalb direkt als Hinweis auf den
+übertragenen Arbeitsschritt verwendet werden.
 
 —
 
-## 14. Aktueller Übergabepunkt
+## 18. Aktueller Übergabepunkt
 
 Das Basisskelett des Projekts steht.
 
@@ -432,7 +569,7 @@ zur administrierbaren CMS-artigen Fischdatenverwaltung.
 
 —
 
-## 15. Wichtig
+## 19. Wichtig
 
 Diese Datei ist ein Lesefahrplan.
 
