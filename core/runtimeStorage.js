@@ -1,6 +1,6 @@
 "use strict";
 window.CatchTrackRuntimeStorage = {
-    version: "1.1.0",
+    version: "1.2.0",
     statusPath: "runtime/runtime_status.json",
     logPath: "runtime/error.log",
     statusStorageKey:
@@ -12,7 +12,12 @@ window.CatchTrackRuntimeStorage = {
     lastStatusJson: null,
     logEntries: [],
     lastLogLine: null,
+    initialized: false,
     init() {
+        if (this.initialized) {
+            return;
+        }
+        this.initialized = true;
         this.loadStatus();
         this.loadLog();
     },
@@ -23,19 +28,22 @@ window.CatchTrackRuntimeStorage = {
                     this.statusStorageKey
                 );
             if (!stored) {
+                this.lastStatus = null;
+                this.lastStatusJson = null;
                 return null;
             }
-            this.lastStatusJson =
-                stored;
+            this.lastStatusJson = stored;
             this.lastStatus =
                 JSON.parse(stored);
             return this.lastStatus;
         }
         catch (error) {
             console.warn(
-                "Runtime Status konnte nicht geladen werden.",
+                "CatchTrack Runtime Status konnte nicht geladen werden.",
                 error
             );
+            this.lastStatus = null;
+            this.lastStatusJson = null;
             return null;
         }
     },
@@ -47,12 +55,14 @@ window.CatchTrackRuntimeStorage = {
                 );
             if (!stored) {
                 this.logEntries = [];
+                this.lastLogLine = null;
                 return [];
             }
             const parsed =
                 JSON.parse(stored);
             if (!Array.isArray(parsed)) {
                 this.logEntries = [];
+                this.lastLogLine = null;
                 return [];
             }
             this.logEntries =
@@ -71,7 +81,7 @@ window.CatchTrackRuntimeStorage = {
         }
         catch (error) {
             console.warn(
-                "Runtime Error Log konnte nicht geladen werden.",
+                "CatchTrack Runtime Error Log konnte nicht geladen werden.",
                 error
             );
             this.logEntries = [];
@@ -80,16 +90,20 @@ window.CatchTrackRuntimeStorage = {
         }
     },
     async saveStatus(status) {
-        if (!status) {
+        if (
+            !status ||
+            typeof status !== "object"
+        ) {
             throw new Error(
-                "Kein Runtime-Status zum Speichern vorhanden."
+                "Kein gültiger Runtime-Status zum Speichern vorhanden."
             );
         }
-        this.lastStatus =
-            status;
+        this.lastStatus = {
+            ...status
+        };
         this.lastStatusJson =
             JSON.stringify(
-                status,
+                this.lastStatus,
                 null,
                 2
             );
@@ -101,16 +115,20 @@ window.CatchTrackRuntimeStorage = {
         }
         catch (error) {
             console.warn(
-                "Runtime Status konnte nicht persistent gespeichert werden.",
+                "CatchTrack Runtime Status konnte nicht im LocalStorage gespeichert werden.",
                 error
             );
+            throw error;
         }
         return this.lastStatusJson;
     },
     async writeLog(entry) {
-        if (!entry) {
+        if (
+            !entry ||
+            typeof entry !== "object"
+        ) {
             throw new Error(
-                "Kein Logeintrag vorhanden."
+                "Kein gültiger Runtime-Logeintrag vorhanden."
             );
         }
         const line =
@@ -141,9 +159,10 @@ window.CatchTrackRuntimeStorage = {
         }
         catch (error) {
             console.warn(
-                "Runtime Error Log konnte nicht persistent gespeichert werden.",
+                "CatchTrack Runtime Error Log konnte nicht im LocalStorage gespeichert werden.",
                 error
             );
+            throw error;
         }
         return line;
     },
@@ -153,6 +172,7 @@ window.CatchTrackRuntimeStorage = {
         ) {
             return this.writeLog({
                 level: "ERROR",
+                source: "runtime",
                 message: line
             });
         }
@@ -184,6 +204,13 @@ window.CatchTrackRuntimeStorage = {
         }
         return result;
     },
+    getStatus() {
+        return this.lastStatus
+            ? {
+                ...this.lastStatus
+            }
+            : null;
+    },
     getStatusJson() {
         return this.lastStatusJson || null;
     },
@@ -197,6 +224,16 @@ window.CatchTrackRuntimeStorage = {
             "\n"
         );
     },
+    getSnapshot() {
+        return {
+            [this.statusStorageKey]:
+                this.lastStatusJson,
+            [this.logStorageKey]:
+                JSON.stringify(
+                    this.logEntries
+                )
+        };
+    },
     clearRuntimeBuffer() {
         this.logEntries = [];
         this.lastLogLine = null;
@@ -207,7 +244,7 @@ window.CatchTrackRuntimeStorage = {
         }
         catch (error) {
             console.warn(
-                "Runtime Error Log konnte nicht gelöscht werden.",
+                "CatchTrack Runtime Error Log konnte nicht gelöscht werden.",
                 error
             );
         }
