@@ -19,7 +19,6 @@
             id="gps-status-badge"
             class="gps-status-badge"
             data-state="idle"
-            data-i18n="gps.status.idle"
         >
             Bereit
         </span>
@@ -48,7 +47,6 @@
                 <span
                     id="gps-source"
                     class="gps-source"
-                    data-i18n="gps.source.none"
                 >
                     Keine Position
                 </span>
@@ -58,10 +56,7 @@
         <div class="gps-position-grid">
 
             <div class="gps-value">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.latitude"
-                >
+                <span class="gps-label">
                     Breitengrad
                 </span>
 
@@ -74,10 +69,7 @@
             </div>
 
             <div class="gps-value">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.longitude"
-                >
+                <span class="gps-label">
                     Längengrad
                 </span>
 
@@ -90,10 +82,7 @@
             </div>
 
             <div class="gps-value">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.accuracy"
-                >
+                <span class="gps-label">
                     Genauigkeit
                 </span>
 
@@ -106,10 +95,7 @@
             </div>
 
             <div class="gps-value">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.altitude"
-                >
+                <span class="gps-label">
                     Höhe über Meeresspiegel
                 </span>
 
@@ -122,10 +108,7 @@
             </div>
 
             <div class="gps-value">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.altitudeAccuracy"
-                >
+                <span class="gps-label">
                     Höhen-Genauigkeit
                 </span>
 
@@ -138,10 +121,7 @@
             </div>
 
             <div class="gps-value gps-value-wide">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.timestamp"
-                >
+                <span class="gps-label">
                     Zeitpunkt
                 </span>
 
@@ -154,10 +134,7 @@
             </div>
 
             <div class="gps-value gps-value-wide">
-                <span
-                    class="gps-label"
-                    data-i18n="gps.stayDuration"
-                >
+                <span class="gps-label">
                     Aufenthaltsdauer
                 </span>
 
@@ -177,7 +154,6 @@
                 id="gps-update-button"
                 type="button"
                 class="gps-button gps-button-primary"
-                data-i18n="gps.action.update"
             >
                 Standort aktualisieren
             </button>
@@ -186,16 +162,22 @@
                 id="gps-share-button"
                 type="button"
                 class="gps-button gps-button-secondary"
-                data-i18n="gps.action.share"
             >
                 Position teilen
+            </button>
+
+            <button
+                id="gps-route-button"
+                type="button"
+                class="gps-button gps-button-secondary"
+            >
+                Route
             </button>
 
             <button
                 id="gps-clear-button"
                 type="button"
                 class="gps-button gps-button-secondary"
-                data-i18n="gps.action.clear"
             >
                 Anzeige zurücksetzen
             </button>
@@ -228,7 +210,6 @@
             <span
                 id="gps-home-status"
                 class="gps-source"
-                data-i18n="gps.home.none"
             >
                 Nicht gespeichert
             </span>
@@ -239,7 +220,7 @@
             id="gps-home-position"
             class="gps-home-position"
         >
-            <span data-i18n="gps.home.empty">
+            <span>
                 Kein Home-Standort vorhanden.
             </span>
         </div>
@@ -250,16 +231,22 @@
                 id="gps-save-home-button"
                 type="button"
                 class="gps-button gps-button-primary"
-                data-i18n="gps.action.saveHome"
             >
                 Aktuellen Standort als Home speichern
+            </button>
+
+            <button
+                id="gps-home-route-button"
+                type="button"
+                class="gps-button gps-button-secondary"
+            >
+                Route nach Hause
             </button>
 
             <button
                 id="gps-delete-home-button"
                 type="button"
                 class="gps-button gps-button-danger"
-                data-i18n="gps.action.deleteHome"
             >
                 Home löschen
             </button>
