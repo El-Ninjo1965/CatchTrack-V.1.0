@@ -2,7 +2,7 @@
 
 window.CatchTrack = {
 
-    version: "2.1",
+    version: "2.2",
 
     database: null,
 
@@ -16,26 +16,34 @@ window.CatchTrack = {
         const response = await fetch(path);
 
         if (!response.ok) {
+
             throw new Error(
                 `Migration ${version} konnte nicht geladen werden: ${path}`
             );
+
         }
 
-        const sql = await response.text();
+        const sql =
+            await response.text();
 
         if (!sql.trim()) {
+
             throw new Error(
                 `Migration ${version} ist leer.`
             );
+
         }
 
         CatchTrackDatabase.registerMigration(
             version,
             description,
             database => {
+
                 database.exec(sql);
+
             }
         );
+
     },
 
 
@@ -60,19 +68,22 @@ window.CatchTrack = {
 
         try {
 
-            console.log("CatchTrack Start");
+            console.log(
+                "CatchTrack Start"
+            );
 
 
             /*
              * SQL.js laden
              */
 
-            const SQL = await initSqlJs({
+            const SQL =
+                await initSqlJs({
 
-                locateFile: file =>
-                    "libraries/" + file
+                    locateFile: file =>
+                        "libraries/" + file
 
-            });
+                });
 
 
             /*
@@ -81,7 +92,9 @@ window.CatchTrack = {
              */
 
             this.database =
-                CatchTrackDatabase.loadDatabase(SQL);
+                CatchTrackDatabase.loadDatabase(
+                    SQL
+                );
 
 
             /*
@@ -94,9 +107,6 @@ window.CatchTrack = {
 
             /*
              * Database Manager verbinden.
-             *
-             * Dadurch werden die registrierten
-             * Migrationen automatisch ausgeführt.
              */
 
             const connected =
@@ -131,7 +141,9 @@ window.CatchTrack = {
 
                 if (seed.trim()) {
 
-                    this.database.exec(seed);
+                    this.database.exec(
+                        seed
+                    );
 
                     CatchTrackDatabase.saveDatabase();
 
@@ -187,9 +199,35 @@ window.CatchTrack = {
 
 
             this.modules =
-                Array.isArray(moduleData.modules)
+                Array.isArray(
+                    moduleData.modules
+                )
                     ? moduleData.modules
                     : [];
+
+
+            /*
+             * Runtime Status
+             *
+             * Die Anwendungsversion und Umgebung
+             * werden vor dem Modulstart bekanntgegeben.
+             */
+
+            if (
+                window.CatchTrackRuntimeStatus
+            ) {
+
+                CatchTrackRuntimeStatus.application.version =
+                    this.version;
+
+                CatchTrackRuntimeStatus.application.environment =
+                    this.config.environment ||
+                    this.config.env ||
+                    null;
+
+                CatchTrackRuntimeStatus.updateStatus();
+
+            }
 
 
             /*
@@ -199,8 +237,8 @@ window.CatchTrack = {
             if (
                 window.CatchTrackModuleManager &&
                 typeof
-                CatchTrackModuleManager.loadModules
-                === "function"
+                    CatchTrackModuleManager.loadModules ===
+                    "function"
             ) {
 
                 CatchTrackModuleManager.loadModules(
@@ -228,6 +266,19 @@ window.CatchTrack = {
                 CatchTrackDatabase.getAppliedMigrations()
             );
 
+
+            /*
+             * Finaler Runtime-Status
+             */
+
+            if (
+                window.CatchTrackRuntimeStatus
+            ) {
+
+                CatchTrackRuntimeStatus.updateStatus();
+
+            }
+
         }
 
         catch (error) {
@@ -238,8 +289,59 @@ window.CatchTrack = {
             );
 
 
+            /*
+             * Zentralen Error Handler verwenden.
+             */
+
+            if (
+                window.CatchTrackErrorHandler &&
+                typeof
+                    CatchTrackErrorHandler.handle ===
+                    "function"
+            ) {
+
+                CatchTrackErrorHandler.handle(
+                    error,
+                    "app:init"
+                );
+
+            }
+
+
+            /*
+             * Runtime Status über den Fehler informieren.
+             */
+
+            if (
+                window.CatchTrackRuntimeStatus &&
+                typeof
+                    CatchTrackRuntimeStatus.registerError ===
+                    "function"
+            ) {
+
+                CatchTrackRuntimeStatus.registerError({
+
+                    level: "ERROR",
+
+                    source: "app:init",
+
+                    message:
+                        error?.message ||
+                        String(error),
+
+                    stack:
+                        error?.stack ||
+                        null
+
+                });
+
+            }
+
+
             const app =
-                document.getElementById("app");
+                document.getElementById(
+                    "app"
+                );
 
 
             if (app) {
@@ -247,7 +349,10 @@ window.CatchTrack = {
                 app.innerHTML =
                     "<h2>CatchTrack</h2>" +
                     "<p>" +
-                    error.message +
+                    (
+                        error?.message ||
+                        "Unbekannter Fehler."
+                    ) +
                     "</p>";
 
             }
@@ -262,6 +367,8 @@ window.CatchTrack = {
 document.addEventListener(
     "DOMContentLoaded",
     () => {
+
         CatchTrack.init();
+
     }
 );
