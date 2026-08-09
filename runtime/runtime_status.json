@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0",
+  "status": "INITIAL",
+  "generatedAt": null,
+  "application": {
+    "name": "CatchTrack",
+    "version": null,
+    "environment": null
+  },
+  "system": {
+    "lastStartup": null,
+    "lastStatusScan": null,
+    "lastSuccessfulStatusScan": null
+  },
+  "modules": [],
+  "errors": {
+    "total": 0,
+    "lastErrorAt": null,
+    "lastError": null
+  }
+}
