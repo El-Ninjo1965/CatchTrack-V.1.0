@@ -1,186 +1,268 @@
 "use strict";
+
+
 window.CatchTrackErrorHandler = {
-    version: "1.4.0",
+
+    version: "2.0.0",
+
     errors: [],
-    logFile:
-        "runtime/error.log",
+
+    maxErrors: 1000,
+
     initialized: false,
+
+
     init() {
-        if (this.initialized) {
+
+        if (
+            this.initialized
+        ) {
+
             return;
+
         }
-        this.initialized = true;
+
+
+        this.initialized =
+            true;
+
+
         window.addEventListener(
             "error",
-            (event) => {
+            event => {
+
                 this.handle(
+
                     event.error ||
                     event.message ||
                     "Unbekannter JavaScript-Fehler",
+
                     "window"
+
                 );
+
             }
         );
+
+
         window.addEventListener(
             "unhandledrejection",
-            (event) => {
+            event => {
+
                 this.handle(
+
                     event.reason ||
                     "Unbehandelte Promise-Ablehnung",
+
                     "unhandledrejection"
+
                 );
+
             }
         );
-        console.log(
-            "CatchTrack Error Handler V1.4.0 bereit."
-        );
+
     },
+
+
     handle(
         error,
         source = "unknown"
     ) {
+
         const entry = {
+
             level:
                 "ERROR",
+
             message:
                 this.getErrorMessage(
                     error
                 ),
-            source:
-                source,
+
+            source,
+
             timestamp:
                 new Date().toISOString()
+
         };
+
+
         const stack =
             this.getErrorStack(
                 error
             );
+
+
         if (stack) {
+
             entry.stack =
                 stack;
+
         }
+
+
         this.errors.push(
             entry
         );
+
+
+        if (
+            this.errors.length >
+            this.maxErrors
+        ) {
+
+            this.errors =
+                this.errors.slice(
+                    -this.maxErrors
+                );
+
+        }
+
+
         console.error(
             "CatchTrack Fehler:",
             entry
         );
-        this.writeToLog(
+
+
+        this.writeToRuntime(
             entry
         );
-        this.registerRuntimeStatus(
-            entry
-        );
+
+
         return entry;
+
     },
-    getErrorMessage(error) {
+
+
+    getErrorMessage(
+        error
+    ) {
+
         if (
             error &&
             typeof error.message ===
             "string"
         ) {
+
             return error.message;
+
         }
+
+
         if (
             typeof error ===
             "string"
         ) {
+
             return error;
+
         }
+
+
         try {
+
             return JSON.stringify(
                 error
             );
+
         }
-        catch {
+
+        catch (_) {
+
             return String(
                 error
             );
+
         }
+
     },
-    getErrorStack(error) {
-        if (
+
+
+    getErrorStack(
+        error
+    ) {
+
+        return (
             error &&
             typeof error.stack ===
             "string"
-        ) {
-            return error.stack;
-        }
-        return null;
+        )
+            ? error.stack
+            : null;
+
     },
-    writeToLog(entry) {
-        const storage =
-            window.CatchTrackRuntimeStorage;
-        if (
-            storage &&
-            typeof storage.writeLog ===
-            "function"
-        ) {
-            try {
-                storage.writeLog(
+
+
+    writeToRuntime(
+        entry
+    ) {
+
+        try {
+
+            if (
+                window.CatchTrackRuntimeStorage
+            ) {
+
+                CatchTrackRuntimeStorage.writeLog(
                     entry
                 );
-                return true;
+
             }
-            catch (error) {
-                console.warn(
-                    "CatchTrack Runtime Storage konnte den Fehler nicht speichern.",
-                    error
-                );
-            }
-        }
-        console.warn(
-            "CatchTrack Runtime Storage nicht verfügbar. " +
-            "Fehler bleibt im Error Handler gespeichert."
-        );
-        return false;
-    },
-    registerRuntimeStatus(entry) {
-        const status =
-            window.CatchTrackRuntimeStatus;
-        if (
-            status &&
-            typeof status.registerError ===
-            "function"
-        ) {
-            try {
-                status.registerError(
+
+
+            if (
+                window.CatchTrackRuntimeStatus
+            ) {
+
+                CatchTrackRuntimeStatus.registerError(
                     entry
                 );
+
             }
-            catch (error) {
-                console.warn(
-                    "CatchTrack Runtime Status konnte den Fehler nicht registrieren.",
-                    error
-                );
-            }
+
         }
+
+        catch (runtimeError) {
+
+            console.warn(
+                "Runtime-Fehler konnte nicht gespeichert werden.",
+                runtimeError
+            );
+
+        }
+
     },
+
+
     getErrors() {
+
         return [
             ...this.errors
         ];
+
     },
+
+
     getLastError() {
-        if (
-            this.errors.length ===
-            0
-        ) {
-            return null;
-        }
-        return this.errors[
-            this.errors.length - 1
-        ];
+
+        return this.errors.length
+            ? this.errors[
+                this.errors.length - 1
+            ]
+            : null;
+
     },
+
+
     clear() {
-        this.errors = [];
+
+        this.errors =
+            [];
+
     }
+
 };
-/*
- * Absichtlich sofort initialisieren.
- *
- * Dadurch werden auch Fehler erfasst,
- * die vor DOMContentLoaded auftreten.
- */
-window.CatchTrackErrorHandler.init();
+
+
+CatchTrackErrorHandler.init();
