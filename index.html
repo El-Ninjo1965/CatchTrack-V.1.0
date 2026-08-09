@@ -4,25 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
-    <title>
-        CatchTrack
-    </title>
+    <title>CatchTrack</title>
     <link rel="stylesheet"
           href="style.css">
 </head>
 <body>
 <header>
-    <h1>
-        CatchTrack
-    </h1>
+    <h1>CatchTrack</h1>
 </header>
 <main id="app">
-    <p>
-        CatchTrack wird gestartet...
-    </p>
+    <p>CatchTrack wird gestartet...</p>
 </main>
 <script src="libraries/sql-wasm.js"></script>
 <script src="database/database.js"></script>
+<!-- Runtime-Infrastruktur muss vor allen davon abhängigen
+     Core-Modulen geladen werden. -->
 <script src="core/runtimeStorage.js"></script>
 <script src="core/errorHandler.js"></script>
 <script src="core/runtimeStatus.js"></script>
