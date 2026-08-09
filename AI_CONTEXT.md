@@ -1,33 +1,54 @@
-# AI_CONTEXT Version 1.8
-# Updated: 2026-08-09
-# CatchTrack – AI Context
-## 1. Zweck
+AI_CONTEXT Version 1.9
+
+Updated: 2026-08-09
+
+CatchTrack – AI Context
+
+1. Zweck
+
 Diese Datei ist der zentrale Einstiegspunkt für ChatGPT/AI zur
 Wiederaufnahme der CatchTrack-Entwicklung.
+
 Bei einer neuen Unterhaltung wird dieser Context zuerst gelesen.
+
 Danach werden die darin genannten Referenzdateien sowie der
 aktuelle GitHub-Projektstand geprüft.
+
 Der tatsächliche Projektstand auf GitHub hat Vorrang vor älteren
 Annahmen, Erinnerungen oder dokumentierten Planungen.
-—
-# 2. Projekt
+
+⸻
+
+2. Projekt
+
 Repository:
-`El-Ninjo1965/CatchTrack-V.1.0`
+El-Ninjo1965/CatchTrack-V.1.0
+
 Branch:
-`main`
-Der Benutzer arbeitet lokal mit **Working Copy** und überträgt
+main
+
+Der Benutzer arbeitet lokal mit Working Copy und überträgt
 Änderungen anschließend nach GitHub.
-Bei Pfadangaben wird `main/` nicht als Bestandteil des Pfades
+
+Bei Pfadangaben wird main/ nicht als Bestandteil des Pfades
 angegeben.
+
 Beispiel:
-`modules/weather/weather.js`
+
+modules/weather/weather.js
+
 nicht:
-`main/modules/weather/weather.js`
-—
-# 3. Grundsätzliche Arbeitsweise
+
+main/modules/weather/weather.js
+
+⸻
+
+3. Grundsätzliche Arbeitsweise
+
 CatchTrack wird modular entwickelt.
+
 Grundprinzip:
-```text
+
 Basis- und Datenmodule
         ↓
 stabile Schnittstellen
@@ -407,22 +428,10 @@ A – automatische Spracherkennung
 Die Anwendung verwendet standardmäßig die vom Endgerät bzw.
 Browser gemeldete bevorzugte Sprache.
 
-Beispiel:
-
-Gerätesprache Deutsch
-        ↓
-CatchTrack Deutsch
-
 B – manuelle Auswahl
 
 Der Benutzer kann die Sprache innerhalb der Anwendung manuell
 auswählen.
-
-Beispiel:
-
-Benutzer wählt English
-        ↓
-CatchTrack English
 
 Priorität
 
@@ -525,11 +534,14 @@ zugrunde liegenden strukturierten Daten verändern.
 
 Beispiel:
 
-interner Wetterwert:
 pressure = 1013.2
+
 Deutsch:
+
 Luftdruck
+
 English:
+
 Pressure
 
 Die Daten bleiben sprachneutral.
@@ -1063,7 +1075,7 @@ Format:
 
 Aktuelle Version:
 
-1.8
+1.9
 
 Versionsänderungen müssen dokumentiert werden.
 
@@ -1088,7 +1100,127 @@ Gültige Projektinformationen dürfen dabei nicht verloren gehen.
 
 ⸻
 
-48. Priorität bei widersprüchlichen Informationen
+48. Dokumentationsänderungen – VERBINDLICHE REGEL
+
+Eine bereits aktuelle Projektdokumentation darf nicht ohne
+konkreten Änderungsgrund erneut überarbeitet werden.
+
+Vor jeder Änderung an einer Dokumentationsdatei muss geprüft werden:
+
+1. Ist die Datei bereits vorhanden?
+2. Welche Version besitzt sie?
+3. Wann wurde sie zuletzt aktualisiert?
+4. Welche Inhalte enthält sie bereits?
+5. Ist die gewünschte Information bereits enthalten?
+6. Widerspricht sie dem tatsächlichen GitHub-Stand?
+7. Muss tatsächlich etwas geändert werden?
+
+Wenn die Datei bereits aktuell ist:
+
+Datei aktuell
+    ↓
+keine Änderung
+    ↓
+keine neue Ersatzdatei
+    ↓
+keine Wiederholung
+
+Es darf nicht automatisch eine bereits vorhandene
+PROJECT_KNOWLEDGE.md, PROJECT_STATUS.md,
+PROJECT_ARCHITECTURE.md, PROJECT_TEST_PLAN.md oder andere
+Dokumentationsdatei neu erstellt werden.
+
+Nur der tatsächlich notwendige Änderungsbereich wird ergänzt
+oder korrigiert.
+
+⸻
+
+49. Dokumentationsrollen nicht vermischen
+
+Die Dokumentationsdateien haben unterschiedliche Aufgaben.
+
+AI_CONTEXT.md
+    ↓
+Arbeitsanweisungen für AI
+PROJECT_RULES.md
+    ↓
+verbindliche Projektregeln
+PROJECT_KNOWLEDGE.md
+    ↓
+gesammeltes Projektwissen
+PROJECT_STATUS.md
+    ↓
+aktueller Entwicklungsstand
+PROJECT_MODULE_PLAN.md
+    ↓
+Entwicklungsplanung
+PROJECT_ARCHITECTURE.md
+    ↓
+technische Architektur
+PROJECT_TEST_PLAN.md
+    ↓
+Teststrategie und Teststatus
+
+Eine Information soll nicht nur deshalb in eine andere Datei
+kopiert werden, weil sie bereits in einer passenden Referenzdatei
+existiert.
+
+Bei Bedarf wird auf die zuständige Datei verwiesen.
+
+⸻
+
+50. Dokumentationsprüfung vor neuem Arbeitsschritt
+
+Wenn ein neuer Arbeitsschritt beginnt, wird nicht automatisch
+jede Dokumentationsdatei erneut verändert.
+
+Stattdessen:
+
+Aufgabe bestimmen
+      ↓
+zuständige Referenzdatei bestimmen
+      ↓
+aktuelle Datei lesen
+      ↓
+Ist-Stand prüfen
+      ↓
+Änderung notwendig?
+   ↙          ↘
+ NEIN         JA
+  ↓            ↓
+weiter       gezielt
+             aktualisieren
+
+Wenn keine Änderung notwendig ist, wird direkt mit der technischen
+Arbeit fortgefahren.
+
+⸻
+
+51. Keine unnötigen Wiederholungen
+
+Bereits bestätigte Informationen sollen nicht ohne Grund erneut
+erarbeitet werden.
+
+Insbesondere nicht:
+
+* bereits geprüfte Dateistrukturen
+* bereits bestätigte Dokumentationsstände
+* bereits bestätigte Architekturentscheidungen
+* bereits bestätigte Modulreihenfolgen
+* bereits bestätigte Dateinamen
+* bereits bestätigte Regeln
+
+Bei einer erneuten Prüfung wird nur dann erneut gearbeitet, wenn:
+
+* sich der GitHub-Stand geändert hat
+* eine neue Datei hinzugekommen ist
+* ein Commit relevant ist
+* der Benutzer ausdrücklich eine erneute Prüfung verlangt
+* ein Widerspruch festgestellt wurde
+
+⸻
+
+52. Priorität bei widersprüchlichen Informationen
 
 Bei widersprüchlichen Informationen gilt:
 
@@ -1107,7 +1239,7 @@ Bei einem nachweisbaren Widerspruch muss dieser benannt werden.
 
 ⸻
 
-49. Keine Zugangsdaten
+53. Keine Zugangsdaten
 
 Diese Datei darf niemals enthalten:
 
@@ -1119,7 +1251,7 @@ Diese Datei darf niemals enthalten:
 
 ⸻
 
-50. Aktueller Übergabepunkt
+54. Aktueller Übergabepunkt
 
 Der aktuelle Entwicklungsfokus ist:
 
@@ -1135,7 +1267,7 @@ Fish Data → Catchbook → Statistics / Hitparade
 
 ⸻
 
-51. Projektfortsetzung in einem neuen Chat
+55. Projektfortsetzung in einem neuen Chat
 
 Bei einer neuen Unterhaltung mit CatchTrack:
 
@@ -1154,7 +1286,7 @@ Erinnerung weiterarbeiten.
 
 ⸻
 
-52. Grundsatz für den tatsächlichen Projektstand
+56. Grundsatz für den tatsächlichen Projektstand
 
 Der aktuelle CatchTrack-Stand wird immer aus drei Ebenen bestimmt:
 
@@ -1175,6 +1307,70 @@ und implementiert ist.
 
 ⸻
 
-Ende AI_CONTEXT
+57. Letzte Dokumentationsprüfung
 
-:::
+Stand:
+
+09.08.2026
+
+Geprüfte zentrale Dokumentation:
+
+AI_CONTEXT.md
+PROJECT_RULES.md
+PROJECT_KNOWLEDGE.md
+PROJECT_MODULE_PLAN.md
+PROJECT_STATUS.md
+PROJECT_ARCHITECTURE.md
+PROJECT_TEST_PLAN.md
+
+Ergebnis:
+
+Die Dokumentationsrollen sind festgelegt.
+
+PROJECT_KNOWLEDGE.md wird nicht erneut bearbeitet, solange
+keine konkrete inhaltliche Änderung erforderlich ist.
+
+Der nächste Arbeitsschritt soll sich auf den tatsächlichen
+technischen Projektstand konzentrieren.
+
+⸻
+
+58. Aktueller technischer Fokus
+
+Der nächste technische Arbeitsschritt ist die Prüfung bzw.
+Weiterentwicklung des vorhandenen:
+
+modules/weather/
+
+mit:
+
+module.json
+weather.js
+weather.html
+weather.css
+
+Vor Änderungen müssen diese Dateien erneut vollständig eingelesen
+und gegen die aktuelle Architektur und den Testplan geprüft werden.
+
+⸻
+
+59. Verbindlicher Grundsatz
+
+Nicht wiederholen, was bereits aktuell ist.
+
+Nicht neu schreiben, was bereits korrekt dokumentiert ist.
+
+Nicht eine Dokumentationsdatei ändern, nur weil eine andere
+Information hinzugekommen ist.
+
+Zuerst prüfen, ob die Information bereits in der zuständigen
+Datei vorhanden ist.
+
+Nur bei tatsächlichem Änderungsbedarf aktualisieren.
+
+Bei technischen Aufgaben möglichst direkt zur technischen Arbeit
+übergehen.
+
+⸻
+
+Ende AI_CONTEXT
