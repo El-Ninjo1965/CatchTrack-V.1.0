@@ -10,6 +10,14 @@ window.CatchTrackRuntimeStorage = {
 
     maxLogEntries: 1000,
 
+    lastStatus: null,
+
+    lastStatusJson: null,
+
+    logEntries: [],
+
+    lastLogLine: null,
+
 
     async saveStatus(status) {
 
@@ -21,17 +29,7 @@ window.CatchTrackRuntimeStorage = {
 
         }
 
-        /*
-         * Browser-Anwendungen dürfen lokale Projektdateien
-         * nicht direkt per JavaScript überschreiben.
-         *
-         * Deshalb wird der Status zunächst als JSON-Daten
-         * bereitgestellt. Eine serverseitige Persistenz kann
-         * diese Schnittstelle später direkt verwenden.
-         */
-
-        this.lastStatus =
-            status;
+        this.lastStatus = status;
 
         this.lastStatusJson =
             JSON.stringify(
@@ -59,23 +57,6 @@ window.CatchTrackRuntimeStorage = {
             this.formatLogEntry(
                 entry
             );
-
-        /*
-         * Lokaler Runtime-Puffer.
-         *
-         * Die eigentliche persistente Speicherung erfolgt,
-         * sobald die Server-/Storage-Schnittstelle vorhanden ist.
-         */
-
-        if (
-            !Array.isArray(
-                this.logEntries
-            )
-        ) {
-
-            this.logEntries = [];
-
-        }
 
         this.logEntries.push(
             line
@@ -111,8 +92,7 @@ window.CatchTrackRuntimeStorage = {
 
                 level: "ERROR",
 
-                message:
-                    line
+                message: line
 
             });
 
@@ -149,9 +129,7 @@ window.CatchTrackRuntimeStorage = {
             `${source}: ` +
             `${message}`;
 
-        if (
-            entry.stack
-        ) {
+        if (entry.stack) {
 
             result +=
                 `\n${entry.stack}`;
@@ -165,27 +143,25 @@ window.CatchTrackRuntimeStorage = {
 
     getStatusJson() {
 
-        return this.lastStatusJson ||
-            null;
+        return this.lastStatusJson || null;
 
     },
 
 
     getLogEntries() {
 
-        return Array.isArray(
-            this.logEntries
-        )
-            ? [...this.logEntries]
-            : [];
+        return [
+            ...this.logEntries
+        ];
 
     },
 
 
     getLogText() {
 
-        return this.getLogEntries()
-            .join("\n");
+        return this.logEntries.join(
+            "\n"
+        );
 
     },
 
@@ -194,8 +170,7 @@ window.CatchTrackRuntimeStorage = {
 
         this.logEntries = [];
 
-        this.lastLogLine =
-            null;
+        this.lastLogLine = null;
 
     }
 
