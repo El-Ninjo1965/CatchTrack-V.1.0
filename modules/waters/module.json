@@ -1,23 +1,23 @@
 {
-"name": "waters",
-"version": "4.1.0",
-"status": "active",
-"enabled": true,
-"description": "Benutzerbezogene Gewässerverwaltung mit GPS-Unterstützung",
-"initializer": "CatchTrackWatersModule",
-"dependencies": [
-"CatchTrackDatabase",
-"CatchTrackIdentity",
-"CatchTrackStorageManager"
-],
-"interface": {
-"getAll": "CatchTrackWatersModule.getAll",
-"getById": "CatchTrackWatersModule.getById",
-"getNearby": "CatchTrackWatersModule.getNearby",
-"getCurrentSuggestion": "CatchTrackWatersModule.getCurrentSuggestion",
-"create": "CatchTrackWatersModule.create",
-"update": "CatchTrackWatersModule.update",
-"remove": "CatchTrackWatersModule.remove",
-"getCount": "CatchTrackWatersModule.getCount"
-}
+  "name": "waters",
+  "version": "5.0.0",
+  "status": "active",
+  "enabled": true,
+  "description": "Benutzerbezogene Gewässerverwaltung mit GPS-, Orts- und Umgebungsunterstützung",
+  "initializer": "CatchTrackWatersModule",
+  "dependencies": [
+    "CatchTrackDatabase",
+    "CatchTrackIdentity",
+    "CatchTrackStorageManager"
+  ],
+  "interface": {
+    "getAll": "CatchTrackWatersModule.getAll",
+    "getById": "CatchTrackWatersModule.getById",
+    "getNearby": "CatchTrackWatersModule.getNearby",
+    "getCurrentSuggestion": "CatchTrackWatersModule.getCurrentSuggestion",
+    "create": "CatchTrackWatersModule.create",
+    "update": "CatchTrackWatersModule.update",
+    "remove": "CatchTrackWatersModule.remove",
+    "getCount": "CatchTrackWatersModule.getCount"
+  }
 }
