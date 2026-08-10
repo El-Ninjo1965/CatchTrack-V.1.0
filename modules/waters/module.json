@@ -1,7 +1,18 @@
 {
     "name": "waters",
-    "version": "1.0",
+    "version": "2.0.0",
     "status": "active",
     "enabled": true,
-    "description": "Gewässerverwaltung"
+    "description": "Gewässerverwaltung",
+    "initializer": "CatchTrackWatersModule",
+    "interface": {
+        "getAll": "CatchTrackWatersModule.getAll",
+        "getById": "CatchTrackWatersModule.getById",
+        "getNearby": "CatchTrackWatersModule.getNearby",
+        "getCurrentSuggestion": "CatchTrackWatersModule.getCurrentSuggestion",
+        "create": "CatchTrackWatersModule.create",
+        "update": "CatchTrackWatersModule.update",
+        "remove": "CatchTrackWatersModule.remove",
+        "getCount": "CatchTrackWatersModule.getCount"
+    }
 }
