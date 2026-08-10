@@ -1,26 +1,48 @@
 "use strict";
 
 window.CatchTrackWatersModule = {
-    version: "7.0.0",
+    version: "8.0.0",
 
     initialized: false,
 
+    constants: {
+        MAX_PHOTO_EDGE: 720,
+        PHOTO_QUALITY: 0.70,
+        PHOTO_MIME: "image/webp",
+        PHOTO_EXTENSION: "webp",
+        GEO_URL:
+            "https://api.bigdatacloud.net/data/reverse-geocode-client",
+        GEO_LANGUAGE: "de",
+        PHOTO_DB_NAME: "CatchTrackWatersPhotos",
+        PHOTO_DB_VERSION: 1,
+        PHOTO_STORE: "photos",
+        WEBP_MODULE:
+            "https://esm.sh/@jsquash/webp@1.5.0"
+    },
+
     state: {
         waters: [],
-        nearby: [],
         editingId: null,
         busy: false,
         gpsBusy: false,
-        currentPosition: null
+        currentPosition: null,
+        currentLocation: null,
+        pendingPhoto: null,
+        existingPhoto: null,
+        photoProcessing: false,
+        photoObjectUrl: null,
+        webpEncoder: null
     },
 
-    init() {
+    async init() {
         if (this.initialized) {
             return;
         }
 
         try {
             this.bindEvents();
+            await this.openPhotoDatabase();
+
             this.initialized = true;
 
             this.setStatus(
@@ -28,7 +50,7 @@ window.CatchTrackWatersModule = {
                 "info"
             );
 
-            this.refresh();
+            await this.refresh();
 
             window.setTimeout(() => {
                 this.autoGetGPS();
@@ -95,20 +117,14 @@ window.CatchTrackWatersModule = {
         return userId;
     },
 
-    query(
-        sql,
-        params = []
-    ) {
+    query(sql, params = []) {
         return this.getDatabase().query(
             sql,
             params
         );
     },
 
-    execute(
-        sql,
-        params = []
-    ) {
+    execute(sql, params = []) {
         return this.getDatabase().execute(
             sql,
             params
@@ -132,9 +148,12 @@ window.CatchTrackWatersModule = {
             "type",
             "country",
             "region",
+            "city",
             "description",
             "gps_lat",
             "gps_lon",
+            "gps_accuracy_m",
+            "gps_timestamp",
             "created_at",
             "updated_at"
         ];
@@ -148,7 +167,8 @@ window.CatchTrackWatersModule = {
         if (missing.length) {
             throw new Error(
                 "Waters-Datenbankschema unvollständig: " +
-                    missing.join(", ")
+                    missing.join(", ") +
+                    ". Bitte Migration 006 ausführen."
             );
         }
 
@@ -163,34 +183,25 @@ window.CatchTrackWatersModule = {
             return null;
         }
 
-        const numberOrNull =
-            value => {
-                if (
-                    value === null ||
-                    value === undefined ||
-                    value === ""
-                ) {
-                    return null;
-                }
+        const numberOrNull = value => {
+            if (
+                value === null ||
+                value === undefined ||
+                value === ""
+            ) {
+                return null;
+            }
 
-                const number =
-                    Number(value);
+            const number = Number(value);
 
-                return Number.isFinite(
-                    number
-                )
-                    ? number
-                    : null;
-            };
+            return Number.isFinite(number)
+                ? number
+                : null;
+        };
 
         return {
-            id: numberOrNull(
-                row.id
-            ),
-
-            user_id: numberOrNull(
-                row.user_id
-            ),
+            id: numberOrNull(row.id),
+            user_id: numberOrNull(row.user_id),
 
             name: String(
                 row.name ?? ""
@@ -208,6 +219,10 @@ window.CatchTrackWatersModule = {
                 row.region ?? ""
             ),
 
+            city: String(
+                row.city ?? ""
+            ),
+
             description: String(
                 row.description ?? ""
             ),
@@ -222,11 +237,22 @@ window.CatchTrackWatersModule = {
                     row.gps_lon
                 ),
 
+            gps_accuracy_m:
+                numberOrNull(
+                    row.gps_accuracy_m
+                ),
+
+            gps_timestamp:
+                row.gps_timestamp ??
+                null,
+
             created_at:
-                row.created_at ?? null,
+                row.created_at ??
+                null,
 
             updated_at:
-                row.updated_at ?? null
+                row.updated_at ??
+                null
         };
     },
 
@@ -238,9 +264,12 @@ window.CatchTrackWatersModule = {
             type,
             country,
             region,
+            city,
             description,
             gps_lat,
             gps_lon,
+            gps_accuracy_m,
+            gps_timestamp,
             created_at,
             updated_at
         `;
@@ -301,9 +330,7 @@ window.CatchTrackWatersModule = {
             );
 
         return rows.length
-            ? this.normalizeWater(
-                rows[0]
-            )
+            ? this.normalizeWater(rows[0])
             : null;
     },
 
@@ -311,19 +338,69 @@ window.CatchTrackWatersModule = {
         return this.getAll().length;
     },
 
+    calculateDistance(
+        latitude1,
+        longitude1,
+        latitude2,
+        longitude2
+    ) {
+        const earthRadiusKm = 6371;
+
+        const lat1 =
+            Number(latitude1) *
+            Math.PI /
+            180;
+
+        const lat2 =
+            Number(latitude2) *
+            Math.PI /
+            180;
+
+        const deltaLat =
+            (
+                Number(latitude2) -
+                Number(latitude1)
+            ) *
+            Math.PI /
+            180;
+
+        const deltaLon =
+            (
+                Number(longitude2) -
+                Number(longitude1)
+            ) *
+            Math.PI /
+            180;
+
+        const a =
+            Math.sin(deltaLat / 2) ** 2 +
+            Math.cos(lat1) *
+                Math.cos(lat2) *
+                Math.sin(deltaLon / 2) ** 2;
+
+        return (
+            earthRadiusKm *
+            2 *
+            Math.atan2(
+                Math.sqrt(a),
+                Math.sqrt(
+                    Math.max(
+                        0,
+                        1 - a
+                    )
+                )
+            )
+        );
+    },
+
     getNearby(
         latitude,
         longitude,
         radiusKm = 50
     ) {
-        const lat =
-            Number(latitude);
-
-        const lon =
-            Number(longitude);
-
-        const radius =
-            Number(radiusKm);
+        const lat = Number(latitude);
+        const lon = Number(longitude);
+        const radius = Number(radiusKm);
 
         if (
             !Number.isFinite(lat) ||
@@ -367,88 +444,8 @@ window.CatchTrackWatersModule = {
             );
     },
 
-    calculateDistance(
-        latitude1,
-        longitude1,
-        latitude2,
-        longitude2
-    ) {
-        const earthRadiusKm =
-            6371;
-
-        const lat1 =
-            Number(latitude1) *
-            Math.PI /
-            180;
-
-        const lat2 =
-            Number(latitude2) *
-            Math.PI /
-            180;
-
-        const deltaLat =
-            (
-                Number(latitude2) -
-                Number(latitude1)
-            ) *
-            Math.PI /
-            180;
-
-        const deltaLon =
-            (
-                Number(longitude2) -
-                Number(longitude1)
-            ) *
-            Math.PI /
-            180;
-
-        const a =
-            Math.sin(
-                deltaLat / 2
-            ) ** 2 +
-            Math.cos(lat1) *
-                Math.cos(lat2) *
-                Math.sin(
-                    deltaLon / 2
-                ) ** 2;
-
-        return (
-            earthRadiusKm *
-            2 *
-            Math.atan2(
-                Math.sqrt(a),
-                Math.sqrt(
-                    Math.max(
-                        0,
-                        1 - a
-                    )
-                )
-            )
-        );
-    },
-
-    getCurrentSuggestion() {
-        const position =
-            this.state.currentPosition;
-
-        if (!position) {
-            return null;
-        }
-
-        const nearby =
-            this.getNearby(
-                position.latitude,
-                position.longitude
-            );
-
-        return nearby.length
-            ? nearby[0]
-            : null;
-    },
-
     validateData(data) {
-        const source =
-            data || {};
+        const source = data || {};
 
         const name =
             String(
@@ -462,11 +459,7 @@ window.CatchTrackWatersModule = {
         }
 
         return {
-            name:
-                name.slice(
-                    0,
-                    150
-                ),
+            name: name.slice(0, 150),
 
             type:
                 this.normalizeText(
@@ -483,6 +476,12 @@ window.CatchTrackWatersModule = {
             region:
                 this.normalizeText(
                     source.region,
+                    150
+                ),
+
+            city:
+                this.normalizeText(
+                    source.city,
                     150
                 ),
 
@@ -504,6 +503,11 @@ window.CatchTrackWatersModule = {
                     source.gps_lon,
                     -180,
                     180
+                ),
+
+            gps_accuracy_m:
+                this.normalizePositiveNumber(
+                    source.gps_accuracy_m
                 )
         };
     },
@@ -518,10 +522,7 @@ window.CatchTrackWatersModule = {
             ).trim();
 
         return text
-            ? text.slice(
-                0,
-                maxLength
-            )
+            ? text.slice(0, maxLength)
             : null;
     },
 
@@ -538,8 +539,7 @@ window.CatchTrackWatersModule = {
             return null;
         }
 
-        const number =
-            Number(value);
+        const number = Number(value);
 
         if (
             !Number.isFinite(number) ||
@@ -554,6 +554,27 @@ window.CatchTrackWatersModule = {
         return number;
     },
 
+    normalizePositiveNumber(value) {
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
+            return null;
+        }
+
+        const number = Number(value);
+
+        if (
+            !Number.isFinite(number) ||
+            number < 0
+        ) {
+            return null;
+        }
+
+        return number;
+    },
+
     create(data) {
         this.ensureSchema();
 
@@ -561,9 +582,7 @@ window.CatchTrackWatersModule = {
             this.getCurrentUserId();
 
         const water =
-            this.validateData(
-                data
-            );
+            this.validateData(data);
 
         const timestamp =
             new Date().toISOString();
@@ -577,14 +596,17 @@ window.CatchTrackWatersModule = {
                     type,
                     country,
                     region,
+                    city,
                     description,
                     gps_lat,
                     gps_lon,
+                    gps_accuracy_m,
+                    gps_timestamp,
                     created_at,
                     updated_at
                 )
                 VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `,
             [
                 userId,
@@ -592,9 +614,14 @@ window.CatchTrackWatersModule = {
                 water.type,
                 water.country,
                 water.region,
+                water.city,
                 water.description,
                 water.gps_lat,
                 water.gps_lon,
+                water.gps_accuracy_m,
+                this.state.currentPosition
+                    ?.timestamp ??
+                    timestamp,
                 timestamp,
                 timestamp
             ]
@@ -616,20 +643,14 @@ window.CatchTrackWatersModule = {
             );
 
         return rows.length
-            ? this.normalizeWater(
-                rows[0]
-            )
+            ? this.normalizeWater(rows[0])
             : null;
     },
 
-    update(
-        id,
-        data
-    ) {
+    update(id, data) {
         this.ensureSchema();
 
-        const waterId =
-            Number(id);
+        const waterId = Number(id);
 
         if (
             !Number.isInteger(waterId) ||
@@ -644,9 +665,7 @@ window.CatchTrackWatersModule = {
             this.getCurrentUserId();
 
         const water =
-            this.validateData(
-                data
-            );
+            this.validateData(data);
 
         this.execute(
             `
@@ -656,9 +675,12 @@ window.CatchTrackWatersModule = {
                     type = ?,
                     country = ?,
                     region = ?,
+                    city = ?,
                     description = ?,
                     gps_lat = ?,
                     gps_lon = ?,
+                    gps_accuracy_m = ?,
+                    gps_timestamp = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                   AND user_id = ?
@@ -668,9 +690,14 @@ window.CatchTrackWatersModule = {
                 water.type,
                 water.country,
                 water.region,
+                water.city,
                 water.description,
                 water.gps_lat,
                 water.gps_lon,
+                water.gps_accuracy_m,
+                this.state.currentPosition
+                    ?.timestamp ??
+                    null,
                 waterId,
                 userId
             ]
@@ -678,16 +705,13 @@ window.CatchTrackWatersModule = {
 
         this.saveDatabase();
 
-        return this.getById(
-            waterId
-        );
+        return this.getById(waterId);
     },
 
     remove(id) {
         this.ensureSchema();
 
-        const waterId =
-            Number(id);
+        const waterId = Number(id);
 
         if (
             !Number.isInteger(waterId) ||
@@ -762,12 +786,8 @@ window.CatchTrackWatersModule = {
                 );
 
             if (
-                !Number.isFinite(
-                    latitude
-                ) ||
-                !Number.isFinite(
-                    longitude
-                )
+                !Number.isFinite(latitude) ||
+                !Number.isFinite(longitude)
             ) {
                 throw new Error(
                     "GPS lieferte ungültige Koordinaten."
@@ -789,16 +809,12 @@ window.CatchTrackWatersModule = {
                 longitude,
 
                 accuracy:
-                    Number.isFinite(
-                        accuracy
-                    )
+                    Number.isFinite(accuracy)
                         ? accuracy
                         : null,
 
                 altitude:
-                    Number.isFinite(
-                        altitude
-                    )
+                    Number.isFinite(altitude)
                         ? altitude
                         : null,
 
@@ -818,180 +834,195 @@ window.CatchTrackWatersModule = {
 
             return normalized;
         } finally {
-            this.state.gpsBusy =
-                false;
+            this.state.gpsBusy = false;
         }
     },
 
-    getGPSErrorMessage(error) {
-        switch (
-            error?.code
-        ) {
-            case 1:
-                return "Der Zugriff auf den Standort wurde verweigert.";
-
-            case 2:
-                return "Der Standort ist derzeit nicht verfügbar.";
-
-            case 3:
-                return "Die Standortbestimmung hat zu lange gedauert.";
-
-            default:
-                return (
-                    error?.message ||
-                    "Der Standort konnte nicht ermittelt werden."
-                );
+    async reverseGeocode(position) {
+        if (!position) {
+            throw new Error(
+                "Kein aktueller GPS-Standort vorhanden."
+            );
         }
-    },
 
-    async autoGetGPS() {
+        const latitude =
+            Number(position.latitude);
+
+        const longitude =
+            Number(position.longitude);
+
         if (
-            this.state.currentPosition
+            !Number.isFinite(latitude) ||
+            !Number.isFinite(longitude)
         ) {
-            return;
+            throw new Error(
+                "Ungültige GPS-Koordinaten für die Standortauflösung."
+            );
         }
 
-        this.setGPSMessage(
-            "Aktuellen GPS-Standort wird ermittelt …",
-            "info"
+        const url =
+            new URL(
+                this.constants.GEO_URL
+            );
+
+        url.searchParams.set(
+            "latitude",
+            String(latitude)
         );
 
-        try {
-            const position =
-                await this.requestGPSPosition();
+        url.searchParams.set(
+            "longitude",
+            String(longitude)
+        );
 
-            this.setGPSFields(
-                position
+        url.searchParams.set(
+            "localityLanguage",
+            this.constants.GEO_LANGUAGE
+        );
+
+        const response =
+            await fetch(
+                url.toString(),
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: {
+                        Accept:
+                            "application/json"
+                    }
+                }
             );
 
-            this.renderCurrentPosition();
-            this.renderNearby();
-
-            this.setGPSMessage(
-                "GPS-Standort wurde automatisch übernommen.",
-                "success"
-            );
-        } catch (error) {
-            this.setGPSMessage(
-                this.getGPSErrorMessage(
-                    error
-                ),
-                "error"
-            );
-
-            this.handleError(
-                error,
-                "waters:auto-gps"
+        if (!response.ok) {
+            throw new Error(
+                `Standortauflösung fehlgeschlagen (${response.status}).`
             );
         }
-    },
 
-    async updateGPS() {
-        const button =
-            document.getElementById(
-                "waters-gps-button"
-            );
+        const data =
+            await response.json();
 
         if (
-            this.state.gpsBusy
+            !data ||
+            typeof data !== "object"
         ) {
-            return;
+            throw new Error(
+                "Ungültige Antwort der Standortauflösung."
+            );
         }
 
-        try {
-            if (button) {
-                button.disabled =
-                    true;
-            }
+        const location = {
+            country:
+                String(
+                    data.countryName ??
+                    ""
+                ).trim(),
 
+            region:
+                String(
+                    data.principalSubdivision ??
+                    ""
+                ).trim(),
+
+            city:
+                String(
+                    data.city ??
+                    data.locality ??
+                    ""
+                ).trim(),
+
+            locality:
+                String(
+                    data.locality ??
+                    ""
+                ).trim(),
+
+            postcode:
+                String(
+                    data.postcode ??
+                    ""
+                ).trim(),
+
+            countryCode:
+                String(
+                    data.countryCode ??
+                    ""
+                ).trim(),
+
+            source:
+                "bigdatacloud",
+
+            timestamp:
+                new Date().toISOString()
+        };
+
+        if (
+            !location.country &&
+            !location.region &&
+            !location.city
+        ) {
+            throw new Error(
+                "Die Standortauflösung lieferte keine Ortsdaten."
+            );
+        }
+
+        return location;
+    },
+
+    async updateLocationFromGPS() {
+        const position =
+            await this.requestGPSPosition();
+
+        this.setGPSFields(position);
+
+        try {
             this.setGPSMessage(
-                "GPS-Standort wird ermittelt …",
+                "Standort wird aufgelöst …",
                 "info"
             );
 
-            const position =
-                await this.requestGPSPosition();
+            const location =
+                await this.reverseGeocode(
+                    position
+                );
 
-            this.setGPSFields(
-                position
+            this.state.currentLocation =
+                location;
+
+            this.setLocationFields(
+                location
+            );
+
+            this.setGPSMessage(
+                this.locationSummary(location),
+                "success"
             );
 
             this.renderCurrentPosition();
-            this.renderNearby();
+
+            return {
+                position,
+                location
+            };
+        } catch (error) {
+            this.state.currentLocation =
+                null;
 
             this.setGPSMessage(
-                "GPS-Standort wurde aktualisiert.",
-                "success"
-            );
-        } catch (error) {
-            this.setGPSMessage(
-                this.getGPSErrorMessage(
-                    error
-                ),
+                "GPS wurde ermittelt, aber Land / Provinz / Ort konnten nicht automatisch bestimmt werden.",
                 "error"
             );
 
-            this.handleError(
-                error,
-                "waters:gps"
-            );
-        } finally {
-            if (button) {
-                button.disabled =
-                    false;
-            }
+            throw error;
         }
     },
 
-    async useGPSForForm() {
-        const button =
-            document.getElementById(
-                "waters-location-button"
-            );
-
-        try {
-            if (button) {
-                button.disabled =
-                    true;
-            }
-
-            this.setFormMessage(
-                "GPS-Standort wird ermittelt …",
-                "info"
-            );
-
-            const position =
-                await this.requestGPSPosition();
-
-            this.setGPSFields(
-                position
-            );
-
-            this.renderCurrentPosition();
-            this.renderNearby();
-
-            this.setFormMessage(
-                "Aktueller GPS-Standort wurde übernommen.",
-                "success"
-            );
-        } catch (error) {
-            this.setFormMessage(
-                this.getGPSErrorMessage(
-                    error
-                ),
-                "error"
-            );
-
-            this.handleError(
-                error,
-                "waters:form-gps"
-            );
-        } finally {
-            if (button) {
-                button.disabled =
-                    false;
-            }
-        }
+    locationSummary(location) {
+        return this.uniqueParts([
+            location?.city,
+            location?.region,
+            location?.country
+        ]).join(" · ");
     },
 
     setGPSFields(position) {
@@ -1005,32 +1036,66 @@ window.CatchTrackWatersModule = {
                 "waters-longitude"
             );
 
-        if (
-            latitude &&
-            Number.isFinite(
-                Number(
-                    position?.latitude
-                )
-            )
-        ) {
+        const accuracy =
+            document.getElementById(
+                "waters-accuracy"
+            );
+
+        if (latitude) {
             latitude.value =
                 Number(
                     position.latitude
                 ).toFixed(6);
         }
 
-        if (
-            longitude &&
-            Number.isFinite(
-                Number(
-                    position?.longitude
-                )
-            )
-        ) {
+        if (longitude) {
             longitude.value =
                 Number(
                     position.longitude
                 ).toFixed(6);
+        }
+
+        if (accuracy) {
+            accuracy.value =
+                position.accuracy !== null
+                    ? `±${Math.round(
+                        position.accuracy
+                    )} m`
+                    : "nicht verfügbar";
+        }
+    },
+
+    setLocationFields(location) {
+        const country =
+            document.getElementById(
+                "waters-country"
+            );
+
+        const region =
+            document.getElementById(
+                "waters-region"
+            );
+
+        const city =
+            document.getElementById(
+                "waters-city"
+            );
+
+        if (country) {
+            country.value =
+                location?.country || "";
+        }
+
+        if (region) {
+            region.value =
+                location?.region || "";
+        }
+
+        if (city) {
+            city.value =
+                location?.city ||
+                location?.locality ||
+                "";
         }
     },
 
@@ -1056,6 +1121,11 @@ window.CatchTrackWatersModule = {
                     "waters-region"
                 )?.value,
 
+            city:
+                document.getElementById(
+                    "waters-city"
+                )?.value,
+
             description:
                 document.getElementById(
                     "waters-description"
@@ -1069,19 +1139,142 @@ window.CatchTrackWatersModule = {
             gps_lon:
                 document.getElementById(
                     "waters-longitude"
-                )?.value
+                )?.value,
+
+            gps_accuracy_m:
+                this.state.currentPosition
+                    ?.accuracy ?? null
         };
     },
 
-    async submitForm() {
+    async autoGetGPS() {
         if (
-            this.state.busy
+            this.state.currentPosition
         ) {
             return;
         }
 
-        this.state.busy =
-            true;
+        this.setGPSMessage(
+            "Aktuellen GPS-Standort wird ermittelt …",
+            "info"
+        );
+
+        try {
+            await this.updateLocationFromGPS();
+
+            this.renderCurrentPosition();
+        } catch (error) {
+            this.handleError(
+                error,
+                "waters:auto-gps"
+            );
+        }
+    },
+
+    async updateGPS() {
+        const button =
+            document.getElementById(
+                "waters-gps-button"
+            );
+
+        if (this.state.gpsBusy) {
+            return;
+        }
+
+        try {
+            if (button) {
+                button.disabled = true;
+            }
+
+            this.setGPSMessage(
+                "GPS-Standort wird ermittelt …",
+                "info"
+            );
+
+            await this.updateLocationFromGPS();
+
+            this.renderCurrentPosition();
+        } catch (error) {
+            this.setGPSMessage(
+                this.getGPSErrorMessage(error),
+                "error"
+            );
+
+            this.handleError(
+                error,
+                "waters:gps"
+            );
+        } finally {
+            if (button) {
+                button.disabled = false;
+            }
+        }
+    },
+
+    async useGPSForForm() {
+        const button =
+            document.getElementById(
+                "waters-location-button"
+            );
+
+        try {
+            if (button) {
+                button.disabled = true;
+            }
+
+            this.setFormMessage(
+                "GPS-Standort und Ortsdaten werden ermittelt …",
+                "info"
+            );
+
+            await this.updateLocationFromGPS();
+
+            this.setFormMessage(
+                "GPS, Land, Provinz/Bundesstaat und Ort wurden übernommen.",
+                "success"
+            );
+        } catch (error) {
+            this.setFormMessage(
+                this.getGPSErrorMessage(error),
+                "error"
+            );
+
+            this.handleError(
+                error,
+                "waters:form-gps"
+            );
+        } finally {
+            if (button) {
+                button.disabled = false;
+            }
+        }
+    },
+
+    getGPSErrorMessage(error) {
+        switch (error?.code) {
+            case 1:
+                return "Der Zugriff auf den Standort wurde verweigert.";
+
+            case 2:
+                return "Der Standort ist derzeit nicht verfügbar.";
+
+            case 3:
+                return "Die Standortbestimmung hat zu lange gedauert.";
+
+            default:
+                return (
+                    error?.message ||
+                    "Der Standort konnte nicht ermittelt werden."
+                );
+        }
+    },
+
+    async submitForm() {
+        if (this.state.busy) {
+            return;
+        }
+
+        this.state.busy = true;
 
         const saveButton =
             document.getElementById(
@@ -1090,8 +1283,15 @@ window.CatchTrackWatersModule = {
 
         try {
             if (saveButton) {
-                saveButton.disabled =
-                    true;
+                saveButton.disabled = true;
+            }
+
+            if (
+                this.state.photoProcessing
+            ) {
+                throw new Error(
+                    "Das Foto wird noch optimiert. Bitte kurz warten."
+                );
             }
 
             const data =
@@ -1106,15 +1306,17 @@ window.CatchTrackWatersModule = {
                         editingId,
                         data
                     )
-                    : this.create(
-                        data
-                    );
+                    : this.create(data);
 
             if (!water) {
                 throw new Error(
-                    "Gewässer konnte nicht gespeichert werden."
+                    "Fangplatz konnte nicht gespeichert werden."
                 );
             }
+
+            await this.persistPhotoForWater(
+                water.id
+            );
 
             const wasNew =
                 !editingId;
@@ -1125,8 +1327,8 @@ window.CatchTrackWatersModule = {
 
             this.setFormMessage(
                 wasNew
-                    ? "Gewässer wurde gespeichert."
-                    : "Gewässer wurde aktualisiert.",
+                    ? "Fangplatz wurde gespeichert."
+                    : "Fangplatz wurde aktualisiert.",
                 "success"
             );
 
@@ -1134,7 +1336,7 @@ window.CatchTrackWatersModule = {
         } catch (error) {
             this.setFormMessage(
                 error?.message ||
-                    "Gewässer konnte nicht gespeichert werden.",
+                    "Fangplatz konnte nicht gespeichert werden.",
                 "error"
             );
 
@@ -1143,12 +1345,10 @@ window.CatchTrackWatersModule = {
                 "waters:save"
             );
         } finally {
-            this.state.busy =
-                false;
+            this.state.busy = false;
 
             if (saveButton) {
-                saveButton.disabled =
-                    false;
+                saveButton.disabled = false;
             }
         }
     },
@@ -1163,25 +1363,22 @@ window.CatchTrackWatersModule = {
             this.renderList();
             this.renderCount();
             this.renderCurrentPosition();
-            this.renderNearby();
 
             this.setStatus(
                 this.state.waters.length
-                    ? `${this.state.waters.length} eigene Gewässer geladen.`
-                    : "Noch keine eigenen Gewässer vorhanden.",
+                    ? `${this.state.waters.length} eigene Fangplätze geladen.`
+                    : "Noch keine eigenen Fangplätze vorhanden.",
                 "success"
             );
         } catch (error) {
-            this.state.waters =
-                [];
+            this.state.waters = [];
 
             this.renderList();
             this.renderCount();
-            this.renderNearby();
 
             this.setStatus(
                 error?.message ||
-                    "Gewässer konnten nicht geladen werden.",
+                    "Fangplätze konnten nicht geladen werden.",
                 "error"
             );
 
@@ -1219,21 +1416,17 @@ window.CatchTrackWatersModule = {
         const position =
             this.state.currentPosition;
 
+        const location =
+            this.state.currentLocation;
+
         if (!position) {
-            container.hidden =
-                true;
-
-            container.innerHTML =
-                "";
-
+            container.hidden = true;
+            container.innerHTML = "";
             return;
         }
 
-        container.hidden =
-            false;
-
-        container.innerHTML =
-            "";
+        container.hidden = false;
+        container.innerHTML = "";
 
         const values = [
             {
@@ -1258,54 +1451,60 @@ window.CatchTrackWatersModule = {
                             position.accuracy
                         )} m`
                         : "nicht verfügbar"
+            },
+            {
+                label: "Standort",
+                value:
+                    this.locationSummary(
+                        location
+                    ) ||
+                    "noch nicht aufgelöst"
             }
         ];
 
-        values.forEach(
-            item => {
-                const wrapper =
-                    document.createElement(
-                        "div"
-                    );
-
-                wrapper.className =
-                    "waters-position-value";
-
-                const label =
-                    document.createElement(
-                        "span"
-                    );
-
-                label.className =
-                    "waters-position-label";
-
-                label.textContent =
-                    item.label;
-
-                const value =
-                    document.createElement(
-                        "span"
-                    );
-
-                value.className =
-                    "waters-position-number";
-
-                value.textContent =
-                    item.value;
-
-                wrapper.append(
-                    label,
-                    value
+        values.forEach(item => {
+            const wrapper =
+                document.createElement(
+                    "div"
                 );
 
-                container.appendChild(
-                    wrapper
+            wrapper.className =
+                "waters-position-value";
+
+            const label =
+                document.createElement(
+                    "span"
                 );
-            }
-        );
+
+            label.className =
+                "waters-position-label";
+
+            label.textContent =
+                item.label;
+
+            const value =
+                document.createElement(
+                    "span"
+                );
+
+            value.className =
+                "waters-position-number";
+
+            value.textContent =
+                item.value;
+
+            wrapper.append(
+                label,
+                value
+            );
+
+            container.appendChild(
+                wrapper
+            );
+        });
     },
 
-    renderList() {
+    async renderList() {
         const container =
             document.getElementById(
                 "waters-list"
@@ -1315,12 +1514,9 @@ window.CatchTrackWatersModule = {
             return;
         }
 
-        container.innerHTML =
-            "";
+        container.innerHTML = "";
 
-        if (
-            !this.state.waters.length
-        ) {
+        if (!this.state.waters.length) {
             const empty =
                 document.createElement(
                     "div"
@@ -1330,27 +1526,25 @@ window.CatchTrackWatersModule = {
                 "waters-empty";
 
             empty.textContent =
-                "Noch keine eigenen Gewässer vorhanden.";
+                "Noch keine eigenen Fangplätze vorhanden.";
 
-            container.appendChild(
-                empty
-            );
+            container.appendChild(empty);
 
             return;
         }
 
-        this.state.waters.forEach(
-            water => {
-                container.appendChild(
-                    this.createWaterCard(
-                        water
-                    )
-                );
-            }
-        );
+        for (
+            const water of this.state.waters
+        ) {
+            container.appendChild(
+                await this.createWaterCard(
+                    water
+                )
+            );
+        }
     },
 
-    createWaterCard(water) {
+    async createWaterCard(water) {
         const article =
             document.createElement(
                 "article"
@@ -1358,6 +1552,64 @@ window.CatchTrackWatersModule = {
 
         article.className =
             "waters-card";
+
+        const photoWrapper =
+            document.createElement(
+                "div"
+            );
+
+        photoWrapper.className =
+            "waters-card-photo";
+
+        const photo =
+            await this.getStoredPhoto(
+                water.id
+            );
+
+        if (photo?.blob) {
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+            const url =
+                URL.createObjectURL(
+                    photo.blob
+                );
+
+            image.src = url;
+            image.alt =
+                `Fangplatzfoto ${water.name}`;
+            image.loading = "lazy";
+
+            image.addEventListener(
+                "load",
+                () => {
+                    URL.revokeObjectURL(
+                        url
+                    );
+                },
+                {
+                    once: true
+                }
+            );
+
+            photoWrapper.appendChild(
+                image
+            );
+        }
+
+        article.appendChild(
+            photoWrapper
+        );
+
+        const content =
+            document.createElement(
+                "div"
+            );
+
+        content.className =
+            "waters-card-content";
 
         const header =
             document.createElement(
@@ -1398,6 +1650,7 @@ window.CatchTrackWatersModule = {
         meta.textContent =
             this.uniqueParts([
                 water.type,
+                water.city,
                 water.region,
                 water.country
             ]).join(" · ");
@@ -1410,13 +1663,11 @@ window.CatchTrackWatersModule = {
             title
         );
 
-        article.appendChild(
+        content.appendChild(
             header
         );
 
-        if (
-            water.description
-        ) {
+        if (water.description) {
             const description =
                 document.createElement(
                     "p"
@@ -1428,7 +1679,7 @@ window.CatchTrackWatersModule = {
             description.textContent =
                 water.description;
 
-            article.appendChild(
+            content.appendChild(
                 description
             );
         }
@@ -1448,7 +1699,16 @@ window.CatchTrackWatersModule = {
             coordinates.textContent =
                 `${water.gps_lat.toFixed(6)}, ${water.gps_lon.toFixed(6)}`;
 
-            article.appendChild(
+            if (
+                water.gps_accuracy_m !== null
+            ) {
+                coordinates.textContent +=
+                    ` · ±${Math.round(
+                        water.gps_accuracy_m
+                    )} m`;
+            }
+
+            content.appendChild(
                 coordinates
             );
         }
@@ -1510,211 +1770,39 @@ window.CatchTrackWatersModule = {
             remove
         );
 
-        article.appendChild(
+        content.appendChild(
             actions
+        );
+
+        article.appendChild(
+            content
         );
 
         return article;
     },
 
-    renderNearby() {
-        const container =
-            document.getElementById(
-                "waters-nearby-list"
-            );
-
-        if (!container) {
-            return;
-        }
-
-        container.innerHTML =
-            "";
-
-        const position =
-            this.state.currentPosition;
-
-        if (!position) {
-            const empty =
-                document.createElement(
-                    "div"
-                );
-
-            empty.className =
-                "waters-empty";
-
-            empty.textContent =
-                "Noch kein aktueller GPS-Standort vorhanden.";
-
-            container.appendChild(
-                empty
-            );
-
-            return;
-        }
-
-        let nearby = [];
-
-        try {
-            nearby =
-                this.getNearby(
-                    position.latitude,
-                    position.longitude,
-                    50
-                );
-        } catch (error) {
-            const empty =
-                document.createElement(
-                    "div"
-                );
-
-            empty.className =
-                "waters-empty";
-
-            empty.textContent =
-                "Die Suche nach nahegelegenen Gewässern ist derzeit nicht verfügbar.";
-
-            container.appendChild(
-                empty
-            );
-
-            return;
-        }
-
-        if (!nearby.length) {
-            const empty =
-                document.createElement(
-                    "div"
-                );
-
-            empty.className =
-                "waters-empty";
-
-            empty.textContent =
-                "Keine eigenen Gewässer innerhalb von 50 km gefunden.";
-
-            container.appendChild(
-                empty
-            );
-
-            return;
-        }
-
-        nearby.forEach(
-            water => {
-                const item =
-                    document.createElement(
-                        "div"
-                    );
-
-                item.className =
-                    "waters-nearby-item";
-
-                const info =
-                    document.createElement(
-                        "div"
-                    );
-
-                info.className =
-                    "waters-nearby-info";
-
-                const title =
-                    document.createElement(
-                        "p"
-                    );
-
-                title.className =
-                    "waters-nearby-title";
-
-                title.textContent =
-                    water.name;
-
-                const meta =
-                    document.createElement(
-                        "p"
-                    );
-
-                meta.className =
-                    "waters-nearby-meta";
-
-                meta.textContent =
-                    this.uniqueParts([
-                        water.type,
-                        water.region,
-                        water.country
-                    ]).join(" · ");
-
-                info.append(
-                    title,
-                    meta
-                );
-
-                const distance =
-                    document.createElement(
-                        "span"
-                    );
-
-                distance.className =
-                    "waters-nearby-distance";
-
-                distance.textContent =
-                    `${water.distance_km.toFixed(1)} km`;
-
-                const navigation =
-                    this.createButton(
-                        "Navigation"
-                    );
-
-                navigation.classList.add(
-                    "waters-nearby-navigation"
-                );
-
-                navigation.addEventListener(
-                    "click",
-                    () =>
-                        this.navigateTo(
-                            water
-                        )
-                );
-
-                item.append(
-                    info,
-                    distance,
-                    navigation
-                );
-
-                container.appendChild(
-                    item
-                );
-            }
-        );
-    },
-
     uniqueParts(parts) {
         const result = [];
 
-        parts.forEach(
-            value => {
-                const text =
-                    String(
-                        value ?? ""
-                    ).trim();
+        parts.forEach(value => {
+            const text =
+                String(
+                    value ?? ""
+                ).trim();
 
-                if (
-                    !text ||
-                    result.some(
-                        existing =>
-                            existing.toLowerCase() ===
-                            text.toLowerCase()
-                    )
-                ) {
-                    return;
-                }
-
-                result.push(
-                    text
-                );
+            if (
+                !text ||
+                result.some(
+                    existing =>
+                        existing.toLowerCase() ===
+                        text.toLowerCase()
+                )
+            ) {
+                return;
             }
-        );
+
+            result.push(text);
+        });
 
         return result;
     },
@@ -1725,14 +1813,12 @@ window.CatchTrackWatersModule = {
                 "button"
             );
 
-        button.type =
-            "button";
+        button.type = "button";
 
         button.className =
             "waters-button waters-button-secondary";
 
-        button.textContent =
-            text;
+        button.textContent = text;
 
         return button;
     },
@@ -1744,24 +1830,26 @@ window.CatchTrackWatersModule = {
 
             if (!water) {
                 throw new Error(
-                    "Gewässer wurde nicht gefunden."
+                    "Fangplatz wurde nicht gefunden."
                 );
             }
 
-            this.fillForm(
-                water
-            );
+            this.fillForm(water);
 
             this.showForm();
 
+            this.loadExistingPhoto(
+                water.id
+            );
+
             this.setFormMessage(
-                `Gewässer „${water.name}" wird bearbeitet.`,
+                `Fangplatz „${water.name}" wird bearbeitet.`,
                 "info"
             );
         } catch (error) {
             this.setFormMessage(
                 error?.message ||
-                    "Gewässer konnte nicht geladen werden.",
+                    "Fangplatz konnte nicht geladen werden.",
                 "error"
             );
 
@@ -1789,6 +1877,9 @@ window.CatchTrackWatersModule = {
             "waters-region":
                 water.region ?? "",
 
+            "waters-city":
+                water.city ?? "",
+
             "waters-description":
                 water.description ?? "",
 
@@ -1796,12 +1887,17 @@ window.CatchTrackWatersModule = {
                 water.gps_lat ?? "",
 
             "waters-longitude":
-                water.gps_lon ?? ""
+                water.gps_lon ?? "",
+
+            "waters-accuracy":
+                water.gps_accuracy_m !== null
+                    ? `±${Math.round(
+                        water.gps_accuracy_m
+                    )} m`
+                    : ""
         };
 
-        Object.entries(
-            fields
-        ).forEach(
+        Object.entries(fields).forEach(
             ([id, value]) => {
                 const element =
                     document.getElementById(
@@ -1818,15 +1914,52 @@ window.CatchTrackWatersModule = {
         this.state.editingId =
             water.id;
 
+        this.state.currentPosition =
+            water.gps_lat !== null &&
+            water.gps_lon !== null
+                ? {
+                    latitude:
+                        water.gps_lat,
+                    longitude:
+                        water.gps_lon,
+                    accuracy:
+                        water.gps_accuracy_m,
+                    altitude:
+                        null,
+                    timestamp:
+                        water.gps_timestamp ??
+                        null,
+                    source:
+                        "stored-water"
+                }
+                : null;
+
+        this.state.currentLocation =
+            water.country ||
+            water.region ||
+            water.city
+                ? {
+                    country:
+                        water.country,
+                    region:
+                        water.region,
+                    city:
+                        water.city,
+                    source:
+                        "stored-water"
+                }
+                : null;
+
         const cancel =
             document.getElementById(
                 "waters-cancel-button"
             );
 
         if (cancel) {
-            cancel.hidden =
-                false;
+            cancel.hidden = false;
         }
+
+        this.renderCurrentPosition();
     },
 
     resetForm() {
@@ -1845,12 +1978,13 @@ window.CatchTrackWatersModule = {
             );
 
         if (id) {
-            id.value =
-                "";
+            id.value = "";
         }
 
-        this.state.editingId =
-            null;
+        this.state.editingId = null;
+        this.state.pendingPhoto = null;
+        this.state.existingPhoto = null;
+        this.clearPhotoPreview();
 
         const cancel =
             document.getElementById(
@@ -1858,8 +1992,7 @@ window.CatchTrackWatersModule = {
             );
 
         if (cancel) {
-            cancel.hidden =
-                true;
+            cancel.hidden = true;
         }
     },
 
@@ -1873,7 +2006,7 @@ window.CatchTrackWatersModule = {
 
         if (
             !window.confirm(
-                `Gewässer „${water.name}" wirklich löschen?`
+                `Fangplatz „${water.name}" wirklich löschen?`
             )
         ) {
             return;
@@ -1882,11 +2015,15 @@ window.CatchTrackWatersModule = {
         try {
             this.remove(id);
 
+            await this.deleteStoredPhoto(
+                id
+            );
+
             await this.refresh();
         } catch (error) {
             this.setStatus(
                 error?.message ||
-                    "Gewässer konnte nicht gelöscht werden.",
+                    "Fangplatz konnte nicht gelöscht werden.",
                 "error"
             );
 
@@ -1962,6 +2099,838 @@ window.CatchTrackWatersModule = {
         });
     },
 
+    async handlePhotoSelection(event) {
+        const input =
+            event.target;
+
+        const file =
+            input?.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        try {
+            this.state.photoProcessing =
+                true;
+
+            this.setPhotoStatus(
+                "Foto wird auf 720 px / WebP 70 % optimiert …",
+                "info"
+            );
+
+            const optimized =
+                await this.optimizePhoto(
+                    file
+                );
+
+            this.state.pendingPhoto =
+                optimized;
+
+            this.renderPendingPhoto(
+                optimized.blob
+            );
+
+            this.setPhotoStatus(
+                `Optimiert: ${this.formatBytes(
+                    optimized.size
+                )} · ${optimized.width} × ${optimized.height} px`,
+                "success"
+            );
+        } catch (error) {
+            this.state.pendingPhoto =
+                null;
+
+            input.value = "";
+
+            this.setPhotoStatus(
+                error?.message ||
+                    "Foto konnte nicht optimiert werden.",
+                "error"
+            );
+
+            this.handleError(
+                error,
+                "waters:photo"
+            );
+        } finally {
+            this.state.photoProcessing =
+                false;
+        }
+    },
+
+    async optimizePhoto(file) {
+        if (
+            !file.type.startsWith("image/")
+        ) {
+            throw new Error(
+                "Die ausgewählte Datei ist kein Bild."
+            );
+        }
+
+        const image =
+            await this.loadImage(file);
+
+        const sourceWidth =
+            image.naturalWidth ||
+            image.width;
+
+        const sourceHeight =
+            image.naturalHeight ||
+            image.height;
+
+        if (
+            !sourceWidth ||
+            !sourceHeight
+        ) {
+            throw new Error(
+                "Die Bildgröße konnte nicht ermittelt werden."
+            );
+        }
+
+        const scale =
+            Math.min(
+                1,
+                this.constants.MAX_PHOTO_EDGE /
+                    Math.max(
+                        sourceWidth,
+                        sourceHeight
+                    )
+            );
+
+        const width =
+            Math.max(
+                1,
+                Math.round(
+                    sourceWidth * scale
+                )
+            );
+
+        const height =
+            Math.max(
+                1,
+                Math.round(
+                    sourceHeight * scale
+                )
+            );
+
+        const canvas =
+            document.createElement(
+                "canvas"
+            );
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const context =
+            canvas.getContext(
+                "2d",
+                {
+                    alpha: false
+                }
+            );
+
+        if (!context) {
+            throw new Error(
+                "Bildverarbeitung wird von diesem Gerät nicht unterstützt."
+            );
+        }
+
+        context.imageSmoothingEnabled =
+            true;
+
+        context.imageSmoothingQuality =
+            "high";
+
+        context.drawImage(
+            image,
+            0,
+            0,
+            width,
+            height
+        );
+
+        const nativeWebp =
+            await this.canvasToWebP(
+                canvas,
+                this.constants.PHOTO_QUALITY
+            );
+
+        if (nativeWebp) {
+            return {
+                blob: nativeWebp,
+                size: nativeWebp.size,
+                width,
+                height,
+                mimeType:
+                    this.constants.PHOTO_MIME,
+                fileName:
+                    this.createPhotoFileName()
+            };
+        }
+
+        const imageData =
+            context.getImageData(
+                0,
+                0,
+                width,
+                height
+            );
+
+        const webpBuffer =
+            await this.encodeWebPWithWasm(
+                imageData
+            );
+
+        const blob =
+            new Blob(
+                [webpBuffer],
+                {
+                    type:
+                        this.constants.PHOTO_MIME
+                }
+            );
+
+        if (
+            !blob.size ||
+            blob.type !==
+                this.constants.PHOTO_MIME
+        ) {
+            throw new Error(
+                "WebP konnte auf diesem Gerät nicht erzeugt werden."
+            );
+        }
+
+        return {
+            blob,
+            size: blob.size,
+            width,
+            height,
+            mimeType:
+                this.constants.PHOTO_MIME,
+            fileName:
+                this.createPhotoFileName()
+        };
+    },
+
+    loadImage(file) {
+        return new Promise(
+            (resolve, reject) => {
+                const image =
+                    new Image();
+
+                const url =
+                    URL.createObjectURL(
+                        file
+                    );
+
+                image.onload = () => {
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+                    resolve(image);
+                };
+
+                image.onerror = () => {
+                    URL.revokeObjectURL(
+                        url
+                    );
+
+                    reject(
+                        new Error(
+                            "Das Foto konnte nicht gelesen werden."
+                        )
+                    );
+                };
+
+                image.src = url;
+            }
+        );
+    },
+
+    canvasToWebP(
+        canvas,
+        quality
+    ) {
+        return new Promise(resolve => {
+            if (
+                typeof canvas.toBlob !==
+                "function"
+            ) {
+                resolve(null);
+                return;
+            }
+
+            canvas.toBlob(
+                blob => {
+                    if (
+                        blob &&
+                        blob.type ===
+                            this.constants.PHOTO_MIME
+                    ) {
+                        resolve(blob);
+                    } else {
+                        resolve(null);
+                    }
+                },
+                this.constants.PHOTO_MIME,
+                quality
+            );
+        });
+    },
+
+    async encodeWebPWithWasm(
+        imageData
+    ) {
+        if (
+            !this.state.webpEncoder
+        ) {
+            const module =
+                await import(
+                    this.constants.WEBP_MODULE
+                );
+
+            if (
+                !module ||
+                typeof module.encode !==
+                    "function"
+            ) {
+                throw new Error(
+                    "Der WebP-Encoder konnte nicht geladen werden."
+                );
+            }
+
+            this.state.webpEncoder =
+                module.encode;
+        }
+
+        return this.state.webpEncoder(
+            imageData,
+            {
+                quality:
+                    70,
+                method:
+                    4
+            }
+        );
+    },
+
+    createPhotoFileName() {
+        const timestamp =
+            new Date()
+                .toISOString()
+                .replace(
+                    /[:.]/g,
+                    "-"
+                );
+
+        return `catchtrack-fangplatz-${timestamp}.webp`;
+    },
+
+    formatBytes(bytes) {
+        const value =
+            Number(bytes);
+
+        if (
+            !Number.isFinite(value) ||
+            value < 0
+        ) {
+            return "0 KB";
+        }
+
+        if (value < 1024) {
+            return `${value} B`;
+        }
+
+        if (value < 1024 * 1024) {
+            return `${(
+                value / 1024
+            ).toFixed(0)} KB`;
+        }
+
+        return `${(
+            value /
+            1024 /
+            1024
+        ).toFixed(1)} MB`;
+    },
+
+    async openPhotoDatabase() {
+        if (
+            !window.indexedDB
+        ) {
+            throw new Error(
+                "Lokaler Bildspeicher wird von diesem Browser nicht unterstützt."
+            );
+        }
+
+        return new Promise(
+            (resolve, reject) => {
+                const request =
+                    window.indexedDB.open(
+                        this.constants.PHOTO_DB_NAME,
+                        this.constants.PHOTO_DB_VERSION
+                    );
+
+                request.onupgradeneeded =
+                    event => {
+                        const database =
+                            event.target.result;
+
+                        if (
+                            !database.objectStoreNames.contains(
+                                this.constants.PHOTO_STORE
+                            )
+                        ) {
+                            database.createObjectStore(
+                                this.constants.PHOTO_STORE,
+                                {
+                                    keyPath:
+                                        "key"
+                                }
+                            );
+                        }
+                    };
+
+                request.onsuccess = () =>
+                    resolve(
+                        request.result
+                    );
+
+                request.onerror = () =>
+                    reject(
+                        request.error ||
+                            new Error(
+                                "Lokaler Bildspeicher konnte nicht geöffnet werden."
+                            )
+                    );
+            }
+        );
+    },
+
+    getPhotoDatabase() {
+        return new Promise(
+            (resolve, reject) => {
+                const request =
+                    window.indexedDB.open(
+                        this.constants.PHOTO_DB_NAME,
+                        this.constants.PHOTO_DB_VERSION
+                    );
+
+                request.onsuccess = () =>
+                    resolve(
+                        request.result
+                    );
+
+                request.onerror = () =>
+                    reject(
+                        request.error
+                    );
+            }
+        );
+    },
+
+    async putStoredPhoto(
+        waterId,
+        photo
+    ) {
+        const userId =
+            this.getCurrentUserId();
+
+        const database =
+            await this.getPhotoDatabase();
+
+        const key =
+            `${userId}:${Number(waterId)}`;
+
+        await new Promise(
+            (resolve, reject) => {
+                const transaction =
+                    database.transaction(
+                        [
+                            this.constants.PHOTO_STORE
+                        ],
+                        "readwrite"
+                    );
+
+                const store =
+                    transaction.objectStore(
+                        this.constants.PHOTO_STORE
+                    );
+
+                store.put({
+                    key,
+                    user_id: userId,
+                    water_id:
+                        Number(waterId),
+                    file_name:
+                        photo.fileName,
+                    mime_type:
+                        photo.mimeType,
+                    size_bytes:
+                        photo.size,
+                    width:
+                        photo.width,
+                    height:
+                        photo.height,
+                    blob:
+                        photo.blob,
+                    updated_at:
+                        new Date().toISOString()
+                });
+
+                transaction.oncomplete =
+                    () => resolve();
+
+                transaction.onerror =
+                    () =>
+                        reject(
+                            transaction.error
+                        );
+
+                transaction.onabort =
+                    () =>
+                        reject(
+                            transaction.error ||
+                                new Error(
+                                    "Foto konnte nicht gespeichert werden."
+                                )
+                        );
+            }
+        );
+
+        database.close();
+
+        this.execute(
+            `
+                INSERT INTO water_photos
+                (
+                    user_id,
+                    water_id,
+                    file_name,
+                    mime_type,
+                    size_bytes,
+                    width,
+                    height,
+                    cloud_status,
+                    updated_at
+                )
+                VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(water_id)
+                DO UPDATE SET
+                    file_name = excluded.file_name,
+                    mime_type = excluded.mime_type,
+                    size_bytes = excluded.size_bytes,
+                    width = excluded.width,
+                    height = excluded.height,
+                    cloud_status = 'pending',
+                    updated_at = CURRENT_TIMESTAMP
+            `,
+            [
+                userId,
+                Number(waterId),
+                photo.fileName,
+                photo.mimeType,
+                photo.size,
+                photo.width,
+                photo.height,
+                "pending"
+            ]
+        );
+
+        this.saveDatabase();
+    },
+
+    async getStoredPhoto(waterId) {
+        const userId =
+            this.getCurrentUserId();
+
+        const database =
+            await this.getPhotoDatabase();
+
+        const key =
+            `${userId}:${Number(waterId)}`;
+
+        const result =
+            await new Promise(
+                (resolve, reject) => {
+                    const transaction =
+                        database.transaction(
+                            [
+                                this.constants.PHOTO_STORE
+                            ],
+                            "readonly"
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            this.constants.PHOTO_STORE
+                        );
+
+                    const request =
+                        store.get(key);
+
+                    request.onsuccess =
+                        () =>
+                            resolve(
+                                request.result ||
+                                    null
+                            );
+
+                    request.onerror =
+                        () =>
+                            reject(
+                                request.error
+                            );
+                }
+            );
+
+        database.close();
+
+        return result;
+    },
+
+    async deleteStoredPhoto(
+        waterId
+    ) {
+        const userId =
+            this.getCurrentUserId();
+
+        const database =
+            await this.getPhotoDatabase();
+
+        const key =
+            `${userId}:${Number(waterId)}`;
+
+        await new Promise(
+            (resolve, reject) => {
+                const transaction =
+                    database.transaction(
+                        [
+                            this.constants.PHOTO_STORE
+                        ],
+                        "readwrite"
+                    );
+
+                transaction.objectStore(
+                    this.constants.PHOTO_STORE
+                ).delete(key);
+
+                transaction.oncomplete =
+                    () => resolve();
+
+                transaction.onerror =
+                    () =>
+                        reject(
+                            transaction.error
+                        );
+
+                transaction.onabort =
+                    () =>
+                        reject(
+                            transaction.error ||
+                                new Error(
+                                    "Lokales Foto konnte nicht gelöscht werden."
+                                )
+                        );
+            }
+        );
+
+        database.close();
+
+        this.execute(
+            `
+                DELETE FROM water_photos
+                WHERE water_id = ?
+                  AND user_id = ?
+            `,
+            [
+                Number(waterId),
+                userId
+            ]
+        );
+
+        this.saveDatabase();
+    },
+
+    async persistPhotoForWater(
+        waterId
+    ) {
+        if (
+            !this.state.pendingPhoto
+        ) {
+            return;
+        }
+
+        await this.putStoredPhoto(
+            waterId,
+            this.state.pendingPhoto
+        );
+
+        this.state.pendingPhoto = null;
+    },
+
+    async loadExistingPhoto(
+        waterId
+    ) {
+        try {
+            const photo =
+                await this.getStoredPhoto(
+                    waterId
+                );
+
+            this.state.existingPhoto =
+                photo;
+
+            if (photo?.blob) {
+                this.renderPendingPhoto(
+                    photo.blob
+                );
+
+                this.setPhotoStatus(
+                    `${this.formatBytes(
+                        photo.size_bytes
+                    )} · WebP · ${photo.width} × ${photo.height} px`,
+                    "success"
+                );
+            } else {
+                this.clearPhotoPreview();
+            }
+        } catch (error) {
+            this.state.existingPhoto =
+                null;
+
+            this.handleError(
+                error,
+                "waters:photo-load"
+            );
+        }
+    },
+
+    renderPendingPhoto(blob) {
+        const container =
+            document.getElementById(
+                "waters-photo-preview"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        this.clearPhotoPreview();
+
+        const image =
+            document.createElement(
+                "img"
+            );
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+        image.src = url;
+        image.alt =
+            "Fangplatzfoto";
+
+        image.addEventListener(
+            "load",
+            () => {
+                if (
+                    this.state.photoObjectUrl ===
+                    url
+                ) {
+                    this.state.photoObjectUrl =
+                        null;
+                }
+
+                URL.revokeObjectURL(
+                    url
+                );
+            },
+            {
+                once: true
+            }
+        );
+
+        container.appendChild(
+            image
+        );
+
+        container.hidden = false;
+    },
+
+    clearPhotoPreview() {
+        const container =
+            document.getElementById(
+                "waters-photo-preview"
+            );
+
+        if (container) {
+            container.innerHTML = "";
+            container.hidden = true;
+        }
+
+        if (
+            this.state.photoObjectUrl
+        ) {
+            URL.revokeObjectURL(
+                this.state.photoObjectUrl
+            );
+
+            this.state.photoObjectUrl =
+                null;
+        }
+
+        const input =
+            document.getElementById(
+                "waters-photo"
+            );
+
+        if (input) {
+            input.value = "";
+        }
+
+        this.setPhotoStatus(
+            "",
+            "info"
+        );
+    },
+
+    setPhotoStatus(
+        message,
+        type = "info"
+    ) {
+        const element =
+            document.getElementById(
+                "waters-photo-status"
+            );
+
+        if (!element) {
+            return;
+        }
+
+        element.textContent =
+            message || "";
+
+        element.className =
+            "waters-message";
+
+        if (type === "error") {
+            element.classList.add(
+                "waters-message-error"
+            );
+        }
+
+        if (type === "success") {
+            element.classList.add(
+                "waters-message-success"
+            );
+        }
+    },
+
     bindEvents() {
         document
             .getElementById(
@@ -2013,6 +2982,18 @@ window.CatchTrackWatersModule = {
                 "click",
                 () =>
                     this.resetForm()
+            );
+
+        document
+            .getElementById(
+                "waters-photo"
+            )
+            ?.addEventListener(
+                "change",
+                event =>
+                    this.handlePhotoSelection(
+                        event
+                    )
             );
     },
 
