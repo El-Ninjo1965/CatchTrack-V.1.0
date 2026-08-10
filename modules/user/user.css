@@ -1,0 +1,288 @@
+.user-module {
+
+    max-width: 900px;
+
+    margin: 0 auto;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+}
+
+
+.user-header {
+
+    margin-bottom: 20px;
+
+}
+
+
+.user-header h1 {
+
+    margin: 0 0 8px 0;
+
+}
+
+
+.user-status {
+
+    margin: 0;
+
+    padding: 10px 12px;
+
+    border-radius: 6px;
+
+    background: #f2f2f2;
+
+}
+
+
+.user-status-success {
+
+    background: #e8f6e8;
+
+}
+
+
+.user-status-error {
+
+    background: #f8e5e5;
+
+}
+
+
+.user-status-info {
+
+    background: #e8eef6;
+
+}
+
+
+.user-card {
+
+    margin-bottom: 20px;
+
+    padding: 18px;
+
+    border: 1px solid #d8d8d8;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    box-sizing: border-box;
+
+}
+
+
+.user-card h2 {
+
+    margin-top: 0;
+
+}
+
+
+.user-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+}
+
+
+.user-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 8px 0;
+
+    border-bottom: 1px solid #eeeeee;
+
+}
+
+
+.user-row:last-child {
+
+    border-bottom: 0;
+
+}
+
+
+.user-label {
+
+    font-weight: 600;
+
+}
+
+
+.user-value {
+
+    text-align: right;
+
+    word-break: break-word;
+
+}
+
+
+.user-description {
+
+    margin-top: 0;
+
+}
+
+
+.user-label-block {
+
+    display: block;
+
+    margin: 14px 0 6px 0;
+
+    font-weight: 600;
+
+}
+
+
+.user-module input {
+
+    width: 100%;
+
+    padding: 10px;
+
+    border: 1px solid #cfcfcf;
+
+    border-radius: 5px;
+
+    box-sizing: border-box;
+
+    font: inherit;
+
+}
+
+
+.user-button {
+
+    margin-top: 14px;
+
+    padding: 10px 16px;
+
+    border: 1px solid #bdbdbd;
+
+    border-radius: 6px;
+
+    background: #f4f4f4;
+
+    cursor: pointer;
+
+    font: inherit;
+
+}
+
+
+.user-button:hover {
+
+    background: #eaeaea;
+
+}
+
+
+.user-button:disabled {
+
+    opacity: 0.6;
+
+    cursor: default;
+
+}
+
+
+.user-button-primary {
+
+    border-color: #333333;
+
+    background: #333333;
+
+    color: #ffffff;
+
+}
+
+
+.user-button-primary:hover {
+
+    background: #222222;
+
+}
+
+
+.user-actions {
+
+    display: flex;
+
+    justify-content: flex-start;
+
+}
+
+
+.user-message {
+
+    min-height: 20px;
+
+    margin-top: 12px;
+
+}
+
+
+.user-message-success {
+
+    color: #176b17;
+
+}
+
+
+.user-message-error {
+
+    color: #a00000;
+
+}
+
+
+.user-message-info {
+
+    color: #333333;
+
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .user-module {
+
+        padding: 12px;
+
+    }
+
+
+    .user-row {
+
+        flex-direction: column;
+
+        gap: 4px;
+
+    }
+
+
+    .user-value {
+
+        text-align: left;
+
+    }
+
+}
