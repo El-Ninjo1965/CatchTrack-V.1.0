@@ -2,7 +2,7 @@
 
 window.CatchTrackWatersModule = {
 
-    version: "4.3.0",
+    version: "4.4.0",
 
     initialized: false,
     schemaReady: false,
@@ -20,12 +20,13 @@ window.CatchTrackWatersModule = {
 
     init() {
 
-        if (this.initialized) {
-            return;
-        }
-
         try {
 
+            /*
+             * Das HTML des Moduls wird bei jedem Modulwechsel
+             * neu geladen. Deshalb darf die Initialisierung
+             * nicht durch "initialized" blockiert werden.
+             */
             this.ensureSchema();
             this.bindEvents();
 
@@ -147,6 +148,12 @@ window.CatchTrackWatersModule = {
 
         }
 
+        /*
+         * Bestehende Datenbanken können aus einer älteren
+         * Version stammen. Fehlende Spalten werden deshalb
+         * automatisch ergänzt.
+         */
+
         if (!columns.includes("user_id")) {
 
             database.executeScript(`
@@ -160,6 +167,76 @@ window.CatchTrackWatersModule = {
             `);
 
         }
+        else {
+
+            database.executeScript(`
+                CREATE INDEX IF NOT EXISTS
+                idx_waters_user_id
+                ON waters(user_id);
+            `);
+
+        }
+
+
+        let currentColumns =
+            database.getTableColumns("waters");
+
+
+        if (!currentColumns.includes("created_at")) {
+
+            database.executeScript(`
+                ALTER TABLE waters
+                ADD COLUMN created_at DATETIME;
+            `);
+
+            currentColumns =
+                database.getTableColumns("waters");
+
+        }
+
+
+        if (!currentColumns.includes("updated_at")) {
+
+            database.executeScript(`
+                ALTER TABLE waters
+                ADD COLUMN updated_at DATETIME;
+            `);
+
+            currentColumns =
+                database.getTableColumns("waters");
+
+        }
+
+
+        /*
+         * Alte Datensätze bekommen nachträglich Zeitstempel,
+         * sofern diese noch NULL sind.
+         */
+        if (
+            currentColumns.includes("created_at") &&
+            currentColumns.includes("updated_at")
+        ) {
+
+            database.executeScript(`
+                UPDATE waters
+                SET
+                    created_at =
+                        COALESCE(
+                            created_at,
+                            CURRENT_TIMESTAMP
+                        ),
+                    updated_at =
+                        COALESCE(
+                            updated_at,
+                            CURRENT_TIMESTAMP
+                        )
+                WHERE
+                    created_at IS NULL
+                    OR updated_at IS NULL;
+            `);
+
+        }
+
 
         this.schemaReady = true;
 
@@ -369,10 +446,6 @@ window.CatchTrackWatersModule = {
         const timestamp =
             new Date().toISOString();
 
-        /*
-         * WICHTIG:
-         * 10 Spalten = exakt 10 Werte.
-         */
         this.execute(
             `
                 INSERT INTO waters
@@ -844,9 +917,6 @@ window.CatchTrackWatersModule = {
 
         }
 
-        /*
-         * Primärer Dienst: Nominatim / OpenStreetMap
-         */
         try {
 
             const url =
@@ -919,12 +989,6 @@ window.CatchTrackWatersModule = {
         }
 
 
-        /*
-         * Fallback:
-         * BigDataCloud liefert Reverse-Geocoding
-         * ohne API-Key und ist für Browser-Aufrufe
-         * geeignet.
-         */
         try {
 
             const url =
@@ -947,9 +1011,11 @@ window.CatchTrackWatersModule = {
                 );
 
             if (!response.ok) {
+
                 throw new Error(
                     `Reverse-Geocoding-Fallback fehlgeschlagen (${response.status}).`
                 );
+
             }
 
             const result =
@@ -1063,10 +1129,6 @@ window.CatchTrackWatersModule = {
 
     async autoFillLocation() {
 
-        /*
-         * Beim Bearbeiten eines vorhandenen Gewässers
-         * wird nichts automatisch überschrieben.
-         */
         if (this.state.editingId) {
             return;
         }
@@ -1100,10 +1162,6 @@ window.CatchTrackWatersModule = {
 
         }
 
-        /*
-         * Wenn bereits Daten vorhanden sind,
-         * nicht automatisch überschreiben.
-         */
         if (
             latitude.value ||
             longitude.value ||
@@ -1365,6 +1423,11 @@ window.CatchTrackWatersModule = {
                 "error"
             );
 
+            this.handleError(
+                error,
+                "waters:form-gps"
+            );
+
         }
 
     },
@@ -1418,10 +1481,6 @@ window.CatchTrackWatersModule = {
                 "success"
             );
 
-            /*
-             * Nach dem Anlegen automatisch
-             * zur Übersicht springen.
-             */
             if (wasNew) {
 
                 this.showMyWaters();
