@@ -33,7 +33,7 @@ Bei Widersprüchen ist der tatsächliche aktuelle GitHub-Stand maßgeblich.
 
 3. READ BEFORE WRITE
 
-Vor jeder Änderung an einer bereits vorhandenen Datei:
+Vor jeder Änderung an einer bereits auf Github vorhandenen Datei:
 
 GitHub
 ↓
@@ -334,6 +334,7 @@ Der aktuelle technische Übergang ist:
 
 Waters Master
 
+Pfad: modules/waters
 ⸻
 
 20. GRUNDREGEL
