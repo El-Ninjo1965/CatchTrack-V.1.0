@@ -1,257 +1,185 @@
 CatchTrack V1.0 – PROJECT TEST PLAN
 
-Projekt: CatchTrack V1.0
+Version: 2.0
+Stand: 10.08.2026
 Repository: El-Ninjo1965/CatchTrack-V.1.0
 Branch: main
-Stand: 09.08.2026
-Status: Initialfassung
-
-⸻
 
 1. Zweck
 
-Dieser Testplan definiert die verbindlichen Prüfungen für CatchTrack V1.0.
+Dieser Testplan definiert die technischen Prüfungen für CatchTrack.
 
-Ein Modul gilt erst als MASTER, wenn die für das Modul relevanten Prüfungen erfolgreich abgeschlossen wurden.
-
-Der Testplan wird während der Entwicklung fortlaufend aktualisiert und muss jederzeit den tatsächlichen Projektstand widerspiegeln.
+Ein Modul wird erst als MASTER bezeichnet, wenn die relevanten Prüfungen erfolgreich abgeschlossen wurden.
 
 ⸻
 
-2. Verbindlicher Arbeitsworkflow
-
-Der Benutzer nimmt keine manuellen Codeänderungen vor.
-
-Der Benutzer sucht keine einzelnen Codepassagen und führt keine manuellen „Suchen & Ersetzen“-Änderungen durch.
-
-Bei Änderungen an bestehenden Dateien wird grundsätzlich die vollständige aktuelle Ersatzdatei geliefert.
-
-Bei neuen Dateien wird grundsätzlich die vollständige Datei geliefert.
-
-Der Benutzer übernimmt die vollständige Datei über Working Copy.
-
-Bestätigungsregel
-
-Wenn ChatGPT eine konkrete nächste Datei zur vollständigen Ausgabe ankündigt und der Benutzer anschließend mit:
-
-* OK
-* Okay
-* Ok
-
-bestätigt, gilt dies unmittelbar als Auftrag zur Ausgabe dieser Datei.
-
-Es erfolgt danach:
-
-* keine erneute Ankündigung
-* keine erneute Rückfrage
-* keine Wiederholung der Planung
-* keine zusätzliche Bestätigung
-
-Stattdessen wird unmittelbar die vollständige Datei ausgegeben.
-
-Standardworkflow
-
-GitHub aktuellen Stand einlesen
-        ↓
-Dateien und Abhängigkeiten prüfen
-        ↓
-vollständige Ersatz-/Neue Datei erstellen
-        ↓
-Benutzer übernimmt Datei über Working Copy
-        ↓
-Commit / Push
-        ↓
-GitHub erneut einlesen
-        ↓
-Runtime-/Fehlerprüfung
-        ↓
-Testplan aktualisieren
-
-⸻
-
-3. Teststatus
+2. Teststatus
 
 Status	Bedeutung
 TODO	noch nicht getestet
 RUNNING	Test läuft
 PASS	erfolgreich
 FAIL	fehlgeschlagen
-BLOCKED	Test wegen Abhängigkeit nicht möglich
-N/A	für dieses Modul nicht relevant
+BLOCKED	Abhängigkeit verhindert Prüfung
+N/A	nicht relevant
 
 ⸻
 
-4. Grundprüfung jedes Moduls
+3. Allgemeiner Modultest
 
-Jedes Modul wird mindestens auf folgende Punkte geprüft:
+Jedes Modul wird geprüft auf:
 
-* Modul wird korrekt geladen
-* Modul wird korrekt initialisiert
-* HTML wird korrekt dargestellt
-* CSS wird korrekt geladen
-* JavaScript erzeugt keine Fehler
-* Navigation funktioniert
-* Daten werden korrekt gelesen
-* Daten werden korrekt gespeichert
-* Daten werden korrekt geändert
-* Daten werden korrekt gelöscht, sofern vorgesehen
-* Fehler werden korrekt behandelt
-* Sprachsystem funktioniert
-* Abhängigkeiten funktionieren
-* mobile Darstellung funktioniert
-* Runtime-Status wird korrekt aktualisiert
-* Fehler werden im Error-Log protokolliert
-
-⸻
-
-5. Runtime-System
-
-5.1 Runtime Status
-
-Datei:
-
-runtime/runtime_status.json
-
-Zu prüfen:
-
-* Datei existiert
-* gültiges JSON
-* Status kann aktualisiert werden
-* Zeitstempel wird korrekt geschrieben
-* Anwendungsversion wird erkannt
-* Module werden erkannt
-* Modulstatus wird korrekt erfasst
-* Ladezustand wird korrekt erfasst
-* Fehlerstatus wird korrekt erfasst
-* keine veralteten Daten bleiben nach einem Status-Scan bestehen
-
-Status:
-
-TODO
-
-⸻
-
-6. Error Log
-
-Datei:
-
-runtime/error.log
-
-Zu prüfen:
-
-* Datei existiert
-* neue Fehler werden automatisch protokolliert
-* Datum wird gespeichert
-* Uhrzeit wird gespeichert
-* Fehlerlevel wird gespeichert
-* Modul wird gespeichert
-* Datei wird gespeichert, sofern bekannt
-* Funktion wird gespeichert, sofern bekannt
-* Fehlermeldung wird gespeichert
-* Stacktrace wird gespeichert, sofern verfügbar
-* Promise-Rejections werden erkannt
-* Modul-Ladefehler werden erkannt
-* Datenbankfehler werden erkannt
-* API-Fehler werden erkannt
-* Storage-Fehler werden erkannt
-
-Status:
-
-TODO
-
-⸻
-
-7. Absichtlicher Fehler-Test
-
-Das System muss einen kontrollierten Testfehler erzeugen können.
-
-Erwartung:
-
-Fehler entsteht
-      ↓
-Error Handler erkennt Fehler
-      ↓
-error.log erhält Eintrag
-      ↓
-runtime_status.json aktualisiert Fehlerstatus
-      ↓
-Admin kann Fehler anzeigen
-
-Nach dem Test muss der Testfehler eindeutig erkennbar sein.
-
-⸻
-
-8. Datenbanktests
-
-Zu prüfen:
-
-* Datenbank wird geöffnet
-* Tabellen sind vorhanden
-* Lesen funktioniert
-* Schreiben funktioniert
-* Aktualisieren funktioniert
-* Löschen funktioniert
-* Fehler werden erkannt
-* Transaktionen funktionieren, sofern verwendet
-* Migrationen funktionieren
-* Seed-Daten sind verfügbar
-* keine unzulässigen parallelen Datenstrukturen entstehen
-
-⸻
-
-9. Core-Tests
-
-API
-
+* Laden
 * Initialisierung
-* Requests
-* Fehlerbehandlung
-* Timeout-/Fehlerfälle
-
-Database
-
-* Verbindung
-* Queries
-* Fehlerbehandlung
-
-Error Handler
-
-* JavaScript-Fehler
-* Promise-Rejections
-* Modulfehler
-* Logging
-
-Language Manager
-
-* Sprache laden
-* Übersetzung
-* fehlende Übersetzung
-
-Module Manager
-
-* Modul erkennen
-* Modul laden
-* Modul initialisieren
-* Modul deaktivieren
-* Modulfehler erkennen
-
-Router
-
+* HTML
+* CSS
+* JavaScript
 * Navigation
-* Modulwechsel
-* ungültige Route
-
-Storage Manager
-
-* speichern
-* lesen
-* ändern
-* löschen
-* Fehlerfälle
+* Daten lesen
+* Daten speichern
+* Daten ändern
+* Daten löschen, sofern vorgesehen
+* Fehlerbehandlung
+* Language Manager
+* Abhängigkeiten
+* mobile Darstellung
+* Runtime-Status
+* Error-Logging
+* öffentliche Schnittstellen
+* keine unnötigen parallelen Datenstrukturen
 
 ⸻
 
-10. Modul-Ladetests
+4. Read-Before-Write-Test
+
+Vor jedem Test einer bestehenden Datei ist sicherzustellen:
+
+aktuellen GitHub-Stand lesen
+↓
+Abhängigkeiten prüfen
+↓
+Testumfang bestimmen
+
+Es darf kein Test auf Grundlage einer veralteten Chatversion durchgeführt werden.
+
+⸻
+
+5. Datenbanktests
+
+Zu prüfen:
+
+* Datenbank öffnet
+* Tabellen vorhanden
+* Spalten vorhanden
+* Primärschlüssel
+* Foreign Keys
+* Indizes
+* Lesen
+* Schreiben
+* Ändern
+* Löschen
+* Migrationen
+* Fehlerbehandlung
+* bestehende Daten bleiben erhalten
+
+⸻
+
+6. Identity-Core-Test
+
+Datei:
+
+core/identityManager.js
+
+Zu prüfen:
+
+* Identity Core lädt
+* vorhandener Benutzer kann geladen werden
+* user_id wird korrekt bereitgestellt
+* aktueller Benutzer kann gesetzt werden
+* aktueller Benutzer kann zurückgesetzt werden
+* ungültige Benutzer werden erkannt
+* keine parallele Benutzeridentität entsteht
+* Benutzerwechsel verändert nur den zulässigen Datenkontext
+* Fehler werden zentral behandelt
+
+Benutzerdatentrennung
+
+Zu prüfen:
+
+User A
+↓
+user_id A
+↓
+persönliche Daten A
+User B
+↓
+user_id B
+↓
+persönliche Daten B
+
+Ein Benutzer darf keine persönlichen Daten eines anderen Benutzers lesen oder verändern können.
+
+Status: TODO
+
+⸻
+
+7. GPS-Test
+
+GPS Version 2.5.0:
+
+Status: MASTER / FROZEN
+
+Nur Regressionstests, sofern erforderlich.
+
+Zu prüfen:
+
+* Standort
+* Genauigkeit
+* Aktualisierung
+* Höhe, sofern verfügbar
+* Home Location
+* Routing
+* Teilen
+* Gewässerübergabe
+
+Keine erneute funktionale Neuentwicklung ohne technischen Grund.
+
+⸻
+
+8. Waters-Test
+
+Zu prüfen:
+
+* Gewässer laden
+* Gewässer erstellen
+* Gewässer anzeigen
+* Gewässer bearbeiten
+* Gewässer löschen
+* GPS-Position übernehmen
+* user_id
+* Datenbankzuordnung
+* Foreign Key
+* Index
+* Benutzertrennung
+* Legacy-Daten
+* Navigation
+
+Besonders:
+
+User A
+↓
+Waters A
+User B
+↓
+Waters B
+
+Ein manipuliertes water_id darf keinen Zugriff auf ein fremdes persönliches Gewässer ermöglichen.
+
+Status: TODO
+
+⸻
+
+9. Modul-Ladetest
 
 Für jedes Modul:
 
@@ -269,646 +197,120 @@ JavaScript initialisiert
 ↓
 UI verfügbar
 
-Bei Fehlern:
+Bei Fehler:
 
-* Error Log prüfen
-* Runtime Status prüfen
-* betroffene Datei identifizieren
-
-⸻
-
-11. Fish Database
-
-Funktionen
-
-* Fischarten anzeigen
-* Suche
-* Auswahl
-* Detailansicht
-* Daten lesen
-* Daten speichern
-* Daten bearbeiten
-* Daten löschen, sofern vorgesehen
-
-Abhängigkeiten
-
-* Database
-* Storage
-* Language Manager
-
-Status
-
-TODO
+1. Error Log prüfen
+2. Runtime Status prüfen
+3. betroffene Datei bestimmen
+4. Abhängigkeit prüfen
+5. aktuellen GitHub-Stand prüfen
 
 ⸻
 
-12. Equipment
+10. Runtime-Test
 
-Funktionen
+Zu prüfen:
 
-* Equipment anzeigen
-* Kategorien
-* Hinzufügen
-* Bearbeiten
-* Löschen
-* Fangzuordnung
+Fehler
+↓
+Error Handler
+↓
+Fehlerklassifizierung
+↓
+error.log
+↓
+runtime_status.json
 
-Abhängigkeiten
+Zu prüfen:
 
-* Database
-* Storage
-* Catches
-
-Status
-
-TODO
-
-⸻
-
-13. Waters
-
-Funktionen
-
-* Gewässer anzeigen
-* Gewässer erstellen
-* bearbeiten
-* löschen
-* Koordinaten
-* Details
-* Fangzuordnung
-
-Abhängigkeiten
-
-* Database
-* GPS
-* Maps
-* Catches
-
-Status
-
-TODO
-
-⸻
-
-14. GPS
-
-Funktionen
-
-* Standort anfordern
-* Koordinaten ermitteln
-* Genauigkeit anzeigen
-* Standort speichern
-* Standort an andere Module übergeben
-
-Fehlerfälle
-
-* Berechtigung verweigert
-* GPS nicht verfügbar
-* Timeout
-* ungenaue Position
-
-Abhängigkeiten
-
-* Browser Geolocation API
-* Catches
-* Waters
-* Maps
-
-Status
-
-TODO
-
-⸻
-
-15. Maps
-
-Funktionen
-
-* Karte laden
-* aktuelle Position
-* Gewässerpositionen
-* Fangpositionen
-* Marker
-* Navigation
-
-Fehlerfälle
-
-* Kartenanbieter nicht erreichbar
-* Position fehlt
-* ungültige Koordinaten
-
-Abhängigkeiten
-
-* GPS
-* Waters
-* Catches
-
-Status
-
-TODO
-
-⸻
-
-16. Catches
-
-Funktionen
-
-* Fang erstellen
-* Fang anzeigen
-* Fang bearbeiten
-* Fang löschen
-* Fischart
-* Gewicht
-* Länge
-* Datum
-* Uhrzeit
-* Gewässer
-* Position
-* Wetter
-* Gezeiten
-* Mond
-* Bedingungen
-* Equipment
-* Fotos
-* Notizen
-
-Integrationsprüfung
-
-Alle verfügbaren abhängigen Module müssen getestet werden.
-
-Status
-
-TODO
-
-⸻
-
-17. Catchbook
-
-Funktionen
-
-* Fänge anzeigen
-* Suche
-* Filter
-* Sortierung
-* Detailansicht
-* Bearbeitung
-* Löschung
-
-Abhängigkeiten
-
-* Catches
-* Database
-* Statistics
-
-Status
-
-TODO
-
-⸻
-
-18. Weather
-
-Weather ist der abgeschlossene STEP-1-Meilenstein.
-
-Status:
-
-MASTER
-
-Nur folgende Prüfungen bleiben möglich:
-
-* Regressionstest
-* notwendige Integrationsprüfung
-* Fehlerkorrektur bei nachgewiesenem Problem
-
-⸻
-
-19. Tides
-
-Funktionen
-
-* Gezeiten anzeigen
-* Hochwasser
-* Niedrigwasser
-* Zeit
-* Höhe
-* Fangzuordnung
-
-Fehlerfälle
-
-* keine Daten
+* JavaScript-Fehler
+* Promise-Rejections
+* Modulfehler
+* Datenbankfehler
+* Storage-Fehler
 * API-Fehler
-* ungültiger Standort
-* Netzwerkfehler
-
-Status
-
-TODO
+* Stacktrace
+* Modulzuordnung
 
 ⸻
 
-20. Moon
+11. Sprachtest
 
-Funktionen
+Jedes Modul muss geprüft werden auf:
 
-* Mondphase
-* Mondalter
-* Beleuchtung
-* Datum/Zeit
-* Fangzuordnung
+1. automatische Gerätesprache
+2. manuelle Sprachauswahl
+3. Sprachwechsel
+4. fehlende Übersetzung
+5. Fallback
+6. unterschiedliche Textlängen
+7. gespeicherte Spracheinstellung
 
-Status
+Manuelle Sprache hat Vorrang.
 
-TODO
-
-⸻
-
-21. Conditions
-
-Funktionen
-
-* Angelbedingungen
-* Wasserbedingungen
-* Wind
-* Strömung
-* Sicht
-* Temperatur
-* manuelle Eingaben
-* Fangzuordnung
-
-Status
-
-TODO
+Interne Daten bleiben sprachneutral.
 
 ⸻
 
-22. Photos
+12. Automatische Daten
 
-Funktionen
+Zu prüfen:
 
-* Foto hinzufügen
-* mehrere Fotos
-* Vorschau
-* Fangzuordnung
-* Speichern
-* Löschen
-
-Fehlerfälle
-
-* fehlende Berechtigung
-* ungültige Datei
-* Speicherfehler
-* fehlende Datei
-
-Status
-
-TODO
+* automatische Werte werden als Vorschlag behandelt
+* Benutzer kann Werte korrigieren
+* bestätigte Werte bleiben erhalten
+* Herkunft ist nachvollziehbar, sofern erforderlich
+* automatische Daten überschreiben keine bestätigten Werte ungeprüft
 
 ⸻
 
-23. Statistics
+13. Legacy-Daten
 
-Funktionen
+Bei Migrationen:
 
-* Fanganzahl
-* Gewicht
-* Durchschnitt
-* Arten
-* Gewässer
-* Zeiträume
-* Köder
-* Equipment
-* Wetter
-* Gezeiten
-* Mond
-* Bedingungen
-
-Status
-
-TODO
+* vorhandene Daten identifizieren
+* Zuordnung prüfen
+* keine zufällige Zuordnung
+* keine stille Löschung
+* Migration reproduzierbar
+* Ergebnis kontrollieren
+* Legacy-Speicher nach erfolgreicher Migration nicht unnötig parallel weiterführen
 
 ⸻
 
-24. Records
+14. MASTER-Abschlussprüfung
 
-Funktionen
+Ein Modul darf als MASTER dokumentiert werden, wenn:
 
-* größter Fisch
-* schwerster Fisch
-* längster Fisch
-* Artenrekorde
-* Gewässerrekorde
-* persönliche Rekorde
-
-Status
-
-TODO
-
-⸻
-
-25. Leaderboard
-
-Funktionen
-
-* Ranglisten
-* Filter
-* Artenvergleich
-* Gewässervergleich
-* Zeitraum
-
-Status
-
-TODO
-
-⸻
-
-26. Settings
-
-Funktionen
-
-* Sprache
-* Theme
-* Einheiten
-* Standort
-* Datenoptionen
-* Moduloptionen
-
-Status
-
-TODO
-
-⸻
-
-27. Export
-
-Funktionen
-
-* JSON Export
-* CSV Export
-* vollständiger Export
-* selektiver Export
-
-Tests
-
-Exportierte Dateien müssen strukturell geprüft werden.
-
-Status
-
-TODO
-
-⸻
-
-28. Backup
-
-Funktionen
-
-* Backup erstellen
-* Backup speichern
-* Backup prüfen
-* Backup wiederherstellen
-* beschädigtes Backup erkennen
-
-Status
-
-TODO
-
-⸻
-
-29. Safety
-
-Funktionen
-
-* Sicherheitsinformationen
-* Standortinformationen
-* Warnungen
-* relevante Hinweise
-
-Status
-
-TODO
-
-⸻
-
-30. Bluetooth
-
-Funktionen
-
-* Geräte erkennen
-* Verbindung
-* Trennung
-* Gerätedaten
-* Fehlerbehandlung
-
-Fehlerfälle
-
-* Bluetooth deaktiviert
-* Gerät nicht gefunden
-* Berechtigung verweigert
-* Verbindung verloren
-
-Status
-
-TODO
-
-⸻
-
-31. AI
-
-Funktionen
-
-* Datenanalyse
-* Fangmuster
-* Empfehlungen
-* Auswertung
-
-Abhängigkeiten
-
-* Catches
-* Statistics
-* Weather
-* Conditions
-* Fish Database
-
-Status
-
-TODO
-
-⸻
-
-32. Start
-
-Funktionen
-
-* Startseite
-* Navigation
-* Modulübersicht
-* Statusanzeige
-
-Status
-
-TODO
-
-⸻
-
-33. Admin
-
-Funktionen
-
-* Systemstatus
-* Modulstatus
-* Runtime Status
-* Error Log
-* Diagnose
-* Wartung
-* Status aktualisieren
-
-Runtime-Tests
-
-Der Admin-Bereich muss mindestens anzeigen können:
-
-* Anwendungsversion
-* Anzahl Module
-* aktive Module
-* Ladefehler
-* letzte Statusaktualisierung
-* letzte Fehler
-
-Status
-
-TODO
-
-⸻
-
-34. Regressionstests
-
-Nach jedem größeren Modulabschluss werden bereits fertige Kernfunktionen erneut geprüft.
-
-Mindestens:
-
-* Start
-* Navigation
-* Module Manager
-* Database
-* Storage
-* Language Manager
-* Weather
-* Catches
-* Catchbook
-
-Weitere Regressionstests werden entsprechend den Abhängigkeiten ergänzt.
-
-⸻
-
-35. Altlastenprüfung
-
-Nach Fertigstellung eines Moduls:
-
-1. Dateien des alten Moduls erfassen
-2. globale Referenzsuche
-3. Imports prüfen
-4. dynamische Imports prüfen
-5. Module Manager prüfen
-6. Config prüfen
-7. Services prüfen
-8. Core prüfen
-9. Datenbankreferenzen prüfen
-10. Git-Historie prüfen
-
-Danach:
-
-ALT
-↓
-LÖCHKANDIDAT
-↓
-ZUR LÖSCHUNG FREIGEGEBEN
-↓
-GELÖSCHT
-
-⸻
-
-36. Abschlusskriterium MASTER
-
-Ein Modul darf erst MASTER werden, wenn:
-
-* Funktionen vollständig implementiert
-* Datenbankzugriffe geprüft
+* Funktion vollständig vorhanden
+* relevante Tests PASS
+* Datenmodell stabil
 * Abhängigkeiten geprüft
-* UI geprüft
-* Navigation geprüft
-* Fehlerfälle geprüft
-* Runtime Status geprüft
-* Error Log geprüft
-* Regressionstest bestanden
-* Altlasten geprüft
-* Löschkandidaten dokumentiert
+* Schnittstellen definiert
+* Benutzertrennung geprüft, sofern erforderlich
+* Fehlerbehandlung geprüft
+* Mehrsprachigkeit berücksichtigt
+* keine bekannte kritische Blockade besteht
+* aktueller GitHub-Stand kontrolliert wurde
 
 ⸻
 
-37. Testprotokoll
+15. Abschlusskontrolle
 
-Für jeden abgeschlossenen Test:
+Nach einem abgeschlossenen Arbeitsschritt:
 
-Datum:
-Modul:
-Test:
-Ergebnis:
-Fehler:
-Fehlerlog-Eintrag:
-Behoben:
-Git-Commit:
-Bemerkungen:
+Working Copy
+↓
+Commit
+↓
+GitHub
+↓
+aktuellen Stand erneut lesen
+↓
+Dateien kontrollieren
+↓
+Version / Status aktualisieren
 
-⸻
+Erst danach gilt der Arbeitsschritt als abgeschlossen.
 
-38. STEP-2-ABSCHLUSS
-
-STEP 2 gilt erst als abgeschlossen, wenn:
-
-* alle vorgesehenen Module MASTER sind
-* alle relevanten Tests PASS sind
-* keine ungeklärten kritischen Fehler bestehen
-* Altlasten identifiziert wurden
-* freigegebene Altlasten entfernt wurden
-* Runtime-System funktioniert
-* Error-Logging funktioniert
-* Regressionstests erfolgreich sind
-* GitHub den dokumentierten Masterstand enthält
-
-⸻
-
-39. AKTUELLER STATUS
-
-STEP 1        MASTER
-Weather       MASTER
-STEP 2        TODO
-Runtime       TODO
-Error Log     TODO
-Testsystem    TODO
-Module        noch nicht vollständig abgearbeitet
-
-⸻
-
-40. ÄNDERUNGSPROTOKOLL
-
-Datum	Änderung	Status
-09.08.2026	Initiale Erstellung des Testplans	INITIAL
-09.08.2026	Bestätigungsregel für direkte Dateiausgabe ergänzt	INITIAL
-
-⸻
-
-41. VERBINDLICHE REGELN
-
-Dieser Testplan wird nicht als theoretische Dokumentation behandelt.
-
-Die Einträge müssen den tatsächlichen Teststand widerspiegeln.
-
-Ein Modul darf nicht auf MASTER gesetzt werden, nur weil die Dateien vorhanden sind.
-
-MASTER bedeutet:
-
-Implementiert + integriert + getestet + geprüft + dokumentiert.
-
-Zusätzliche verbindliche Arbeitsregel:
-
-Wenn ChatGPT eine konkrete nächste Datei zur vollständigen Ausgabe ankündigt und der Benutzer anschließend mit „OK“, „Okay“ oder „Ok“ bestätigt, wird unmittelbar die vollständige Datei ausgegeben.
-
-Keine erneute Ankündigung und keine erneute Bestätigung.
+Ende PROJECT_TEST_PLAN.md
