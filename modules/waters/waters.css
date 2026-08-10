@@ -102,6 +102,11 @@
     font: inherit;
 }
 
+.waters-field input[readonly] {
+    opacity: 0.8;
+    cursor: default;
+}
+
 .waters-field textarea {
     min-height: 100px;
     resize: vertical;
@@ -112,6 +117,12 @@
 .waters-button:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
+}
+
+.waters-help {
+    margin: 0;
+    font-size: 0.8rem;
+    opacity: 0.65;
 }
 
 .waters-form-actions {
@@ -154,11 +165,6 @@
     opacity: 0.85;
 }
 
-.waters-button-secondary {
-    background: transparent;
-    color: inherit;
-}
-
 .waters-message {
     min-height: 20px;
     margin: 10px 0;
@@ -191,7 +197,7 @@
 .waters-current-position {
     display: grid;
     grid-template-columns: repeat(
-        3,
+        4,
         minmax(0, 1fr)
     );
     gap: 10px;
@@ -224,8 +230,31 @@
     font-size: 0.9rem;
 }
 
-.waters-list,
-.waters-nearby-list {
+.waters-photo-preview {
+    position: relative;
+    width: min(100%, 360px);
+    overflow: hidden;
+    margin-top: 8px;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 10px;
+    background: rgba(127, 127, 127, 0.04);
+}
+
+.waters-photo-preview img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.waters-photo-preview-meta {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.waters-list {
     display: grid;
     gap: 12px;
 }
@@ -240,11 +269,34 @@
 
 .waters-card {
     display: grid;
-    gap: 12px;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 16px;
     padding: 16px;
     border: 1px solid rgba(127, 127, 127, 0.25);
     border-radius: 10px;
     background: rgba(127, 127, 127, 0.04);
+}
+
+.waters-card-photo {
+    width: 160px;
+    min-height: 120px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgba(127, 127, 127, 0.08);
+}
+
+.waters-card-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 120px;
+    object-fit: cover;
+}
+
+.waters-card-content {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
 }
 
 .waters-card-header {
@@ -291,41 +343,6 @@
     gap: 8px;
 }
 
-.waters-nearby-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 12px;
-    border: 1px solid rgba(127, 127, 127, 0.2);
-    border-radius: 9px;
-}
-
-.waters-nearby-info {
-    min-width: 0;
-}
-
-.waters-nearby-title {
-    margin: 0;
-    font-weight: 700;
-}
-
-.waters-nearby-meta {
-    margin: 4px 0 0;
-    font-size: 0.85rem;
-    opacity: 0.7;
-}
-
-.waters-nearby-distance {
-    flex: 0 0 auto;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.waters-nearby-navigation {
-    flex: 0 0 auto;
-}
-
 @media (max-width: 700px) {
     .waters-module {
         padding: 16px;
@@ -333,8 +350,7 @@
 
     .waters-header,
     .waters-panel-header,
-    .waters-card-header,
-    .waters-nearby-item {
+    .waters-card-header {
         flex-direction: column;
         align-items: stretch;
     }
@@ -348,15 +364,32 @@
     }
 
     .waters-current-position {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
     }
 
     .waters-button {
         width: 100%;
     }
 
-    .waters-nearby-distance,
-    .waters-nearby-navigation {
+    .waters-card {
+        grid-template-columns: 1fr;
+    }
+
+    .waters-card-photo {
         width: 100%;
+        min-height: 180px;
+    }
+
+    .waters-card-photo img {
+        min-height: 180px;
+    }
+}
+
+@media (max-width: 420px) {
+    .waters-current-position {
+        grid-template-columns: 1fr;
     }
 }
