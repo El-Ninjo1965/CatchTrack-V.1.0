@@ -47,18 +47,6 @@ technische Notwendigkeit feststellen
 ↓
 vollständige aktualisierte Datei ausgeben
 
-Eine vorhandene Datei darf nicht aus einer früheren Chatversion rekonstruiert werden.
-
-Dies gilt für:
-
-* Core
-* Datenbank
-* Migrationen
-* Module
-* Konfiguration
-* Dokumentation
-* Statusdateien
-* Testdateien
 
 ⸻
 
@@ -211,6 +199,8 @@ Daten / Service
 
 Ein Modul übernimmt nicht dauerhaft die fachliche Verantwortung eines anderen Moduls.
 
+Pfad der Module auf Github: modules
+
 ⸻
 
 12. USER-ID-PRÜFUNG
@@ -241,7 +231,7 @@ Keine:
 * Such-und-Ersetzen-Anweisungen
 * unvollständigen Dateien
 
-Bei mehreren zusammengehörenden Dateien werden möglichst alle betroffenen Dateien gemeinsam ausgegeben.
+Bei mehreren zusammengehörenden Dateien werden möglichst alle betroffenen Dateien gemeinsam ausgegeben und in separaten Copyblöcken mit Pfadangabe angezeigt.
 
 ⸻
 
@@ -284,7 +274,7 @@ GitHub
 ↓
 erneut prüfen
 
-ChatGPT muss den Schreibzugriff nicht thematisieren.
+ChatGPT hat keinen Schreibzugriff und muss den Schreibzugriff nicht thematisieren oder erwähnen.
 
 ⸻
 
@@ -328,7 +318,6 @@ Ausnahmen:
 
 Ein abgeschlossenes Modul wird nicht ohne konkreten technischen Grund erneut verändert.
 
-GPS Version 2.5.0 gilt als abgeschlossener Stand.
 
 Änderungen nur bei:
 
