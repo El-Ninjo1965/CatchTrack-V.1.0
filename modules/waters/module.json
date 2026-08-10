@@ -1,22 +1,20 @@
 {
-  "name": "waters",
-  "version": "7.0.0",
-  "status": "active",
+  "id": "waters",
+  "name": "Waters",
+  "version": "1.0.0",
+  "description": "Erfassung und Verwaltung von Fangplätzen und Gewässerstandorten.",
+  "entry": "app.js",
   "enabled": true,
-  "description": "Benutzerbezogene Gewässerverwaltung mit automatischer GPS-Standortbestimmung",
-  "initializer": "CatchTrackWatersModule",
-  "dependencies": [
-    "CatchTrackDatabase",
-    "CatchTrackIdentity"
-  ],
-  "interface": {
-    "getAll": "CatchTrackWatersModule.getAll",
-    "getById": "CatchTrackWatersModule.getById",
-    "getNearby": "CatchTrackWatersModule.getNearby",
-    "getCurrentSuggestion": "CatchTrackWatersModule.getCurrentSuggestion",
-    "create": "CatchTrackWatersModule.create",
-    "update": "CatchTrackWatersModule.update",
-    "remove": "CatchTrackWatersModule.remove",
-    "getCount": "CatchTrackWatersModule.getCount"
+  "features": {
+    "gps": true,
+    "automaticLocation": true,
+    "reverseGeocoding": false,
+    "waterNameManual": true,
+    "catchSpotPhoto": true,
+    "singlePhotoPerSpot": true,
+    "photoFormat": "webp",
+    "photoMaxWidth": 720,
+    "photoMaxHeight": 720,
+    "photoQuality": 0.8
   }
 }
