@@ -5,12 +5,8 @@
 >
     <header class="waters-header">
         <div>
-            <p class="waters-eyebrow">
-                CatchTrack
-            </p>
-            <h1 id="waters-title">
-                Gewässer
-            </h1>
+            <p class="waters-eyebrow">CatchTrack</p>
+            <h1 id="waters-title">Gewässer</h1>
             <p
                 id="waters-status"
                 class="waters-status"
@@ -20,6 +16,7 @@
                 Gewässer werden geladen …
             </p>
         </div>
+
         <button
             id="waters-refresh-button"
             class="waters-button waters-button-secondary"
@@ -28,20 +25,21 @@
             Aktualisieren
         </button>
     </header>
+
     <main class="waters-content">
+
         <section
             class="waters-panel waters-current-panel"
             aria-labelledby="waters-current-title"
         >
             <div class="waters-panel-header">
                 <div>
-                    <p class="waters-section-label">
-                        Standort
-                    </p>
+                    <p class="waters-section-label">Standort</p>
                     <h2 id="waters-current-title">
                         Gewässer in meiner Nähe
                     </h2>
                 </div>
+
                 <button
                     id="waters-gps-button"
                     class="waters-button waters-button-secondary"
@@ -50,32 +48,40 @@
                     Standort ermitteln
                 </button>
             </div>
+
             <div
                 id="waters-gps-status"
                 class="waters-message"
                 role="status"
                 aria-live="polite"
             ></div>
+
+            <div
+                id="waters-current-position"
+                class="waters-current-position"
+                hidden
+            ></div>
+
             <div
                 id="waters-nearby-list"
                 class="waters-nearby-list"
                 aria-live="polite"
             ></div>
         </section>
+
         <section
             class="waters-panel"
             aria-labelledby="waters-form-title"
         >
             <div class="waters-panel-header">
                 <div>
-                    <p class="waters-section-label">
-                        Verwaltung
-                    </p>
+                    <p class="waters-section-label">Verwaltung</p>
                     <h2 id="waters-form-title">
                         Gewässer erfassen
                     </h2>
                 </div>
             </div>
+
             <form
                 id="waters-form"
                 class="waters-form"
@@ -86,11 +92,14 @@
                     name="id"
                     type="hidden"
                 >
+
                 <div class="waters-form-grid">
+
                     <div class="waters-field waters-field-full">
                         <label for="waters-name">
                             Name
                         </label>
+
                         <input
                             id="waters-name"
                             name="name"
@@ -100,10 +109,12 @@
                             required
                         >
                     </div>
+
                     <div class="waters-field">
                         <label for="waters-type">
                             Gewässertyp
                         </label>
+
                         <input
                             id="waters-type"
                             name="type"
@@ -113,10 +124,12 @@
                             placeholder="z. B. Fluss, See, Kanal"
                         >
                     </div>
+
                     <div class="waters-field">
                         <label for="waters-country">
                             Land
                         </label>
+
                         <input
                             id="waters-country"
                             name="country"
@@ -125,10 +138,12 @@
                             autocomplete="country-name"
                         >
                     </div>
+
                     <div class="waters-field waters-field-full">
                         <label for="waters-region">
                             Provinz / Bundesstaat / Ort
                         </label>
+
                         <input
                             id="waters-region"
                             name="region"
@@ -137,10 +152,12 @@
                             autocomplete="address-level1"
                         >
                     </div>
+
                     <div class="waters-field waters-field-full">
                         <label for="waters-description">
                             Beschreibung
                         </label>
+
                         <textarea
                             id="waters-description"
                             name="description"
@@ -148,10 +165,12 @@
                             rows="4"
                         ></textarea>
                     </div>
+
                     <div class="waters-field">
                         <label for="waters-latitude">
                             Breitengrad
                         </label>
+
                         <input
                             id="waters-latitude"
                             name="gps_lat"
@@ -162,10 +181,12 @@
                             inputmode="decimal"
                         >
                     </div>
+
                     <div class="waters-field">
                         <label for="waters-longitude">
                             Längengrad
                         </label>
+
                         <input
                             id="waters-longitude"
                             name="gps_lon"
@@ -176,14 +197,18 @@
                             inputmode="decimal"
                         >
                     </div>
+
                 </div>
+
                 <div
                     id="waters-form-message"
                     class="waters-message"
                     role="alert"
                     aria-live="assertive"
                 ></div>
+
                 <div class="waters-form-actions">
+
                     <button
                         id="waters-save-button"
                         class="waters-button waters-button-primary"
@@ -191,13 +216,15 @@
                     >
                         Gewässer speichern
                     </button>
+
                     <button
                         id="waters-location-button"
                         class="waters-button waters-button-secondary"
                         type="button"
                     >
-                        GPS + Ort übernehmen
+                        Aktuellen GPS-Standort übernehmen
                     </button>
+
                     <button
                         id="waters-cancel-button"
                         class="waters-button waters-button-secondary"
@@ -206,9 +233,11 @@
                     >
                         Bearbeitung abbrechen
                     </button>
+
                 </div>
             </form>
         </section>
+
         <section
             class="waters-panel"
             aria-labelledby="waters-list-title"
@@ -218,10 +247,12 @@
                     <p class="waters-section-label">
                         Meine Daten
                     </p>
+
                     <h2 id="waters-list-title">
                         Meine Gewässer
                     </h2>
                 </div>
+
                 <span
                     id="waters-count"
                     class="waters-count"
@@ -229,11 +260,13 @@
                     0
                 </span>
             </div>
+
             <div
                 id="waters-list"
                 class="waters-list"
                 aria-live="polite"
             ></div>
         </section>
+
     </main>
 </section>
