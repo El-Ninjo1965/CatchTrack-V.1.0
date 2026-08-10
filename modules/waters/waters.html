@@ -1,235 +1,411 @@
-<section class="waters-container">
-
-
-    <h1>
-
-        Gewässer
-
-    </h1>
-
-
-
-
-
-    <div class="waters-form-container">
-
-
-        <h2>
-
-            Neues Gewässer
-
-        </h2>
-
-
-
-
-
-        <label for="water-name">
-
-            Name
-
-        </label>
-
-
-        <input
-
-            type="text"
-
-            id="water-name"
-
-            placeholder="Gewässername"
-
-        >
-
-
-
-
-
-        <label for="water-type">
-
-            Gewässertyp
-
-        </label>
-
-
-        <input
-
-            type="text"
-
-            id="water-type"
-
-            placeholder="See, Fluss, Meer..."
-
-        >
-
-
-
-
-
-        <label for="water-country">
-
-            Land
-
-        </label>
-
-
-        <input
-
-            type="text"
-
-            id="water-country"
-
-            placeholder="Land"
-
-        >
-
-
-
-
-
-        <label for="water-region">
-
-            Region
-
-        </label>
-
-
-        <input
-
-            type="text"
-
-            id="water-region"
-
-            placeholder="Region"
-
-        >
-
-
-
-
-
-        <label for="water-lat">
-
-            GPS Breitengrad
-
-        </label>
-
-
-        <input
-
-            type="number"
-
-            step="0.000001"
-
-            id="water-lat"
-
-        >
-
-
-
-
-
-        <label for="water-lon">
-
-            GPS Längengrad
-
-        </label>
-
-
-        <input
-
-            type="number"
-
-            step="0.000001"
-
-            id="water-lon"
-
-        >
-
-
-
-
-
-        <label for="water-description">
-
-            Beschreibung
-
-        </label>
-
-
-        <textarea
-
-            id="water-description"
-
-            placeholder="Beschreibung"
-
-        ></textarea>
-
-
-
-
-
-        <button
-
-            id="save-water"
-
-        >
-
-            Speichern
-
-        </button>
-
-
-
-    </div>
-
-
-
-
-
-
-    <div class="waters-list-container">
-
-
-        <h2>
-
-            Gespeicherte Gewässer
-
-        </h2>
-
-
-
-
-        <div id="waters-list">
-
-
-            <p>
-
-                Lade Gewässer...
-
+<section class="waters-container" aria-labelledby="waters-title">
+
+    <header class="waters-header">
+
+        <div>
+            <p
+                class="waters-eyebrow"
+                data-i18n="waters.eyebrow"
+            >
+                Gewässerverwaltung
             </p>
 
+            <h1
+                id="waters-title"
+                data-i18n="waters.title"
+            >
+                Gewässer
+            </h1>
+
+            <p
+                class="waters-intro"
+                data-i18n="waters.intro"
+            >
+                Verwalte deine Angelgewässer und ihre Positionen.
+            </p>
+        </div>
+
+        <div
+            id="waters-count"
+            class="waters-count"
+            aria-live="polite"
+        >
+            0
+        </div>
+
+    </header>
+
+
+    <section
+        class="waters-panel waters-form-panel"
+        aria-labelledby="waters-form-title"
+    >
+
+        <div class="waters-panel-header">
+
+            <div>
+
+                <p
+                    class="waters-section-label"
+                    data-i18n="waters.form.label"
+                >
+                    Gewässerdaten
+                </p>
+
+                <h2
+                    id="waters-form-title"
+                    data-i18n="waters.form.newTitle"
+                >
+                    Neues Gewässer
+                </h2>
+
+            </div>
+
+            <span
+                id="waters-form-mode"
+                class="waters-form-mode"
+                data-i18n="waters.form.modeNew"
+            >
+                Neu
+            </span>
 
         </div>
 
 
-    </div>
+        <form
+            id="waters-form"
+            novalidate
+        >
+
+            <input
+                type="hidden"
+                id="water-id"
+            >
 
 
+            <div class="waters-grid">
+
+                <div class="waters-field waters-field-wide">
+
+                    <label
+                        for="water-name"
+                        data-i18n="waters.fields.name"
+                    >
+                        Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="water-name"
+                        maxlength="200"
+                        autocomplete="off"
+                        required
+                        data-i18n-placeholder="waters.placeholders.name"
+                        placeholder="z. B. Pranburi River"
+                    >
+
+                </div>
+
+
+                <div class="waters-field">
+
+                    <label
+                        for="water-type"
+                        data-i18n="waters.fields.type"
+                    >
+                        Gewässertyp
+                    </label>
+
+                    <select id="water-type">
+
+                        <option
+                            value=""
+                            data-i18n="waters.types.unknown"
+                        >
+                            Nicht angegeben
+                        </option>
+
+                        <option
+                            value="sea"
+                            data-i18n="waters.types.sea"
+                        >
+                            Meer
+                        </option>
+
+                        <option
+                            value="river"
+                            data-i18n="waters.types.river"
+                        >
+                            Fluss
+                        </option>
+
+                        <option
+                            value="lake"
+                            data-i18n="waters.types.lake"
+                        >
+                            See
+                        </option>
+
+                        <option
+                            value="canal"
+                            data-i18n="waters.types.canal"
+                        >
+                            Kanal
+                        </option>
+
+                        <option
+                            value="reservoir"
+                            data-i18n="waters.types.reservoir"
+                        >
+                            Stausee
+                        </option>
+
+                        <option
+                            value="pond"
+                            data-i18n="waters.types.pond"
+                        >
+                            Teich
+                        </option>
+
+                        <option
+                            value="other"
+                            data-i18n="waters.types.other"
+                        >
+                            Sonstiges
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="waters-field">
+
+                    <label
+                        for="water-country"
+                        data-i18n="waters.fields.country"
+                    >
+                        Land
+                    </label>
+
+                    <input
+                        type="text"
+                        id="water-country"
+                        maxlength="120"
+                        autocomplete="country-name"
+                        data-i18n-placeholder="waters.placeholders.country"
+                        placeholder="Land"
+                    >
+
+                </div>
+
+
+                <div class="waters-field">
+
+                    <label
+                        for="water-region"
+                        data-i18n="waters.fields.region"
+                    >
+                        Region
+                    </label>
+
+                    <input
+                        type="text"
+                        id="water-region"
+                        maxlength="160"
+                        autocomplete="address-level1"
+                        data-i18n-placeholder="waters.placeholders.region"
+                        placeholder="Region"
+                    >
+
+                </div>
+
+
+                <div class="waters-field">
+
+                    <label
+                        for="water-lat"
+                        data-i18n="waters.fields.latitude"
+                    >
+                        Breitengrad
+                    </label>
+
+                    <input
+                        type="number"
+                        id="water-lat"
+                        min="-90"
+                        max="90"
+                        step="0.000001"
+                        inputmode="decimal"
+                        data-i18n-placeholder="waters.placeholders.latitude"
+                        placeholder="z. B. 12.345678"
+                    >
+
+                </div>
+
+
+                <div class="waters-field">
+
+                    <label
+                        for="water-lon"
+                        data-i18n="waters.fields.longitude"
+                    >
+                        Längengrad
+                    </label>
+
+                    <input
+                        type="number"
+                        id="water-lon"
+                        min="-180"
+                        max="180"
+                        step="0.000001"
+                        inputmode="decimal"
+                        data-i18n-placeholder="waters.placeholders.longitude"
+                        placeholder="z. B. 98.765432"
+                    >
+
+                </div>
+
+
+                <div class="waters-field waters-field-wide">
+
+                    <div class="waters-location-actions">
+
+                        <button
+                            type="button"
+                            id="waters-use-gps"
+                            class="waters-button waters-button-secondary"
+                            data-i18n="waters.actions.useGps"
+                        >
+                            Aktuellen GPS-Standort übernehmen
+                        </button>
+
+                        <span
+                            id="waters-gps-status"
+                            class="waters-gps-status"
+                            aria-live="polite"
+                        ></span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="waters-field waters-field-wide">
+
+                    <label
+                        for="water-description"
+                        data-i18n="waters.fields.description"
+                    >
+                        Beschreibung
+                    </label>
+
+                    <textarea
+                        id="water-description"
+                        maxlength="2000"
+                        rows="5"
+                        data-i18n-placeholder="waters.placeholders.description"
+                        placeholder="Optionale Beschreibung"
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="waters-form-message"
+                class="waters-message"
+                aria-live="polite"
+                hidden
+            ></div>
+
+
+            <div class="waters-form-actions">
+
+                <button
+                    type="submit"
+                    id="save-water"
+                    class="waters-button waters-button-primary"
+                    data-i18n="waters.actions.save"
+                >
+                    Gewässer speichern
+                </button>
+
+                <button
+                    type="button"
+                    id="cancel-water-edit"
+                    class="waters-button waters-button-secondary"
+                    data-i18n="waters.actions.cancel"
+                    hidden
+                >
+                    Abbrechen
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <section
+        class="waters-panel waters-list-panel"
+        aria-labelledby="waters-list-title"
+    >
+
+        <div class="waters-panel-header">
+
+            <div>
+
+                <p
+                    class="waters-section-label"
+                    data-i18n="waters.list.label"
+                >
+                    Datenbank
+                </p>
+
+                <h2
+                    id="waters-list-title"
+                    data-i18n="waters.list.title"
+                >
+                    Gespeicherte Gewässer
+                </h2>
+
+            </div>
+
+            <button
+                type="button"
+                id="waters-refresh"
+                class="waters-button waters-button-small"
+                data-i18n="waters.actions.refresh"
+            >
+                Aktualisieren
+            </button>
+
+        </div>
+
+
+        <div
+            id="waters-list-message"
+            class="waters-message"
+            aria-live="polite"
+            hidden
+        ></div>
+
+
+        <div
+            id="waters-list"
+            class="waters-list"
+        >
+            <p
+                class="waters-empty"
+                data-i18n="waters.list.loading"
+            >
+                Gewässer werden geladen …
+            </p>
+        </div>
+
+    </section>
 
 </section>
-
-
-
-
-
-<!--
-==================================================
-ENDE DATEI
-
-CatchTrack Master Edition V1.0
-modules/waters/waters.html
-
-Version 1.0 Final Master
-==================================================
--->
