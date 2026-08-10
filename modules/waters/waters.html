@@ -29,13 +29,13 @@
     <main class="waters-content">
 
         <section
-            class="waters-panel waters-current-panel"
-            aria-labelledby="waters-current-title"
+            class="waters-panel"
+            aria-labelledby="waters-location-title"
         >
             <div class="waters-panel-header">
                 <div>
                     <p class="waters-section-label">Standort</p>
-                    <h2 id="waters-current-title">
+                    <h2 id="waters-location-title">
                         Aktueller Standort
                     </h2>
                 </div>
@@ -69,7 +69,7 @@
         >
             <div class="waters-panel-header">
                 <div>
-                    <p class="waters-section-label">Verwaltung</p>
+                    <p class="waters-section-label">Fangplatz</p>
                     <h2 id="waters-form-title">
                         Fangplatz erfassen
                     </h2>
@@ -129,7 +129,6 @@
                             name="country"
                             type="text"
                             maxlength="100"
-                            autocomplete="country-name"
                             readonly
                         >
                     </div>
@@ -144,7 +143,6 @@
                             name="region"
                             type="text"
                             maxlength="150"
-                            autocomplete="address-level1"
                             readonly
                         >
                     </div>
@@ -159,7 +157,6 @@
                             name="city"
                             type="text"
                             maxlength="150"
-                            autocomplete="address-level2"
                             readonly
                         >
                     </div>
@@ -189,7 +186,6 @@
                             min="-90"
                             max="90"
                             step="any"
-                            inputmode="decimal"
                             readonly
                         >
                     </div>
@@ -206,7 +202,6 @@
                             min="-180"
                             max="180"
                             step="any"
-                            inputmode="decimal"
                             readonly
                         >
                     </div>
@@ -237,8 +232,9 @@
                         >
 
                         <p class="waters-help">
-                            Ein Foto pro Fangplatz. Automatisch auf
-                            maximal 720 px und WebP 70 % optimiert.
+                            Ein Foto pro Fangplatz. Beim Upload wird
+                            automatisch auf maximal 720 px und WebP
+                            mit 70 % Qualität optimiert.
                         </p>
 
                         <div
