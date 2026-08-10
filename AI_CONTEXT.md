@@ -343,23 +343,7 @@ GPS Version 2.5.0 gilt als abgeschlossener Stand.
 
 Der aktuelle technische Übergang ist:
 
-GPS
-↓
-Identity Core
-↓
 Waters Master
-
-Identity wird nicht erneut begonnen, wenn der aktuelle GitHub-Stand bereits vorhanden und technisch ausreichend ist.
-
-Vor jeder Entscheidung über Identity gilt:
-
-core/identityManager.js
-↓
-vollständig lesen
-↓
-aktuellen Stand bewerten
-↓
-nur bei tatsächlicher Notwendigkeit ändern
 
 ⸻
 
