@@ -3,7 +3,7 @@
 
 window.CatchTrackIdentity = {
 
-    version: "1.0.0",
+    version: "2.0.0",
 
     initialized: false,
 
@@ -86,6 +86,15 @@ window.CatchTrackIdentity = {
 
 
         CatchTrackAPI.register(
+            "identity.createUser",
+            payload =>
+                this.createUser(
+                    payload
+                )
+        );
+
+
+        CatchTrackAPI.register(
             "identity.setCurrentUser",
             payload =>
                 this.setCurrentUser(
@@ -98,6 +107,15 @@ window.CatchTrackIdentity = {
             "identity.clearCurrentUser",
             () =>
                 this.clearCurrentUser()
+        );
+
+
+        CatchTrackAPI.register(
+            "identity.updateCurrentUser",
+            payload =>
+                this.updateCurrentUser(
+                    payload
+                )
         );
 
 
@@ -209,6 +227,439 @@ window.CatchTrackIdentity = {
                 ? rows[0]
                 : null
         );
+
+    },
+
+
+    findUserByUsername(username) {
+
+        const normalizedUsername =
+            this.normalizeUsername(
+                username
+            );
+
+
+        if (
+            normalizedUsername === null
+        ) {
+
+            return null;
+
+        }
+
+
+        const rows =
+            CatchTrackDatabase.query(
+                `
+                    SELECT
+                        id,
+                        username,
+                        display_name,
+                        email,
+                        created_at,
+                        updated_at
+
+                    FROM users
+
+                    WHERE username = ?
+
+                    LIMIT 1;
+                `,
+                [
+                    normalizedUsername
+                ]
+            );
+
+
+        return (
+            rows.length
+                ? rows[0]
+                : null
+        );
+
+    },
+
+
+    createUser(userData = {}) {
+
+        if (
+            !this.isReady()
+        ) {
+
+            throw new Error(
+                "Identity Core ist nicht bereit."
+            );
+
+        }
+
+
+        const username =
+            this.normalizeUsername(
+                userData.username
+            );
+
+
+        if (
+            username === null
+        ) {
+
+            throw new Error(
+                "Ein gültiger Benutzername ist erforderlich."
+            );
+
+        }
+
+
+        if (
+            this.findUserByUsername(
+                username
+            )
+        ) {
+
+            throw new Error(
+                `Benutzername bereits vorhanden: ${username}`
+            );
+
+        }
+
+
+        const displayName =
+            this.normalizeOptionalText(
+                userData.display_name ??
+                userData.displayName
+            );
+
+
+        const email =
+            this.normalizeOptionalEmail(
+                userData.email
+            );
+
+
+        const existingEmail =
+            email === null
+                ? null
+                : this.findUserByEmail(
+                    email
+                );
+
+
+        if (
+            existingEmail
+        ) {
+
+            throw new Error(
+                `E-Mail-Adresse bereits vorhanden: ${email}`
+            );
+
+        }
+
+
+        CatchTrackDatabase.execute(
+            `
+                INSERT INTO users
+                (
+                    username,
+                    display_name,
+                    email
+                )
+
+                VALUES
+                (
+                    ?,
+                    ?,
+                    ?
+                );
+            `,
+            [
+                username,
+                displayName,
+                email
+            ]
+        );
+
+
+        const rows =
+            CatchTrackDatabase.query(
+                `
+                    SELECT
+                        id,
+                        username,
+                        display_name,
+                        email,
+                        created_at,
+                        updated_at
+
+                    FROM users
+
+                    WHERE username = ?
+
+                    LIMIT 1;
+                `,
+                [
+                    username
+                ]
+            );
+
+
+        if (
+            !rows.length
+        ) {
+
+            throw new Error(
+                "Benutzer konnte nach dem Anlegen nicht gelesen werden."
+            );
+
+        }
+
+
+        const user =
+            rows[0];
+
+
+        this.ensureUserSettings(
+            user.id
+        );
+
+
+        this.ensurePrivacySettings(
+            user.id
+        );
+
+
+        if (
+            userData.setCurrent === true
+        ) {
+
+            this.setCurrentUser(
+                user.id
+            );
+
+            return this.getCurrentUser();
+
+        }
+
+
+        return {
+            ...user
+        };
+
+    },
+
+
+    findUserByEmail(email) {
+
+        const normalizedEmail =
+            this.normalizeOptionalEmail(
+                email
+            );
+
+
+        if (
+            normalizedEmail === null
+        ) {
+
+            return null;
+
+        }
+
+
+        const rows =
+            CatchTrackDatabase.query(
+                `
+                    SELECT
+                        id,
+                        username,
+                        display_name,
+                        email,
+                        created_at,
+                        updated_at
+
+                    FROM users
+
+                    WHERE email = ?
+
+                    LIMIT 1;
+                `,
+                [
+                    normalizedEmail
+                ]
+            );
+
+
+        return (
+            rows.length
+                ? rows[0]
+                : null
+        );
+
+    },
+
+
+    updateCurrentUser(userData = {}) {
+
+        const currentUserId =
+            this.getCurrentUserId();
+
+
+        if (
+            currentUserId === null
+        ) {
+
+            throw new Error(
+                "Kein aktueller Benutzer ausgewählt."
+            );
+
+        }
+
+
+        const currentUser =
+            this.findUserById(
+                currentUserId
+            );
+
+
+        if (
+            !currentUser
+        ) {
+
+            this.clearCurrentUser();
+
+            throw new Error(
+                "Der aktuelle Benutzer existiert nicht mehr."
+            );
+
+        }
+
+
+        const username =
+            userData.username === undefined
+                ? currentUser.username
+                : this.normalizeUsername(
+                    userData.username
+                );
+
+
+        if (
+            username === null
+        ) {
+
+            throw new Error(
+                "Ein gültiger Benutzername ist erforderlich."
+            );
+
+        }
+
+
+        const existingUsername =
+            this.findUserByUsername(
+                username
+            );
+
+
+        if (
+            existingUsername &&
+            Number(existingUsername.id) !==
+            currentUserId
+        ) {
+
+            throw new Error(
+                `Benutzername bereits vorhanden: ${username}`
+            );
+
+        }
+
+
+        const displayName =
+            userData.display_name !== undefined ||
+            userData.displayName !== undefined
+
+                ? this.normalizeOptionalText(
+                    userData.display_name ??
+                    userData.displayName
+                )
+
+                : currentUser.display_name;
+
+
+        const email =
+            userData.email !== undefined
+
+                ? this.normalizeOptionalEmail(
+                    userData.email
+                )
+
+                : currentUser.email;
+
+
+        if (
+            email !== null
+        ) {
+
+            const existingEmail =
+                this.findUserByEmail(
+                    email
+                );
+
+
+            if (
+                existingEmail &&
+                Number(existingEmail.id) !==
+                currentUserId
+            ) {
+
+                throw new Error(
+                    `E-Mail-Adresse bereits vorhanden: ${email}`
+                );
+
+            }
+
+        }
+
+
+        CatchTrackDatabase.execute(
+            `
+                UPDATE users
+
+                SET
+                    username = ?,
+                    display_name = ?,
+                    email = ?,
+                    updated_at = CURRENT_TIMESTAMP
+
+                WHERE id = ?;
+            `,
+            [
+                username,
+                displayName,
+                email,
+                currentUserId
+            ]
+        );
+
+
+        const updatedUser =
+            this.findUserById(
+                currentUserId
+            );
+
+
+        if (
+            !updatedUser
+        ) {
+
+            throw new Error(
+                "Benutzer konnte nach der Aktualisierung nicht gelesen werden."
+            );
+
+        }
+
+
+        this.currentUser =
+            updatedUser;
+
+
+        return this.getCurrentUser();
 
     },
 
@@ -331,6 +782,86 @@ window.CatchTrackIdentity = {
     },
 
 
+    ensureUserSettings(userId) {
+
+        const normalizedId =
+            this.normalizeUserId(
+                userId
+            );
+
+
+        if (
+            normalizedId === null
+        ) {
+
+            return false;
+
+        }
+
+
+        CatchTrackDatabase.execute(
+            `
+                INSERT OR IGNORE INTO user_settings
+                (
+                    user_id
+                )
+
+                VALUES
+                (
+                    ?
+                );
+            `,
+            [
+                normalizedId
+            ]
+        );
+
+
+        return true;
+
+    },
+
+
+    ensurePrivacySettings(userId) {
+
+        const normalizedId =
+            this.normalizeUserId(
+                userId
+            );
+
+
+        if (
+            normalizedId === null
+        ) {
+
+            return false;
+
+        }
+
+
+        CatchTrackDatabase.execute(
+            `
+                INSERT OR IGNORE INTO privacy_settings
+                (
+                    user_id
+                )
+
+                VALUES
+                (
+                    ?
+                );
+            `,
+            [
+                normalizedId
+            ]
+        );
+
+
+        return true;
+
+    },
+
+
     loadStoredUserId() {
 
         if (
@@ -425,6 +956,98 @@ window.CatchTrackIdentity = {
 
 
         return numericId;
+
+    },
+
+
+    normalizeUsername(username) {
+
+        if (
+            username === null ||
+            username === undefined
+        ) {
+
+            return null;
+
+        }
+
+
+        const value =
+            String(
+                username
+            ).trim();
+
+
+        if (
+            !value
+        ) {
+
+            return null;
+
+        }
+
+
+        return value;
+
+    },
+
+
+    normalizeOptionalText(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
+            return null;
+
+        }
+
+
+        const normalized =
+            String(
+                value
+            ).trim();
+
+
+        return normalized
+            ? normalized
+            : null;
+
+    },
+
+
+    normalizeOptionalEmail(email) {
+
+        if (
+            email === null ||
+            email === undefined ||
+            email === ""
+        ) {
+
+            return null;
+
+        }
+
+
+        const normalized =
+            String(
+                email
+            )
+            .trim()
+            .toLowerCase();
+
+
+        if (
+            !normalized
+        ) {
+
+            return null;
+
+        }
+
+
+        return normalized;
 
     },
 
