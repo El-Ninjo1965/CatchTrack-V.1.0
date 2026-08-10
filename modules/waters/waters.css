@@ -12,11 +12,15 @@
     box-sizing: border-box;
 }
 
-.waters-header {
+.waters-header,
+.waters-panel-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
+}
+
+.waters-header {
     margin-bottom: 24px;
 }
 
@@ -61,19 +65,12 @@
 }
 
 .waters-panel-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
     margin-bottom: 16px;
 }
 
 .waters-form-grid {
     display: grid;
-    grid-template-columns: repeat(
-        2,
-        minmax(0, 1fr)
-    );
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
 }
 
@@ -104,7 +101,6 @@
 
 .waters-field input[readonly] {
     opacity: 0.8;
-    cursor: default;
 }
 
 .waters-field textarea {
@@ -159,12 +155,6 @@
     color: ButtonFace;
 }
 
-.waters-button-primary:hover {
-    background: ButtonText;
-    color: ButtonFace;
-    opacity: 0.85;
-}
-
 .waters-message {
     min-height: 20px;
     margin: 10px 0;
@@ -196,12 +186,8 @@
 
 .waters-current-position {
     display: grid;
-    grid-template-columns: repeat(
-        4,
-        minmax(0, 1fr)
-    );
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
-    margin-bottom: 16px;
 }
 
 .waters-position-value {
@@ -220,18 +206,11 @@
 
 .waters-position-number {
     display: block;
-    font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.9rem;
 }
 
 .waters-photo-preview {
-    position: relative;
     width: min(100%, 360px);
     overflow: hidden;
     margin-top: 8px;
@@ -326,13 +305,7 @@
 }
 
 .waters-card-coordinates {
-    font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 0.85rem;
     opacity: 0.75;
 }
@@ -364,10 +337,7 @@
     }
 
     .waters-current-position {
-        grid-template-columns: repeat(
-            2,
-            minmax(0, 1fr)
-        );
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .waters-button {
