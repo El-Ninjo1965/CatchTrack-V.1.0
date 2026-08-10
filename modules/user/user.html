@@ -1,0 +1,127 @@
+<div class="user-module">
+
+    <section class="user-header">
+        <h1>CatchTrack – Benutzer</h1>
+        <p id="user-status" class="user-status">
+            Benutzerstatus wird geladen …
+        </p>
+    </section>
+
+
+    <section class="user-card">
+
+        <h2>Aktiver Benutzer</h2>
+
+        <div class="user-info">
+
+            <div class="user-row">
+                <span class="user-label">User-ID</span>
+                <span
+                    id="user-id"
+                    class="user-value"
+                >–</span>
+            </div>
+
+            <div class="user-row">
+                <span class="user-label">Benutzername</span>
+                <span
+                    id="user-username"
+                    class="user-value"
+                >–</span>
+            </div>
+
+            <div class="user-row">
+                <span class="user-label">Anzeigename</span>
+                <span
+                    id="user-display-name"
+                    class="user-value"
+                >–</span>
+            </div>
+
+            <div class="user-row">
+                <span class="user-label">Status</span>
+                <span
+                    id="user-active-status"
+                    class="user-value"
+                >–</span>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="user-card">
+
+        <h2>Benutzer anlegen</h2>
+
+        <p class="user-description">
+            Wenn noch kein Benutzer vorhanden ist,
+            kann hier der erste CatchTrack-Benutzer
+            angelegt und automatisch aktiviert werden.
+        </p>
+
+        <form id="user-create-form">
+
+            <label
+                for="user-username-input"
+                class="user-label-block"
+            >
+                Benutzername
+            </label>
+
+            <input
+                id="user-username-input"
+                name="username"
+                type="text"
+                autocomplete="username"
+                maxlength="100"
+                required
+            >
+
+            <label
+                for="user-display-name-input"
+                class="user-label-block"
+            >
+                Anzeigename
+            </label>
+
+            <input
+                id="user-display-name-input"
+                name="displayName"
+                type="text"
+                maxlength="150"
+            >
+
+            <button
+                id="user-create-button"
+                class="user-button user-button-primary"
+                type="submit"
+            >
+                Benutzer anlegen
+            </button>
+
+        </form>
+
+        <div
+            id="user-form-message"
+            class="user-message"
+            aria-live="polite"
+        ></div>
+
+    </section>
+
+
+    <section class="user-actions">
+
+        <button
+            id="user-refresh-button"
+            class="user-button"
+            type="button"
+        >
+            Benutzer aktualisieren
+        </button>
+
+    </section>
+
+</div>
