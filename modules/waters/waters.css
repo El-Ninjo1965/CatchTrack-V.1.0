@@ -5,11 +5,13 @@
     margin: 0 auto;
     padding: 24px;
 }
+
 .waters-module *,
 .waters-module *::before,
 .waters-module *::after {
     box-sizing: border-box;
 }
+
 .waters-header {
     display: flex;
     align-items: flex-start;
@@ -17,6 +19,7 @@
     gap: 20px;
     margin-bottom: 24px;
 }
+
 .waters-eyebrow,
 .waters-section-label {
     margin: 0 0 4px;
@@ -26,30 +29,37 @@
     text-transform: uppercase;
     opacity: 0.65;
 }
+
 .waters-header h1,
 .waters-panel h2 {
     margin: 0;
 }
+
 .waters-header h1 {
     font-size: 1.8rem;
 }
+
 .waters-panel h2 {
     font-size: 1.2rem;
 }
+
 .waters-status {
     margin: 8px 0 0;
     opacity: 0.75;
 }
+
 .waters-content {
     display: grid;
     gap: 20px;
 }
+
 .waters-panel {
     padding: 20px;
     border: 1px solid rgba(127, 127, 127, 0.25);
     border-radius: 14px;
     background: rgba(127, 127, 127, 0.06);
 }
+
 .waters-panel-header {
     display: flex;
     align-items: flex-start;
@@ -57,6 +67,7 @@
     gap: 16px;
     margin-bottom: 16px;
 }
+
 .waters-form-grid {
     display: grid;
     grid-template-columns: repeat(
@@ -65,17 +76,21 @@
     );
     gap: 16px;
 }
+
 .waters-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
+
 .waters-field-full {
     grid-column: 1 / -1;
 }
+
 .waters-field label {
     font-weight: 600;
 }
+
 .waters-field input,
 .waters-field textarea {
     width: 100%;
@@ -86,22 +101,26 @@
     color: inherit;
     font: inherit;
 }
+
 .waters-field textarea {
     min-height: 100px;
     resize: vertical;
 }
+
 .waters-field input:focus,
 .waters-field textarea:focus,
 .waters-button:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
 }
+
 .waters-form-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 18px;
 }
+
 .waters-button {
     min-height: 42px;
     padding: 9px 15px;
@@ -113,40 +132,50 @@
     font-weight: 600;
     cursor: pointer;
 }
+
 .waters-button:hover {
     background: rgba(127, 127, 127, 0.1);
 }
+
 .waters-button:disabled {
     cursor: not-allowed;
     opacity: 0.55;
 }
+
 .waters-button-primary {
     border-color: ButtonText;
     background: ButtonText;
     color: ButtonFace;
 }
+
 .waters-button-primary:hover {
     background: ButtonText;
     color: ButtonFace;
     opacity: 0.85;
 }
+
 .waters-button-secondary {
     background: transparent;
     color: inherit;
 }
+
 .waters-message {
     min-height: 20px;
     margin: 10px 0;
 }
+
 .waters-message:empty {
     display: none;
 }
+
 .waters-message-error {
     font-weight: 600;
 }
+
 .waters-message-success {
     font-weight: 600;
 }
+
 .waters-count {
     display: inline-flex;
     align-items: center;
@@ -158,11 +187,49 @@
     background: rgba(127, 127, 127, 0.15);
     font-weight: 700;
 }
+
+.waters-current-position {
+    display: grid;
+    grid-template-columns: repeat(
+        3,
+        minmax(0, 1fr)
+    );
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.waters-position-value {
+    padding: 10px;
+    border: 1px solid rgba(127, 127, 127, 0.2);
+    border-radius: 8px;
+    background: rgba(127, 127, 127, 0.04);
+}
+
+.waters-position-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.75rem;
+    opacity: 0.65;
+}
+
+.waters-position-number {
+    display: block;
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+    font-size: 0.9rem;
+}
+
 .waters-list,
 .waters-nearby-list {
     display: grid;
     gap: 12px;
 }
+
 .waters-empty {
     padding: 20px;
     border: 1px dashed rgba(127, 127, 127, 0.35);
@@ -170,6 +237,7 @@
     text-align: center;
     opacity: 0.7;
 }
+
 .waters-card {
     display: grid;
     gap: 12px;
@@ -178,16 +246,19 @@
     border-radius: 10px;
     background: rgba(127, 127, 127, 0.04);
 }
+
 .waters-card-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
 }
+
 .waters-card-title {
     margin: 0;
     font-size: 1.05rem;
 }
+
 .waters-card-meta {
     display: flex;
     flex-wrap: wrap;
@@ -196,10 +267,12 @@
     font-size: 0.9rem;
     opacity: 0.7;
 }
+
 .waters-card-description {
     margin: 0;
     white-space: pre-wrap;
 }
+
 .waters-card-coordinates {
     font-family:
         ui-monospace,
@@ -211,11 +284,13 @@
     font-size: 0.85rem;
     opacity: 0.75;
 }
+
 .waters-card-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
+
 .waters-nearby-item {
     display: flex;
     align-items: center;
@@ -225,30 +300,37 @@
     border: 1px solid rgba(127, 127, 127, 0.2);
     border-radius: 9px;
 }
+
 .waters-nearby-info {
     min-width: 0;
 }
+
 .waters-nearby-title {
     margin: 0;
     font-weight: 700;
 }
+
 .waters-nearby-meta {
     margin: 4px 0 0;
     font-size: 0.85rem;
     opacity: 0.7;
 }
+
 .waters-nearby-distance {
     flex: 0 0 auto;
     font-weight: 700;
     white-space: nowrap;
 }
+
 .waters-nearby-navigation {
     flex: 0 0 auto;
 }
+
 @media (max-width: 700px) {
     .waters-module {
         padding: 16px;
     }
+
     .waters-header,
     .waters-panel-header,
     .waters-card-header,
@@ -256,15 +338,23 @@
         flex-direction: column;
         align-items: stretch;
     }
+
     .waters-form-grid {
         grid-template-columns: 1fr;
     }
+
     .waters-field-full {
         grid-column: auto;
     }
+
+    .waters-current-position {
+        grid-template-columns: 1fr;
+    }
+
     .waters-button {
         width: 100%;
     }
+
     .waters-nearby-distance,
     .waters-nearby-navigation {
         width: 100%;
