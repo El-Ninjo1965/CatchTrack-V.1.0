@@ -92,8 +92,8 @@ window.CatchTrack = {
         );
         await this.loadMigration(
             "5",
-            "Core and GPS foundation",
-            "database/migrations/005_core_gps.sql"
+            "Waters legacy ownership",
+            "database/migrations/005_waters_legacy_ownership.sql"
         );
         await this.loadMigration(
             "6",
