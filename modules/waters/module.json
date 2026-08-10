@@ -1,9 +1,9 @@
 {
   "name": "waters",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "status": "active",
   "enabled": true,
-  "description": "Benutzerbezogene Gewässerverwaltung mit GPS und automatischer Ortsauflösung",
+  "description": "Benutzerbezogene Gewässerverwaltung mit automatischer GPS-Standortbestimmung",
   "initializer": "CatchTrackWatersModule",
   "dependencies": [
     "CatchTrackDatabase",
