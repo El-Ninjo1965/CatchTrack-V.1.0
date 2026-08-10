@@ -1,0 +1,22 @@
+{
+  "name": "waters",
+  "version": "6.0.0",
+  "status": "active",
+  "enabled": true,
+  "description": "Benutzerbezogene Gewässerverwaltung mit GPS und automatischer Ortsauflösung",
+  "initializer": "CatchTrackWatersModule",
+  "dependencies": [
+    "CatchTrackDatabase",
+    "CatchTrackIdentity"
+  ],
+  "interface": {
+    "getAll": "CatchTrackWatersModule.getAll",
+    "getById": "CatchTrackWatersModule.getById",
+    "getNearby": "CatchTrackWatersModule.getNearby",
+    "getCurrentSuggestion": "CatchTrackWatersModule.getCurrentSuggestion",
+    "create": "CatchTrackWatersModule.create",
+    "update": "CatchTrackWatersModule.update",
+    "remove": "CatchTrackWatersModule.remove",
+    "getCount": "CatchTrackWatersModule.getCount"
+  }
+}
