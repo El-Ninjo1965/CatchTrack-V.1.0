@@ -1,16 +1,17 @@
 {
     "name": "waters",
-    "version": "3.1.1",
+    "version": "4.0.0",
     "status": "active",
     "enabled": true,
-    "description": "Benutzerbezogene Gewässerverwaltung",
+    "description": "Benutzerbezogene Gewässerverwaltung mit GPS-Unterstützung",
     "initializer": "CatchTrackWatersModule",
     "dependencies": [
         "CatchTrackDatabase",
         "CatchTrackIdentity",
         "CatchTrackStorageManager",
         "CatchTrackLanguageManager",
-        "CatchTrackAPI"
+        "CatchTrackAPI",
+        "CatchTrackGPSModule"
     ],
     "interface": {
         "getAll": "CatchTrackWatersModule.getAll",
