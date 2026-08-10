@@ -1,280 +1,146 @@
-{
-  "modules": [
+[
     {
-      "name": "start",
-      "displayName": "Start",
-      "path": "modules/start/",
-      "files": {
-        "html": "start.html",
-        "css": "start.css",
-        "js": "start.js"
-      },
-      "initializer": "CatchTrackStartModule",
-      "enabled": true
+        "name": "start",
+        "displayName": "Start",
+        "enabled": true,
+        "path": "modules/start/",
+        "files": {
+            "html": "start.html",
+            "css": "start.css",
+            "js": "start.js"
+        },
+        "initializer": "CatchTrackStartModule"
     },
     {
-      "name": "admin",
-      "displayName": "Admin",
-      "path": "modules/admin/",
-      "files": {
-        "html": "admin.html",
-        "css": "admin.css",
-        "js": "admin.js"
-      },
-      "initializer": "CatchTrackAdminModule",
-      "enabled": true
+        "name": "user",
+        "displayName": "Benutzer",
+        "enabled": true,
+        "path": "modules/user/",
+        "files": {
+            "html": "user.html",
+            "css": "user.css",
+            "js": "user.js"
+        },
+        "initializer": "CatchTrackUserModule"
     },
     {
-      "name": "catches",
-      "displayName": "Catches",
-      "path": "modules/catches/",
-      "files": {
-        "html": "catches.html",
-        "css": "catches.css",
-        "js": "catches.js"
-      },
-      "initializer": "CatchTrackCatchesModule",
-      "enabled": true
+        "name": "admin",
+        "displayName": "Admin",
+        "enabled": true,
+        "path": "modules/admin/",
+        "files": {
+            "html": "admin.html",
+            "css": "admin.css",
+            "js": "admin.js"
+        },
+        "initializer": "CatchTrackAdminModule"
     },
     {
-      "name": "catchbook",
-      "displayName": "Catchbook",
-      "path": "modules/catchbook/",
-      "files": {
-        "html": "catchbook.html",
-        "css": "catchbook.css",
-        "js": "catchbook.js"
-      },
-      "initializer": "CatchTrackCatchbookModule",
-      "enabled": true
+        "name": "catches",
+        "displayName": "Catches",
+        "enabled": true,
+        "path": "modules/catches/",
+        "files": {
+            "html": "catches.html",
+            "css": "catches.css",
+            "js": "catches.js"
+        },
+        "initializer": "CatchTrackCatchesModule"
     },
     {
-      "name": "fishDatabase",
-      "displayName": "Fish Database",
-      "path": "modules/fishDatabase/",
-      "files": {
-        "html": "fishDatabase.html",
-        "css": "fishDatabase.css",
-        "js": "fishDatabase.js"
-      },
-      "initializer": "CatchTrackFishDatabaseModule",
-      "enabled": true
+        "name": "catchbook",
+        "displayName": "Catchbook",
+        "enabled": true,
+        "path": "modules/catchbook/",
+        "files": {
+            "html": "catchbook.html",
+            "css": "catchbook.css",
+            "js": "catchbook.js"
+        },
+        "initializer": "CatchTrackCatchbookModule"
     },
     {
-      "name": "equipment",
-      "displayName": "Equipment",
-      "path": "modules/equipment/",
-      "files": {
-        "html": "equipment.html",
-        "css": "equipment.css",
-        "js": "equipment.js"
-      },
-      "initializer": "CatchTrackEquipmentModule",
-      "enabled": true
+        "name": "fishdatabase",
+        "displayName": "Fischdatenbank",
+        "enabled": true,
+        "path": "modules/fishdatabase/",
+        "files": {
+            "html": "fishdatabase.html",
+            "css": "fishdatabase.css",
+            "js": "fishdatabase.js"
+        },
+        "initializer": "CatchTrackFishDatabaseModule"
     },
     {
-      "name": "gps",
-      "displayName": "GPS",
-      "path": "modules/gps/",
-      "files": {
-        "html": "gps.html",
-        "css": "gps.css",
-        "js": "gps.js"
-      },
-      "initializer": "CatchTrackGPSModule",
-      "enabled": true
+        "name": "equipment",
+        "displayName": "Equipment",
+        "enabled": true,
+        "path": "modules/equipment/",
+        "files": {
+            "html": "equipment.html",
+            "css": "equipment.css",
+            "js": "equipment.js"
+        },
+        "initializer": "CatchTrackEquipmentModule"
     },
     {
-      "name": "maps",
-      "displayName": "Maps",
-      "path": "modules/maps/",
-      "files": {
-        "html": "maps.html",
-        "css": "maps.css",
-        "js": "maps.js"
-      },
-      "initializer": "CatchTrackMapsModule",
-      "enabled": true
+        "name": "gps",
+        "displayName": "GPS",
+        "enabled": true,
+        "path": "modules/gps/",
+        "files": {
+            "html": "gps.html",
+            "css": "gps.css",
+            "js": "gps.js"
+        },
+        "initializer": "CatchTrackGPSModule"
     },
     {
-      "name": "waters",
-      "displayName": "Waters",
-      "path": "modules/waters/",
-      "files": {
-        "html": "waters.html",
-        "css": "waters.css",
-        "js": "waters.js"
-      },
-      "initializer": "CatchTrackWatersModule",
-      "enabled": true
+        "name": "maps",
+        "displayName": "Maps",
+        "enabled": true,
+        "path": "modules/maps/",
+        "files": {
+            "html": "maps.html",
+            "css": "maps.css",
+            "js": "maps.js"
+        },
+        "initializer": "CatchTrackMapsModule"
     },
     {
-      "name": "statistics",
-      "displayName": "Statistics",
-      "path": "modules/statistics/",
-      "files": {
-        "html": "statistics.html",
-        "css": "statistics.css",
-        "js": "statistics.js"
-      },
-      "initializer": "CatchTrackStatisticsModule",
-      "enabled": true
+        "name": "waters",
+        "displayName": "Waters",
+        "enabled": true,
+        "path": "modules/waters/",
+        "files": {
+            "html": "waters.html",
+            "css": "waters.css",
+            "js": "waters.js"
+        },
+        "initializer": "CatchTrackWatersModule"
     },
     {
-      "name": "records",
-      "displayName": "Records",
-      "path": "modules/records/",
-      "files": {
-        "html": "records.html",
-        "css": "records.css",
-        "js": "records.js"
-      },
-      "initializer": "CatchTrackRecordsModule",
-      "enabled": true
+        "name": "statistics",
+        "displayName": "Statistik",
+        "enabled": true,
+        "path": "modules/statistics/",
+        "files": {
+            "html": "statistics.html",
+            "css": "statistics.css",
+            "js": "statistics.js"
+        },
+        "initializer": "CatchTrackStatisticsModule"
     },
     {
-      "name": "leaderboard",
-      "displayName": "Leaderboard",
-      "path": "modules/leaderboard/",
-      "files": {
-        "html": "leaderboard.html",
-        "css": "leaderboard.css",
-        "js": "leaderboard.js"
-      },
-      "initializer": "CatchTrackLeaderboardModule",
-      "enabled": false
-    },
-    {
-      "name": "weather",
-      "displayName": "Weather",
-      "path": "modules/weather/",
-      "files": {
-        "html": "weather.html",
-        "css": "weather.css",
-        "js": "weather.js"
-      },
-      "initializer": "CatchTrackWeatherModule",
-      "enabled": false
-    },
-    {
-      "name": "tides",
-      "displayName": "Tides",
-      "path": "modules/tides/",
-      "files": {
-        "html": "tides.html",
-        "css": "tides.css",
-        "js": "tides.js"
-      },
-      "initializer": "CatchTrackTidesModule",
-      "enabled": false
-    },
-    {
-      "name": "moon",
-      "displayName": "Moon",
-      "path": "modules/moon/",
-      "files": {
-        "html": "moon.html",
-        "css": "moon.css",
-        "js": "moon.js"
-      },
-      "initializer": "CatchTrackMoonModule",
-      "enabled": false
-    },
-    {
-      "name": "ai",
-      "displayName": "AI",
-      "path": "modules/ai/",
-      "files": {
-        "html": "ai.html",
-        "css": "ai.css",
-        "js": "ai.js"
-      },
-      "initializer": "CatchTrackAIModule",
-      "enabled": false
-    },
-    {
-      "name": "bluetooth",
-      "displayName": "Bluetooth",
-      "path": "modules/bluetooth/",
-      "files": {
-        "html": "bluetooth.html",
-        "css": "bluetooth.css",
-        "js": "bluetooth.js"
-      },
-      "initializer": "CatchTrackBluetoothModule",
-      "enabled": false
-    },
-    {
-      "name": "backup",
-      "displayName": "Backup",
-      "path": "modules/backup/",
-      "files": {
-        "html": "backup.html",
-        "css": "backup.css",
-        "js": "backup.js"
-      },
-      "initializer": "CatchTrackBackupModule",
-      "enabled": false
-    },
-    {
-      "name": "export",
-      "displayName": "Export",
-      "path": "modules/export/",
-      "files": {
-        "html": "export.html",
-        "css": "export.css",
-        "js": "export.js"
-      },
-      "initializer": "CatchTrackExportModule",
-      "enabled": false
-    },
-    {
-      "name": "conditions",
-      "displayName": "Conditions",
-      "path": "modules/conditions/",
-      "files": {
-        "html": "conditions.html",
-        "css": "conditions.css",
-        "js": "conditions.js"
-      },
-      "initializer": "CatchTrackConditionsModule",
-      "enabled": false
-    },
-    {
-      "name": "photos",
-      "displayName": "Photos",
-      "path": "modules/photos/",
-      "files": {
-        "html": "photos.html",
-        "css": "photos.css",
-        "js": "photos.js"
-      },
-      "initializer": "CatchTrackPhotosModule",
-      "enabled": false
-    },
-    {
-      "name": "safety",
-      "displayName": "Safety",
-      "path": "modules/safety/",
-      "files": {
-        "html": "safety.html",
-        "css": "safety.css",
-        "js": "safety.js"
-      },
-      "initializer": "CatchTrackSafetyModule",
-      "enabled": false
-    },
-    {
-      "name": "settings",
-      "displayName": "Settings",
-      "path": "modules/settings/",
-      "files": {
-        "html": "settings.html",
-        "css": "settings.css",
-        "js": "settings.js"
-      },
-      "initializer": "CatchTrackSettingsModule",
-      "enabled": false
+        "name": "records",
+        "displayName": "Records",
+        "enabled": true,
+        "path": "modules/records/",
+        "files": {
+            "html": "records.html",
+            "css": "records.css",
+            "js": "records.js"
+        },
+        "initializer": "CatchTrackRecordsModule"
     }
-  ]
-}
+]
