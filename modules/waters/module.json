@@ -8,10 +8,7 @@
 "dependencies": [
 "CatchTrackDatabase",
 "CatchTrackIdentity",
-"CatchTrackStorageManager",
-"CatchTrackLanguageManager",
-"CatchTrackAPI",
-"CatchTrackGPSModule"
+"CatchTrackStorageManager"
 ],
 "interface": {
 "getAll": "CatchTrackWatersModule.getAll",
@@ -22,14 +19,5 @@
 "update": "CatchTrackWatersModule.update",
 "remove": "CatchTrackWatersModule.remove",
 "getCount": "CatchTrackWatersModule.getCount"
-},
-"database": {
-"migrations": [
-{
-"version": "5",
-"description": "Waters legacy ownership normalization",
-"path": "database/migrations/005_waters_legacy_ownership.sql"
-}
-]
 }
 }
