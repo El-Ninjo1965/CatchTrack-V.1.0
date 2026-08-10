@@ -136,6 +136,13 @@ window.CatchTrack = {
             "database/migrations/003_core_master.sql"
         );
 
+
+        await this.loadMigration(
+            "4",
+            "Waters user ownership",
+            "database/migrations/004_waters_user_id.sql"
+        );
+
     },
 
 
