@@ -185,12 +185,16 @@
     background: #f2f2f2;
 }
 
-.waters-message.is-error {
+.waters-message-error {
     border: 1px solid #d8a0a0;
 }
 
-.waters-message.is-success {
+.waters-message-success {
     border: 1px solid #a8cda8;
+}
+
+.waters-message-info {
+    border: 1px solid #d8d8d8;
 }
 
 .waters-message[hidden] {
@@ -215,47 +219,13 @@
     border-radius: 10px;
 }
 
-.water-item-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-}
-
 .water-item h3 {
-    margin: 0;
+    margin: 0 0 8px;
     font-size: 19px;
 }
 
-.water-item-type {
-    margin-top: 4px;
-    font-size: 13px;
-    opacity: 0.65;
-}
-
-.water-item-details {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 16px;
-    margin: 14px 0;
-}
-
-.water-item-detail {
-    margin: 0;
-}
-
-.water-item-detail strong {
-    display: block;
-    margin-bottom: 2px;
-    font-size: 12px;
-    opacity: 0.65;
-    text-transform: uppercase;
-}
-
-.water-item-description {
-    margin: 12px 0 0;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+.water-item p {
+    margin: 6px 0;
 }
 
 .water-item-actions {
@@ -278,8 +248,7 @@
         flex-direction: column;
     }
 
-    .waters-grid,
-    .water-item-details {
+    .waters-grid {
         grid-template-columns: 1fr;
     }
 
