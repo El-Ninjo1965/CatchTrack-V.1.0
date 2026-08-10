@@ -28,16 +28,3 @@ CREATE INDEX IF NOT EXISTS idx_waters_user_id
 
 CREATE INDEX IF NOT EXISTS idx_waters_user_name
     ON waters(user_id, name);
-
-
-INSERT OR IGNORE INTO migrations
-(
-    version,
-    description
-)
-
-VALUES
-(
-    '004',
-    'Add user ownership to waters'
-);
