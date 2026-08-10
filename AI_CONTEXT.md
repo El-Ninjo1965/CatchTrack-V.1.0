@@ -189,10 +189,10 @@ Eine mögliche Struktur ist beispielsweise:
 
 modules/
 └── gps/
-    ├── module.json
-    ├── gps.html
-    ├── gps.css
-    └── gps.js
+├── module.json
+├── gps.html
+├── gps.css
+└── gps.js
 
 Die tatsächliche Struktur muss jedoch immer aus GitHub gelesen werden.
 
@@ -489,6 +489,8 @@ Dies betrifft insbesondere:
 * persönliche Einstellungen
 * persönliche Fishing Spots
 * weitere personenbezogene Fachmoduldaten
+* persönliche Statistiken
+* persönliche Cloud-Daten
 
 Eine bereits vorhandene zentrale user_id wird wiederverwendet.
 
@@ -515,12 +517,9 @@ Dabei ist insbesondere zu prüfen:
 * Wird der Datensatz für persönliche Statistiken benötigt?
 * Kann der Datensatz in anonymisierten oder globalen Statistiken erscheinen?
 * Besteht eine Beziehung zu einem bereits user_id-gebundenen Objekt?
+* Kann der Datensatz später für Community-, Pinnwand- oder Marketplace-Funktionen relevant werden?
 
-Wenn die Daten benutzerbezogen sind:
-
-user_id
-
-wird von Anfang an in:
+Wenn die Daten benutzerbezogen sind, wird user_id von Anfang an in:
 
 * Datenmodell
 * Migration
@@ -537,13 +536,13 @@ berücksichtigt.
 
 user_id darf nicht erst nachträglich ergänzt werden, wenn bereits erkennbar ist, dass die Daten persönlich sind.
 
-Wenn die fachliche Zuordnung nicht eindeutig ist, darf nicht geraten werden.
-
-In diesem Fall ist vor der Implementierung eine Rückfrage erforderlich.
-
 user_id wird jedoch nicht blind in jede Tabelle aufgenommen.
 
 Rein globale Stammdaten oder Daten, die fachlich keinem Benutzer gehören, benötigen keine künstliche Benutzerzuordnung.
+
+Wenn die fachliche Zuordnung nicht eindeutig ist, darf nicht geraten werden.
+
+In diesem Fall ist vor der Implementierung eine Rückfrage erforderlich.
 
 ⸻
 
@@ -551,129 +550,36 @@ Rein globale Stammdaten oder Daten, die fachlich keinem Benutzer gehören, benö
 
 Spätere Statistikmodule müssen die Benutzerzuordnung von Anfang an berücksichtigen.
 
-Statistische Daten können unterschiedliche Ebenen besitzen:
+Statistische Auswertungen müssen unterscheiden können zwischen:
 
-Persönliche Statistik
+* persönlichen Statistiken
+* anonymisierten Community-Statistiken
+* globalen Statistiken
+* aggregierten weltweiten Statistiken
 
-user_id
-↓
-persönliche Auswertung
+Beispiele:
 
-Anonymisierte globale Statistik
+* persönliche Fangstatistik
+* persönliche Gewässerstatistik
+* persönliche Köderstatistik
+* Fangstatistik nach Fischart
+* Fangzeiten
+* Fangorte
+* Ködererfolg
+* Wetterbedingungen
+* Gewässervergleiche
+* globale Durchschnittswerte
+* weltweite Hitparaden
 
-freigegebene Benutzerdaten
-↓
-Anonymisierung
-↓
-globale Statistik
+Statistikmodule sollen vorhandene Fachobjekte über IDs und user_id auswerten.
 
-Nicht-personenbezogene globale Statistik
+Statistiken dürfen nicht unnötig dieselben Rohdaten in eigenen Tabellen duplizieren.
 
-globale Stammdaten
-↓
-globale Statistik
-
-Bei der Entwicklung eines Statistikmoduls muss deshalb vorab geprüft werden, aus welcher Datenebene die Statistik gespeist wird.
-
-Statistikmodule dürfen keine persönlichen Daten ohne entsprechende Benutzerzuordnung oder Freigabelogik aggregieren.
-
-⸻
-
-25. CLOUD- UND SHARING-ARCHITEKTUR
-
-CatchTrack ist zunächst als Offline-Anwendung konzipiert.
-
-Die Architektur muss jedoch von Anfang an eine spätere Cloud-Anbindung ermöglichen.
-
-Die lokale Anwendung bleibt dabei die primäre Quelle der persönlichen Daten, solange keine andere Architektur ausdrücklich beschlossen wurde.
-
-Spätere Cloud-Funktionen können insbesondere umfassen:
-
-* Synchronisation
-* persönliche Datensicherung
-* freigegebene Gewässer
-* freigegebene Fänge
-* globale Statistiken
-* Hitparaden
-* Community-Funktionen
-* Angeltreffen
-* Pinnwand
-* Marketplace
-* weitere soziale Funktionen
-
-Die spätere Cloud-Architektur darf nicht voraussetzen, dass lokale persönliche Daten bereits öffentlich sind.
+Für Cloud- oder Community-Auswertungen dürfen nur Daten verwendet werden, für deren Veröffentlichung bzw. Verarbeitung eine entsprechende Freigabe besteht.
 
 ⸻
 
-26. DATENFREIGABE UND PRIVATSPHÄRE
-
-Persönliche Daten werden grundsätzlich zunächst privat behandelt.
-
-Eine spätere Cloud-Freigabe muss kontrolliert und benutzerbezogen erfolgen.
-
-Der Benutzer muss perspektivisch festlegen können, welche Informationen öffentlich oder innerhalb der Community sichtbar werden.
-
-Für öffentliche Benutzeridentität sind insbesondere folgende Darstellungen möglich:
-
-* anonym
-* user_id
-* ausgewählter Benutzername
-* ausgewählter Anzeigename
-
-Die konkrete Auswahl und technische Umsetzung wird im späteren Identity-/Privacy-/Cloud-System festgelegt.
-
-Persönliche Identitätsdaten dürfen nicht automatisch öffentlich gemacht werden.
-
-⸻
-
-27. CLOUD-DATEN UND GPS
-
-Nicht jede lokale Information darf automatisch in die Cloud übertragen werden.
-
-Insbesondere sensible oder hochpräzise Standortinformationen wie:
-
-* aktuelle GPS-Position
-* Home Location
-* exakte persönliche Aufenthaltsposition
-
-müssen gesondert behandelt werden.
-
-Eine spätere Cloud-Funktion muss zwischen:
-
-* intern benötigten Positionsdaten
-* persönlichen Positionsdaten
-* freigegebenen Positionsdaten
-* anonymisierten/geografisch abstrahierten Daten
-
-unterscheiden können.
-
-⸻
-
-28. GEWÄSSERDATEN UND CLOUD
-
-Das Waters-Modul bleibt lokal und fachlich für die Gewässer-Stammdaten zuständig.
-
-Eine spätere Cloud-Version kann freigegebene Gewässerdaten zentral erfassen.
-
-Grundprinzip:
-
-Lokales Waters
-↓
-user_id
-↓
-Benutzerfreigabe
-↓
-Cloud-Synchronisation
-↓
-globale/communityfähige Gewässerdaten
-
-Die Cloud-Daten dürfen nicht als Ersatz für die lokale Waters-Datenstruktur in das Waters-Modul integriert werden.
-
-Lokale und Cloud-Verantwortlichkeiten bleiben getrennt.
-
-⸻
-
-29. WATERS-MODUL – MASTER-ARCHITEKTUR
+25. WATERS-MODUL – MASTER-ARCHITEKTUR
 
 Das Waters-Modul verwaltet ausschließlich die Stammdaten eines Gewässers.
 
@@ -695,7 +601,7 @@ Die tatsächlich implementierte Struktur wird durch den aktuellen GitHub-Stand u
 
 user_id ist verbindlicher Bestandteil der zukünftigen Master-Struktur.
 
-Ein Waters-Datensatz gehört genau zu dem Benutzer, dem er zugeordnet wurde.
+Ein persönlicher Waters-Datensatz gehört genau zu dem Benutzer, dem er zugeordnet wurde.
 
 Waters-Zugriffe müssen die Benutzerzuordnung berücksichtigen.
 
@@ -715,7 +621,7 @@ Ein Benutzer darf niemals über eine manipulierte Datensatz-ID auf ein fremdes p
 
 ⸻
 
-30. WATERS BLEIBT SCHLANK
+26. WATERS BLEIBT SCHLANK
 
 Das Waters-Modul wird nicht zu einer Sammeldatenbank für sämtliche Informationen über ein Gewässer.
 
@@ -742,7 +648,7 @@ waters
 
 ⸻
 
-31. CATCHER – FANGHISTORIE
+27. CATCHER – FANGHISTORIE
 
 Das Fangbuch-Modul Catcher ist für die Fanghistorie zuständig.
 
@@ -764,9 +670,27 @@ Waters
 
 Die Fanghistorie wird nicht redundant in Waters gespeichert.
 
+Fangdaten sollen später für persönliche und – bei entsprechender Freigabe – anonymisierte bzw. globale Statistiken nutzbar sein.
+
+Relevante Daten können unter anderem sein:
+
+* Fischart
+* Größe
+* Gewicht
+* Köder
+* Methode
+* Zeitpunkt
+* Wetter
+* Gewässer
+* Fishing Spot
+* GPS-Bezug
+* weitere fachliche Fangdaten
+
+Diese Informationen werden nicht in Waters dupliziert.
+
 ⸻
 
-32. FISHING SPOTS
+28. FISHING SPOTS
 
 Ein späteres Fishing-Spots-Modul kann konkrete Angelstellen innerhalb eines Gewässers verwalten.
 
@@ -794,7 +718,7 @@ Automatisch ermittelte GPS-Daten gelten gemäß den allgemeinen CatchTrack-Regel
 
 ⸻
 
-33. FOTOS
+29. FOTOS
 
 Fotos werden nicht grundsätzlich als Binärdaten direkt in die Waters-Tabelle integriert.
 
@@ -816,9 +740,11 @@ Photo
 ├── fishing_spot_id (optional)
 └── catch_id (optional)
 
+Fotos können später abhängig von den Freigabeeinstellungen des Benutzers auch für Cloud-/Community-Funktionen verwendet werden.
+
 ⸻
 
-34. WASSERBEZOGENE MODULBEZIEHUNGEN
+30. WASSERBEZOGENE MODULBEZIEHUNGEN
 
 CatchTrack verwendet für gewässerbezogene Fachinformationen grundsätzlich Beziehungen statt redundanter Datenhaltung.
 
@@ -841,7 +767,7 @@ Informationen dürfen nicht unnötig in mehreren Modulen dupliziert werden.
 
 ⸻
 
-35. GPS → WATERS → FACHMODULE
+31. GPS → WATERS → FACHMODULE
 
 GPS liefert Positionsdaten.
 
@@ -875,7 +801,7 @@ Kein Fachmodul übernimmt dauerhaft die fachliche Verantwortung eines anderen Mo
 
 ⸻
 
-36. WATERS-MIGRATION
+32. WATERS-MIGRATION
 
 Da Waters ursprünglich ohne user_id angelegt wurde, muss die Erweiterung über eine neue Datenbankmigration erfolgen.
 
@@ -900,7 +826,337 @@ Nach erfolgreicher Migration darf keine unnötige parallele Waters-Datenhaltung 
 
 ⸻
 
-37. MULTILINGUALITÄT
+33. CLOUD-ARCHITEKTUR – GRUNDSATZ
+
+CatchTrack ist zunächst eine Offline-First-Anwendung.
+
+Die Architektur muss jedoch von Anfang an cloudfähig entwickelt werden.
+
+Cloud-Funktionalität darf nicht dazu führen, dass die Offline-Funktionalität unnötig von einer Internetverbindung abhängig wird.
+
+Grundprinzip:
+
+Offline CatchTrack
+↓
+lokale zentrale Datenbank
+↓
+optionale Cloud-Synchronisation
+↓
+Cloud-Datenbestand
+
+Die Cloud ist eine spätere Erweiterung und kein Ersatz für die lokale Datenhaltung.
+
+Module müssen deshalb so entwickelt werden, dass ihre Daten später über definierte Schnittstellen abgefragt, synchronisiert und – sofern freigegeben – veröffentlicht werden können.
+
+⸻
+
+34. CLOUD UND BENUTZERDATEN
+
+Persönliche Daten können später optional in die Cloud übertragen werden.
+
+Dies betrifft beispielsweise:
+
+* Gewässer
+* Fänge
+* Fotos
+* Fishing Spots
+* Statistiken
+* ausgewählte weitere Daten
+
+Die Übertragung erfolgt nicht automatisch für alle persönlichen Daten.
+
+Der Benutzer muss über geeignete Einstellungen bzw. Freigaben bestimmen können, welche Daten für Cloud-, Community- oder öffentliche Funktionen verwendet werden dürfen.
+
+Besonders sensible Daten, insbesondere aktuelle GPS-Positionen, dürfen nicht ungeprüft veröffentlicht werden.
+
+⸻
+
+35. DATENFREIGABE UND PRIVATSPHÄRE
+
+CatchTrack benötigt langfristig eine zentrale, benutzersteuerbare Freigabearchitektur.
+
+Ein Benutzer soll grundsätzlich unterscheiden können zwischen:
+
+* privat
+* anonymisiert
+* unter Nutzername sichtbar
+* öffentlich
+* für bestimmte Community-Funktionen freigegeben
+* nicht für Cloud-Funktionen freigegeben
+
+Die konkrete technische Umsetzung wird über das User-/Identity-System und spätere Cloud-/Permission-Komponenten festgelegt.
+
+Ein Fachmodul darf keine eigene parallele Freigabelogik entwickeln.
+
+⸻
+
+36. IDENTITÄT BEI ÖFFENTLICHEN DATEN
+
+Die interne user_id bleibt die technische Identität eines Benutzers.
+
+Sie ist nicht automatisch der öffentlich sichtbare Name.
+
+Ein Benutzer kann später über sein User-Modul festlegen, wie er in öffentlichen oder Community-Funktionen dargestellt wird.
+
+Mögliche Darstellungen:
+
+* anonym
+* Benutzer-ID bzw. anonymisierte Kennung
+* selbst gewählter Nutzername
+* freigegebener Anzeigename
+
+Die interne user_id darf nicht ohne ausdrückliche fachliche Notwendigkeit als öffentlich sichtbare Identität behandelt werden.
+
+⸻
+
+37. CLOUD-DATENMODELL
+
+Cloud-Funktionen müssen langfristig auf den lokalen Fachobjekten aufbauen.
+
+Beispiel:
+
+User
+↓
+user_id
+↓
+Waters
+├── water_id
+├── Catches
+├── Fishing Spots
+├── Photos
+└── Statistics
+
+Für Cloud-Funktionen sollen diese Daten über definierte IDs und Schnittstellen abgefragt werden können.
+
+Es wird kein zweites fachliches Datenmodell in einzelnen Modulen aufgebaut, nur weil später eine Cloud vorgesehen ist.
+
+Lokale und Cloud-Daten müssen langfristig über stabile Identifikatoren miteinander verbunden werden können.
+
+⸻
+
+38. GLOBALE STATISTIKEN UND COMMUNITY-DATEN
+
+CatchTrack soll langfristig aus freigegebenen Daten anonymisierte und aggregierte Statistiken erzeugen können.
+
+Beispiele:
+
+* beste Fangzeit einer Fischart
+* häufig erfolgreiche Köder
+* Fanghäufigkeit nach Gewässertyp
+* Fangwahrscheinlichkeit unter bestimmten Wetterbedingungen
+* durchschnittliche Fanggrößen
+* regionale Unterschiede
+* weltweite Hitparaden
+
+Dabei dürfen nur Daten berücksichtigt werden, die entsprechend freigegeben wurden.
+
+Aktuelle persönliche GPS-Positionen gehören grundsätzlich nicht automatisch zu diesen Daten.
+
+Statistiksysteme müssen zwischen Rohdaten, personenbezogenen Daten und anonymisierten Aggregaten unterscheiden.
+
+⸻
+
+39. WORLDWIDE HITPARADE
+
+Eine spätere weltweite Hitparade kann auf freigegebenen Fangdaten basieren.
+
+Mögliche Kategorien:
+
+* größter Fisch
+* schwerster Fisch
+* größte Fischart
+* Rekord pro Gewässer
+* Rekord pro Region
+* Rekord weltweit
+* saisonale Ranglisten
+* weitere fachliche Ranglisten
+
+Die technische Identität bleibt user_id-basiert.
+
+Die öffentliche Darstellung erfolgt ausschließlich entsprechend der Freigabeeinstellungen des Benutzers.
+
+⸻
+
+40. ANGELTREFFEN / COMMUNITY-PINNWAND
+
+CatchTrack soll langfristig eine Community-Funktion für Angeltreffen ermöglichen.
+
+Ein Benutzer kann beispielsweise veröffentlichen:
+
+* Gewässer
+* geplantes Datum
+* geplante Uhrzeit
+* gewünschte Dauer
+* Anzahl möglicher Teilnehmer
+* kurze Beschreibung
+* weitere optionale Informationen
+
+Beispiel:
+
+„Morgen ab 07:00 Uhr am Gewässer X. Wer kommt mit?“
+
+Die konkrete Datenstruktur wird erst bei Entwicklung des entsprechenden Community-Moduls festgelegt.
+
+Ein Angeltreffen gehört grundsätzlich zu einem Benutzer bzw. Ersteller und benötigt daher voraussichtlich user_id.
+
+Beziehungen zu Waters sollen über water_id erfolgen.
+
+⸻
+
+41. COMMUNITY-PINNWAND
+
+Die spätere Pinnwand soll mehrere fachlich getrennte Inhalte unterstützen können.
+
+Mögliche Bereiche:
+
+* Angeltreffen
+* allgemeine Beiträge
+* Gesuche
+* Angebote
+* Informationen
+* Community-Ankündigungen
+
+Die Pinnwand ist nicht Bestandteil des Waters-Moduls.
+
+Sie wird später als eigenes Fachmodul bzw. Community-System umgesetzt.
+
+⸻
+
+42. MARKETPLACE
+
+CatchTrack soll langfristig einen Marketplace ermöglichen.
+
+Benutzer können dort beispielsweise gebrauchte Angelprodukte anbieten.
+
+Mögliche Inhalte:
+
+* Angebotstitel
+* Beschreibung
+* Kategorie
+* Preis
+* Fotos
+* Zustand
+* Standort/Region
+* Verkäuferreferenz
+* Status
+* Erstellungszeitpunkt
+
+Marketplace-Daten sind benutzerbezogen und benötigen daher grundsätzlich user_id.
+
+Die technische Struktur wird erst bei Entwicklung des Marketplace-Moduls festgelegt.
+
+Der Marketplace darf nicht in Waters oder Catcher integriert werden.
+
+⸻
+
+43. PAKETE UND FUNKTIONSFREIGABEN
+
+CatchTrack soll langfristig unterschiedliche Nutzungspakete unterstützen.
+
+Beispielhaft:
+
+* Free
+* weitere kostenpflichtige Pakete
+* optionale Add-ons
+
+Die konkrete Preis- und Paketstruktur wird später festgelegt.
+
+Funktionen können abhängig vom Paket freigeschaltet werden.
+
+Beispiel:
+
+Marketplace
+→ nur bei entsprechendem Paket oder Add-on
+
+Weitere mögliche Premium-Funktionen können später hinzukommen.
+
+Pakete und Berechtigungen müssen zentral verwaltet werden.
+
+Ein Fachmodul darf keine eigene Tariflogik aufbauen.
+
+⸻
+
+44. ADMINISTRATION / CMS
+
+CatchTrack soll langfristig ein administrierbares System erhalten.
+
+Das Admin-System soll insbesondere ermöglichen:
+
+* Benutzer verwalten
+* Benutzerstatus verwalten
+* Pakete zuweisen
+* Add-ons verwalten
+* Berechtigungen verwalten
+* Freigaben verwalten
+* Community-Inhalte moderieren
+* Marketplace-Inhalte verwalten
+* Systemeinstellungen verwalten
+* Cloud-Funktionen administrieren
+* gegebenenfalls Aktualisierungen verwalten
+
+Das Admin-Modul wird als eigenes System entwickelt.
+
+Die Administration darf nicht dauerhaft in Fachmodule integriert werden.
+
+⸻
+
+45. ADMIN UND CLOUD
+
+Die spätere Administration kann über eine Cloud-basierte Administrationsoberfläche erfolgen.
+
+Die lokale App muss nicht sämtliche administrativen Funktionen selbst bereitstellen.
+
+Lokale Admin-Funktionen können jedoch für Offline- bzw. Grundfunktionen erforderlich sein.
+
+Die konkrete Aufteilung zwischen lokaler Administration und Cloud-Administration wird später festgelegt.
+
+⸻
+
+46. UPDATE-SYSTEM
+
+CatchTrack soll langfristig ein Update-System erhalten.
+
+Grundprinzip:
+
+App-Start
+↓
+Prüfung auf verfügbare Aktualisierung
+↓
+falls vorhanden
+↓
+Benutzer informieren
+↓
+Update nach Bestätigung durchführen
+
+Die Prüfung soll später optional cloudgestützt erfolgen können.
+
+Die Offline-Funktionalität darf dadurch nicht unnötig beeinträchtigt werden.
+
+Eine Update-Funktion darf niemals ungeprüft Dateien überschreiben.
+
+Versionen müssen eindeutig nachvollziehbar sein.
+
+⸻
+
+47. UPDATE-SICHERHEIT
+
+Spätere Updates müssen mindestens berücksichtigen:
+
+* aktuelle App-Version
+* verfügbare Zielversion
+* Kompatibilität
+* Datenbankmigrationen
+* notwendige Mindestversion
+* Rollback-/Fehlerstrategie
+* Integrität der Update-Dateien
+
+Datenbankmigrationen müssen vor bzw. während eines Updates kontrolliert ausgeführt werden.
+
+Ein Update darf bestehende Benutzerdaten nicht unnötig zerstören.
+
+⸻
+
+48. MULTILINGUALITÄT
 
 Neue Module müssen multilingual vorbereitet werden.
 
@@ -914,7 +1170,7 @@ Weitere Sprachen müssen später ergänzt werden können.
 
 ⸻
 
-38. RUNTIME UND FEHLERBEHANDLUNG
+49. RUNTIME UND FEHLERBEHANDLUNG
 
 Module müssen die vorhandene Runtime- und Fehlerarchitektur verwenden.
 
@@ -930,7 +1186,7 @@ Modulfehler müssen nachvollziehbar bleiben.
 
 ⸻
 
-39. WIEDERVERWENDBARKEIT
+50. WIEDERVERWENDBARKEIT
 
 Funktionen sollen möglichst so entwickelt werden, dass andere Module sie später verwenden können.
 
@@ -944,7 +1200,7 @@ Andere Module sollen diese Daten verwenden können, ohne internen Modulcode zu d
 
 ⸻
 
-40. KEINE PARALLELENTWICKLUNG
+51. KEINE PARALLELENTWICKLUNG
 
 Bei der Entwicklung eines Moduls werden grundsätzlich keine anderen Fachmodule nebenbei umgebaut.
 
@@ -966,7 +1222,7 @@ ein Modul
 
 ⸻
 
-41. ARBEITSREIHENFOLGE DER AKTUELLEN ARCHITEKTUR
+52. ARBEITSREIHENFOLGE DER AKTUELLEN ARCHITEKTUR
 
 Die Entwicklung erfolgt grundsätzlich in technischer Abhängigkeitsreihenfolge.
 
@@ -986,7 +1242,7 @@ Technische Abhängigkeiten haben Vorrang vor einer rein alphabetischen oder hist
 
 ⸻
 
-42. KEINE VORZEITIGE AUSIMPLEMENTIERUNG ZUKÜNFTIGER MODULE
+53. KEINE VORZEITIGE AUSIMPLEMENTIERUNG ZUKÜNFTIGER MODULE
 
 Die Architektur muss spätere Module ermöglichen.
 
@@ -1002,15 +1258,16 @@ Waters implementiert aber nicht selbst:
 * Fishing-Spots-Verwaltung
 * Fotoverwaltung
 * Wetterhistorie
-* Cloud-Community-Funktionen
+* Community
 * Marketplace
-* Angeltreffen
+* Statistiksystem
+* Cloud-Synchronisation
 
 Diese Funktionen werden später in ihren jeweiligen Modulen umgesetzt.
 
 ⸻
 
-43. ARCHITEKTURZIEL
+54. ARCHITEKTURZIEL
 
 CatchTrack soll langfristig aus klar getrennten, miteinander verbundenen Fachmodulen bestehen.
 
@@ -1038,12 +1295,13 @@ Dabei gilt:
 * migrationsbasierte Erweiterungen
 * wiederverwendbare Schnittstellen
 * automatische Daten nur als korrigierbare Vorschläge
-* Benutzerzuordnung bei persönlichen Daten
-* kontrollierte Datenfreigabe für spätere Cloud-Funktionen
+* Cloud-Fähigkeit von Anfang an berücksichtigen
+* Benutzerfreigaben berücksichtigen
+* persönliche Daten niemals ungeprüft öffentlich machen
 
 ⸻
 
-44. MODULREIHENFOLGE UND ABHÄNGIGKEITEN
+55. MODULREIHENFOLGE UND ABHÄNGIGKEITEN
 
 Der aktuelle Entwicklungsstand wird nicht allein anhand einer historischen Modulliste bestimmt.
 
@@ -1056,7 +1314,16 @@ Vor Beginn eines neuen Moduls muss geprüft werden:
 * PROJECT_MODULE_PLAN.md
 * tatsächlicher GitHub-Stand
 
-Zusätzlich muss bei jedem Modul die Notwendigkeit einer user_id geprüft werden.
+Zusätzlich ist bei jedem Modul die langfristige Bedeutung für:
+
+* user_id
+* Cloud
+* Sharing
+* Statistiken
+* Community
+* Berechtigungen
+
+zu prüfen.
 
 Ein Modul darf nicht nur deshalb vorgezogen oder fertiggestellt werden, weil eine ältere Dokumentation dies vorsieht.
 
@@ -1064,7 +1331,7 @@ Der tatsächlich erforderliche technische Unterbau hat Vorrang.
 
 ⸻
 
-45. MASTER-DATEIEN
+56. MASTER-DATEIEN
 
 Bei der Entwicklung eines Moduls werden zusammengehörige Dateien möglichst gemeinsam als vollständige Master-Version erstellt.
 
@@ -1076,13 +1343,13 @@ Ziel:
 * vollständige Abhängigkeiten
 * klare Datenstrukturen
 * langfristige Wiederverwendbarkeit
-* frühzeitige Berücksichtigung absehbarer user_id-Abhängigkeiten
+* spätere Cloud-Fähigkeit
 
 Eine Master-Version muss den bekannten zukünftigen Architekturanforderungen Rechnung tragen, ohne zukünftige Fachmodule vorzeitig vollständig zu implementieren.
 
 ⸻
 
-46. VOLLSTÄNDIGE DATEIEN STATT PATCHES
+57. VOLLSTÄNDIGE DATEIEN STATT PATCHES
 
 Wenn eine Datei erstellt, ersetzt oder überarbeitet werden muss, wird grundsätzlich immer die vollständige Datei ausgegeben.
 
@@ -1104,7 +1371,7 @@ Ziel ist, dass jede bereitgestellte Datei direkt als vollständige Datei in Work
 
 ⸻
 
-47. VORHANDENE DATEIEN
+58. VORHANDENE DATEIEN
 
 Eine vorhandene Datei wird nicht zwanghaft geflickt.
 
@@ -1120,18 +1387,25 @@ Gültige bestehende Funktionen und Informationen dürfen dabei nicht verloren ge
 
 ⸻
 
-48. AUSGABEFORMAT FÜR NEUE DATEIEN
+59. AUSGABEFORMAT FÜR NEUE DATEIEN
 
 Bei der Entwicklung werden zunächst vollständig aufgelistet:
 
 ZU ERSETZEN
+
 * Dateien
+
 NEU ZU ERSTELLEN
+
 * Dateien
+
 LÖSCHKANDIDATEN
+
 * Dateien
 * kurze Begründung
+
 UNVERÄNDERT
+
 * Dateien
 
 Danach folgen die vollständigen Inhalte aller zu ersetzenden und neu zu erstellenden Dateien.
@@ -1144,7 +1418,7 @@ Keine unvollständigen Patch-Fragmente.
 
 ⸻
 
-49. COPYBLOCK-REGEL
+60. COPYBLOCK-REGEL
 
 Wenn mehrere Dateien gleichzeitig erstellt oder ersetzt werden müssen, werden sie möglichst gemeinsam in einer Ausgabe geliefert.
 
@@ -1161,7 +1435,7 @@ Diese Regel gilt verbindlich für alle weiteren Entwicklungsarbeiten.
 
 ⸻
 
-50. ARBEITSABLAUF: CHATGPT → WORKING COPY → GITHUB
+61. ARBEITSABLAUF: CHATGPT → WORKING COPY → GITHUB
 
 Die CatchTrack-Entwicklung erfolgt nach folgendem verbindlichen Arbeitsablauf:
 
@@ -1200,7 +1474,7 @@ Dabei werden abhängig vom Arbeitsschritt insbesondere geprüft:
 
 ⸻
 
-51. OK-REGEL
+62. OK-REGEL
 
 Wenn der Benutzer:
 
@@ -1222,39 +1496,45 @@ Wenn etwas nicht korrekt ist:
 
 Es ist keine zusätzliche Bestätigung erforderlich, dass Dateien gespeichert, übernommen oder committed wurden.
 
-Es ist nicht erforderlich, dem Benutzer mitzuteilen, dass ChatGPT selbst keine Dateien direkt verändert hat.
+Es ist nicht erforderlich, den Benutzer darüber zu informieren, dass keine Dateien direkt durch ChatGPT geschrieben wurden.
 
-Es ist nicht erforderlich, den Benutzer über fehlenden direkten GitHub-Schreibzugriff zu informieren.
-
-Der festgelegte Arbeitsablauf ist:
-
-ChatGPT erstellt vollständige Dateien
-↓
-Benutzer übernimmt sie in Working Copy
-↓
-Working Copy committet nach GitHub
-↓
-ChatGPT kontrolliert GitHub
+Der Arbeitsablauf ChatGPT → Working Copy → GitHub gilt als verbindlich.
 
 Kein nächster Entwicklungsschritt wird als abgeschlossen dargestellt, wenn die erforderliche Kontrolle fehlgeschlagen ist.
 
 ⸻
 
-52. KOMMUNIKATIONSREGEL BEI FORTLAUFENDER ENTWICKLUNG
+63. ARBEITSWEISE UND KOMMUNIKATION
 
-Die technische Zusammenarbeit soll ohne unnötige Wiederholungen und ohne unnötige Zwischenbestätigungen erfolgen.
+Die technische Zusammenarbeit soll ohne unnötige Wiederholungen erfolgen.
 
-Nach einem erfolgreichen OK wird der nächste gemäß Architektur vorgesehene Arbeitsschritt ausgeführt.
+Wenn ein Arbeitsschritt durch den Benutzer mit:
 
-Es werden keine bereits geklärten Punkte erneut abgefragt.
+OK
 
-Längere Erklärungen werden nur gegeben, wenn sie für eine technische Entscheidung erforderlich sind oder ausdrücklich verlangt werden.
+bestätigt wurde, wird der nächste vorgesehene Arbeitsschritt ausgeführt.
 
-Bei einer eindeutig festgelegten technischen Reihenfolge wird diese ohne unnötige Rückfrage abgearbeitet.
+Es sind keine zusätzlichen Bestätigungen erforderlich, wenn die Architektur und der nächste Schritt eindeutig festgelegt sind.
+
+Lange allgemeine Erklärungen sind zu vermeiden.
+
+Ausgaben sollen sich auf:
+
+* tatsächlichen Projektstand
+* relevante technische Entscheidungen
+* notwendige Änderungen
+* Ergebnisse
+* nächste Schritte
+
+konzentrieren.
+
+Bei technischen Unsicherheiten darf nicht geraten werden.
+
+Wenn eine Entscheidung für die Architektur erforderlich ist und aus dem Projektstand nicht eindeutig hervorgeht, muss gezielt nachgefragt werden.
 
 ⸻
 
-53. AKTUELLER PROJEKTSTATUS
+64. AKTUELLER PROJEKTSTATUS
 
 Stand: 10.08.2026
 
@@ -1263,9 +1543,12 @@ Abgeschlossen:
 * Weather-Modul
 * GPS-Modul Version 2.5.0
 * bisheriger Waters-Entwicklungsstand wurde committed
-* Identity Core ist vorhanden
-* zentrale users-Struktur ist vorhanden
-* app.js wurde als Core-Master geprüft und auf den aktuellen Stand gebracht
+
+Identity Core:
+
+* core/identityManager.js ist vorhanden
+* die tatsächliche Datei und ihre aktuelle Implementierung sind maßgeblich
+* der Identity Core bildet die Grundlage für user_id-bezogene Fachmodule
 
 Aktueller technischer Übergang:
 
@@ -1277,11 +1560,11 @@ Waters Master
 
 Nächste vorgesehene Arbeitsschritte:
 
-1. aktuelle Identity-relevante Core-, Datenbank- und Konfigurationsdateien vollständig prüfen
+1. aktuellen Identity-Stand vollständig prüfen
 2. vorhandene users-Struktur und bestehende Benutzerbeziehungen prüfen
-3. Identity Core als vollständige Master-Version prüfen und gegebenenfalls abschließen
+3. Identity Core als vollständige Master-Version konsolidieren
 4. Identity Core testen
-5. Waters-Datenbankmigration mit user_id entwickeln bzw. korrigieren
+5. Waters-Datenbankmigration mit user_id prüfen bzw. entwickeln
 6. bestehende Waters-Daten berücksichtigen
 7. Waters-Dateien als vollständige Identity-kompatible Master-Version entwickeln
 8. Waters testen
@@ -1289,9 +1572,11 @@ Nächste vorgesehene Arbeitsschritte:
 10. Identity und Waters als abgeschlossenen Architekturstand dokumentieren
 11. danach mit dem nächsten technisch vorgesehenen Modul fortfahren
 
+Bei jedem folgenden Modul ist die User-ID-Prüfung verbindlich.
+
 ⸻
 
-54. WICHTIGE ABSCHLUSSREGEL
+65. WICHTIGE ABSCHLUSSREGEL
 
 Abgeschlossene Module werden nicht ohne konkreten technischen Grund erneut verändert.
 
@@ -1308,7 +1593,7 @@ Das Waters-Modul wird auf Grundlage des bestehenden committeden Standes und der 
 
 ⸻
 
-55. VERBINDLICHE ZIELARCHITEKTUR
+66. VERBINDLICHE ZIELARCHITEKTUR
 
 Die langfristige CatchTrack-Architektur folgt diesem Grundprinzip:
 
@@ -1322,10 +1607,23 @@ user_id
 │              │              │              │              │
 Waters       Catcher        Photos        Settings       weitere
 │              │              │              │              │
-│              │              │              │              │
 water_id       water_id       water_id       user_id        user_id
 │              │              │
 └──────────────┴──────────────┴──────────────┘
+
+Zusätzliche langfristige Ebene:
+
+User
+↓
+Identity
+↓
+Freigaben / Berechtigungen
+↓
+lokale Daten
+↓
+optionale Cloud-Daten
+↓
+Community / Statistiken / Marketplace
 
 Waters bleibt dabei das zentrale Gewässer-Stammdatenobjekt.
 
@@ -1333,223 +1631,101 @@ Andere Fachinformationen werden über definierte Beziehungen angebunden.
 
 Die Architektur darf nicht dadurch vereinfacht werden, dass unterschiedliche Fachinformationen dauerhaft in eine einzige große Waters-Tabelle integriert werden.
 
-Ziel ist eine langfristig wartbare, erweiterbare und wiederverwendbare CatchTrack-Masterarchitektur.
+Ziel ist eine langfristig wartbare, erweiterbare, cloudfähige und wiederverwendbare CatchTrack-Masterarchitektur.
 
 ⸻
 
-56. VERBINDLICHE REGEL FÜR ZUKÜNFTIGE CLOUD-, COMMUNITY- UND STATISTIKFUNKTIONEN
+67. LANGFRISTIGE GESAMTARCHITEKTUR
 
-Die spätere CatchTrack-Cloud wird nicht als unabhängiges zweites Fachsystem entwickelt, sondern baut auf den lokalen Master-Daten und den definierten Fachobjekten auf.
+Die langfristige CatchTrack-Struktur soll grundsätzlich folgende Ebenen ermöglichen:
 
-Dazu können später insbesondere gehören:
-
-* globale Gewässerdaten
-* globale Fangstatistiken
-* Hitparaden
-* Köderstatistiken
-* Zeit-/Ort-Statistiken
-* Community-Funktionen
-* Angeltreffen
-* Pinnwand
-* Marketplace
-* Benutzerprofile
-* Synchronisation
-* optionale Datensicherung
-
-Die hierfür benötigten lokalen Daten müssen bereits bei der Entwicklung der jeweiligen Fachmodule so strukturiert werden, dass sie später eindeutig zugeordnet und abgefragt werden können.
-
-Insbesondere sind dafür grundsätzlich zu berücksichtigen:
-
-user_id
-water_id
-catch_id
-fishing_spot_id
-photo_id
-
-soweit das jeweilige Fachobjekt diese Beziehung fachlich benötigt.
-
-Beispiele:
+Lokale Ebene
 
 User
 ↓
-Catch
-├── user_id
-├── water_id
-├── fish_id
-├── bait_id
-└── weitere Fangdaten
-
-Dadurch können spätere Statistikmodule beispielsweise Auswertungen erstellen wie:
-
-* persönliche Fangstatistik
-* Fangstatistik pro Gewässer
-* Fangstatistik pro Fischart
-* Fangstatistik pro Köder
-* Fangstatistik nach Uhrzeit
-* Fangstatistik nach Zeitraum
-* anonymisierte globale Statistiken
-
-Eine solche spätere Auswertung darf nicht dazu führen, dass die ursprünglichen Fachmodule ihre Daten redundant duplizieren müssen.
-
-Die Statistik greift auf die vorhandenen relationalen Daten zu.
-
-⸻
-
-57. VERBINDLICHE FREIGABEARCHITEKTUR FÜR CLOUD-DATEN
-
-Persönliche lokale Daten und öffentlich freigegebene Cloud-Daten sind architektonisch zu unterscheiden.
-
-Grundprinzip:
-
-Lokale persönliche Daten
+Identity Core
 ↓
-Identity / Privacy
+zentrale lokale Datenbank
 ↓
-Benutzerfreigabe
+Fachmodule
+
+Optionale Cloud-Ebene
+
+lokale Datenbank
+↓
+freigegebene Daten
 ↓
 Cloud-Synchronisation
 ↓
-öffentliche / Community-Daten
+Cloud-Datenbestand
 
-Die spätere Freigabelogik muss ermöglichen, dass Benutzer festlegen können, welche Daten veröffentlicht werden.
+Community-Ebene
 
-Insbesondere können perspektivisch unterschiedliche Sichtbarkeitsstufen erforderlich sein:
+Cloud-Daten
+↓
+Freigaben
+↓
+Community
+├── Angeltreffen
+├── Pinnwand
+├── Marketplace
+├── Statistiken
+└── Hitparaden
 
-PRIVATE
-↓
-nur Benutzer
-ANONYM
-↓
-öffentliche Daten ohne persönlichen Namen
-USER_ID
-↓
-öffentliche technische Benutzerreferenz
-USERNAME
-↓
-öffentlicher ausgewählter Benutzername
-DISPLAY_NAME
-↓
-öffentlicher Anzeigename
+Administration
 
-Die konkrete technische Implementierung dieser Stufen wird erst bei der Entwicklung des Identity-/Privacy-/Cloud-Systems festgelegt.
+Admin
+↓
+Benutzer
+├── Identität
+├── Pakete
+├── Add-ons
+├── Berechtigungen
+├── Freigaben
+└── Moderation
 
-Kein Fachmodul darf eine eigene parallele Sichtbarkeits- oder Identitätslogik entwickeln.
+Diese Ebenen dürfen technisch nicht unnötig miteinander vermischt werden.
 
 ⸻
 
-58. VERBINDLICHE REGEL FÜR SPÄTERE ADMINISTRATION
+68. GRUNDSATZ FÜR ZUKÜNFTIGE MODULE
 
-CatchTrack soll langfristig über ein zentrales Administrationssystem verwaltet werden können.
+Bei jedem zukünftigen Modul ist automatisch zu prüfen:
 
-Das spätere Admin-Modul bzw. die Cloud-Administration kann unter anderem verwalten:
+1. Welche Daten verwaltet das Modul?
+2. Gehören diese Daten einem Benutzer?
+3. Wird user_id benötigt?
+4. Bestehen Beziehungen zu user_id-gebundenen Objekten?
+5. Wird eine water_id benötigt?
+6. Wird eine andere Fachobjekt-ID benötigt?
+7. Können die Daten später für Statistiken verwendet werden?
+8. Können die Daten später optional in die Cloud übertragen werden?
+9. Können die Daten anonymisiert veröffentlicht werden?
+10. Gibt es Datenschutz- oder Freigabeanforderungen?
+11. Muss das Modul später von Community- oder Admin-Funktionen verwendet werden?
 
-* Benutzer
-* Benutzerstatus
-* Berechtigungen
-* Pakete/Tarife
-* Zusatzmodule/Add-ons
-* Freigaben
-* Community-Funktionen
-* Marketplace-Berechtigungen
-* Systemkonfiguration
-* Inhalte
-* Updates
-* weitere administrative Einstellungen
+Diese Prüfung erfolgt vor der eigentlichen Implementierung.
 
-Persönliche Benutzerdaten dürfen dabei nicht ungeordnet direkt aus einzelnen Fachmodulen administriert werden.
-
-Die Administration muss über definierte Core-/API-/Cloud-Schnittstellen erfolgen.
+Wenn die Antwort auf eine dieser Fragen technisch relevant und nicht eindeutig ist, darf nicht geraten werden.
 
 ⸻
 
-59. VERBINDLICHE REGEL FÜR PAKETE UND ADD-ONS
+69. ENDE DES AI_CONTEXT
 
-CatchTrack kann langfristig unterschiedliche Funktionspakete und optionale Add-ons anbieten.
+Diese Datei ist verbindliche Arbeitsgrundlage für die technische Weiterentwicklung von CatchTrack.
 
-Beispielsweise können Funktionen wie:
+Bei jedem neuen Arbeitsschritt gilt:
 
-* Marketplace
-* erweiterte Community-Funktionen
-* Cloud-Speicherung
-* erweiterte Statistiken
-* zusätzliche Synchronisation
-* weitere Premium-Funktionen
+aktueller GitHub-Stand
 
-über Pakete oder Add-ons freigeschaltet werden.
+aktuelle technische Realität
+Commit-Historie
+aktuelle Projektdokumentation
+AI_CONTEXT
+ältere Annahmen und Chatverläufe
 
-Die technische Architektur der Fachmodule darf jedoch nicht von einer einzelnen Tarifstufe abhängig implementiert werden.
+Die Architektur wird schrittweise als vollständige Master-Version aufgebaut.
 
-Berechtigungen müssen zentral über die vorhandene bzw. zukünftige Permission-/Subscription-Architektur geprüft werden.
-
-Es darf keine fest codierte Tariflogik in einzelnen Fachmodulen entstehen.
-
-⸻
-
-60. VERBINDLICHE REGEL FÜR UPDATES
-
-CatchTrack soll langfristig eine kontrollierte Update-Funktion besitzen.
-
-Die Offline-Version bleibt funktionsfähig, auch wenn keine Cloud-Verbindung vorhanden ist.
-
-Wenn Cloud-Funktionen aktiviert sind, kann die Anwendung beim Start perspektivisch prüfen:
-
-App-Start
-↓
-Cloud erreichbar?
-↓
-Update-Information verfügbar?
-↓
-Benutzer informieren
-↓
-Update nach Benutzerentscheidung
-
-Updates dürfen nicht ungeprüft oder unkontrolliert die lokale Datenbank oder persönliche Daten überschreiben.
-
-Datenbankänderungen müssen weiterhin über das bestehende migrationsbasierte System erfolgen.
-
-⸻
-
-61. ABSCHLIESSENDES ARCHITEKTURPRINZIP
-
-CatchTrack wird nach folgenden langfristigen Grundsätzen entwickelt:
-
-Identity Core
-↓
-user_id
-↓
-Fachobjekte
-↓
-relationale Beziehungen
-↓
-lokale persönliche Daten
-↓
-optionale Benutzerfreigabe
-↓
-Cloud
-↓
-Community / Statistik / Marketplace / Treffen
-
-Dabei gilt verbindlich:
-
-* GitHub ist die technische Wahrheit.
-* Nicht raten.
-* Keine unnötigen Änderungen an abgeschlossenen Dateien.
-* Keine stillschweigenden Löschungen.
-* Keine parallelen Datenbanken.
-* Keine parallelen Identitätssysteme.
-* Keine unnötige Datenredundanz.
-* Persönliche Daten erhalten eine user_id.
-* Jedes neue Modul wird auf seine user_id-Notwendigkeit geprüft.
-* Bei unklarer Benutzerzuordnung wird vor der Implementierung nachgefragt.
-* Statistikmodule verwenden bestehende Datenbeziehungen statt redundanter Kopien.
-* Cloud-Daten werden nur über definierte Freigaben veröffentlicht.
-* GPS-, Home- und andere sensible Positionsdaten werden gesondert geschützt.
-* Fachmodule bleiben fachlich getrennt.
-* Core-Schnittstellen werden wiederverwendet.
-* Datenbankänderungen erfolgen ausschließlich über Migrationen.
-* Automatisch ermittelte Daten bleiben korrigierbare Vorschläge.
-* Vollständige Master-Dateien statt Patch-Fragmente.
-* Working Copy übernimmt Integration und Commit.
-* Nach OK wird der aktuelle GitHub-Stand geprüft und anschließend ohne unnötige Rückfrage der nächste vorgesehene Arbeitsschritt ausgeführt.
+Zukünftige Anforderungen werden berücksichtigt, ohne zukünftige Fachmodule vorzeitig vollständig zu implementieren.
 
 Ende AI_CONTEXT.md
