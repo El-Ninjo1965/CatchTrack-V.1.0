@@ -2,7 +2,7 @@
 
 window.CatchTrackWatersModule = {
 
-    version: "4.5.0",
+    version: "4.6.0",
 
     initialized: false,
     schemaReady: false,
@@ -930,6 +930,19 @@ window.CatchTrackWatersModule = {
 
         }
 
+
+        /*
+         * CatchTrack benötigt bewusst nur:
+         *
+         * Land
+         * Provinz/Bundesland
+         * Ort/Region
+         *
+         * Die GPS-Koordinaten selbst bleiben die
+         * exakte Positionsinformation.
+         */
+
+
         /*
          * Primärer Dienst:
          * Nominatim / OpenStreetMap
@@ -941,7 +954,7 @@ window.CatchTrackWatersModule = {
                 `?format=jsonv2` +
                 `&lat=${encodeURIComponent(lat)}` +
                 `&lon=${encodeURIComponent(lon)}` +
-                `&zoom=10` +
+                `&zoom=18` +
                 `&addressdetails=1` +
                 `&accept-language=de`;
 
@@ -965,30 +978,72 @@ window.CatchTrackWatersModule = {
                 const address =
                     result?.address || {};
 
+
+                /*
+                 * Land
+                 */
                 const country =
                     String(
                         address.country ||
                         ""
                     ).trim();
 
-                const region =
+
+                /*
+                 * Provinz / Bundesland
+                 */
+                const province =
                     String(
                         address.state ||
-                        address.region ||
                         address.province ||
+                        address.region ||
                         address.state_district ||
+                        address.county ||
                         ""
                     ).trim();
 
+
+                /*
+                 * Ort / Region
+                 */
+                const locality =
+                    String(
+                        address.city ||
+                        address.town ||
+                        address.municipality ||
+                        address.city_district ||
+                        address.village ||
+                        address.suburb ||
+                        address.district ||
+                        ""
+                    ).trim();
+
+
                 if (
                     country ||
-                    region
+                    province ||
+                    locality
                 ) {
 
                     return {
+
                         country,
-                        region,
-                        source: "nominatim"
+
+                        region:
+                            [
+                                province,
+                                locality
+                            ]
+                            .filter(Boolean)
+                            .join(" · "),
+
+                        source:
+                            "nominatim",
+
+                        province,
+
+                        locality
+
                     };
 
                 }
@@ -1042,28 +1097,64 @@ window.CatchTrackWatersModule = {
             const result =
                 await response.json();
 
+
+            /*
+             * Land
+             */
             const country =
                 String(
                     result?.countryName ||
                     ""
                 ).trim();
 
-            const region =
+
+            /*
+             * Provinz / Bundesland
+             */
+            const province =
                 String(
                     result?.principalSubdivision ||
                     result?.principalSubdivisionName ||
                     ""
                 ).trim();
 
+
+            /*
+             * Ort / Region
+             */
+            const locality =
+                String(
+                    result?.city ||
+                    result?.locality ||
+                    ""
+                ).trim();
+
+
             if (
                 country ||
-                region
+                province ||
+                locality
             ) {
 
                 return {
+
                     country,
-                    region,
-                    source: "bigdatacloud"
+
+                    region:
+                        [
+                            province,
+                            locality
+                        ]
+                        .filter(Boolean)
+                        .join(" · "),
+
+                    source:
+                        "bigdatacloud",
+
+                    province,
+
+                    locality
+
                 };
 
             }
@@ -1957,7 +2048,6 @@ window.CatchTrackWatersModule = {
             );
 
             /*
-             * Wichtig:
              * Nach dem Anklicken von "Bearbeiten"
              * wird das Formular sichtbar gemacht.
              */
