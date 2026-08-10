@@ -237,6 +237,162 @@ window.CatchTrackWatersModule = {
     },
 
 
+    bindEvents() {
+
+        const form =
+            document.getElementById(
+                "waters-form"
+            );
+
+        if (form) {
+
+            form.addEventListener(
+                "submit",
+                event => {
+
+                    event.preventDefault();
+
+                    this.saveFromForm();
+
+                }
+            );
+
+        }
+
+
+        const gpsButton =
+            document.getElementById(
+                "waters-use-gps"
+            );
+
+        if (gpsButton) {
+
+            gpsButton.addEventListener(
+                "click",
+                () => {
+
+                    this.applyCurrentGpsPosition();
+
+                }
+            );
+
+        }
+
+
+        const cancelButton =
+            document.getElementById(
+                "cancel-water-edit"
+            );
+
+        if (cancelButton) {
+
+            cancelButton.addEventListener(
+                "click",
+                () => {
+
+                    this.resetForm();
+
+                }
+            );
+
+        }
+
+
+        const refreshButton =
+            document.getElementById(
+                "waters-refresh"
+            );
+
+        if (refreshButton) {
+
+            refreshButton.addEventListener(
+                "click",
+                () => {
+
+                    this.loadWaters();
+
+                }
+            );
+
+        }
+
+
+        const list =
+            document.getElementById(
+                "waters-list"
+            );
+
+        if (list) {
+
+            list.addEventListener(
+                "click",
+                event => {
+
+                    const button =
+                        event.target.closest(
+                            "[data-water-action]"
+                        );
+
+                    if (!button) {
+                        return;
+                    }
+
+                    const action =
+                        button.dataset.waterAction;
+
+                    const id =
+                        Number(
+                            button.dataset.waterId
+                        );
+
+                    if (
+                        !Number.isInteger(id) ||
+                        id <= 0
+                    ) {
+                        return;
+                    }
+
+                    switch (action) {
+
+                        case "navigate":
+                            this.navigateToWater(id);
+                            break;
+
+                        case "edit":
+                            this.startEdit(id);
+                            break;
+
+                        case "delete":
+                            this.deleteWater(id);
+                            break;
+
+                        default:
+                            break;
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        document.addEventListener(
+            "catchtrack:language-changed",
+            () => {
+
+                this.applyLanguage();
+
+                this.renderList();
+
+                this.updateCount();
+
+            }
+        );
+
+    },
+
+
     applyLanguage() {
 
         const languageManager =
@@ -1471,51 +1627,88 @@ window.CatchTrackWatersModule = {
         this.state.editingId =
             water.id;
 
-        document.getElementById(
-            "water-id"
-        ).value =
-            water.id;
+        const idField =
+            document.getElementById(
+                "water-id"
+            );
 
-        document.getElementById(
-            "water-name"
-        ).value =
-            water.name || "";
+        if (idField) {
+            idField.value = water.id;
+        }
 
-        document.getElementById(
-            "water-type"
-        ).value =
-            water.type || "";
+        const nameField =
+            document.getElementById(
+                "water-name"
+            );
 
-        document.getElementById(
-            "water-country"
-        ).value =
-            water.country || "";
+        if (nameField) {
+            nameField.value =
+                water.name || "";
+        }
 
-        document.getElementById(
-            "water-region"
-        ).value =
-            water.region || "";
+        const typeField =
+            document.getElementById(
+                "water-type"
+            );
 
-        document.getElementById(
-            "water-lat"
-        ).value =
-            water.gps_lat ?? "";
+        if (typeField) {
+            typeField.value =
+                water.type || "";
+        }
 
-        document.getElementById(
-            "water-lon"
-        ).value =
-            water.gps_lon ?? "";
+        const countryField =
+            document.getElementById(
+                "water-country"
+            );
 
-        document.getElementById(
-            "water-description"
-        ).value =
-            water.description || "";
+        if (countryField) {
+            countryField.value =
+                water.country || "";
+        }
+
+        const regionField =
+            document.getElementById(
+                "water-region"
+            );
+
+        if (regionField) {
+            regionField.value =
+                water.region || "";
+        }
+
+        const latitudeField =
+            document.getElementById(
+                "water-lat"
+            );
+
+        if (latitudeField) {
+            latitudeField.value =
+                water.gps_lat ?? "";
+        }
+
+        const longitudeField =
+            document.getElementById(
+                "water-lon"
+            );
+
+        if (longitudeField) {
+            longitudeField.value =
+                water.gps_lon ?? "";
+        }
+
+        const descriptionField =
+            document.getElementById(
+                "water-description"
+            );
+
+        if (descriptionField) {
+            descriptionField.value =
+                water.description || "";
+        }
 
         this.updateFormMode();
 
-        document.getElementById(
-            "water-name"
-        )?.focus();
+        nameField?.focus();
 
     },
 
@@ -1529,10 +1722,14 @@ window.CatchTrackWatersModule = {
 
         form?.reset();
 
-        document.getElementById(
-            "water-id"
-        ).value =
-            "";
+        const idField =
+            document.getElementById(
+                "water-id"
+            );
+
+        if (idField) {
+            idField.value = "";
+        }
 
         this.state.editingId =
             null;
@@ -1778,15 +1975,25 @@ window.CatchTrackWatersModule = {
 
         }
 
-        document.getElementById(
-            "water-lat"
-        ).value =
-            Number(latitude).toFixed(6);
+        const latitudeField =
+            document.getElementById(
+                "water-lat"
+            );
 
-        document.getElementById(
-            "water-lon"
-        ).value =
-            Number(longitude).toFixed(6);
+        const longitudeField =
+            document.getElementById(
+                "water-lon"
+            );
+
+        if (latitudeField) {
+            latitudeField.value =
+                Number(latitude).toFixed(6);
+        }
+
+        if (longitudeField) {
+            longitudeField.value =
+                Number(longitude).toFixed(6);
+        }
 
         const status =
             document.getElementById(
