@@ -2,7 +2,7 @@
 
 window.CatchTrackWatersModule = {
 
-    version: "4.4.0",
+    version: "4.5.0",
 
     initialized: false,
     schemaReady: false,
@@ -24,13 +24,18 @@ window.CatchTrackWatersModule = {
 
             /*
              * Das HTML des Moduls wird bei jedem Modulwechsel
-             * neu geladen. Deshalb darf die Initialisierung
-             * nicht durch "initialized" blockiert werden.
+             * neu geladen. Deshalb muss die Initialisierung
+             * bei jedem Aufruf erneut erfolgen.
              */
             this.ensureSchema();
             this.bindEvents();
 
             this.initialized = true;
+
+            this.setStatus(
+                "Gewässer werden geladen …",
+                "info"
+            );
 
             this.refresh();
 
@@ -137,7 +142,7 @@ window.CatchTrackWatersModule = {
         const database =
             this.getDatabase();
 
-        const columns =
+        let columns =
             database.getTableColumns("waters");
 
         if (!columns.length) {
@@ -149,9 +154,9 @@ window.CatchTrackWatersModule = {
         }
 
         /*
-         * Bestehende Datenbanken können aus einer älteren
-         * Version stammen. Fehlende Spalten werden deshalb
-         * automatisch ergänzt.
+         * Bestehende Datenbanken können aus älteren
+         * Versionen stammen. Fehlende Spalten werden
+         * deshalb automatisch ergänzt.
          */
 
         if (!columns.includes("user_id")) {
@@ -178,43 +183,42 @@ window.CatchTrackWatersModule = {
         }
 
 
-        let currentColumns =
+        columns =
             database.getTableColumns("waters");
 
 
-        if (!currentColumns.includes("created_at")) {
+        if (!columns.includes("created_at")) {
 
             database.executeScript(`
                 ALTER TABLE waters
                 ADD COLUMN created_at DATETIME;
             `);
 
-            currentColumns =
+            columns =
                 database.getTableColumns("waters");
 
         }
 
 
-        if (!currentColumns.includes("updated_at")) {
+        if (!columns.includes("updated_at")) {
 
             database.executeScript(`
                 ALTER TABLE waters
                 ADD COLUMN updated_at DATETIME;
             `);
 
-            currentColumns =
+            columns =
                 database.getTableColumns("waters");
 
         }
 
 
         /*
-         * Alte Datensätze bekommen nachträglich Zeitstempel,
-         * sofern diese noch NULL sind.
+         * Alte Datensätze erhalten fehlende Zeitstempel.
          */
         if (
-            currentColumns.includes("created_at") &&
-            currentColumns.includes("updated_at")
+            columns.includes("created_at") &&
+            columns.includes("updated_at")
         ) {
 
             database.executeScript(`
@@ -377,8 +381,9 @@ window.CatchTrackWatersModule = {
             `,
             [userId]
         )
-        .map(row =>
-            this.normalizeWater(row)
+        .map(
+            row =>
+                this.normalizeWater(row)
         )
         .filter(Boolean);
 
@@ -573,7 +578,9 @@ window.CatchTrackWatersModule = {
 
         this.saveDatabase();
 
-        return this.getById(waterId);
+        return this.getById(
+            waterId
+        );
 
     },
 
@@ -679,13 +686,21 @@ window.CatchTrackWatersModule = {
     },
 
 
-    normalizeText(value, maxLength) {
+    normalizeText(
+        value,
+        maxLength
+    ) {
 
         const text =
-            String(value ?? "").trim();
+            String(
+                value ?? ""
+            ).trim();
 
         return text
-            ? text.slice(0, maxLength)
+            ? text.slice(
+                0,
+                maxLength
+            )
             : null;
 
     },
@@ -788,9 +803,7 @@ window.CatchTrackWatersModule = {
 
         }
 
-        if (
-            !navigator.geolocation
-        ) {
+        if (!navigator.geolocation) {
 
             throw new Error(
                 "Dieser Browser unterstützt keine Standortbestimmung."
@@ -917,6 +930,10 @@ window.CatchTrackWatersModule = {
 
         }
 
+        /*
+         * Primärer Dienst:
+         * Nominatim / OpenStreetMap
+         */
         try {
 
             const url =
@@ -989,6 +1006,10 @@ window.CatchTrackWatersModule = {
         }
 
 
+        /*
+         * Fallback:
+         * BigDataCloud
+         */
         try {
 
             const url =
@@ -1094,12 +1115,10 @@ window.CatchTrackWatersModule = {
 
         }
 
-        this.setGPSFields(
-            {
-                latitude,
-                longitude
-            }
-        );
+        this.setGPSFields({
+            latitude,
+            longitude
+        });
 
         const geocoded =
             await this.reverseGeocode(
@@ -1583,6 +1602,41 @@ window.CatchTrackWatersModule = {
     },
 
 
+    showForm() {
+
+        const form =
+            document.getElementById(
+                "waters-form"
+            );
+
+        if (!form) {
+            return;
+        }
+
+        const panel =
+            form.closest(
+                ".waters-panel"
+            );
+
+        if (panel) {
+
+            panel.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            return;
+
+        }
+
+        form.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    },
+
+
     async refresh() {
 
         try {
@@ -1594,6 +1648,13 @@ window.CatchTrackWatersModule = {
 
             this.renderList();
             this.renderCount();
+
+            this.setStatus(
+                this.state.waters.length
+                    ? `${this.state.waters.length} eigenes Gewässer geladen.`
+                    : "Noch keine eigenen Gewässer vorhanden.",
+                "success"
+            );
 
         }
         catch (error) {
@@ -1607,6 +1668,11 @@ window.CatchTrackWatersModule = {
                 error?.message ||
                 "Gewässer konnten nicht geladen werden.",
                 "error"
+            );
+
+            this.handleError(
+                error,
+                "waters:refresh"
             );
 
         }
@@ -1678,6 +1744,7 @@ window.CatchTrackWatersModule = {
         article.className =
             "waters-card";
 
+
         const title =
             document.createElement(
                 "h3"
@@ -1689,7 +1756,10 @@ window.CatchTrackWatersModule = {
         title.textContent =
             water.name;
 
-        article.appendChild(title);
+        article.appendChild(
+            title
+        );
+
 
         const meta =
             document.createElement(
@@ -1708,7 +1778,10 @@ window.CatchTrackWatersModule = {
             .filter(Boolean)
             .join(" · ");
 
-        article.appendChild(meta);
+        article.appendChild(
+            meta
+        );
+
 
         if (water.description) {
 
@@ -1728,6 +1801,7 @@ window.CatchTrackWatersModule = {
             );
 
         }
+
 
         if (
             water.gps_lat !== null &&
@@ -1751,6 +1825,7 @@ window.CatchTrackWatersModule = {
 
         }
 
+
         const actions =
             document.createElement(
                 "div"
@@ -1759,6 +1834,7 @@ window.CatchTrackWatersModule = {
         actions.className =
             "waters-card-actions";
 
+
         const edit =
             this.createButton(
                 "Bearbeiten"
@@ -1766,11 +1842,18 @@ window.CatchTrackWatersModule = {
 
         edit.addEventListener(
             "click",
-            () =>
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
                 this.editWater(
                     water.id
-                )
+                );
+
+            }
         );
+
 
         const navigation =
             this.createButton(
@@ -1783,9 +1866,18 @@ window.CatchTrackWatersModule = {
 
         navigation.addEventListener(
             "click",
-            () =>
-                this.navigateTo(water)
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                this.navigateTo(
+                    water
+                );
+
+            }
         );
+
 
         const remove =
             this.createButton(
@@ -1794,11 +1886,18 @@ window.CatchTrackWatersModule = {
 
         remove.addEventListener(
             "click",
-            () =>
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
                 this.deleteWater(
                     water.id
-                )
+                );
+
+            }
         );
+
 
         actions.append(
             edit,
@@ -1841,7 +1940,9 @@ window.CatchTrackWatersModule = {
         try {
 
             const water =
-                this.getById(id);
+                this.getById(
+                    id
+                );
 
             if (!water) {
 
@@ -1851,14 +1952,34 @@ window.CatchTrackWatersModule = {
 
             }
 
-            this.fillForm(water);
+            this.fillForm(
+                water
+            );
+
+            /*
+             * Wichtig:
+             * Nach dem Anklicken von "Bearbeiten"
+             * wird das Formular sichtbar gemacht.
+             */
+            this.showForm();
+
+            this.setFormMessage(
+                `Gewässer „${water.name}" wird bearbeitet.`,
+                "info"
+            );
 
         }
         catch (error) {
 
             this.setFormMessage(
-                error.message,
+                error?.message ||
+                "Gewässer konnte nicht geladen werden.",
                 "error"
+            );
+
+            this.handleError(
+                error,
+                "waters:edit"
             );
 
         }
@@ -1896,27 +2017,45 @@ window.CatchTrackWatersModule = {
 
         };
 
-        Object.entries(fields)
-            .forEach(
-                (
-                    [
-                        id,
-                        value
-                    ]
-                ) => {
 
-                    const element =
-                        document.getElementById(id);
+        Object.entries(
+            fields
+        )
+        .forEach(
+            (
+                [
+                    id,
+                    value
+                ]
+            ) => {
 
-                    if (element) {
-                        element.value = value;
-                    }
+                const element =
+                    document.getElementById(
+                        id
+                    );
+
+                if (element) {
+
+                    element.value =
+                        value;
 
                 }
-            );
+
+            }
+        );
+
 
         this.state.editingId =
             water.id;
+
+        this.state.locationResolved =
+            Boolean(
+                water.country ||
+                water.region ||
+                water.gps_lat !== null ||
+                water.gps_lon !== null
+            );
+
 
         const cancel =
             document.getElementById(
@@ -1924,7 +2063,10 @@ window.CatchTrackWatersModule = {
             );
 
         if (cancel) {
-            cancel.hidden = false;
+
+            cancel.hidden =
+                false;
+
         }
 
     },
@@ -1950,8 +2092,12 @@ window.CatchTrackWatersModule = {
             id.value = "";
         }
 
-        this.state.editingId = null;
-        this.state.locationResolved = false;
+        this.state.editingId =
+            null;
+
+        this.state.locationResolved =
+            false;
+
 
         const cancel =
             document.getElementById(
@@ -1959,7 +2105,10 @@ window.CatchTrackWatersModule = {
             );
 
         if (cancel) {
-            cancel.hidden = true;
+
+            cancel.hidden =
+                true;
+
         }
 
     },
@@ -1968,7 +2117,9 @@ window.CatchTrackWatersModule = {
     async deleteWater(id) {
 
         const water =
-            this.getById(id);
+            this.getById(
+                id
+            );
 
         if (!water) {
             return;
@@ -1986,7 +2137,9 @@ window.CatchTrackWatersModule = {
 
         try {
 
-            this.remove(id);
+            this.remove(
+                id
+            );
 
             await this.refresh();
 
@@ -1994,8 +2147,14 @@ window.CatchTrackWatersModule = {
         catch (error) {
 
             this.setStatus(
-                error.message,
+                error?.message ||
+                "Gewässer konnte nicht gelöscht werden.",
                 "error"
+            );
+
+            this.handleError(
+                error,
+                "waters:delete"
             );
 
         }
@@ -2020,7 +2179,8 @@ window.CatchTrackWatersModule = {
 
         if (
             gps &&
-            typeof gps.navigateTo === "function"
+            typeof gps.navigateTo ===
+                "function"
         ) {
 
             return gps.navigateTo(
@@ -2056,6 +2216,7 @@ window.CatchTrackWatersModule = {
                 }
             );
 
+
         document
             .getElementById(
                 "waters-location-button"
@@ -2065,6 +2226,7 @@ window.CatchTrackWatersModule = {
                 () =>
                     this.useGPSForForm()
             );
+
 
         document
             .getElementById(
@@ -2076,6 +2238,7 @@ window.CatchTrackWatersModule = {
                     this.updateGPS()
             );
 
+
         document
             .getElementById(
                 "waters-refresh-button"
@@ -2085,6 +2248,7 @@ window.CatchTrackWatersModule = {
                 () =>
                     this.refresh()
             );
+
 
         document
             .getElementById(
