@@ -2,14 +2,16 @@
 
 window.CatchTrackWatersModule = {
 
-version: "4.0.0",
+version: "4.1.0",
 initialized: false,
+schemaReady: false,
 state: {
     waters: [],
     nearby: [],
     editingId: null,
     busy: false,
-    gpsBusy: false
+    gpsBusy: false,
+    currentPosition: null
 },
 init() {
     if (
@@ -17,29 +19,30 @@ init() {
     ) {
         return;
     }
-    this.bindEvents();
-    this.initialized = true;
-    this.refresh()
-        .catch(
-            error =>
-                this.handleError(
-                    error,
-                    "waters:init"
-                )
+    try {
+        this.ensureSchema();
+        this.bindEvents();
+        this.initialized = true;
+        this.refresh();
+    }
+    catch (error) {
+        this.handleError(
+            error,
+            "waters:init"
         );
+        this.setStatus(
+            error?.message ||
+            "Waters konnte nicht initialisiert werden.",
+            "error"
+        );
+    }
 },
 getDatabase() {
     if (
         window.CatchTrackDatabase &&
-        CatchTrackDatabase.database
+        CatchTrackDatabase.isReady()
     ) {
-        return CatchTrackDatabase.database;
-    }
-    if (
-        window.CatchTrack &&
-        CatchTrack.database
-    ) {
-        return CatchTrack.database;
+        return CatchTrackDatabase;
     }
     throw new Error(
         "CatchTrack-Datenbank ist nicht verfügbar."
@@ -50,19 +53,15 @@ getCurrentUserId() {
         window.CatchTrackIdentity;
     if (
         !identity ||
-        typeof identity.getCurrentUser !==
+        typeof identity.getCurrentUserId !==
             "function"
     ) {
         throw new Error(
             "Identity Core ist nicht verfügbar."
         );
     }
-    const user =
-        identity.getCurrentUser();
     const userId =
-        user?.id ??
-        user?.user_id ??
-        null;
+        identity.getCurrentUserId();
     if (
         userId === null ||
         userId === undefined ||
@@ -72,34 +71,83 @@ getCurrentUserId() {
             "Kein aktiver Benutzer vorhanden."
         );
     }
-    return userId;
+    return Number(
+        userId
+    );
+},
+ensureSchema() {
+    if (
+        this.schemaReady
+    ) {
+        return true;
+    }
+    const database =
+        this.getDatabase();
+    const columns =
+        database.getTableColumns(
+            "waters"
+        );
+    if (
+        !columns.length
+    ) {
+        throw new Error(
+            "Die Tabelle waters ist im Basisschema nicht vorhanden."
+        );
+    }
+    if (
+        !columns.includes(
+            "user_id"
+        )
+    ) {
+        database.executeScript(
+            `
+                ALTER TABLE waters
+                ADD COLUMN user_id INTEGER
+                REFERENCES users(id);
+                CREATE INDEX IF NOT EXISTS
+                idx_waters_user_id
+                ON waters(user_id);
+            `
+        );
+    }
+    this.schemaReady = true;
+    return true;
 },
 normalizeWater(
     row
 ) {
     if (
         !row ||
-        typeof row !== "object"
+        typeof row !==
+            "object"
     ) {
         return null;
     }
     const id =
-        Number(row.id);
+        Number(
+            row.id
+        );
     const userId =
         row.user_id === null ||
         row.user_id === undefined
             ? null
-            : Number(row.user_id);
+            : Number(
+                row.user_id
+            );
     const latitude =
         row.gps_lat === null ||
         row.gps_lat === undefined
             ? null
-            : Number(row.gps_lat);
+            : Number(
+                row.gps_lat
+            );
     const longitude =
         row.gps_lon === null ||
         row.gps_lon === undefined
             ? null
-            : Number(row.gps_lon);
+            : Number(
+                row.gps_lon
+            );
     return {
         id:
             Number.isFinite(id)
@@ -154,98 +202,60 @@ query(
     sql,
     params = []
 ) {
-    const database =
-        this.getDatabase();
-    const statement =
-        database.prepare(
-            sql
-        );
-    try {
-        statement.bind(
+    return this.getDatabase()
+        .query(
+            sql,
             params
         );
-        const rows = [];
-        while (
-            statement.step()
-        ) {
-            rows.push(
-                statement.getAsObject()
-            );
-        }
-        return rows;
-    }
-    finally {
-        statement.free();
-    }
 },
 execute(
     sql,
     params = []
 ) {
-    const database =
-        this.getDatabase();
-    const statement =
-        database.prepare(
-            sql
-        );
-    try {
-        statement.bind(
+    return this.getDatabase()
+        .execute(
+            sql,
             params
         );
-        statement.step();
-    }
-    finally {
-        statement.free();
-    }
 },
 saveDatabase() {
-    if (
-        window.CatchTrackDatabase &&
-        typeof
-            CatchTrackDatabase.saveDatabase ===
-            "function"
-    ) {
-        CatchTrackDatabase.saveDatabase();
-        return true;
-    }
-    return false;
+    return this.getDatabase()
+        .saveDatabase();
 },
 getAll() {
     const userId =
         this.getCurrentUserId();
-    const rows =
-        this.query(
-            `
-                SELECT
-                    id,
-                    user_id,
-                    name,
-                    type,
-                    country,
-                    region,
-                    description,
-                    gps_lat,
-                    gps_lon,
-                    created_at,
-                    updated_at
-                FROM waters
-                WHERE user_id = ?
-                ORDER BY name COLLATE NOCASE ASC
-            `,
-            [
-                userId
-            ]
-        );
-    return rows
-        .map(
-            row =>
-                this.normalizeWater(
-                    row
-                )
-        )
-        .filter(
-            Boolean
-        );
+    return this.query(
+        `
+            SELECT
+                id,
+                user_id,
+                name,
+                type,
+                country,
+                region,
+                description,
+                gps_lat,
+                gps_lon,
+                created_at,
+                updated_at
+            FROM waters
+            WHERE user_id = ?
+            ORDER BY name COLLATE NOCASE ASC
+        `,
+        [
+            userId
+        ]
+    )
+    .map(
+        row =>
+            this.normalizeWater(
+                row
+            )
+    )
+    .filter(
+        Boolean
+    );
 },
 getById(
     id
@@ -253,9 +263,13 @@ getById(
     const userId =
         this.getCurrentUserId();
     const waterId =
-        Number(id);
+        Number(
+            id
+        );
     if (
-        !Number.isInteger(waterId) ||
+        !Number.isInteger(
+            waterId
+        ) ||
         waterId <= 0
     ) {
         return null;
@@ -292,253 +306,181 @@ getById(
         : null;
 },
 getCount() {
+    return this.getAll()
+        .length;
+},
+create(
+    data
+) {
     const userId =
         this.getCurrentUserId();
-    const rows =
-        this.query(
+    const water =
+        this.validateData(
+            data
+        );
+    const timestamp =
+        new Date()
+            .toISOString();
+    this.execute(
+        `
+            INSERT INTO waters
+            (
+                user_id,
+                name,
+                type,
+                country,
+                region,
+                description,
+                gps_lat,
+                gps_lon,
+                created_at,
+                updated_at
+            )
+            VALUES
+            (
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?,
+                ?
+            )
+        `,
+        [
+            userId,
+            water.name,
+            water.type,
+            water.country,
+            water.region,
+            water.description,
+            water.gps_lat,
+            water.gps_lon,
+            timestamp,
+            timestamp
+        ]
+    );
+    this.saveDatabase();
+    return this.query(
+        `
+            SELECT
+                id,
+                user_id,
+                name,
+                type,
+                country,
+                region,
+                description,
+                gps_lat,
+                gps_lon,
+                created_at,
+                updated_at
+            FROM waters
+            WHERE user_id = ?
+            ORDER BY id DESC
+            LIMIT 1
+        `,
+        [
+            userId
+        ]
+    )
+    .map(
+        row =>
+            this.normalizeWater(
+                row
+            )
+    )[0] || null;
+},
+update(
+    id,
+    data
+) {
+    const userId =
+        this.getCurrentUserId();
+    const waterId =
+        Number(
+            id
+        );
+    if (
+        !Number.isInteger(
+            waterId
+        ) ||
+        waterId <= 0
+    ) {
+        throw new Error(
+            "Ungültige Gewässer-ID."
+        );
+    }
+    const water =
+        this.validateData(
+            data
+        );
+    this.execute(
+        `
+            UPDATE waters
+            SET
+                name = ?,
+                type = ?,
+                country = ?,
+                region = ?,
+                description = ?,
+                gps_lat = ?,
+                gps_lon = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+              AND user_id = ?
+        `,
+        [
+            water.name,
+            water.type,
+            water.country,
+            water.region,
+            water.description,
+            water.gps_lat,
+            water.gps_lon,
+            waterId,
+            userId
+        ]
+    );
+    this.saveDatabase();
+    return this.getById(
+        waterId
+    );
+},
+remove(
+    id
+) {
+    const userId =
+        this.getCurrentUserId();
+    const waterId =
+        Number(
+            id
+        );
+    if (
+        !Number.isInteger(
+            waterId
+        ) ||
+        waterId <= 0
+    ) {
+        return false;
+    }
+    const result =
+        this.execute(
             `
-                SELECT COUNT(*) AS count
-                FROM waters
-                WHERE user_id = ?
+                DELETE FROM waters
+                WHERE id = ?
+                  AND user_id = ?
             `,
             [
+                waterId,
                 userId
             ]
         );
-    return Number(
-        rows[0]?.count ??
-        0
-    );
-},
-getNearby(
-    latitude,
-    longitude,
-    radiusKm = 25
-) {
-    const userId =
-        this.getCurrentUserId();
-    const lat =
-        Number(latitude);
-    const lon =
-        Number(longitude);
-    const radius =
-        Number(radiusKm);
-    if (
-        !Number.isFinite(lat) ||
-        !Number.isFinite(lon) ||
-        lat < -90 ||
-        lat > 90 ||
-        lon < -180 ||
-        lon > 180
-    ) {
-        throw new Error(
-            "Ungültige GPS-Koordinaten."
-        );
-    }
-    const safeRadius =
-        Number.isFinite(radius) &&
-        radius > 0
-            ? Math.min(
-                radius,
-                500
-            )
-            : 25;
-    const latDelta =
-        safeRadius /
-        111.32;
-    const cosLat =
-        Math.cos(
-            lat *
-            Math.PI /
-            180
-        );
-    const lonDelta =
-        Math.abs(cosLat) < 0.000001
-            ? 180
-            : safeRadius /
-                (
-                    111.32 *
-                    Math.abs(cosLat)
-                );
-    const rows =
-        this.query(
-            `
-                SELECT
-                    id,
-                    user_id,
-                    name,
-                    type,
-                    country,
-                    region,
-                    description,
-                    gps_lat,
-                    gps_lon,
-                    created_at,
-                    updated_at
-                FROM waters
-                WHERE user_id = ?
-                  AND gps_lat IS NOT NULL
-                  AND gps_lon IS NOT NULL
-                  AND gps_lat BETWEEN ? AND ?
-                  AND gps_lon BETWEEN ? AND ?
-            `,
-            [
-                userId,
-                lat - latDelta,
-                lat + latDelta,
-                lon - lonDelta,
-                lon + lonDelta
-            ]
-        );
-    return rows
-        .map(
-            row =>
-                this.normalizeWater(
-                    row
-                )
-        )
-        .filter(
-            water =>
-                water &&
-                water.gps_lat !== null &&
-                water.gps_lon !== null
-        )
-        .map(
-            water => ({
-                ...water,
-                distance_km:
-                    this.calculateDistanceKm(
-                        lat,
-                        lon,
-                        water.gps_lat,
-                        water.gps_lon
-                    )
-            })
-        )
-        .filter(
-            water =>
-                water.distance_km <=
-                safeRadius
-        )
-        .sort(
-            (
-                first,
-                second
-            ) =>
-                first.distance_km -
-                second.distance_km
-        );
-},
-getCurrentSuggestion(
-    radiusKm = 25
-) {
-    const position =
-        this.getGPSPosition();
-    if (
-        !position
-    ) {
-        return null;
-    }
-    const nearby =
-        this.getNearby(
-            position.latitude,
-            position.longitude,
-            radiusKm
-        );
-    return nearby.length
-        ? nearby[0]
-        : null;
-},
-calculateDistanceKm(
-    latitude1,
-    longitude1,
-    latitude2,
-    longitude2
-) {
-    const earthRadius =
-        6371;
-    const lat1 =
-        Number(latitude1) *
-        Math.PI /
-        180;
-    const lat2 =
-        Number(latitude2) *
-        Math.PI /
-        180;
-    const deltaLat =
-        (
-            Number(latitude2) -
-            Number(latitude1)
-        ) *
-        Math.PI /
-        180;
-    const deltaLon =
-        (
-            Number(longitude2) -
-            Number(longitude1)
-        ) *
-        Math.PI /
-        180;
-    const sinLat =
-        Math.sin(
-            deltaLat / 2
-        );
-    const sinLon =
-        Math.sin(
-            deltaLon / 2
-        );
-    const value =
-        sinLat * sinLat +
-        Math.cos(lat1) *
-        Math.cos(lat2) *
-        sinLon *
-        sinLon;
-    return (
-        earthRadius *
-        2 *
-        Math.atan2(
-            Math.sqrt(value),
-            Math.sqrt(
-                1 - value
-            )
-        )
-    );
-},
-getGPSPosition() {
-    const gps =
-        window.CatchTrackGPSModule;
-    if (
-        !gps
-    ) {
-        return null;
-    }
-    if (
-        typeof gps.getCurrentPosition ===
-        "function"
-    ) {
-        return gps.getCurrentPosition();
-    }
-    if (
-        typeof gps.getCoordinates ===
-        "function"
-    ) {
-        return gps.getCoordinates();
-    }
-    return null;
-},
-async requestGPSPosition() {
-    const gps =
-        window.CatchTrackGPSModule;
-    if (
-        !gps ||
-        typeof gps.requestPosition !==
-            "function"
-    ) {
-        throw new Error(
-            "GPS-Modul ist nicht verfügbar."
-        );
-    }
-    return gps.requestPosition();
+    this.saveDatabase();
+    return !!result;
 },
 validateData(
     data
@@ -559,25 +501,12 @@ validateData(
         );
     }
     if (
-        name.length >
-        150
+        name.length > 150
     ) {
         throw new Error(
             "Der Gewässername darf maximal 150 Zeichen enthalten."
         );
     }
-    const latitude =
-        this.normalizeCoordinate(
-            source.gps_lat,
-            -90,
-            90
-        );
-    const longitude =
-        this.normalizeCoordinate(
-            source.gps_lon,
-            -180,
-            180
-        );
     return {
         name,
         type:
@@ -601,9 +530,17 @@ validateData(
                 2000
             ),
         gps_lat:
-            latitude,
+            this.normalizeCoordinate(
+                source.gps_lat,
+                -90,
+                90
+            ),
         gps_lon:
-            longitude
+            this.normalizeCoordinate(
+                source.gps_lon,
+                -180,
+                180
+            )
     };
 },
 normalizeText(
@@ -635,7 +572,9 @@ normalizeCoordinate(
         return null;
     }
     const number =
-        Number(value);
+        Number(
+            value
+        );
     if (
         !Number.isFinite(number) ||
         number < minimum ||
@@ -647,47 +586,181 @@ normalizeCoordinate(
     }
     return number;
 },
-create(
-    data
+getGPSModule() {
+    return window.CatchTrackGPSModule ||
+        null;
+},
+getCurrentPosition() {
+    const gps =
+        this.getGPSModule();
+    if (
+        gps &&
+        typeof gps.getCurrentPosition ===
+            "function"
+    ) {
+        const position =
+            gps.getCurrentPosition();
+        if (
+            position
+        ) {
+            return position;
+        }
+    }
+    return this.state.currentPosition;
+},
+requestGPSPosition() {
+    const gps =
+        this.getGPSModule();
+    if (
+        gps &&
+        typeof gps.requestPosition ===
+            "function"
+    ) {
+        return gps.requestPosition()
+            .then(
+                position => {
+                    this.state.currentPosition =
+                        position;
+                    return position;
+                }
+            );
+    }
+    if (
+        !navigator.geolocation
+    ) {
+        return Promise.reject(
+            new Error(
+                "Dieser Browser unterstützt keine Standortbestimmung."
+            )
+        );
+    }
+    this.state.gpsBusy =
+        true;
+    return new Promise(
+        (
+            resolve,
+            reject
+        ) => {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const normalized = {
+                        latitude:
+                            Number(
+                                position.coords.latitude
+                            ),
+                        longitude:
+                            Number(
+                                position.coords.longitude
+                            ),
+                        accuracy:
+                            Number.isFinite(
+                                position.coords.accuracy
+                            )
+                                ? position.coords.accuracy
+                                : null,
+                        altitude:
+                            Number.isFinite(
+                                position.coords.altitude
+                            )
+                                ? position.coords.altitude
+                                : null,
+                        altitudeAccuracy:
+                            Number.isFinite(
+                                position.coords.altitudeAccuracy
+                            )
+                                ? position.coords.altitudeAccuracy
+                                : null,
+                        timestamp:
+                            new Date(
+                                position.timestamp
+                            ).toISOString(),
+                        source:
+                            "geolocation"
+                    };
+                    this.state.currentPosition =
+                        normalized;
+                    this.state.gpsBusy =
+                        false;
+                    resolve(
+                        normalized
+                    );
+                },
+                error => {
+                    this.state.gpsBusy =
+                        false;
+                    reject(
+                        new Error(
+                            this.getGPSErrorMessage(
+                                error
+                            )
+                        )
+                    );
+                },
+                {
+                    enableHighAccuracy:
+                        true,
+                    timeout:
+                        15000,
+                    maximumAge:
+                        0
+                }
+            );
+        }
+    );
+},
+getGPSErrorMessage(
+    error
+) {
+    switch (
+        error?.code
+    ) {
+        case 1:
+            return "Der Zugriff auf den Standort wurde verweigert.";
+        case 2:
+            return "Der Standort ist derzeit nicht verfügbar.";
+        case 3:
+            return "Die Standortbestimmung hat zu lange gedauert.";
+        default:
+            return "Der Standort konnte nicht ermittelt werden.";
+    }
+},
+getNearby(
+    latitude,
+    longitude,
+    radiusKm = 25
 ) {
     const userId =
         this.getCurrentUserId();
-    const water =
-        this.validateData(
-            data
+    const lat =
+        Number(
+            latitude
         );
-    const timestamp =
-        new Date().toISOString();
-    this.execute(
-        `
-            INSERT INTO waters (
-                user_id,
-                name,
-                type,
-                country,
-                region,
-                description,
-                gps_lat,
-                gps_lon,
-                created_at,
-                updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-            userId,
-            water.name,
-            water.type,
-            water.country,
-            water.region,
-            water.description,
-            water.gps_lat,
-            water.gps_lon,
-            timestamp,
-            timestamp
-        ]
-    );
-    this.saveDatabase();
+    const lon =
+        Number(
+            longitude
+        );
+    const radius =
+        Math.min(
+            Math.max(
+                Number(
+                    radiusKm
+                ) || 25,
+                0.1
+            ),
+            500
+        );
+    if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lon) ||
+        lat < -90 ||
+        lat > 90 ||
+        lon < -180 ||
+        lon > 180
+    ) {
+        throw new Error(
+            "Ungültige GPS-Koordinaten."
+        );
+    }
     const rows =
         this.query(
             `
@@ -705,154 +778,459 @@ create(
                     updated_at
                 FROM waters
                 WHERE user_id = ?
-                ORDER BY id DESC
-                LIMIT 1
+                  AND gps_lat IS NOT NULL
+                  AND gps_lon IS NOT NULL
             `,
             [
                 userId
             ]
         );
-    return rows.length
-        ? this.normalizeWater(
-            rows[0]
+    return rows
+        .map(
+            row =>
+                this.normalizeWater(
+                    row
+                )
         )
+        .filter(
+            water =>
+                water &&
+                water.gps_lat !== null &&
+                water.gps_lon !== null
+        )
+        .map(
+            water => ({
+                ...water,
+                distance_km:
+                    this.calculateDistanceKm(
+                        lat,
+                        lon,
+                        water.gps_lat,
+                        water.gps_lon
+                    )
+            })
+        )
+        .filter(
+            water =>
+                water.distance_km <=
+                radius
+        )
+        .sort(
+            (
+                first,
+                second
+            ) =>
+                first.distance_km -
+                second.distance_km
+        );
+},
+getCurrentSuggestion(
+    radiusKm = 25
+) {
+    const position =
+        this.getCurrentPosition();
+    if (
+        !position
+    ) {
+        return null;
+    }
+    const nearby =
+        this.getNearby(
+            position.latitude,
+            position.longitude,
+            radiusKm
+        );
+    return nearby.length
+        ? nearby[0]
         : null;
 },
-update(
-    id,
-    data
+calculateDistanceKm(
+    latitude1,
+    longitude1,
+    latitude2,
+    longitude2
 ) {
-    const userId =
-        this.getCurrentUserId();
-    const waterId =
-        Number(id);
-    if (
-        !Number.isInteger(waterId) ||
-        waterId <= 0
-    ) {
-        throw new Error(
-            "Ungültige Gewässer-ID."
-        );
-    }
-    const water =
-        this.validateData(
-            data
-        );
-    const timestamp =
-        new Date().toISOString();
-    this.execute(
-        `
-            UPDATE waters
-            SET
-                name = ?,
-                type = ?,
-                country = ?,
-                region = ?,
-                description = ?,
-                gps_lat = ?,
-                gps_lon = ?,
-                updated_at = ?
-            WHERE id = ?
-              AND user_id = ?
-        `,
-        [
-            water.name,
-            water.type,
-            water.country,
-            water.region,
-            water.description,
-            water.gps_lat,
-            water.gps_lon,
-            timestamp,
-            waterId,
-            userId
-        ]
-    );
-    this.saveDatabase();
-    return this.getById(
-        waterId
+    const earthRadius =
+        6371;
+    const lat1 =
+        Number(
+            latitude1
+        ) *
+        Math.PI /
+        180;
+    const lat2 =
+        Number(
+            latitude2
+        ) *
+        Math.PI /
+        180;
+    const deltaLat =
+        (
+            Number(
+                latitude2
+            ) -
+            Number(
+                latitude1
+            )
+        ) *
+        Math.PI /
+        180;
+    const deltaLon =
+        (
+            Number(
+                longitude2
+            ) -
+            Number(
+                longitude1
+            )
+        ) *
+        Math.PI /
+        180;
+    const a =
+        Math.sin(
+            deltaLat / 2
+        ) ** 2 +
+        Math.cos(
+            lat1
+        ) *
+        Math.cos(
+            lat2
+        ) *
+        Math.sin(
+            deltaLon / 2
+        ) ** 2;
+    return (
+        earthRadius *
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(
+                1 - a
+            )
+        )
     );
 },
-remove(
-    id
-) {
-    const userId =
-        this.getCurrentUserId();
-    const waterId =
-        Number(id);
-    if (
-        !Number.isInteger(waterId) ||
-        waterId <= 0
-    ) {
-        return false;
-    }
-    const existing =
-        this.getById(
-            waterId
+async refresh() {
+    try {
+        this.ensureSchema();
+        this.state.waters =
+            this.getAll();
+        this.renderList();
+        this.renderCount();
+        const position =
+            this.getCurrentPosition();
+        if (
+            position
+        ) {
+            this.state.nearby =
+                this.getNearby(
+                    position.latitude,
+                    position.longitude,
+                    25
+                );
+        }
+        else {
+            this.state.nearby =
+                [];
+        }
+        this.renderNearby();
+        this.setStatus(
+            `${this.state.waters.length} eigene Gewässer geladen.`,
+            "success"
         );
-    if (
-        !existing
-    ) {
-        return false;
     }
-    this.execute(
-        `
-            DELETE FROM waters
-            WHERE id = ?
-              AND user_id = ?
-        `,
-        [
-            waterId,
-            userId
-        ]
-    );
-    this.saveDatabase();
-    return true;
+    catch (error) {
+        this.state.waters =
+            [];
+        this.state.nearby =
+            [];
+        this.renderList();
+        this.renderCount();
+        this.renderNearby();
+        this.setStatus(
+            error?.message ||
+            "Gewässer konnten nicht geladen werden.",
+            "error"
+        );
+        this.handleError(
+            error,
+            "waters:refresh"
+        );
+    }
 },
-resetForm() {
-    const form =
-        document.getElementById(
-            "waters-form"
-        );
+async updateGPS() {
     if (
-        !form
+        this.state.gpsBusy
     ) {
         return;
     }
-    form.reset();
-    const id =
+    const button =
         document.getElementById(
-            "waters-id"
+            "waters-gps-button"
         );
-    if (
-        id
-    ) {
-        id.value = "";
+    try {
+        this.state.gpsBusy =
+            true;
+        if (
+            button
+        ) {
+            button.disabled =
+                true;
+        }
+        this.setGPSMessage(
+            "Standort wird ermittelt.",
+            "info"
+        );
+        const position =
+            await this.requestGPSPosition();
+        if (
+            !position
+        ) {
+            throw new Error(
+                "GPS lieferte keinen gültigen Standort."
+            );
+        }
+        this.state.currentPosition =
+            position;
+        this.state.nearby =
+            this.getNearby(
+                position.latitude,
+                position.longitude,
+                25
+            );
+        this.renderNearby();
+        this.setGPSMessage(
+            `${this.state.nearby.length} Gewässer im Umkreis von 25 km gefunden.`,
+            "success"
+        );
     }
-    this.state.editingId =
-        null;
-    const cancel =
+    catch (error) {
+        this.setGPSMessage(
+            error?.message ||
+            "Standort konnte nicht ermittelt werden.",
+            "error"
+        );
+        this.handleError(
+            error,
+            "waters:gps"
+        );
+    }
+    finally {
+        this.state.gpsBusy =
+            false;
+        if (
+            button
+        ) {
+            button.disabled =
+                false;
+        }
+    }
+},
+useGPSForForm() {
+    const position =
+        this.getCurrentPosition();
+    if (
+        !position
+    ) {
+        this.setFormMessage(
+            "Bitte zuerst den Standort ermitteln.",
+            "error"
+        );
+        return;
+    }
+    const latitude =
         document.getElementById(
-            "waters-cancel-button"
+            "waters-latitude"
+        );
+    const longitude =
+        document.getElementById(
+            "waters-longitude"
         );
     if (
-        cancel
+        latitude
     ) {
-        cancel.hidden = true;
+        latitude.value =
+            position.latitude;
+    }
+    if (
+        longitude
+    ) {
+        longitude.value =
+            position.longitude;
     }
     this.setFormMessage(
-        "",
-        ""
+        "Aktueller GPS-Standort wurde übernommen.",
+        "success"
     );
 },
-fillForm(
-    water
+getFormData() {
+    return {
+        name:
+            document.getElementById(
+                "waters-name"
+            )?.value,
+        type:
+            document.getElementById(
+                "waters-type"
+            )?.value,
+        country:
+            document.getElementById(
+                "waters-country"
+            )?.value,
+        region:
+            document.getElementById(
+                "waters-region"
+            )?.value,
+        description:
+            document.getElementById(
+                "waters-description"
+            )?.value,
+        gps_lat:
+            document.getElementById(
+                "waters-latitude"
+            )?.value,
+        gps_lon:
+            document.getElementById(
+                "waters-longitude"
+            )?.value
+    };
+},
+async submitForm() {
+    if (
+        this.state.busy
+    ) {
+        return;
+    }
+    this.state.busy =
+        true;
+    this.setFormDisabled(
+        true
+    );
+    try {
+        const data =
+            this.getFormData();
+        const editingId =
+            this.state.editingId;
+        const water =
+            editingId
+                ? this.update(
+                    editingId,
+                    data
+                )
+                : this.create(
+                    data
+                );
+        if (
+            !water
+        ) {
+            throw new Error(
+                "Gewässer konnte nicht gespeichert werden."
+            );
+        }
+        this.resetForm();
+        await this.refresh();
+        this.setFormMessage(
+            editingId
+                ? "Gewässer wurde aktualisiert."
+                : "Gewässer wurde gespeichert.",
+            "success"
+        );
+    }
+    catch (error) {
+        this.setFormMessage(
+            error?.message ||
+            "Gewässer konnte nicht gespeichert werden.",
+            "error"
+        );
+        this.handleError(
+            error,
+            "waters:save"
+        );
+    }
+    finally {
+        this.state.busy =
+            false;
+        this.setFormDisabled(
+            false
+        );
+    }
+},
+editWater(
+    id
 ) {
+    try {
+        const water =
+            this.getById(
+                id
+            );
+        if (
+            !water
+        ) {
+            throw new Error(
+                "Gewässer wurde nicht gefunden."
+            );
+        }
+        this.fillForm(
+            water
+        );
+    }
+    catch (error) {
+        this.setFormMessage(
+            error.message,
+            "error"
+        );
+        this.handleError(
+            error,
+            "waters:edit"
+        );
+    }
+},
+async deleteWater(
+    id
+) {
+    const water =
+        this.getById(
+            id
+        );
     if (
         !water
     ) {
         return;
     }
+    if (
+        !window.confirm(
+            `Gewässer „${water.name}" wirklich löschen?`
+        )
+    ) {
+        return;
+    }
+    try {
+        if (
+            !this.remove(
+                id
+            )
+        ) {
+            throw new Error(
+                "Gewässer konnte nicht gelöscht werden."
+            );
+        }
+        this.resetForm();
+        await this.refresh();
+    }
+    catch (error) {
+        this.setStatus(
+            error.message,
+            "error"
+        );
+        this.handleError(
+            error,
+            "waters:delete"
+        );
+    }
+},
+fillForm(
+    water
+) {
     const values = {
         "waters-id":
             water.id ?? "",
@@ -901,349 +1279,46 @@ fillForm(
     if (
         cancel
     ) {
-        cancel.hidden = false;
+        cancel.hidden =
+            false;
     }
-    this.setFormMessage(
-        "Gewässer wird bearbeitet.",
-        "success"
-    );
+},
+resetForm() {
     const form =
         document.getElementById(
             "waters-form"
         );
-    form?.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-},
-getFormData() {
-    return {
-        name:
-            document.getElementById(
-                "waters-name"
-            )?.value,
-        type:
-            document.getElementById(
-                "waters-type"
-            )?.value,
-        country:
-            document.getElementById(
-                "waters-country"
-            )?.value,
-        region:
-            document.getElementById(
-                "waters-region"
-            )?.value,
-        description:
-            document.getElementById(
-                "waters-description"
-            )?.value,
-        gps_lat:
-            document.getElementById(
-                "waters-latitude"
-            )?.value,
-        gps_lon:
-            document.getElementById(
-                "waters-longitude"
-            )?.value
-    };
-},
-async submitForm() {
     if (
-        this.state.busy
+        form
     ) {
-        return;
+        form.reset();
     }
-    this.state.busy =
-        true;
-    this.setFormDisabled(
-        true
-    );
-    try {
-        const data =
-            this.getFormData();
-        const water =
-            this.state.editingId
-                ? this.update(
-                    this.state.editingId,
-                    data
-                )
-                : this.create(
-                    data
-                );
-        if (
-            !water
-        ) {
-            throw new Error(
-                "Gewässer konnte nicht gespeichert werden."
-            );
-        }
-        this.setFormMessage(
-            this.state.editingId
-                ? "Gewässer wurde aktualisiert."
-                : "Gewässer wurde gespeichert.",
-            "success"
-        );
-        this.resetForm();
-        await this.refresh();
-    }
-    catch (error) {
-        this.setFormMessage(
-            error?.message ||
-                "Gewässer konnte nicht gespeichert werden.",
-            "error"
-        );
-        this.handleError(
-            error,
-            "waters:save"
-        );
-    }
-    finally {
-        this.state.busy =
-            false;
-        this.setFormDisabled(
-            false
-        );
-    }
-},
-async editWater(
-    id
-) {
-    try {
-        const water =
-            this.getById(
-                id
-            );
-        if (
-            !water
-        ) {
-            throw new Error(
-                "Gewässer wurde nicht gefunden."
-            );
-        }
-        this.fillForm(
-            water
-        );
-    }
-    catch (error) {
-        this.setFormMessage(
-            error.message,
-            "error"
-        );
-        this.handleError(
-            error,
-            "waters:edit"
-        );
-    }
-},
-async deleteWater(
-    id
-) {
-    const water =
-        this.getById(
-            id
-        );
-    if (
-        !water
-    ) {
-        return;
-    }
-    const confirmed =
-        window.confirm(
-            `Gewässer „${water.name}" wirklich löschen?`
-        );
-    if (
-        !confirmed
-    ) {
-        return;
-    }
-    try {
-        if (
-            !this.remove(
-                id
-            )
-        ) {
-            throw new Error(
-                "Gewässer konnte nicht gelöscht werden."
-            );
-        }
-        if (
-            this.state.editingId ===
-            Number(id)
-        ) {
-            this.resetForm();
-        }
-        await this.refresh();
-        this.setStatus(
-            "Gewässer wurde gelöscht.",
-            "success"
-        );
-    }
-    catch (error) {
-        this.setStatus(
-            error.message,
-            "error"
-        );
-        this.handleError(
-            error,
-            "waters:delete"
-        );
-    }
-},
-useGPSForForm() {
-    const position =
-        this.getGPSPosition();
-    if (
-        !position
-    ) {
-        this.setFormMessage(
-            "Es ist noch kein GPS-Standort verfügbar.",
-            "error"
-        );
-        return;
-    }
-    const latitude =
+    const id =
         document.getElementById(
-            "waters-latitude"
-        );
-    const longitude =
-        document.getElementById(
-            "waters-longitude"
+            "waters-id"
         );
     if (
-        latitude
+        id
     ) {
-        latitude.value =
-            position.latitude;
+        id.value =
+            "";
     }
+    this.state.editingId =
+        null;
+    const cancel =
+        document.getElementById(
+            "waters-cancel-button"
+        );
     if (
-        longitude
+        cancel
     ) {
-        longitude.value =
-            position.longitude;
+        cancel.hidden =
+            true;
     }
     this.setFormMessage(
-        "Aktueller GPS-Standort wurde übernommen.",
-        "success"
+        "",
+        ""
     );
-},
-async updateGPS() {
-    if (
-        this.state.gpsBusy
-    ) {
-        return;
-    }
-    this.state.gpsBusy =
-        true;
-    const button =
-        document.getElementById(
-            "waters-gps-button"
-        );
-    if (
-        button
-    ) {
-        button.disabled = true;
-    }
-    this.setGPSMessage(
-        "Standort wird ermittelt.",
-        "info"
-    );
-    try {
-        await this.requestGPSPosition();
-        const position =
-            this.getGPSPosition();
-        if (
-            !position
-        ) {
-            throw new Error(
-                "GPS lieferte keinen gültigen Standort."
-            );
-        }
-        const nearby =
-            this.getNearby(
-                position.latitude,
-                position.longitude,
-                25
-            );
-        this.state.nearby =
-            nearby;
-        this.renderNearby();
-        this.setGPSMessage(
-            `${nearby.length} Gewässer im Umkreis von 25 km gefunden.`,
-            "success"
-        );
-    }
-    catch (error) {
-        this.setGPSMessage(
-            error?.message ||
-                "Standort konnte nicht ermittelt werden.",
-            "error"
-        );
-        this.handleError(
-            error,
-            "waters:gps"
-        );
-    }
-    finally {
-        this.state.gpsBusy =
-            false;
-        if (
-            button
-        ) {
-            button.disabled = false;
-        }
-    }
-},
-async refresh() {
-    try {
-        this.setStatus(
-            "Gewässer werden geladen.",
-            "info"
-        );
-        this.state.waters =
-            this.getAll();
-        this.renderList();
-        this.renderCount();
-        const position =
-            this.getGPSPosition();
-        if (
-            position
-        ) {
-            this.state.nearby =
-                this.getNearby(
-                    position.latitude,
-                    position.longitude,
-                    25
-                );
-        }
-        else {
-            this.state.nearby =
-                [];
-        }
-        this.renderNearby();
-        this.setStatus(
-            `${this.state.waters.length} eigene Gewässer geladen.`,
-            "success"
-        );
-    }
-    catch (error) {
-        this.state.waters =
-            [];
-        this.state.nearby =
-            [];
-        this.renderList();
-        this.renderCount();
-        this.renderNearby();
-        this.setStatus(
-            error?.message ||
-                "Gewässer konnten nicht geladen werden.",
-            "error"
-        );
-        this.handleError(
-            error,
-            "waters:refresh"
-        );
-    }
 },
 renderCount() {
     const element =
@@ -1269,15 +1344,13 @@ renderList() {
     ) {
         return;
     }
-    container.innerHTML = "";
+    container.innerHTML =
+        "";
     if (
         !this.state.waters.length
     ) {
-        container.appendChild(
-            this.createEmptyElement(
-                "Noch keine eigenen Gewässer vorhanden."
-            )
-        );
+        container.textContent =
+            "Noch keine eigenen Gewässer vorhanden.";
         return;
     }
     this.state.waters.forEach(
@@ -1300,15 +1373,13 @@ renderNearby() {
     ) {
         return;
     }
-    container.innerHTML = "";
+    container.innerHTML =
+        "";
     if (
         !this.state.nearby.length
     ) {
-        container.appendChild(
-            this.createEmptyElement(
-                "Keine Gewässer in der Nähe gefunden."
-            )
-        );
+        container.textContent =
+            "Keine Gewässer in der Nähe gefunden.";
         return;
     }
     this.state.nearby.forEach(
@@ -1319,12 +1390,6 @@ renderNearby() {
                 );
             item.className =
                 "waters-nearby-item";
-            const info =
-                document.createElement(
-                    "div"
-                );
-            info.className =
-                "waters-nearby-info";
             const title =
                 document.createElement(
                     "p"
@@ -1345,34 +1410,21 @@ renderNearby() {
                 )} · ${this.getLocationText(
                     water
                 )}`;
-            info.append(
-                title,
-                meta
-            );
-            const actions =
-                document.createElement(
-                    "div"
-                );
-            actions.className =
-                "waters-card-actions";
-            const edit =
+            const button =
                 this.createButton(
-                    "Übernehmen",
-                    "waters-button waters-button-secondary"
+                    "Übernehmen"
                 );
-            edit.addEventListener(
+            button.addEventListener(
                 "click",
                 () =>
                     this.fillForm(
                         water
                     )
             );
-            actions.appendChild(
-                edit
-            );
             item.append(
-                info,
-                actions
+                title,
+                meta,
+                button
             );
             container.appendChild(
                 item
@@ -1389,59 +1441,33 @@ createWaterCard(
         );
     article.className =
         "waters-card";
-    const header =
-        document.createElement(
-            "div"
-        );
-    header.className =
-        "waters-card-header";
-    const titleBlock =
-        document.createElement(
-            "div"
-        );
     const title =
         document.createElement(
             "h3"
         );
-    title.className =
-        "waters-card-title";
     title.textContent =
         water.name;
+    article.appendChild(
+        title
+    );
     const meta =
         document.createElement(
-            "div"
+            "p"
         );
-    meta.className =
-        "waters-card-meta";
-    const metadata = [
-        water.type,
-        water.country,
-        water.region
-    ].filter(
-        Boolean
-    );
-    metadata.forEach(
-        value => {
-            const span =
-                document.createElement(
-                    "span"
-                );
-            span.textContent =
-                value;
-            meta.appendChild(
-                span
-            );
-        }
-    );
-    titleBlock.append(
-        title,
-        meta
-    );
-    header.append(
-        titleBlock
-    );
+    meta.textContent =
+        [
+            water.type,
+            water.country,
+            water.region
+        ]
+        .filter(
+            Boolean
+        )
+        .join(
+            " · "
+        );
     article.appendChild(
-        header
+        meta
     );
     if (
         water.description
@@ -1450,8 +1476,6 @@ createWaterCard(
             document.createElement(
                 "p"
             );
-        description.className =
-            "waters-card-description";
         description.textContent =
             water.description;
         article.appendChild(
@@ -1464,10 +1488,8 @@ createWaterCard(
     ) {
         const coordinates =
             document.createElement(
-                "div"
+                "p"
             );
-        coordinates.className =
-            "waters-card-coordinates";
         coordinates.textContent =
             `${water.gps_lat.toFixed(6)}, ${water.gps_lon.toFixed(6)}`;
         article.appendChild(
@@ -1482,8 +1504,7 @@ createWaterCard(
         "waters-card-actions";
     const edit =
         this.createButton(
-            "Bearbeiten",
-            "waters-button waters-button-secondary"
+            "Bearbeiten"
         );
     edit.addEventListener(
         "click",
@@ -1492,15 +1513,14 @@ createWaterCard(
                 water.id
             )
     );
-    const navigate =
+    const navigation =
         this.createButton(
-            "Navigation",
-            "waters-button waters-button-secondary"
+            "Navigation"
         );
-    navigate.disabled =
+    navigation.disabled =
         water.gps_lat === null ||
         water.gps_lon === null;
-    navigate.addEventListener(
+    navigation.addEventListener(
         "click",
         () =>
             this.navigateTo(
@@ -1509,8 +1529,7 @@ createWaterCard(
     );
     const remove =
         this.createButton(
-            "Löschen",
-            "waters-button waters-button-secondary"
+            "Löschen"
         );
     remove.addEventListener(
         "click",
@@ -1521,7 +1540,7 @@ createWaterCard(
     );
     actions.append(
         edit,
-        navigate,
+        navigation,
         remove
     );
     article.appendChild(
@@ -1530,8 +1549,7 @@ createWaterCard(
     return article;
 },
 createButton(
-    text,
-    className
+    text
 ) {
     const button =
         document.createElement(
@@ -1540,23 +1558,40 @@ createButton(
     button.type =
         "button";
     button.className =
-        className;
+        "waters-button waters-button-secondary";
     button.textContent =
         text;
     return button;
 },
-createEmptyElement(
-    text
+navigateTo(
+    water
 ) {
-    const element =
-        document.createElement(
-            "div"
+    if (
+        !water ||
+        water.gps_lat === null ||
+        water.gps_lon === null
+    ) {
+        return;
+    }
+    const gps =
+        this.getGPSModule();
+    if (
+        gps &&
+        typeof gps.navigateTo ===
+            "function"
+    ) {
+        return gps.navigateTo(
+            water.gps_lat,
+            water.gps_lon
         );
-    element.className =
-        "waters-empty";
-    element.textContent =
-        text;
-    return element;
+    }
+    const url =
+        `https://www.google.com/maps/dir/?api=1&destination=` +
+        encodeURIComponent(
+            `${water.gps_lat},${water.gps_lon}`
+        );
+    window.location.href =
+        url;
 },
 getLocationText(
     water
@@ -1564,11 +1599,14 @@ getLocationText(
     return [
         water.region,
         water.country
-    ].filter(
+    ]
+    .filter(
         Boolean
-    ).join(
+    )
+    .join(
         ", "
-    ) || "Standort unbekannt";
+    ) ||
+    "Standort unbekannt";
 },
 formatDistance(
     kilometers
@@ -1587,48 +1625,9 @@ formatDistance(
             kilometers * 1000
         )} m`;
     }
-    return `${kilometers.toFixed(1)} km`;
-},
-async navigateTo(
-    water
-) {
-    if (
-        !water ||
-        water.gps_lat === null ||
-        water.gps_lon === null
-    ) {
-        return;
-    }
-    const gps =
-        window.CatchTrackGPSModule;
-    try {
-        if (
-            gps &&
-            typeof gps.navigateTo ===
-                "function"
-        ) {
-            await gps.navigateTo(
-                water.gps_lat,
-                water.gps_lon
-            );
-            return;
-        }
-        const destination =
-            `${water.gps_lat.toFixed(6)},${water.gps_lon.toFixed(6)}`;
-        const url =
-            `https://www.google.com/maps/dir/?api=1&destination=` +
-            encodeURIComponent(
-                destination
-            );
-        window.location.href =
-            url;
-    }
-    catch (error) {
-        this.handleError(
-            error,
-            "waters:navigation"
-        );
-    }
+    return `${kilometers.toFixed(
+        1
+    )} km`;
 },
 setFormDisabled(
     disabled
@@ -1644,11 +1643,11 @@ setFormDisabled(
     }
     form.querySelectorAll(
         "input, textarea, button"
-    ).forEach(
-        element => {
+    )
+    .forEach(
+        element =>
             element.disabled =
-                disabled;
-        }
+                disabled
     );
 },
 setStatus(
@@ -1748,17 +1747,17 @@ setFormMessage(
     }
 },
 bindEvents() {
-    const form =
-        document.getElementById(
+    document
+        .getElementById(
             "waters-form"
+        )
+        ?.addEventListener(
+            "submit",
+            event => {
+                event.preventDefault();
+                this.submitForm();
+            }
         );
-    form?.addEventListener(
-        "submit",
-        event => {
-            event.preventDefault();
-            this.submitForm();
-        }
-    );
     document
         .getElementById(
             "waters-cancel-button"
@@ -1809,6 +1808,12 @@ handleError(
         CatchTrackErrorHandler.handle(
             error,
             source
+        );
+    }
+    else {
+        console.error(
+            source,
+            error
         );
     }
 }
