@@ -3,9 +3,11 @@
 
 window.CatchTrackUserModule = {
 
-    version: "1.0.0",
+    version: "1.1.0",
 
     initialized: false,
+
+    schemaRepairVersion: "5",
 
 
     init() {
@@ -16,9 +18,323 @@ window.CatchTrackUserModule = {
 
         this.initialized = true;
 
+        try {
+
+            this.ensureUserSchema();
+
+        }
+        catch (error) {
+
+            this.handleError(
+                error,
+                "user:schema"
+            );
+
+        }
+
         this.bindEvents();
 
         this.refresh();
+
+    },
+
+
+    ensureUserSchema() {
+
+        const database =
+            window.CatchTrackDatabase;
+
+        if (
+            !database ||
+            !database.isReady()
+        ) {
+
+            throw new Error(
+                "Datenbank ist für die User-Schema-Prüfung nicht verfügbar."
+            );
+
+        }
+
+
+        const columns =
+            database.getTableColumns(
+                "users"
+            );
+
+
+        if (!columns.length) {
+
+            throw new Error(
+                "Die Tabelle users ist nicht vorhanden."
+            );
+
+        }
+
+
+        const missingColumns = [];
+
+
+        if (
+            !columns.includes(
+                "display_name"
+            )
+        ) {
+
+            database.database.exec(`
+                ALTER TABLE users
+                ADD COLUMN display_name TEXT;
+            `);
+
+            missingColumns.push(
+                "display_name"
+            );
+
+        }
+
+
+        const refreshedColumns =
+            database.getTableColumns(
+                "users"
+            );
+
+
+        if (
+            !refreshedColumns.includes(
+                "email"
+            )
+        ) {
+
+            database.database.exec(`
+                ALTER TABLE users
+                ADD COLUMN email TEXT;
+            `);
+
+            missingColumns.push(
+                "email"
+            );
+
+        }
+
+
+        const finalColumns =
+            database.getTableColumns(
+                "users"
+            );
+
+
+        if (
+            !finalColumns.includes(
+                "created_at"
+            )
+        ) {
+
+            database.database.exec(`
+                ALTER TABLE users
+                ADD COLUMN created_at DATETIME
+                DEFAULT CURRENT_TIMESTAMP;
+            `);
+
+            missingColumns.push(
+                "created_at"
+            );
+
+        }
+
+
+        const afterCreatedAt =
+            database.getTableColumns(
+                "users"
+            );
+
+
+        if (
+            !afterCreatedAt.includes(
+                "updated_at"
+            )
+        ) {
+
+            database.database.exec(`
+                ALTER TABLE users
+                ADD COLUMN updated_at DATETIME
+                DEFAULT CURRENT_TIMESTAMP;
+            `);
+
+            missingColumns.push(
+                "updated_at"
+            );
+
+        }
+
+
+        const settingsTable =
+            database.getTableColumns(
+                "user_settings"
+            );
+
+
+        if (
+            !settingsTable.length
+        ) {
+
+            database.database.exec(`
+
+                CREATE TABLE IF NOT EXISTS user_settings (
+
+                    user_id INTEGER PRIMARY KEY,
+
+                    language TEXT
+                        NOT NULL
+                        DEFAULT 'de',
+
+                    timezone TEXT,
+
+                    created_at DATETIME
+                        NOT NULL
+                        DEFAULT CURRENT_TIMESTAMP,
+
+                    updated_at DATETIME
+                        NOT NULL
+                        DEFAULT CURRENT_TIMESTAMP,
+
+                    FOREIGN KEY (user_id)
+                        REFERENCES users(id)
+                        ON DELETE CASCADE
+
+                );
+
+            `);
+
+            missingColumns.push(
+                "user_settings"
+            );
+
+        }
+
+
+        const privacyTable =
+            database.getTableColumns(
+                "privacy_settings"
+            );
+
+
+        if (
+            !privacyTable.length
+        ) {
+
+            database.database.exec(`
+
+                CREATE TABLE IF NOT EXISTS privacy_settings (
+
+                    user_id INTEGER PRIMARY KEY,
+
+                    location_sharing INTEGER
+                        NOT NULL
+                        DEFAULT 0,
+
+                    home_location_sharing INTEGER
+                        NOT NULL
+                        DEFAULT 0,
+
+                    social_sharing INTEGER
+                        NOT NULL
+                        DEFAULT 0,
+
+                    created_at DATETIME
+                        NOT NULL
+                        DEFAULT CURRENT_TIMESTAMP,
+
+                    updated_at DATETIME
+                        NOT NULL
+                        DEFAULT CURRENT_TIMESTAMP,
+
+                    FOREIGN KEY (user_id)
+                        REFERENCES users(id)
+                        ON DELETE CASCADE
+
+                );
+
+            `);
+
+            missingColumns.push(
+                "privacy_settings"
+            );
+
+        }
+
+
+        database.database.exec(`
+
+            CREATE INDEX IF NOT EXISTS idx_users_username
+                ON users(username);
+
+            CREATE INDEX IF NOT EXISTS idx_users_email
+                ON users(email);
+
+        `);
+
+
+        this.ensureMigrationRecord();
+
+
+        database.saveDatabase();
+
+
+        return {
+            repaired:
+                missingColumns.length > 0,
+
+            changes:
+                missingColumns
+
+        };
+
+    },
+
+
+    ensureMigrationRecord() {
+
+        const database =
+            window.CatchTrackDatabase;
+
+        if (
+            !database ||
+            !database.database
+        ) {
+
+            return false;
+
+        }
+
+
+        database.database.exec(`
+
+            CREATE TABLE IF NOT EXISTS migrations (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                version TEXT NOT NULL UNIQUE,
+
+                description TEXT,
+
+                applied_at DATETIME
+                    NOT NULL
+                    DEFAULT CURRENT_TIMESTAMP
+
+            );
+
+        `);
+
+
+        database.markMigrationApplied(
+            this.schemaRepairVersion,
+            "User schema compatibility repair"
+        );
+
+
+        database.updateSchemaVersion();
+
+
+        return true;
 
     },
 
@@ -91,10 +407,8 @@ window.CatchTrackUserModule = {
 
     getCurrentUserId() {
 
-        const identity =
-            this.getIdentity();
-
-        return identity.getCurrentUserId();
+        return this.getIdentity()
+            .getCurrentUserId();
 
     },
 
@@ -118,44 +432,16 @@ window.CatchTrackUserModule = {
     },
 
 
-    hasActiveUser() {
-
-        const identity =
-            this.getIdentity();
-
-        if (
-            typeof identity.hasActiveUser ===
-                "function"
-        ) {
-
-            return identity.hasActiveUser();
-
-        }
-
-        const userId =
-            identity.getCurrentUserId();
-
-        return (
-            userId !== null &&
-            userId !== undefined &&
-            userId !== ""
-        );
-
-    },
-
-
     refresh() {
 
         try {
-
-            const identity =
-                this.getIdentity();
 
             const userId =
                 this.getCurrentUserId();
 
             const user =
                 this.getCurrentUser();
+
 
             if (
                 userId === null ||
@@ -168,6 +454,7 @@ window.CatchTrackUserModule = {
                 return;
 
             }
+
 
             this.renderUser(
                 userId,
@@ -266,7 +553,9 @@ window.CatchTrackUserModule = {
     },
 
 
-    renderError(error) {
+    renderError(
+        error
+    ) {
 
         this.setText(
             "user-id",
@@ -318,9 +607,11 @@ window.CatchTrackUserModule = {
                 "user-display-name-input"
             );
 
+
         if (!usernameInput) {
             return;
         }
+
 
         const username =
             usernameInput.value.trim();
@@ -329,6 +620,7 @@ window.CatchTrackUserModule = {
             displayNameInput
                 ? displayNameInput.value.trim()
                 : "";
+
 
         if (!username) {
 
@@ -348,10 +640,14 @@ window.CatchTrackUserModule = {
                 button.disabled = true;
             }
 
+
             this.setFormMessage(
                 "Benutzer wird angelegt …",
                 "info"
             );
+
+
+            this.ensureUserSchema();
 
 
             const identity =
@@ -371,15 +667,18 @@ window.CatchTrackUserModule = {
 
 
             const user =
-                await identity.createUser(
-                    {
+                await identity.createUser({
+
+                    username,
+
+                    displayName:
+                        displayName ||
                         username,
-                        displayName:
-                            displayName ||
-                            username,
-                        setCurrent: true
-                    }
-                );
+
+                    setCurrent:
+                        true
+
+                });
 
 
             if (!user) {
@@ -395,6 +694,7 @@ window.CatchTrackUserModule = {
                 "Benutzer wurde erfolgreich angelegt.",
                 "success"
             );
+
 
             this.refresh();
 
@@ -447,10 +747,12 @@ window.CatchTrackUserModule = {
             return;
         }
 
+
         const section =
             form.closest(
                 ".user-card"
             );
+
 
         if (section) {
 
@@ -475,6 +777,7 @@ window.CatchTrackUserModule = {
         if (!element) {
             return;
         }
+
 
         element.textContent =
             message || "";
@@ -502,6 +805,7 @@ window.CatchTrackUserModule = {
         if (!element) {
             return;
         }
+
 
         element.textContent =
             message || "";
@@ -559,6 +863,7 @@ window.CatchTrackUserModule = {
             return;
 
         }
+
 
         console.error(
             source,
