@@ -29,7 +29,45 @@ Bei Widersprüchen ist der tatsächliche aktuelle GitHub-Stand maßgeblich.
 
 ⸻
 
-3. GRUNDREGEL: NICHT RATEN
+3. VERBINDLICHE SERVER-/GITHUB-BESTANDSAUFNAHME VOR JEDER ÄNDERUNG
+
+Vor jeder technischen Änderung muss der aktuell auf GitHub vorhandene Stand der betroffenen Dateien zuerst vollständig ausgelesen werden.
+
+Dabei gilt zwingend:
+
+Erst lesen → dann prüfen → anschließend aktualisieren/ergänzen → vollständige Datei ausgeben.
+
+Es darf keine Datei auf Grundlage einer älteren Chat-Version, einer früheren Ausgabe, einer Erinnerung oder einer angenommenen Struktur neu aufgebaut werden, wenn die aktuelle Datei auf GitHub vorhanden ist.
+
+Der aktuelle GitHub-Stand ist immer die Ausgangsbasis für eine Änderung.
+
+Dies gilt insbesondere für:
+
+* AI_CONTEXT.md
+* PROJECT_STATUS.md
+* PROJECT_RULES.md
+* PROJECT_MODULE_PLAN.md
+* Core-Dateien
+* Datenbankdateien
+* Migrationen
+* Module
+* Konfigurationen
+* sonstige bereits vorhandene Projektdateien
+
+Eine vorhandene Datei wird daher grundsätzlich:
+
+1. vollständig vom aktuellen GitHub-Stand gelesen
+2. technisch geprüft
+3. auf Basis dieses tatsächlichen Inhalts aktualisiert oder ergänzt
+4. anschließend vollständig als neue Master-Version ausgegeben
+
+Es wird niemals nur ein vermeintlich aktueller Teilstand verwendet.
+
+Auch wenn nur eine einzelne Zeile geändert werden soll, ist zunächst die vollständige aktuelle Datei vom Server/GitHub auszulesen.
+
+⸻
+
+4. GRUNDREGEL: NICHT RATEN
 
 Es darf niemals aufgrund einer erwarteten oder früher bekannten Struktur angenommen werden, dass eine Datei oder Funktion existiert.
 
@@ -53,9 +91,11 @@ Dabei sind einzubeziehen:
 * sonstige Dateien
 * Altbestände
 
+Die Prüfung erfolgt auf Grundlage des aktuellen GitHub-/Serverstands und nicht auf Grundlage älterer Chatstände.
+
 ⸻
 
-4. ÄNDERUNGSGRUNDSATZ
+5. ÄNDERUNGSGRUNDSATZ
 
 Bestehende funktionierende Dateien werden nicht unnötig verändert.
 
@@ -75,9 +115,15 @@ Keine Datei darf stillschweigend gelöscht werden.
 
 Löschungen müssen ausdrücklich als Löschkandidaten ausgewiesen werden.
 
+Bei einer vorhandenen Datei gilt zusätzlich zwingend:
+
+Der aktuelle vollständige GitHub-Inhalt ist die Grundlage jeder Änderung.
+
+Es wird nicht auf einer älteren lokalen oder aus dem Chat bekannten Version weitergearbeitet.
+
 ⸻
 
-5. CORE-MASTER – VERBINDLICHER FREEZE
+6. CORE-MASTER – VERBINDLICHER FREEZE
 
 Der zentrale CatchTrack-Core wird als Master-Version konsolidiert.
 
@@ -110,7 +156,7 @@ sind grundsätzlich eingefroren.
 
 ⸻
 
-6. AUSNAHME VOM CORE-FREEZE
+7. AUSNAHME VOM CORE-FREEZE
 
 Eine Änderung des Core-Masters ist nur zulässig, wenn eine konkrete technische Anforderung dies zwingend erforderlich macht.
 
@@ -120,9 +166,16 @@ CORE-ÄNDERUNG ERFORDERLICH
 
 Die Änderung wird anschließend begründet und als eigener Arbeitsschritt behandelt.
 
+Auch bei einer zulässigen Core-Änderung gilt:
+
+1. aktuellen GitHub-Stand vollständig auslesen
+2. Abhängigkeiten prüfen
+3. Änderung durchführen
+4. vollständige Master-Version der betroffenen Datei ausgeben
+
 ⸻
 
-7. APP.JS – MASTER-REGEL
+8. APP.JS – MASTER-REGEL
 
 app.js ist der zentrale Application Bootstrap.
 
@@ -145,7 +198,7 @@ Module müssen über die vorhandenen Core-Schnittstellen eingebunden werden.
 
 ⸻
 
-8. DATABASE/SCHEMA.SQL – MASTER-REGEL
+9. DATABASE/SCHEMA.SQL – MASTER-REGEL
 
 database/schema.sql ist das zentrale Basisschema für eine neue CatchTrack-Datenbank.
 
@@ -159,7 +212,7 @@ Wenn eine neue Datenbankstruktur für ein Modul tatsächlich erforderlich ist, w
 
 ⸻
 
-9. DATENBANK-MIGRATIONSSYSTEM
+10. DATENBANK-MIGRATIONSSYSTEM
 
 CatchTrack verwendet ein migrationsbasiertes Datenbanksystem.
 
@@ -179,7 +232,7 @@ Eine Migration muss:
 
 ⸻
 
-10. MODULARCHITEKTUR
+11. MODULARCHITEKTUR
 
 Jedes Fachmodul befindet sich unter:
 
@@ -189,10 +242,10 @@ Eine mögliche Struktur ist beispielsweise:
 
 modules/
 └── gps/
-├── module.json
-├── gps.html
-├── gps.css
-└── gps.js
+    ├── module.json
+    ├── gps.html
+    ├── gps.css
+    └── gps.js
 
 Die tatsächliche Struktur muss jedoch immer aus GitHub gelesen werden.
 
@@ -200,7 +253,7 @@ Es darf keine Dateiliste aus früheren Annahmen vorausgesetzt werden.
 
 ⸻
 
-11. MODULE MANAGER
+12. MODULE MANAGER
 
 Module werden über den zentralen Module Manager geladen.
 
@@ -219,7 +272,7 @@ Ein Fachmodul darf nicht am Module Manager vorbei eigene globale Ladewege etabli
 
 ⸻
 
-12. MODULE.JSON
+13. MODULE.JSON
 
 module.json definiert die technische Modulbeschreibung.
 
@@ -238,9 +291,11 @@ Dazu können gehören:
 
 Die tatsächlich bestehende Definition hat Vorrang.
 
+Vor einer Änderung an module.json wird immer zuerst die vollständige aktuelle Datei aus GitHub gelesen.
+
 ⸻
 
-13. SCHNITTSTELLEN
+14. SCHNITTSTELLEN
 
 Module müssen klare Schnittstellen zum Core besitzen.
 
@@ -265,7 +320,7 @@ Es werden keine parallelen Ersatzsysteme gebaut.
 
 ⸻
 
-14. DATENBANKZUGRIFF VON MODULEN
+15. DATENBANKZUGRIFF VON MODULEN
 
 Module greifen auf die zentrale Datenbank zu.
 
@@ -285,7 +340,7 @@ Modulspezifische Datenbankerweiterungen werden über Migrationen vorgenommen.
 
 ⸻
 
-15. AUTOMATISCH ERMITTELTE DATEN
+16. AUTOMATISCH ERMITTELTE DATEN
 
 Automatisch ermittelte Daten sind grundsätzlich als:
 
@@ -310,7 +365,7 @@ Automatisch ermittelte Daten dürfen nicht ungeprüft endgültige Benutzerdaten 
 
 ⸻
 
-16. GPS – ABGESCHLOSSENE VERSION
+17. GPS – ABGESCHLOSSENE VERSION
 
 Stand: 09.08.2026
 
@@ -330,7 +385,7 @@ Die tatsächlich vorhandene module.json ist maßgeblich für die technische Modu
 
 ⸻
 
-17. FUNKTIONEN DES GPS-MODULS
+18. FUNKTIONEN DES GPS-MODULS
 
 Das GPS-Modul umfasst aktuell:
 
@@ -363,7 +418,7 @@ Nicht Bestandteil des GPS-Moduls:
 
 ⸻
 
-18. GPS-DATENSTRUKTUR
+19. GPS-DATENSTRUKTUR
 
 Ein GPS-Positionsobjekt enthält konzeptionell:
 
@@ -381,7 +436,7 @@ Insbesondere Höhe und Höhengenauigkeit können abhängig vom Endgerät fehlen.
 
 ⸻
 
-19. GEWÄSSER-SPEICHERUNG DURCH GPS
+20. GEWÄSSER-SPEICHERUNG DURCH GPS
 
 Der Benutzer kann auf der GPS-Seite einen eigenen Gewässernamen eingeben.
 
@@ -415,7 +470,7 @@ Er darf nicht ungeprüft als dauerhafte parallele Datenquelle weitergeführt wer
 
 ⸻
 
-20. GPS → WATERS
+21. GPS → WATERS
 
 Der bisherige Übergabepunkt lautet:
 
@@ -443,7 +498,7 @@ Die endgültige Speicherung eines persönlichen Gewässers erfolgt im Waters-Dat
 
 ⸻
 
-21. IDENTITY CORE – ZENTRALE BENUTZERIDENTITÄT
+22. IDENTITY CORE – ZENTRALE BENUTZERIDENTITÄT
 
 CatchTrack verwendet eine zentrale Benutzeridentität.
 
@@ -455,7 +510,7 @@ Der Identity Core stellt für die gesamte Anwendung mindestens folgende Informat
 * aktuelle user_id
 * Benutzer laden
 * aktuellen Benutzer setzen
-* aktuellen Benutzer wechseln, sofern dies später erforderlich ist
+* aktuellen Benutzer wechseln, sofern dies später erforderlich wird
 * aktuellen Benutzer zurücksetzen
 * Prüfung, ob ein gültiger Benutzer vorhanden ist
 
@@ -477,7 +532,7 @@ Der Identity Core ist eine zentrale technische Abhängigkeit für alle persönli
 
 ⸻
 
-22. USER_ID ALS STANDARD FÜR PERSÖNLICHE DATEN
+23. USER_ID ALS STANDARD FÜR PERSÖNLICHE DATEN
 
 Daten, die eindeutig einem Benutzer gehören, müssen langfristig über user_id dem Benutzer zugeordnet werden.
 
@@ -502,7 +557,7 @@ Die Benutzerzuordnung erfolgt möglichst auf Datenbankebene über Foreign Keys u
 
 ⸻
 
-23. VERBINDLICHE USER-ID-PRÜFUNG BEI JEDEM MODUL
+24. VERBINDLICHE USER-ID-PRÜFUNG BEI JEDEM MODUL
 
 Bei jedem neuen oder zu überarbeitenden Fachmodul muss vor der Implementierung geprüft werden, ob die vom Modul verwalteten Daten einem Benutzer zugeordnet werden müssen.
 
@@ -546,7 +601,7 @@ In diesem Fall ist vor der Implementierung eine Rückfrage erforderlich.
 
 ⸻
 
-24. USER-ID UND STATISTIKMODULE
+25. USER-ID UND STATISTIKMODULE
 
 Spätere Statistikmodule müssen die Benutzerzuordnung von Anfang an berücksichtigen.
 
@@ -579,7 +634,7 @@ Für Cloud- oder Community-Auswertungen dürfen nur Daten verwendet werden, für
 
 ⸻
 
-25. WATERS-MODUL – MASTER-ARCHITEKTUR
+26. WATERS-MODUL – MASTER-ARCHITEKTUR
 
 Das Waters-Modul verwaltet ausschließlich die Stammdaten eines Gewässers.
 
@@ -621,7 +676,7 @@ Ein Benutzer darf niemals über eine manipulierte Datensatz-ID auf ein fremdes p
 
 ⸻
 
-26. WATERS BLEIBT SCHLANK
+27. WATERS BLEIBT SCHLANK
 
 Das Waters-Modul wird nicht zu einer Sammeldatenbank für sämtliche Informationen über ein Gewässer.
 
@@ -648,7 +703,7 @@ waters
 
 ⸻
 
-27. CATCHER – FANGHISTORIE
+28. CATCHER – FANGHISTORIE
 
 Das Fangbuch-Modul Catcher ist für die Fanghistorie zuständig.
 
@@ -690,7 +745,7 @@ Diese Informationen werden nicht in Waters dupliziert.
 
 ⸻
 
-28. FISHING SPOTS
+29. FISHING SPOTS
 
 Ein späteres Fishing-Spots-Modul kann konkrete Angelstellen innerhalb eines Gewässers verwalten.
 
@@ -718,7 +773,7 @@ Automatisch ermittelte GPS-Daten gelten gemäß den allgemeinen CatchTrack-Regel
 
 ⸻
 
-29. FOTOS
+30. FOTOS
 
 Fotos werden nicht grundsätzlich als Binärdaten direkt in die Waters-Tabelle integriert.
 
@@ -744,7 +799,7 @@ Fotos können später abhängig von den Freigabeeinstellungen des Benutzers auch
 
 ⸻
 
-30. WASSERBEZOGENE MODULBEZIEHUNGEN
+31. WASSERBEZOGENE MODULBEZIEHUNGEN
 
 CatchTrack verwendet für gewässerbezogene Fachinformationen grundsätzlich Beziehungen statt redundanter Datenhaltung.
 
@@ -767,7 +822,7 @@ Informationen dürfen nicht unnötig in mehreren Modulen dupliziert werden.
 
 ⸻
 
-31. GPS → WATERS → FACHMODULE
+32. GPS → WATERS → FACHMODULE
 
 GPS liefert Positionsdaten.
 
@@ -801,7 +856,7 @@ Kein Fachmodul übernimmt dauerhaft die fachliche Verantwortung eines anderen Mo
 
 ⸻
 
-32. WATERS-MIGRATION
+33. WATERS-MIGRATION
 
 Da Waters ursprünglich ohne user_id angelegt wurde, muss die Erweiterung über eine neue Datenbankmigration erfolgen.
 
@@ -826,7 +881,7 @@ Nach erfolgreicher Migration darf keine unnötige parallele Waters-Datenhaltung 
 
 ⸻
 
-33. CLOUD-ARCHITEKTUR – GRUNDSATZ
+34. CLOUD-ARCHITEKTUR – GRUNDSATZ
 
 CatchTrack ist zunächst eine Offline-First-Anwendung.
 
@@ -850,7 +905,7 @@ Module müssen deshalb so entwickelt werden, dass ihre Daten später über defin
 
 ⸻
 
-34. CLOUD UND BENUTZERDATEN
+35. CLOUD UND BENUTZERDATEN
 
 Persönliche Daten können später optional in die Cloud übertragen werden.
 
@@ -871,7 +926,7 @@ Besonders sensible Daten, insbesondere aktuelle GPS-Positionen, dürfen nicht un
 
 ⸻
 
-35. DATENFREIGABE UND PRIVATSPHÄRE
+36. DATENFREIGABE UND PRIVATSPHÄRE
 
 CatchTrack benötigt langfristig eine zentrale, benutzersteuerbare Freigabearchitektur.
 
@@ -890,7 +945,7 @@ Ein Fachmodul darf keine eigene parallele Freigabelogik entwickeln.
 
 ⸻
 
-36. IDENTITÄT BEI ÖFFENTLICHEN DATEN
+37. IDENTITÄT BEI ÖFFENTLICHEN DATEN
 
 Die interne user_id bleibt die technische Identität eines Benutzers.
 
@@ -909,7 +964,7 @@ Die interne user_id darf nicht ohne ausdrückliche fachliche Notwendigkeit als �
 
 ⸻
 
-37. CLOUD-DATENMODELL
+38. CLOUD-DATENMODELL
 
 Cloud-Funktionen müssen langfristig auf den lokalen Fachobjekten aufbauen.
 
@@ -934,7 +989,7 @@ Lokale und Cloud-Daten müssen langfristig über stabile Identifikatoren miteina
 
 ⸻
 
-38. GLOBALE STATISTIKEN UND COMMUNITY-DATEN
+39. GLOBALE STATISTIKEN UND COMMUNITY-DATEN
 
 CatchTrack soll langfristig aus freigegebenen Daten anonymisierte und aggregierte Statistiken erzeugen können.
 
@@ -956,7 +1011,7 @@ Statistiksysteme müssen zwischen Rohdaten, personenbezogenen Daten und anonymis
 
 ⸻
 
-39. WORLDWIDE HITPARADE
+40. WORLDWIDE HITPARADE
 
 Eine spätere weltweite Hitparade kann auf freigegebenen Fangdaten basieren.
 
@@ -977,7 +1032,7 @@ Die öffentliche Darstellung erfolgt ausschließlich entsprechend der Freigabeei
 
 ⸻
 
-40. ANGELTREFFEN / COMMUNITY-PINNWAND
+41. ANGELTREFFEN / COMMUNITY-PINNWAND
 
 CatchTrack soll langfristig eine Community-Funktion für Angeltreffen ermöglichen.
 
@@ -1003,7 +1058,7 @@ Beziehungen zu Waters sollen über water_id erfolgen.
 
 ⸻
 
-41. COMMUNITY-PINNWAND
+42. COMMUNITY-PINNWAND
 
 Die spätere Pinnwand soll mehrere fachlich getrennte Inhalte unterstützen können.
 
@@ -1022,7 +1077,7 @@ Sie wird später als eigenes Fachmodul bzw. Community-System umgesetzt.
 
 ⸻
 
-42. MARKETPLACE
+43. MARKETPLACE
 
 CatchTrack soll langfristig einen Marketplace ermöglichen.
 
@@ -1049,7 +1104,7 @@ Der Marketplace darf nicht in Waters oder Catcher integriert werden.
 
 ⸻
 
-43. PAKETE UND FUNKTIONSFREIGABEN
+44. PAKETE UND FUNKTIONSFREIGABEN
 
 CatchTrack soll langfristig unterschiedliche Nutzungspakete unterstützen.
 
@@ -1076,7 +1131,7 @@ Ein Fachmodul darf keine eigene Tariflogik aufbauen.
 
 ⸻
 
-44. ADMINISTRATION / CMS
+45. ADMINISTRATION / CMS
 
 CatchTrack soll langfristig ein administrierbares System erhalten.
 
@@ -1100,7 +1155,7 @@ Die Administration darf nicht dauerhaft in Fachmodule integriert werden.
 
 ⸻
 
-45. ADMIN UND CLOUD
+46. ADMIN UND CLOUD
 
 Die spätere Administration kann über eine Cloud-basierte Administrationsoberfläche erfolgen.
 
@@ -1112,7 +1167,7 @@ Die konkrete Aufteilung zwischen lokaler Administration und Cloud-Administration
 
 ⸻
 
-46. UPDATE-SYSTEM
+47. UPDATE-SYSTEM
 
 CatchTrack soll langfristig ein Update-System erhalten.
 
@@ -1138,7 +1193,7 @@ Versionen müssen eindeutig nachvollziehbar sein.
 
 ⸻
 
-47. UPDATE-SICHERHEIT
+48. UPDATE-SICHERHEIT
 
 Spätere Updates müssen mindestens berücksichtigen:
 
@@ -1156,7 +1211,7 @@ Ein Update darf bestehende Benutzerdaten nicht unnötig zerstören.
 
 ⸻
 
-48. MULTILINGUALITÄT
+49. MULTILINGUALITÄT
 
 Neue Module müssen multilingual vorbereitet werden.
 
@@ -1170,7 +1225,7 @@ Weitere Sprachen müssen später ergänzt werden können.
 
 ⸻
 
-49. RUNTIME UND FEHLERBEHANDLUNG
+50. RUNTIME UND FEHLERBEHANDLUNG
 
 Module müssen die vorhandene Runtime- und Fehlerarchitektur verwenden.
 
@@ -1186,7 +1241,7 @@ Modulfehler müssen nachvollziehbar bleiben.
 
 ⸻
 
-50. WIEDERVERWENDBARKEIT
+51. WIEDERVERWENDBARKEIT
 
 Funktionen sollen möglichst so entwickelt werden, dass andere Module sie später verwenden können.
 
@@ -1200,7 +1255,7 @@ Andere Module sollen diese Daten verwenden können, ohne internen Modulcode zu d
 
 ⸻
 
-51. KEINE PARALLELENTWICKLUNG
+52. KEINE PARALLELENTWICKLUNG
 
 Bei der Entwicklung eines Moduls werden grundsätzlich keine anderen Fachmodule nebenbei umgebaut.
 
@@ -1222,7 +1277,7 @@ ein Modul
 
 ⸻
 
-52. ARBEITSREIHENFOLGE DER AKTUELLEN ARCHITEKTUR
+53. ARBEITSREIHENFOLGE DER AKTUELLEN ARCHITEKTUR
 
 Die Entwicklung erfolgt grundsätzlich in technischer Abhängigkeitsreihenfolge.
 
@@ -1242,7 +1297,7 @@ Technische Abhängigkeiten haben Vorrang vor einer rein alphabetischen oder hist
 
 ⸻
 
-53. KEINE VORZEITIGE AUSIMPLEMENTIERUNG ZUKÜNFTIGER MODULE
+54. KEINE VORZEITIGE AUSIMPLEMENTIERUNG ZUKÜNFTIGER MODULE
 
 Die Architektur muss spätere Module ermöglichen.
 
@@ -1267,7 +1322,7 @@ Diese Funktionen werden später in ihren jeweiligen Modulen umgesetzt.
 
 ⸻
 
-54. ARCHITEKTURZIEL
+55. ARCHITEKTURZIEL
 
 CatchTrack soll langfristig aus klar getrennten, miteinander verbundenen Fachmodulen bestehen.
 
@@ -1301,7 +1356,7 @@ Dabei gilt:
 
 ⸻
 
-55. MODULREIHENFOLGE UND ABHÄNGIGKEITEN
+56. MODULREIHENFOLGE UND ABHÄNGIGKEITEN
 
 Der aktuelle Entwicklungsstand wird nicht allein anhand einer historischen Modulliste bestimmt.
 
@@ -1331,7 +1386,7 @@ Der tatsächlich erforderliche technische Unterbau hat Vorrang.
 
 ⸻
 
-56. MASTER-DATEIEN
+57. MASTER-DATEIEN
 
 Bei der Entwicklung eines Moduls werden zusammengehörige Dateien möglichst gemeinsam als vollständige Master-Version erstellt.
 
@@ -1349,7 +1404,7 @@ Eine Master-Version muss den bekannten zukünftigen Architekturanforderungen Rec
 
 ⸻
 
-57. VOLLSTÄNDIGE DATEIEN STATT PATCHES
+58. VOLLSTÄNDIGE DATEIEN STATT PATCHES
 
 Wenn eine Datei erstellt, ersetzt oder überarbeitet werden muss, wird grundsätzlich immer die vollständige Datei ausgegeben.
 
@@ -1371,23 +1426,35 @@ Ziel ist, dass jede bereitgestellte Datei direkt als vollständige Datei in Work
 
 ⸻
 
-58. VORHANDENE DATEIEN
+59. VORHANDENE DATEIEN – READ FIRST, THEN UPDATE
 
-Eine vorhandene Datei wird nicht zwanghaft geflickt.
+Eine vorhandene Datei wird nicht aus einer früheren Version des Chats rekonstruiert.
 
-Wenn die Struktur sinnvoll ist:
+Vor jeder Änderung gilt verbindlich:
 
-→ gezielt integrieren
+GitHub / Server
+↓
+vollständige aktuelle Datei auslesen
+↓
+aktuellen Inhalt prüfen
+↓
+bestehende Funktionen und Informationen erhalten
+↓
+nur notwendige Änderungen / Ergänzungen durchführen
+↓
+vollständige aktualisierte Master-Datei ausgeben
 
-Wenn sie beschädigt, widersprüchlich, veraltet oder unnötig kompliziert ist:
+Die vorhandene Datei wird somit grundsätzlich aktualisiert bzw. ergänzt, nicht aus dem Gedächtnis oder aus einem alten Chatstand neu erzeugt.
 
-→ vollständige Master-Version erstellen
+Eine vollständige Neuerstellung ist nur zulässig, wenn die aktuelle Datei nach Prüfung technisch beschädigt, widersprüchlich, veraltet oder strukturell ungeeignet ist.
 
-Gültige bestehende Funktionen und Informationen dürfen dabei nicht verloren gehen.
+Auch in diesem Fall muss die tatsächlich vorhandene Datei zuerst vollständig ausgelesen werden.
+
+Bestehende gültige Funktionen und Informationen dürfen bei einer Neuerstellung nicht unbeabsichtigt verloren gehen.
 
 ⸻
 
-59. AUSGABEFORMAT FÜR NEUE DATEIEN
+60. AUSGABEFORMAT FÜR NEUE DATEIEN
 
 Bei der Entwicklung werden zunächst vollständig aufgelistet:
 
@@ -1416,9 +1483,11 @@ Keine unnötigen Teilstücke.
 
 Keine unvollständigen Patch-Fragmente.
 
+Bei einer bestehenden Datei basiert der ausgegebene Inhalt immer auf dem unmittelbar zuvor vollständig ausgelesenen aktuellen GitHub-Stand.
+
 ⸻
 
-60. COPYBLOCK-REGEL
+61. COPYBLOCK-REGEL
 
 Wenn mehrere Dateien gleichzeitig erstellt oder ersetzt werden müssen, werden sie möglichst gemeinsam in einer Ausgabe geliefert.
 
@@ -1435,10 +1504,16 @@ Diese Regel gilt verbindlich für alle weiteren Entwicklungsarbeiten.
 
 ⸻
 
-61. ARBEITSABLAUF: CHATGPT → WORKING COPY → GITHUB
+62. ARBEITSABLAUF: CHATGPT → WORKING COPY → GITHUB
 
 Die CatchTrack-Entwicklung erfolgt nach folgendem verbindlichen Arbeitsablauf:
 
+GitHub / aktueller Serverstand
+↓
+vollständiges Auslesen
+↓
+technische Prüfung
+↓
 ChatGPT
 ↓
 vollständige Master-Dateien / Änderungen
@@ -1474,7 +1549,38 @@ Dabei werden abhängig vom Arbeitsschritt insbesondere geprüft:
 
 ⸻
 
-62. OK-REGEL
+63. VERBINDLICHE READ-BEFORE-WRITE-REGEL
+
+Für jede vorhandene Datei gilt:
+
+READ BEFORE WRITE
+
+Das bedeutet:
+
+1. Die Datei wird vollständig aus dem aktuellen GitHub-/Serverstand gelesen.
+2. Der tatsächliche aktuelle Inhalt wird als alleinige Arbeitsgrundlage verwendet.
+3. Die erforderliche Änderung oder Ergänzung wird auf diesem Stand vorgenommen.
+4. Die vollständige aktualisierte Datei wird ausgegeben.
+5. Der Benutzer übernimmt die vollständige Datei über Working Copy.
+6. Nach dem Commit wird der aktuelle GitHub-Stand erneut gelesen und kontrolliert.
+
+Eine Datei darf nicht auf Basis einer älteren Chat-Ausgabe geändert werden, wenn eine aktuellere Version auf GitHub vorhanden ist.
+
+Dies gilt ausdrücklich auch für:
+
+* AI_CONTEXT.md
+* Projektregeln
+* Statusdateien
+* Moduldateien
+* Core-Dateien
+* SQL-Dateien
+* Migrationen
+* Konfigurationen
+* Dokumentationen
+
+⸻
+
+64. OK-REGEL
 
 Wenn der Benutzer:
 
@@ -1504,7 +1610,7 @@ Kein nächster Entwicklungsschritt wird als abgeschlossen dargestellt, wenn die 
 
 ⸻
 
-63. ARBEITSWEISE UND KOMMUNIKATION
+65. ARBEITSWEISE UND KOMMUNIKATION
 
 Die technische Zusammenarbeit soll ohne unnötige Wiederholungen erfolgen.
 
@@ -1534,7 +1640,7 @@ Wenn eine Entscheidung für die Architektur erforderlich ist und aus dem Projekt
 
 ⸻
 
-64. AKTUELLER PROJEKTSTATUS
+66. AKTUELLER PROJEKTSTATUS
 
 Stand: 10.08.2026
 
@@ -1576,7 +1682,7 @@ Bei jedem folgenden Modul ist die User-ID-Prüfung verbindlich.
 
 ⸻
 
-65. WICHTIGE ABSCHLUSSREGEL
+67. WICHTIGE ABSCHLUSSREGEL
 
 Abgeschlossene Module werden nicht ohne konkreten technischen Grund erneut verändert.
 
@@ -1591,9 +1697,19 @@ Das GPS-Modul gilt ab Version 2.5.0 als abgeschlossen.
 
 Das Waters-Modul wird auf Grundlage des bestehenden committeden Standes und der neuen Identity-Architektur als Master-Version fertiggestellt.
 
+Auch bei einer notwendigen Änderung eines abgeschlossenen Moduls gilt die Read-Before-Write-Regel:
+
+aktuellen GitHub-Stand vollständig lesen
+↓
+technische Notwendigkeit feststellen
+↓
+Änderung auf aktuellem Stand durchführen
+↓
+vollständige Datei ausgeben
+
 ⸻
 
-66. VERBINDLICHE ZIELARCHITEKTUR
+68. VERBINDLICHE ZIELARCHITEKTUR
 
 Die langfristige CatchTrack-Architektur folgt diesem Grundprinzip:
 
@@ -1635,7 +1751,7 @@ Ziel ist eine langfristig wartbare, erweiterbare, cloudfähige und wiederverwend
 
 ⸻
 
-67. LANGFRISTIGE GESAMTARCHITEKTUR
+69. LANGFRISTIGE GESAMTARCHITEKTUR
 
 Die langfristige CatchTrack-Struktur soll grundsätzlich folgende Ebenen ermöglichen:
 
@@ -1688,7 +1804,7 @@ Diese Ebenen dürfen technisch nicht unnötig miteinander vermischt werden.
 
 ⸻
 
-68. GRUNDSATZ FÜR ZUKÜNFTIGE MODULE
+70. GRUNDSATZ FÜR ZUKÜNFTIGE MODULE
 
 Bei jedem zukünftigen Modul ist automatisch zu prüfen:
 
@@ -1710,19 +1826,35 @@ Wenn die Antwort auf eine dieser Fragen technisch relevant und nicht eindeutig i
 
 ⸻
 
-69. ENDE DES AI_CONTEXT
+71. ENDE DES AI_CONTEXT
 
 Diese Datei ist verbindliche Arbeitsgrundlage für die technische Weiterentwicklung von CatchTrack.
 
 Bei jedem neuen Arbeitsschritt gilt:
 
 aktueller GitHub-Stand
-
+↓
+vollständige Bestandsaufnahme
+↓
 aktuelle technische Realität
+↓
 Commit-Historie
+↓
 aktuelle Projektdokumentation
+↓
 AI_CONTEXT
+↓
 ältere Annahmen und Chatverläufe
+
+Für jede vorhandene Datei gilt zusätzlich verbindlich:
+
+VOLLSTÄNDIG LESEN
+↓
+AKTUELLEN STAND ALS BASIS VERWENDEN
+↓
+NUR ERFORDERLICHES AKTUALISIEREN / ERGÄNZEN
+↓
+VOLLSTÄNDIGE DATEI AUSGEBEN
 
 Die Architektur wird schrittweise als vollständige Master-Version aufgebaut.
 
