@@ -2,7 +2,7 @@
 
 window.CatchTrackWatersModule = {
 
-    version: "4.6.0",
+    version: "4.7.0",
 
     initialized: false,
     schemaReady: false,
@@ -785,23 +785,86 @@ window.CatchTrackWatersModule = {
                 "function"
         ) {
 
-            const position =
-                await gps.requestPosition();
+            this.state.gpsBusy = true;
 
-            if (!position) {
+            try {
 
-                throw new Error(
-                    "GPS lieferte keinen Standort."
-                );
+                const position =
+                    await gps.requestPosition();
+
+                if (!position) {
+
+                    throw new Error(
+                        "GPS lieferte keinen Standort."
+                    );
+
+                }
+
+                const normalized = {
+
+                    latitude:
+                        Number(
+                            position.latitude
+                        ),
+
+                    longitude:
+                        Number(
+                            position.longitude
+                        ),
+
+                    accuracy:
+                        Number.isFinite(
+                            Number(position.accuracy)
+                        )
+                            ? Number(position.accuracy)
+                            : null,
+
+                    altitude:
+                        Number.isFinite(
+                            Number(position.altitude)
+                        )
+                            ? Number(position.altitude)
+                            : null,
+
+                    timestamp:
+                        position.timestamp ||
+                        new Date().toISOString(),
+
+                    source:
+                        position.source ||
+                        "gps-module"
+
+                };
+
+                if (
+                    !Number.isFinite(
+                        normalized.latitude
+                    ) ||
+                    !Number.isFinite(
+                        normalized.longitude
+                    )
+                ) {
+
+                    throw new Error(
+                        "GPS lieferte ungültige Koordinaten."
+                    );
+
+                }
+
+                this.state.currentPosition =
+                    normalized;
+
+                return normalized;
+
+            }
+            finally {
+
+                this.state.gpsBusy = false;
 
             }
 
-            this.state.currentPosition =
-                position;
-
-            return position;
-
         }
+
 
         if (!navigator.geolocation) {
 
@@ -932,244 +995,166 @@ window.CatchTrackWatersModule = {
 
 
         /*
-         * CatchTrack benötigt bewusst nur:
+         * CatchTrack verwendet für die Ortszuordnung
+         * bewusst nur:
          *
          * Land
          * Provinz/Bundesland
-         * Ort/Region
+         * Ort
          *
-         * Die GPS-Koordinaten selbst bleiben die
-         * exakte Positionsinformation.
+         * Die exakten GPS-Koordinaten bleiben separat
+         * im Datensatz gespeichert.
+         *
+         * Für die Browser-Anwendung wird ausschließlich
+         * der dafür vorgesehene kostenlose
+         * BigDataCloud-Client-Endpunkt verwendet.
          */
 
 
-        /*
-         * Primärer Dienst:
-         * Nominatim / OpenStreetMap
-         */
+        const url =
+            "https://api.bigdatacloud.net/data/" +
+            "reverse-geocode-client" +
+            `?latitude=${encodeURIComponent(lat)}` +
+            `&longitude=${encodeURIComponent(lon)}` +
+            "&localityLanguage=de";
+
+
         try {
-
-            const url =
-                "https://nominatim.openstreetmap.org/reverse" +
-                `?format=jsonv2` +
-                `&lat=${encodeURIComponent(lat)}` +
-                `&lon=${encodeURIComponent(lon)}` +
-                `&zoom=18` +
-                `&addressdetails=1` +
-                `&accept-language=de`;
 
             const response =
                 await fetch(
                     url,
                     {
                         method: "GET",
-                        headers: {
-                            Accept:
-                                "application/json"
-                        }
+                        mode: "cors",
+                        cache: "no-store"
                     }
                 );
 
-            if (response.ok) {
-
-                const result =
-                    await response.json();
-
-                const address =
-                    result?.address || {};
-
-
-                /*
-                 * Land
-                 */
-                const country =
-                    String(
-                        address.country ||
-                        ""
-                    ).trim();
-
-
-                /*
-                 * Provinz / Bundesland
-                 */
-                const province =
-                    String(
-                        address.state ||
-                        address.province ||
-                        address.region ||
-                        address.state_district ||
-                        address.county ||
-                        ""
-                    ).trim();
-
-
-                /*
-                 * Ort / Region
-                 */
-                const locality =
-                    String(
-                        address.city ||
-                        address.town ||
-                        address.municipality ||
-                        address.city_district ||
-                        address.village ||
-                        address.suburb ||
-                        address.district ||
-                        ""
-                    ).trim();
-
-
-                if (
-                    country ||
-                    province ||
-                    locality
-                ) {
-
-                    return {
-
-                        country,
-
-                        region:
-                            [
-                                province,
-                                locality
-                            ]
-                            .filter(Boolean)
-                            .join(" · "),
-
-                        source:
-                            "nominatim",
-
-                        province,
-
-                        locality
-
-                    };
-
-                }
-
-            }
-
-        }
-        catch (error) {
-
-            this.handleError(
-                error,
-                "waters:nominatim"
-            );
-
-        }
-
-
-        /*
-         * Fallback:
-         * BigDataCloud
-         */
-        try {
-
-            const url =
-                "https://api.bigdatacloud.net/data/" +
-                "reverse-geocode-client" +
-                `?latitude=${encodeURIComponent(lat)}` +
-                `&longitude=${encodeURIComponent(lon)}` +
-                "&localityLanguage=de";
-
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
-                        headers: {
-                            Accept:
-                                "application/json"
-                        }
-                    }
-                );
 
             if (!response.ok) {
 
                 throw new Error(
-                    `Reverse-Geocoding-Fallback fehlgeschlagen (${response.status}).`
+                    `Ortsbestimmung fehlgeschlagen (HTTP ${response.status}).`
                 );
 
             }
+
 
             const result =
                 await response.json();
 
 
             /*
-             * Land
+             * BigDataCloud liefert:
+             *
+             * countryName
+             * principalSubdivision
+             * city
+             * locality
+             *
+             * Je nach Position können einzelne Ortsfelder
+             * fehlen. Deshalb werden mehrere Varianten
+             * berücksichtigt.
              */
+
             const country =
                 String(
                     result?.countryName ||
+                    result?.country ||
                     ""
                 ).trim();
 
 
-            /*
-             * Provinz / Bundesland
-             */
             const province =
                 String(
                     result?.principalSubdivision ||
                     result?.principalSubdivisionName ||
+                    result?.state ||
+                    result?.region ||
+                    ""
+                ).trim();
+
+
+            const locality =
+                String(
+                    result?.city ||
+                    result?.locality ||
+                    result?.localityName ||
+                    result?.town ||
+                    result?.municipality ||
+                    result?.village ||
+                    result?.suburb ||
                     ""
                 ).trim();
 
 
             /*
-             * Ort / Region
+             * Für CatchTrack wird Provinz/Bundesland
+             * und Ort gemeinsam im bestehenden Feld
+             * "region" gespeichert.
+             *
+             * Beispiel:
+             *
+             * Thailand
+             * Prachuap Khiri Khan · Pranburi
              */
-            const locality =
-                String(
-                    result?.city ||
-                    result?.locality ||
-                    ""
-                ).trim();
+
+            const region =
+                [
+                    province,
+                    locality
+                ]
+                .filter(Boolean)
+                .filter(
+                    (
+                        value,
+                        index,
+                        array
+                    ) =>
+                        array.indexOf(value) === index
+                )
+                .join(" · ");
 
 
             if (
-                country ||
-                province ||
-                locality
+                !country &&
+                !region
             ) {
 
-                return {
-
-                    country,
-
-                    region:
-                        [
-                            province,
-                            locality
-                        ]
-                        .filter(Boolean)
-                        .join(" · "),
-
-                    source:
-                        "bigdatacloud",
-
-                    province,
-
-                    locality
-
-                };
+                throw new Error(
+                    "Der Ortsdienst lieferte keine verwertbaren Ortsdaten."
+                );
 
             }
+
+
+            return {
+
+                country,
+
+                region,
+
+                source:
+                    "bigdatacloud",
+
+                province,
+
+                locality
+
+            };
 
         }
         catch (error) {
 
             this.handleError(
                 error,
-                "waters:reverse-geocode-fallback"
+                "waters:reverse-geocode"
             );
 
-        }
+            return null;
 
-        return null;
+        }
 
     },
 
@@ -1211,11 +1196,13 @@ window.CatchTrackWatersModule = {
             longitude
         });
 
+
         const geocoded =
             await this.reverseGeocode(
                 latitude,
                 longitude
             );
+
 
         if (geocoded) {
 
@@ -1225,13 +1212,26 @@ window.CatchTrackWatersModule = {
             );
 
             this.state.locationResolved =
-                true;
+                Boolean(
+                    geocoded.country ||
+                    geocoded.region
+                );
+
+        }
+        else {
+
+            this.state.locationResolved =
+                false;
 
         }
 
+
         return {
+
             position,
+
             geocoded
+
         };
 
     },
@@ -1242,6 +1242,7 @@ window.CatchTrackWatersModule = {
         if (this.state.editingId) {
             return;
         }
+
 
         const latitude =
             document.getElementById(
@@ -1263,6 +1264,7 @@ window.CatchTrackWatersModule = {
                 "waters-region"
             );
 
+
         if (
             !latitude ||
             !longitude
@@ -1271,6 +1273,12 @@ window.CatchTrackWatersModule = {
             return;
 
         }
+
+
+        /*
+         * Nur bei einem wirklich neuen,
+         * noch leeren Formular automatisch ermitteln.
+         */
 
         if (
             latitude.value ||
@@ -1283,10 +1291,12 @@ window.CatchTrackWatersModule = {
 
         }
 
+
         this.setGPSMessage(
-            "GPS, Land und Region werden ermittelt …",
+            "GPS, Land, Provinz/Bundesland und Ort werden ermittelt …",
             "info"
         );
+
 
         try {
 
@@ -1295,20 +1305,63 @@ window.CatchTrackWatersModule = {
                     false
                 );
 
+
             if (
                 result?.geocoded
             ) {
 
-                this.setGPSMessage(
-                    "GPS, Land und Region wurden automatisch übernommen.",
-                    "success"
-                );
+                const hasCountry =
+                    Boolean(
+                        result.geocoded.country
+                    );
+
+                const hasRegion =
+                    Boolean(
+                        result.geocoded.region
+                    );
+
+
+                if (
+                    hasCountry &&
+                    hasRegion
+                ) {
+
+                    this.setGPSMessage(
+                        "GPS, Land, Provinz/Bundesland und Ort wurden automatisch übernommen.",
+                        "success"
+                    );
+
+                }
+                else if (hasCountry) {
+
+                    this.setGPSMessage(
+                        "GPS und Land wurden übernommen. Provinz/Bundesland und Ort konnten nicht vollständig ermittelt werden.",
+                        "info"
+                    );
+
+                }
+                else if (hasRegion) {
+
+                    this.setGPSMessage(
+                        "GPS sowie Provinz/Bundesland und Ort wurden übernommen. Das Land konnte nicht ermittelt werden.",
+                        "info"
+                    );
+
+                }
+                else {
+
+                    this.setGPSMessage(
+                        "GPS wurde übernommen. Ortsdaten konnten nicht automatisch ermittelt werden.",
+                        "info"
+                    );
+
+                }
 
             }
             else {
 
                 this.setGPSMessage(
-                    "GPS wurde übernommen. Land und Region konnten nicht automatisch ermittelt werden.",
+                    "GPS wurde übernommen. Ortsdaten konnten nicht automatisch ermittelt werden.",
                     "info"
                 );
 
@@ -1344,6 +1397,7 @@ window.CatchTrackWatersModule = {
                 "waters-longitude"
             );
 
+
         if (
             latitude &&
             Number.isFinite(
@@ -1357,6 +1411,7 @@ window.CatchTrackWatersModule = {
                 ).toFixed(6);
 
         }
+
 
         if (
             longitude &&
@@ -1390,9 +1445,10 @@ window.CatchTrackWatersModule = {
                 "waters-region"
             );
 
+
         if (
             country &&
-            geocoded.country &&
+            geocoded?.country &&
             (
                 overwrite ||
                 !country.value.trim()
@@ -1404,9 +1460,10 @@ window.CatchTrackWatersModule = {
 
         }
 
+
         if (
             region &&
-            geocoded.region &&
+            geocoded?.region &&
             (
                 overwrite ||
                 !region.value.trim()
@@ -1427,10 +1484,12 @@ window.CatchTrackWatersModule = {
             return;
         }
 
+
         const button =
             document.getElementById(
                 "waters-gps-button"
             );
+
 
         try {
 
@@ -1438,30 +1497,75 @@ window.CatchTrackWatersModule = {
                 button.disabled = true;
             }
 
+
             this.setGPSMessage(
                 "Standort wird ermittelt …",
                 "info"
             );
+
 
             const result =
                 await this.resolveCurrentLocation(
                     true
                 );
 
+
             if (
                 result?.geocoded
             ) {
 
-                this.setGPSMessage(
-                    "GPS, Land und Region wurden aktualisiert.",
-                    "success"
-                );
+                const country =
+                    Boolean(
+                        result.geocoded.country
+                    );
+
+                const region =
+                    Boolean(
+                        result.geocoded.region
+                    );
+
+
+                if (
+                    country &&
+                    region
+                ) {
+
+                    this.setGPSMessage(
+                        "GPS, Land, Provinz/Bundesland und Ort wurden aktualisiert.",
+                        "success"
+                    );
+
+                }
+                else if (country) {
+
+                    this.setGPSMessage(
+                        "GPS und Land wurden aktualisiert. Provinz/Bundesland und Ort konnten nicht vollständig ermittelt werden.",
+                        "info"
+                    );
+
+                }
+                else if (region) {
+
+                    this.setGPSMessage(
+                        "GPS sowie Provinz/Bundesland und Ort wurden aktualisiert. Das Land konnte nicht ermittelt werden.",
+                        "info"
+                    );
+
+                }
+                else {
+
+                    this.setGPSMessage(
+                        "GPS wurde aktualisiert. Ortsdaten konnten nicht ermittelt werden.",
+                        "info"
+                    );
+
+                }
 
             }
             else {
 
                 this.setGPSMessage(
-                    "GPS wurde aktualisiert. Land und Region konnten nicht ermittelt werden.",
+                    "GPS wurde aktualisiert. Ortsdaten konnten nicht ermittelt werden.",
                     "info"
                 );
 
@@ -1497,29 +1601,73 @@ window.CatchTrackWatersModule = {
         try {
 
             this.setFormMessage(
-                "GPS, Land und Region werden ermittelt …",
+                "GPS, Land, Provinz/Bundesland und Ort werden ermittelt …",
                 "info"
             );
+
 
             const result =
                 await this.resolveCurrentLocation(
                     true
                 );
 
+
             if (
                 result?.geocoded
             ) {
 
-                this.setFormMessage(
-                    "GPS, Land und Region wurden übernommen.",
-                    "success"
-                );
+                const country =
+                    Boolean(
+                        result.geocoded.country
+                    );
+
+                const region =
+                    Boolean(
+                        result.geocoded.region
+                    );
+
+
+                if (
+                    country &&
+                    region
+                ) {
+
+                    this.setFormMessage(
+                        "GPS, Land, Provinz/Bundesland und Ort wurden übernommen.",
+                        "success"
+                    );
+
+                }
+                else if (country) {
+
+                    this.setFormMessage(
+                        "GPS und Land wurden übernommen. Provinz/Bundesland und Ort konnten nicht vollständig ermittelt werden.",
+                        "info"
+                    );
+
+                }
+                else if (region) {
+
+                    this.setFormMessage(
+                        "GPS sowie Provinz/Bundesland und Ort wurden übernommen. Das Land konnte nicht ermittelt werden.",
+                        "info"
+                    );
+
+                }
+                else {
+
+                    this.setFormMessage(
+                        "GPS wurde übernommen. Ortsdaten konnten nicht ermittelt werden.",
+                        "info"
+                    );
+
+                }
 
             }
             else {
 
                 this.setFormMessage(
-                    "GPS wurde übernommen. Land und Region konnten nicht automatisch ermittelt werden.",
+                    "GPS wurde übernommen. Ortsdaten konnten nicht ermittelt werden.",
                     "info"
                 );
 
@@ -1549,15 +1697,19 @@ window.CatchTrackWatersModule = {
             return;
         }
 
+
         this.state.busy = true;
+
 
         try {
 
             const data =
                 this.getFormData();
 
+
             const editingId =
                 this.state.editingId;
+
 
             const water =
                 editingId
@@ -1569,6 +1721,7 @@ window.CatchTrackWatersModule = {
                         data
                     );
 
+
             if (!water) {
 
                 throw new Error(
@@ -1577,12 +1730,15 @@ window.CatchTrackWatersModule = {
 
             }
 
+
             const wasNew =
                 !editingId;
+
 
             this.resetForm();
 
             await this.refresh();
+
 
             this.setFormMessage(
                 wasNew
@@ -1590,6 +1746,7 @@ window.CatchTrackWatersModule = {
                     : "Gewässer wurde aktualisiert.",
                 "success"
             );
+
 
             if (wasNew) {
 
@@ -1676,10 +1833,12 @@ window.CatchTrackWatersModule = {
             return;
         }
 
+
         const panel =
             list.closest(
                 ".waters-panel"
             );
+
 
         if (panel) {
 
@@ -1704,10 +1863,12 @@ window.CatchTrackWatersModule = {
             return;
         }
 
+
         const panel =
             form.closest(
                 ".waters-panel"
             );
+
 
         if (panel) {
 
@@ -1719,6 +1880,7 @@ window.CatchTrackWatersModule = {
             return;
 
         }
+
 
         form.scrollIntoView({
             behavior: "smooth",
@@ -1737,8 +1899,10 @@ window.CatchTrackWatersModule = {
             this.state.waters =
                 this.getAll();
 
+
             this.renderList();
             this.renderCount();
+
 
             this.setStatus(
                 this.state.waters.length
@@ -1752,14 +1916,17 @@ window.CatchTrackWatersModule = {
 
             this.state.waters = [];
 
+
             this.renderList();
             this.renderCount();
+
 
             this.setStatus(
                 error?.message ||
                 "Gewässer konnten nicht geladen werden.",
                 "error"
             );
+
 
             this.handleError(
                 error,
@@ -1777,6 +1944,7 @@ window.CatchTrackWatersModule = {
             document.getElementById(
                 "waters-count"
             );
+
 
         if (element) {
 
@@ -1797,11 +1965,14 @@ window.CatchTrackWatersModule = {
                 "waters-list"
             );
 
+
         if (!container) {
             return;
         }
 
+
         container.innerHTML = "";
+
 
         if (!this.state.waters.length) {
 
@@ -1812,11 +1983,14 @@ window.CatchTrackWatersModule = {
 
         }
 
+
         this.state.waters.forEach(
             water => {
 
                 container.appendChild(
-                    this.createWaterCard(water)
+                    this.createWaterCard(
+                        water
+                    )
                 );
 
             }
@@ -1860,6 +2034,7 @@ window.CatchTrackWatersModule = {
         meta.className =
             "waters-card-meta";
 
+
         meta.textContent =
             [
                 water.type,
@@ -1868,6 +2043,7 @@ window.CatchTrackWatersModule = {
             ]
             .filter(Boolean)
             .join(" · ");
+
 
         article.appendChild(
             meta
@@ -1931,6 +2107,7 @@ window.CatchTrackWatersModule = {
                 "Bearbeiten"
             );
 
+
         edit.addEventListener(
             "click",
             event => {
@@ -1951,9 +2128,11 @@ window.CatchTrackWatersModule = {
                 "Navigation"
             );
 
+
         navigation.disabled =
             water.gps_lat === null ||
             water.gps_lon === null;
+
 
         navigation.addEventListener(
             "click",
@@ -1974,6 +2153,7 @@ window.CatchTrackWatersModule = {
             this.createButton(
                 "Löschen"
             );
+
 
         remove.addEventListener(
             "click",
@@ -1996,9 +2176,11 @@ window.CatchTrackWatersModule = {
             remove
         );
 
+
         article.appendChild(
             actions
         );
+
 
         return article;
 
@@ -2012,14 +2194,18 @@ window.CatchTrackWatersModule = {
                 "button"
             );
 
+
         button.type =
             "button";
+
 
         button.className =
             "waters-button waters-button-secondary";
 
+
         button.textContent =
             text;
+
 
         return button;
 
@@ -2035,6 +2221,7 @@ window.CatchTrackWatersModule = {
                     id
                 );
 
+
             if (!water) {
 
                 throw new Error(
@@ -2043,15 +2230,14 @@ window.CatchTrackWatersModule = {
 
             }
 
+
             this.fillForm(
                 water
             );
 
-            /*
-             * Nach dem Anklicken von "Bearbeiten"
-             * wird das Formular sichtbar gemacht.
-             */
+
             this.showForm();
+
 
             this.setFormMessage(
                 `Gewässer „${water.name}" wird bearbeitet.`,
@@ -2066,6 +2252,7 @@ window.CatchTrackWatersModule = {
                 "Gewässer konnte nicht geladen werden.",
                 "error"
             );
+
 
             this.handleError(
                 error,
@@ -2124,6 +2311,7 @@ window.CatchTrackWatersModule = {
                         id
                     );
 
+
                 if (element) {
 
                     element.value =
@@ -2138,6 +2326,7 @@ window.CatchTrackWatersModule = {
         this.state.editingId =
             water.id;
 
+
         this.state.locationResolved =
             Boolean(
                 water.country ||
@@ -2151,6 +2340,7 @@ window.CatchTrackWatersModule = {
             document.getElementById(
                 "waters-cancel-button"
             );
+
 
         if (cancel) {
 
@@ -2169,21 +2359,26 @@ window.CatchTrackWatersModule = {
                 "waters-form"
             );
 
+
         if (form) {
             form.reset();
         }
+
 
         const id =
             document.getElementById(
                 "waters-id"
             );
 
+
         if (id) {
             id.value = "";
         }
 
+
         this.state.editingId =
             null;
+
 
         this.state.locationResolved =
             false;
@@ -2193,6 +2388,7 @@ window.CatchTrackWatersModule = {
             document.getElementById(
                 "waters-cancel-button"
             );
+
 
         if (cancel) {
 
@@ -2211,9 +2407,11 @@ window.CatchTrackWatersModule = {
                 id
             );
 
+
         if (!water) {
             return;
         }
+
 
         if (
             !window.confirm(
@@ -2225,11 +2423,13 @@ window.CatchTrackWatersModule = {
 
         }
 
+
         try {
 
             this.remove(
                 id
             );
+
 
             await this.refresh();
 
@@ -2241,6 +2441,7 @@ window.CatchTrackWatersModule = {
                 "Gewässer konnte nicht gelöscht werden.",
                 "error"
             );
+
 
             this.handleError(
                 error,
@@ -2264,8 +2465,10 @@ window.CatchTrackWatersModule = {
 
         }
 
+
         const gps =
             this.getGPSModule();
+
 
         if (
             gps &&
@@ -2279,6 +2482,7 @@ window.CatchTrackWatersModule = {
             );
 
         }
+
 
         window.location.href =
             "https://www.google.com/maps/dir/?api=1&destination=" +
@@ -2363,15 +2567,19 @@ window.CatchTrackWatersModule = {
                 "waters-status"
             );
 
+
         if (!element) {
             return;
         }
 
+
         element.textContent =
             message || "";
 
+
         element.className =
             "waters-status";
+
 
         if (type === "error") {
 
@@ -2380,6 +2588,7 @@ window.CatchTrackWatersModule = {
             );
 
         }
+
 
         if (type === "success") {
 
@@ -2402,15 +2611,19 @@ window.CatchTrackWatersModule = {
                 "waters-gps-status"
             );
 
+
         if (!element) {
             return;
         }
 
+
         element.textContent =
             message || "";
 
+
         element.className =
             "waters-message";
+
 
         if (type === "error") {
 
@@ -2419,6 +2632,7 @@ window.CatchTrackWatersModule = {
             );
 
         }
+
 
         if (type === "success") {
 
@@ -2441,15 +2655,19 @@ window.CatchTrackWatersModule = {
                 "waters-form-message"
             );
 
+
         if (!element) {
             return;
         }
 
+
         element.textContent =
             message || "";
 
+
         element.className =
             "waters-message";
+
 
         if (type === "error") {
 
@@ -2458,6 +2676,7 @@ window.CatchTrackWatersModule = {
             );
 
         }
+
 
         if (type === "success") {
 
