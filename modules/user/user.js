@@ -3,7 +3,7 @@
 
 window.CatchTrackUserModule = {
 
-    version: "1.1.0",
+    version: "1.2.0",
 
     initialized: false,
 
@@ -11,10 +11,6 @@ window.CatchTrackUserModule = {
 
 
     init() {
-
-        if (this.initialized) {
-            return;
-        }
 
         this.initialized = true;
 
@@ -92,7 +88,7 @@ window.CatchTrackUserModule = {
         }
 
 
-        const refreshedColumns =
+        let refreshedColumns =
             database.getTableColumns(
                 "users"
             );
@@ -116,14 +112,14 @@ window.CatchTrackUserModule = {
         }
 
 
-        const finalColumns =
+        refreshedColumns =
             database.getTableColumns(
                 "users"
             );
 
 
         if (
-            !finalColumns.includes(
+            !refreshedColumns.includes(
                 "created_at"
             )
         ) {
@@ -141,14 +137,14 @@ window.CatchTrackUserModule = {
         }
 
 
-        const afterCreatedAt =
+        refreshedColumns =
             database.getTableColumns(
                 "users"
             );
 
 
         if (
-            !afterCreatedAt.includes(
+            !refreshedColumns.includes(
                 "updated_at"
             )
         ) {
@@ -275,11 +271,11 @@ window.CatchTrackUserModule = {
 
         this.ensureMigrationRecord();
 
-
         database.saveDatabase();
 
 
         return {
+
             repaired:
                 missingColumns.length > 0,
 
