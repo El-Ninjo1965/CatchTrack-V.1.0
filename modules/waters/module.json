@@ -1,20 +1,26 @@
 {
-  "id": "waters",
-  "name": "Waters",
-  "version": "1.0.0",
-  "description": "Erfassung und Verwaltung von Fangplätzen und Gewässerstandorten.",
-  "entry": "app.js",
-  "enabled": true,
-  "features": {
-    "gps": true,
-    "automaticLocation": true,
-    "reverseGeocoding": false,
-    "waterNameManual": true,
-    "catchSpotPhoto": true,
-    "singlePhotoPerSpot": true,
-    "photoFormat": "webp",
-    "photoMaxWidth": 720,
-    "photoMaxHeight": 720,
-    "photoQuality": 0.8
-  }
+    "name": "waters",
+    "displayName": "Gewässer",
+    "version": "2.0.0",
+    "status": "active",
+    "enabled": true,
+    "description": "Verwaltung von Gewässern und Fangplätzen mit GPS-Standort, automatischer Ortsbestimmung und optimiertem Fangplatz-Foto.",
+    "path": "modules/waters/",
+    "files": {
+        "html": "waters.html",
+        "css": "waters.css",
+        "js": "waters.js"
+    },
+    "initializer": "CatchTrackWatersModule",
+    "dependencies": [],
+    "features": {
+        "gps": true,
+        "automaticLocation": true,
+        "geocodingProvider": "BigDataCloud",
+        "waterNameManual": true,
+        "singlePhotoPerSpot": true,
+        "photoFormat": "webp",
+        "photoMaxEdge": 720,
+        "photoQuality": 0.7
+    }
 }
