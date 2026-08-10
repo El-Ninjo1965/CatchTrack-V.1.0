@@ -3,7 +3,7 @@
 
 window.CatchTrack = {
 
-    version: "3.0.0",
+    version: "3.1.0",
 
     database: null,
 
@@ -122,11 +122,13 @@ window.CatchTrack = {
             "database/migrations/001_initial.sql"
         );
 
+
         await this.loadMigration(
             "2",
             "User and privacy foundation",
             "database/migrations/002_users.sql"
         );
+
 
         await this.loadMigration(
             "3",
@@ -319,6 +321,24 @@ window.CatchTrack = {
     },
 
 
+    initializeIdentity() {
+
+        if (
+            !window.CatchTrackIdentity
+        ) {
+
+            throw new Error(
+                "CatchTrack Identity Core nicht verfügbar."
+            );
+
+        }
+
+
+        CatchTrackIdentity.init();
+
+    },
+
+
     updateRuntimeStatus() {
 
         if (
@@ -460,6 +480,9 @@ window.CatchTrack = {
             await this.initializeDatabase();
 
 
+            this.initializeIdentity();
+
+
             await this.loadSeeds();
 
 
@@ -494,6 +517,7 @@ window.CatchTrack = {
                 "Migrationen:",
                 CatchTrackDatabase.getAppliedMigrations()
             );
+
 
         }
 
