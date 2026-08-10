@@ -36,7 +36,7 @@
                 <div>
                     <p class="waters-section-label">Standort</p>
                     <h2 id="waters-current-title">
-                        Gewässer in meiner Nähe
+                        Aktueller Standort
                     </h2>
                 </div>
 
@@ -61,12 +61,6 @@
                 class="waters-current-position"
                 hidden
             ></div>
-
-            <div
-                id="waters-nearby-list"
-                class="waters-nearby-list"
-                aria-live="polite"
-            ></div>
         </section>
 
         <section
@@ -77,7 +71,7 @@
                 <div>
                     <p class="waters-section-label">Verwaltung</p>
                     <h2 id="waters-form-title">
-                        Gewässer erfassen
+                        Fangplatz erfassen
                     </h2>
                 </div>
             </div>
@@ -97,7 +91,7 @@
 
                     <div class="waters-field waters-field-full">
                         <label for="waters-name">
-                            Name
+                            Gewässername
                         </label>
 
                         <input
@@ -136,12 +130,13 @@
                             type="text"
                             maxlength="100"
                             autocomplete="country-name"
+                            readonly
                         >
                     </div>
 
-                    <div class="waters-field waters-field-full">
+                    <div class="waters-field">
                         <label for="waters-region">
-                            Provinz / Bundesstaat / Ort
+                            Provinz / Bundesstaat
                         </label>
 
                         <input
@@ -150,6 +145,22 @@
                             type="text"
                             maxlength="150"
                             autocomplete="address-level1"
+                            readonly
+                        >
+                    </div>
+
+                    <div class="waters-field">
+                        <label for="waters-city">
+                            Ort
+                        </label>
+
+                        <input
+                            id="waters-city"
+                            name="city"
+                            type="text"
+                            maxlength="150"
+                            autocomplete="address-level2"
+                            readonly
                         >
                     </div>
 
@@ -179,6 +190,7 @@
                             max="90"
                             step="any"
                             inputmode="decimal"
+                            readonly
                         >
                     </div>
 
@@ -195,7 +207,52 @@
                             max="180"
                             step="any"
                             inputmode="decimal"
+                            readonly
                         >
+                    </div>
+
+                    <div class="waters-field">
+                        <label for="waters-accuracy">
+                            GPS-Genauigkeit
+                        </label>
+
+                        <input
+                            id="waters-accuracy"
+                            name="gps_accuracy_m"
+                            type="text"
+                            readonly
+                        >
+                    </div>
+
+                    <div class="waters-field waters-field-full">
+                        <label for="waters-photo">
+                            Fangplatz-Foto
+                        </label>
+
+                        <input
+                            id="waters-photo"
+                            name="photo"
+                            type="file"
+                            accept="image/*"
+                        >
+
+                        <p class="waters-help">
+                            Ein Foto pro Fangplatz. Automatisch auf
+                            maximal 720 px und WebP 70 % optimiert.
+                        </p>
+
+                        <div
+                            id="waters-photo-status"
+                            class="waters-message"
+                            role="status"
+                            aria-live="polite"
+                        ></div>
+
+                        <div
+                            id="waters-photo-preview"
+                            class="waters-photo-preview"
+                            hidden
+                        ></div>
                     </div>
 
                 </div>
@@ -214,7 +271,7 @@
                         class="waters-button waters-button-primary"
                         type="submit"
                     >
-                        Gewässer speichern
+                        Fangplatz speichern
                     </button>
 
                     <button
@@ -222,7 +279,7 @@
                         class="waters-button waters-button-secondary"
                         type="button"
                     >
-                        Aktuellen GPS-Standort übernehmen
+                        Aktuellen Standort übernehmen
                     </button>
 
                     <button
@@ -249,7 +306,7 @@
                     </p>
 
                     <h2 id="waters-list-title">
-                        Meine Gewässer
+                        Meine Fangplätze
                     </h2>
                 </div>
 
