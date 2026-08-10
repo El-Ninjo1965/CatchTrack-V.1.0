@@ -8,7 +8,7 @@ Sie dient als zentrale Arbeitsgrundlage für jede weitere Entwicklung.
 
 Der tatsächlich vorhandene GitHub-Dateistand hat grundsätzlich Vorrang vor älteren Annahmen, Chatverläufen oder nicht mehr aktuellen Dokumentationen.
 
-Dateien werden bei der praktischen Projektarbeit über Working Copy auf GitHub übernommen. Ein fehlender direkter Schreibzugriff des Assistenten ist kein Grund, von diesem Arbeitsablauf abzuweichen.
+Die praktische Zusammenarbeit erfolgt über ChatGPT, Working Copy und GitHub.
 
 ⸻
 
@@ -903,7 +903,29 @@ Eine Master-Version muss den bekannten zukünftigen Architekturanforderungen Rec
 
 ⸻
 
-40. VORHANDENE DATEIEN
+40. VOLLSTÄNDIGE DATEIEN STATT PATCHES
+
+Wenn eine Datei erstellt, ersetzt oder überarbeitet werden muss, wird grundsätzlich immer die vollständige Datei ausgegeben.
+
+Es werden keine:
+
+* Patch-Fragmente
+* Diff-Ausschnitte
+* einzelnen zu ersetzenden Codezeilen
+* Such-und-Ersetzen-Anweisungen
+* unvollständigen Dateiausschnitte
+
+als primäre Arbeitsgrundlage geliefert.
+
+Auch bei kleinen Änderungen wird die vollständige aktuelle Master-Version der betroffenen Datei ausgegeben.
+
+Wenn mehrere Dateien zusammengehören, werden alle betroffenen Dateien gemeinsam als vollständige Dateien ausgegeben.
+
+Ziel ist, dass jede bereitgestellte Datei direkt als vollständige Datei in Working Copy übernommen werden kann.
+
+⸻
+
+41. VORHANDENE DATEIEN
 
 Eine vorhandene Datei wird nicht zwanghaft geflickt.
 
@@ -919,7 +941,7 @@ Gültige bestehende Funktionen und Informationen dürfen dabei nicht verloren ge
 
 ⸻
 
-41. AUSGABEFORMAT FÜR NEUE DATEIEN
+42. AUSGABEFORMAT FÜR NEUE DATEIEN
 
 Bei der Entwicklung werden zunächst vollständig aufgelistet:
 
@@ -940,15 +962,17 @@ UNVERÄNDERT
 
 * Dateien
 
-Danach folgen die vollständigen Inhalte.
+Danach folgen die vollständigen Inhalte aller zu ersetzenden und neu zu erstellenden Dateien.
+
+Jede Datei wird möglichst in genau einem Copyblock ausgegeben.
 
 Keine unnötigen Teilstücke.
 
-Keine unvollständigen Patch-Fragmente, wenn eine vollständige Master-Datei sinnvoller ist.
+Keine unvollständigen Patch-Fragmente.
 
 ⸻
 
-42. COPYBLOCK-REGEL
+43. COPYBLOCK-REGEL
 
 Wenn mehrere Dateien gleichzeitig erstellt oder ersetzt werden müssen, werden sie möglichst gemeinsam in einer Ausgabe geliefert.
 
@@ -965,47 +989,58 @@ Diese Regel gilt verbindlich für alle weiteren Entwicklungsarbeiten.
 
 ⸻
 
-43. WORKING-COPY-ARBEITSABLAUF
+44. ARBEITSABLAUF: CHATGPT → WORKING COPY → GITHUB
 
-Der Benutzer übernimmt neue oder geänderte Dateien über Working Copy in das GitHub-Repository.
+Die CatchTrack-Entwicklung erfolgt nach folgendem verbindlichen Arbeitsablauf:
 
-Daher gilt:
-
-Assistent erstellt bzw. liefert vollständige Dateien.
+ChatGPT
 ↓
-Benutzer ersetzt/übernimmt Dateien mit Working Copy.
+vollständige Master-Dateien / Änderungen
 ↓
-Benutzer speichert und committet.
+Benutzer übernimmt die Dateien mit Working Copy
 ↓
-Assistent prüft den aktuellen GitHub-Stand.
+Working Copy speichert und committet
+↓
+GitHub
+↓
+ChatGPT liest den aktuellen GitHub-Stand zur Kontrolle
 
-Der Assistent darf keinen erfolgreichen GitHub-Schreibvorgang behaupten, wenn kein tatsächlicher Schreibzugriff vorhanden ist.
+ChatGPT übernimmt die Entwicklung, technische Prüfung und Kontrolle.
 
-Nach einem Benutzer-OK soll, sofern der GitHub-Lesenzugriff verfügbar ist, automatisch geprüft werden:
+Working Copy übernimmt die lokale Integration, Speicherung und den Commit.
 
-* Datei vorhanden?
-* erwarteter Inhalt vorhanden?
-* Version korrekt?
-* Commit vorhanden?
-* Projektstruktur korrekt?
+GitHub ist der maßgebliche technische Projektstand.
 
-Bei fehlendem Schreibzugriff wird die Datei als vollständiger Copyblock für Working Copy bereitgestellt.
+ChatGPT muss nicht prüfen oder thematisieren, ob ein direkter Schreibzugriff auf GitHub besteht.
+
+Nach dem Benutzer-OK wird der aktuelle GitHub-Stand erneut gelesen.
+
+Dabei werden abhängig vom Arbeitsschritt insbesondere geprüft:
+
+* Dateien vorhanden
+* aktueller Dateiinhalt
+* relevante Ordnerstruktur
+* Versionen
+* Commit
+* Commit-SHA, sofern verfügbar
+* relevante Abhängigkeiten
+* tatsächlicher Projektstand
 
 ⸻
 
-44. OK-REGEL
+45. OK-REGEL
 
-Wenn der Assistent Dateien zum Hochladen, Speichern oder Ersetzen bereitstellt und der Benutzer anschließend:
+Wenn der Benutzer:
 
 OK
 
-antwortet, bedeutet dies:
+antwortet, bedeutet dies verbindlich:
 
-Der Benutzer hat seinen Arbeitsschritt ausgeführt.
+Der Benutzer hat den vorgesehenen Arbeitsschritt ausgeführt.
 
-Danach wird der aktuelle GitHub-Stand geprüft, sofern der GitHub-Lesenzugriff verfügbar ist.
+Nach OK wird ohne weitere Rückfrage der aktuelle GitHub-Stand geprüft, sofern der GitHub-Zugriff verfügbar ist.
 
-Wenn alles korrekt ist:
+Wenn die Prüfung erfolgreich ist:
 
 → nächsten vorgesehenen Arbeitsschritt ausführen.
 
@@ -1013,11 +1048,13 @@ Wenn etwas nicht korrekt ist:
 
 → konkret mitteilen, was fehlt oder nicht stimmt.
 
+Es ist keine zusätzliche Bestätigung erforderlich, dass Dateien gespeichert, übernommen oder committed wurden.
+
 Kein nächster Entwicklungsschritt wird als abgeschlossen dargestellt, wenn die erforderliche Kontrolle fehlgeschlagen ist.
 
 ⸻
 
-45. AKTUELLER PROJEKTSTATUS
+46. AKTUELLER PROJEKTSTATUS
 
 Stand: 10.08.2026
 
@@ -1051,7 +1088,7 @@ Nächste vorgesehene Arbeitsschritte:
 
 ⸻
 
-46. WICHTIGE ABSCHLUSSREGEL
+47. WICHTIGE ABSCHLUSSREGEL
 
 Abgeschlossene Module werden nicht ohne konkreten technischen Grund erneut verändert.
 
@@ -1068,7 +1105,7 @@ Das Waters-Modul wird auf Grundlage des bestehenden committeden Standes und der 
 
 ⸻
 
-47. VERBINDLICHE ZIELARCHITEKTUR
+48. VERBINDLICHE ZIELARCHITEKTUR
 
 Die langfristige CatchTrack-Architektur folgt diesem Grundprinzip:
 
