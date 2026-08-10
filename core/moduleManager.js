@@ -2,14 +2,12 @@
 
 window.CatchTrackModuleManager = {
 
-version: "3.0.0",
+version: "2.0.0",
 modules: [],
 activeModules: [],
 currentModule: null,
 loadedScripts: {},
 loadedStyles: {},
-loadedMetadata: {},
-registeredMigrations: {},
 moduleStatus: {},
 initialized: false,
 init() {
@@ -156,12 +154,6 @@ async loadModule(
                 )
             );
         }
-        await this.loadModuleMetadata(
-            module
-        );
-        await this.registerModuleMigrations(
-            module
-        );
         const htmlResponse =
             await fetch(
                 module.path +
@@ -219,168 +211,6 @@ async loadModule(
             );
         }
     }
-},
-async loadModuleMetadata(
-    module
-) {
-    const name =
-        module?.name;
-    if (
-        !name
-    ) {
-        throw new Error(
-            "Modulname fehlt."
-        );
-    }
-    if (
-        this.loadedMetadata[
-            name
-        ]
-    ) {
-        return this.loadedMetadata[
-            name
-        ];
-    }
-    const path =
-        module.path +
-        "module.json";
-    const response =
-        await fetch(
-            path
-        );
-    if (
-        !response.ok
-    ) {
-        throw new Error(
-            `Moduldefinition konnte nicht geladen werden: ${path}`
-        );
-    }
-    const metadata =
-        await response.json();
-    if (
-        !metadata ||
-        typeof metadata !==
-            "object"
-    ) {
-        throw new Error(
-            `Ungültige Moduldefinition: ${path}`
-        );
-    }
-    if (
-        metadata.name &&
-        metadata.name !==
-            module.name
-    ) {
-        throw new Error(
-            `Modulname stimmt nicht überein: ${module.name} / ${metadata.name}`
-        );
-    }
-    this.loadedMetadata[
-        name
-    ] =
-        metadata;
-    return metadata;
-},
-async registerModuleMigrations(
-    module
-) {
-    const metadata =
-        await this.loadModuleMetadata(
-            module
-        );
-    const migrations =
-        Array.isArray(
-            metadata?.database?.migrations
-        )
-            ? metadata.database.migrations
-            : [];
-    if (
-        !migrations.length
-    ) {
-        return false;
-    }
-    if (
-        !window.CatchTrackDatabase ||
-        typeof
-            CatchTrackDatabase.registerMigration !==
-            "function"
-    ) {
-        throw new Error(
-            "CatchTrackDatabase unterstützt keine Migrationen."
-        );
-    }
-    for (
-        const migration
-        of migrations
-    ) {
-        const version =
-            String(
-                migration?.version ??
-                ""
-            ).trim();
-        const description =
-            String(
-                migration?.description ??
-                ""
-            );
-        const path =
-            String(
-                migration?.path ??
-                ""
-            ).trim();
-        if (
-            !version ||
-            !path
-        ) {
-            throw new Error(
-                `Ungültige Migration im Modul ${module.name}.`
-            );
-        }
-        const migrationKey =
-            `${module.name}:${version}`;
-        if (
-            this.registeredMigrations[
-                migrationKey
-            ]
-        ) {
-            continue;
-        }
-        const response =
-            await fetch(
-                path
-            );
-        if (
-            !response.ok
-        ) {
-            throw new Error(
-                `Migration konnte nicht geladen werden: ${path}`
-            );
-        }
-        const sql =
-            await response.text();
-        if (
-            !sql.trim()
-        ) {
-            throw new Error(
-                `Migration ist leer: ${path}`
-            );
-        }
-        CatchTrackDatabase.registerMigration(
-            version,
-            description,
-            database => {
-                database.exec(
-                    sql
-                );
-            }
-        );
-        this.registeredMigrations[
-            migrationKey
-        ] = true;
-    }
-    CatchTrackDatabase.runMigrations();
-    CatchTrackDatabase.saveDatabase();
-    return true;
 },
 loadStyle(
     module
