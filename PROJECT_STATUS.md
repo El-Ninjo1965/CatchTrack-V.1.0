@@ -34,6 +34,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Datum | Komponente | Änderung |
 |---|---|---|
+| 2026-08-11 | Weather/GPS Integration | `index.html`: Wetter lädt jetzt automatisch erst die aktuelle GPS-Position (wenn verfügbar), übernimmt Standort + Ortsnamen und erzwingt Refresh bei Standortwechsel |
 | 2026-08-11 | i18n Module | v1.0.0: Multilanguage DE/EN, navigator.language, manuell wählbar, Sprachauswahl in Einstellungen |
 | 2026-08-11 | GPS Module | v1.0.0: vollständiges GPS-Modul (Browser Geolocation, Simulation, Provider-unabhängige Schnittstelle) |
 | 2026-08-11 | Weather Module | v1.0.0: vollständiges Wetter-Modul (Open-Meteo, Provider-Abstraktion, Offline-Handling) |

@@ -1096,8 +1096,8 @@
       <!-- ===== Wetter ===== -->
       <div class="view" id="view-weather">
         <div class="page-header">
-          <h2>🌤️ Wetter</h2>
-          <p>Aktuelle Wetterdaten für deinen Angelspot.</p>
+          <h2 data-i18n="weather.page_title">🌤️ Wetter</h2>
+          <p data-i18n="weather.page_sub">Aktuelle Wetterdaten für deinen Angelspot.</p>
         </div>
 
         <!-- Standort-Leiste -->
@@ -1186,8 +1186,8 @@
       <!-- ===== GPS & Standort ===== -->
       <div class="view" id="view-gps">
         <div class="page-header">
-          <h2>📡 GPS & Standort</h2>
-          <p>Aktuelle Geräteposition – Schnittstelle für andere Module.</p>
+          <h2 data-i18n="gps.page_title">📡 GPS & Standort</h2>
+          <p data-i18n="gps.page_sub">Aktuelle Geräteposition – Schnittstelle für andere Module.</p>
         </div>
 
         <!-- Status-Banner -->
@@ -1869,7 +1869,7 @@ const CTApp = {
     const btn = document.getElementById('gps-track-btn');
     if (!btn || !gm) return;
     const tracking = gm.isTracking();
-    btn.textContent = tracking ? '⏹ Tracking stoppen' : '▶ Tracking starten';
+    btn.textContent = tracking ? this.t('gps.track_stop') : this.t('gps.track_start');
     btn.className   = 'gps-btn ' + (tracking ? 'red' : 'sec');
   },
 
@@ -1877,27 +1877,30 @@ const CTApp = {
     const panel = document.getElementById('gps-data-panel');
     if (!panel) return;
 
+    const t = (k, p) => this.t(k, p);
+    const locale = (window.CatchTrackI18n?.getLocale?.() || window.CatchTrackI18n?.getDeviceLocale?.() || navigator.language || 'de').replace('_', '-');
+
     if (!pos) {
-      panel.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--c-text-muted);font-size:0.87rem">Noch keine Position verfügbar.</div>';
+      panel.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--c-text-muted);font-size:0.87rem">${t('gps.no_pos')}</div>`;
       return;
     }
 
     const fmtNum = (v, dec) => v != null ? v.toFixed(dec) : '–';
-    const fmtTime = iso => iso ? new Date(iso).toLocaleString('de-DE') : '–';
+    const fmtTime = iso => iso ? new Date(iso).toLocaleString(locale) : '–';
 
     const rows = [
-      ['🌐', 'Latitude',          fmtNum(pos.latitude, 6),           false],
-      ['🌐', 'Longitude',         fmtNum(pos.longitude, 6),          false],
-      ['�️', 'Stadt',            pos.city     || 'wird geladen…',    true],
-      ['🗺️', 'Provinz/Bundesland', pos.province || 'wird geladen…', true],
-      ['🌍', 'Staat',             pos.country  || 'wird geladen…',   true],
-      ['�🎯', 'Genauigkeit',       pos.accuracy != null ? `±${Math.round(pos.accuracy)} m` : '–', true],
-      ['⛰️', 'Höhe',             pos.altitude != null ? `${Math.round(pos.altitude)} m` : 'N/A', true],
-      ['💨', 'Geschwindigkeit',   pos.speed != null ? `${(pos.speed * 3.6).toFixed(1)} km/h` : 'N/A', true],
-      ['🧭', 'Richtung',          pos.heading != null ? `${Math.round(pos.heading)}°` : 'N/A', true],
-      ['🕐', 'Zeitstempel',       fmtTime(pos.timestamp),            true],
-      ['📡', 'Quelle',            pos.source || 'gps',               true],
-      ['⚠️', 'Veraltet',          pos.isStale ? 'Ja (> 5 Min.)' : 'Nein', true]
+      ['🌐', t('gps.d_lat'),          fmtNum(pos.latitude, 6),           false],
+      ['🌐', t('gps.d_lon'),          fmtNum(pos.longitude, 6),          false],
+      ['📍', t('gps.d_city'),         pos.city     || t('gps.loading'),    true],
+      ['🗺️', t('gps.d_province'),    pos.province || t('gps.loading'),    true],
+      ['🌍', t('gps.d_country'),     pos.country  || t('gps.loading'),    true],
+      ['🎯', t('gps.d_accuracy'),     pos.accuracy != null ? `±${Math.round(pos.accuracy)} m` : t('gps.unavail'), true],
+      ['⛰️', t('gps.d_altitude'),    pos.altitude != null ? `${Math.round(pos.altitude)} ${t('gps.alt_unit')}` : t('gps.unavail'), true],
+      ['💨', t('gps.d_speed'),       pos.speed != null ? `${(pos.speed * 3.6).toFixed(1)} ${t('gps.speed_unit')}` : t('gps.unavail'), true],
+      ['🧭', t('gps.d_heading'),     pos.heading != null ? `${Math.round(pos.heading)}°` : t('gps.unavail'), true],
+      ['🕐', t('gps.d_time'),        fmtTime(pos.timestamp),            true],
+      ['📡', t('gps.d_source'),      pos.source || 'gps',               true],
+      ['⚠️', t('gps.d_stale'),       pos.isStale ? t('gps.stale_yes') : t('gps.stale_no'), true]
     ];
 
     panel.innerHTML = rows.map(([icon, label, value, isTxt]) =>
@@ -2073,7 +2076,7 @@ const CTApp = {
 
   // ───── Weather ─────
 
-  loadWeather(forceRefresh) {
+  async loadWeather(forceRefresh) {
     const wm = window.CatchTrackWeatherModule;
     const gm = window.CatchTrackGpsModule;
 
@@ -2101,7 +2104,48 @@ const CTApp = {
     const btn = document.getElementById('wx-refresh-btn');
     if (btn) btn.disabled = true;
 
-    wm.getWeather(!!forceRefresh).then(data => {
+    let locationChanged = false;
+
+    const updateWeatherLocation = (lat, lon, name) => {
+      const prev = wm.getLocation();
+      wm.setLocation(lat, lon, name);
+      if (!prev) return true;
+      return prev.lat !== lat || prev.lon !== lon;
+    };
+
+    // In der Wetteransicht aktiv aktuelle Position nachziehen, wenn noch keine gültige GPS-Position vorliegt.
+    if (gm && gm.isSupported()) {
+      if (gm.hasValidPosition()) {
+        const pos = gm.getLastPosition();
+        const wxName = [pos.city, pos.country].filter(Boolean).join(', ')
+          || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+        locationChanged = updateWeatherLocation(pos.latitude, pos.longitude, wxName) || locationChanged;
+      } else if (gm.getStatus() !== 'requesting') {
+        try {
+          const pos = await gm.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+          try {
+            const geo = await gm.reverseGeocode(pos.latitude, pos.longitude);
+            gm.setLocationInfo(geo.city, geo.province, geo.country);
+            const wxName = [geo.city, geo.country].filter(Boolean).join(', ')
+              || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+            locationChanged = updateWeatherLocation(pos.latitude, pos.longitude, wxName) || locationChanged;
+          } catch (_) {
+            locationChanged = updateWeatherLocation(
+              pos.latitude,
+              pos.longitude,
+              `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`
+            ) || locationChanged;
+          }
+        } catch (_) {
+          // Kein harter Fehler: Wetter lädt weiterhin mit vorhandenem/fallback Standort.
+        }
+      }
+    }
+
+    const loc = wm.getLocation();
+    this._setText('wx-location-name', loc ? loc.name : '–');
+
+    wm.getWeather(!!forceRefresh || locationChanged).then(data => {
       document.getElementById('wx-loading').classList.add('hidden');
       if (btn) btn.disabled = false;
 

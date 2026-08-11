@@ -7,44 +7,40 @@
 
 ## Zweck
 
-Das User-Modul verwaltet Benutzer in der CatchTrack-Anwendung. Es stellt vollständige Benutzeridentitäten bereit – mit eindeutigem Username, Anzeigenamen, Avatar-Referenz, Status und Login-Tracking.
+Das User-Modul verwaltet Benutzeridentitäten in CatchTrack. Es stellt eine stabile API für Authentifizierung, Rollenprüfung und Benutzerpflege bereit.
 
 ## Benutzerdatenstruktur
 
 ```javascript
 {
-    id: string,           // Eindeutige Benutzer-ID
-    username: string,     // Eindeutiger Username (für Catches, Leaderboards, Community)
-    displayName: string,  // Anzeigename in der UI
-    email: string,        // E-Mail-Adresse
-    avatar: string|null,  // URL/Referenz auf Profilbild (null = kein Avatar)
-    role: string,         // Rolle: 'user' | 'admin' | 'developer'
-    status: string,       // Status: 'active' | 'inactive' | 'banned'
-    createdAt: string,    // ISO-Zeitstempel der Erstellung
+    id: string,               // Eindeutige Benutzer-ID
+    username: string,         // Eindeutiger Username
+    displayName: string,      // Anzeigename in der UI
+    email: string,            // E-Mail-Adresse
+    avatar: string|null,      // URL/Referenz auf Profilbild
+    role: string,             // 'user' | 'admin' | 'developer'
+    status: string,           // 'active' | 'inactive' | 'banned'
+    createdAt: string,        // ISO-Zeitstempel
     lastLoginAt: string|null  // ISO-Zeitstempel des letzten Logins
 }
 ```
 
 ## Testbenutzer
 
-Das Modul erstellt automatisch zwei Test-Benutzer:
+Das Modul erstellt automatisch zwei Testbenutzer:
 
 | ID | Username | Anzeigename | E-Mail | Rolle |
 |---|---|---|---|---|
 | `test-user-001` | `devuser` | Dev User | dev@catchtrack.local | developer |
 | `test-admin-001` | `admin` | Administrator | admin@catchtrack.local | admin |
 
-## API
+## Öffentliche API
 
 ### `authenticate(userId)`
-Authentifiziert einen Benutzer. Setzt `lastLoginAt` auf den aktuellen Zeitstempel.
-
-```javascript
-const user = CatchTrackUserModule.authenticate('test-user-001');
-```
+Authentifiziert einen Benutzer und setzt `lastLoginAt`.
 
 ### `getCurrentUser()`
-Gibt den aktuell eingeloggten Benutzer zurück.
+Gibt den aktuell angemeldeten Benutzer zurück.
 
 ### `logout()`
 Meldet den aktuellen Benutzer ab.
@@ -53,40 +49,48 @@ Meldet den aktuellen Benutzer ab.
 Gibt alle Benutzer als Array zurück.
 
 ### `getUserById(userId)`
-Gibt einen Benutzer nach ID zurück (oder `null`).
+Gibt einen Benutzer per ID zurück, sonst `null`.
 
 ### `getUserByUsername(username)`
-Gibt einen Benutzer nach eindeutigem Username zurück (oder `null`).
-
-```javascript
-const user = CatchTrackUserModule.getUserByUsername('devuser');
-```
+Gibt einen Benutzer per Username zurück, sonst `null`.
 
 ### `createUser(userData)`
 Erstellt einen neuen Benutzer. `username` ist Pflichtfeld und muss eindeutig sein.
 
+### `updateUser(userId, updates)`
+Aktualisiert einen Benutzer. `id` und `createdAt` sind schreibgeschützt.
+
+### `deleteUser(userId)`
+Löscht einen Benutzer und gibt `true` bei Erfolg zurück.
+
+### `hasRole(role)`
+Prüft, ob der aktuelle Benutzer eine bestimmte Rolle besitzt.
+
+### `isAdmin()`
+Shortcut für `hasRole('admin')`.
+
+## Beispiele
+
 ```javascript
-const newUser = CatchTrackUserModule.createUser({
+const user = CatchTrackUserModule.authenticate('test-user-001');
+if (user) {
+    console.log('Angemeldet als', user.username);
+}
+
+const byName = CatchTrackUserModule.getUserByUsername('admin');
+
+const created = CatchTrackUserModule.createUser({
     username: 'janedoe',
     displayName: 'Jane Doe',
     email: 'jane@catchtrack.local',
     role: 'user'
 });
+
+const updated = CatchTrackUserModule.updateUser(created.id, {
+    displayName: 'Jane D.',
+    status: 'active'
+});
 ```
-
-Wirft einen Fehler wenn `username` fehlt oder bereits vergeben ist.
-
-### `updateUser(userId, updates)`
-Aktualisiert Felder eines Benutzers. `id` und `createdAt` sind schreibgeschützt. Bei Username-Änderung wird Eindeutigkeit geprüft.
-
-### `deleteUser(userId)`
-Löscht einen Benutzer. Gibt `true` zurück bei Erfolg.
-
-### `hasRole(role)`
-Prüft die Rolle des eingeloggten Benutzers.
-
-### `isAdmin()`
-Shortcut für `hasRole('admin')`.
 
 ## Events
 
@@ -104,206 +108,23 @@ Shortcut für `hasRole('admin')`.
 
 ```
 Modules/user-module/
-├── user-module.js      # Hauptmodul mit Datenstruktur und Logik
-├── user-interface.js   # Modulschnittstelle (öffentliche API)
-├── user-loader.js      # Registrierung und Aktivierung im Core
-└── README.md           # Diese Datei
+├── user-module.js
+├── user-interface.js
+├── user-loader.js
+└── README.md
 ```
 
 ## Funktionen
 
-- Benutzerverwaltung (Erstellen, Lesen, Aktualisieren, Löschen)
-- Benutzer-Authentifizierung
-- Rollenverwaltung (user, admin, developer)
-- Test-Benutzer für die Entwicklung
+- Benutzerverwaltung (CRUD)
+- Authentifizierung
+- Rollen- und Statusprüfung
+- Login-Tracking (`lastLoginAt`)
 - Event-Emission bei Benutzeraktionen
-
-## Testbenutzer
-
-Das Modul erstellt automatisch zwei Test-Benutzer:
-
-| ID | Name | E-Mail | Rolle |
-|---|---|---|---|
-| `test-user-001` | Test Developer | dev@catchtrack.local | developer |
-| `test-admin-001` | Test Administrator | admin@catchtrack.local | admin |
-
-## API
-
-### Methoden
-
-#### `authenticate(userId)`
-Authentifiziert einen Benutzer.
-
-```javascript
-const user = CatchTrackUserModule.authenticate('test-user-001');
-```
-
-**Parameter:** 
-- `userId` (string) - Benutzer-ID
-
-**Rückgabe:** Benutzer-Objekt oder null
-
----
-
-#### `getCurrentUser()`
-Gibt den aktuellen Benutzer zurück.
-
-```javascript
-const currentUser = CatchTrackUserModule.getCurrentUser();
-```
-
-**Rückgabe:** Benutzer-Objekt oder null
-
----
-
-#### `logout()`
-Meldet den aktuellen Benutzer ab.
-
-```javascript
-CatchTrackUserModule.logout();
-```
-
----
-
-#### `getAllUsers()`
-Gibt alle Benutzer zurück.
-
-```javascript
-const users = CatchTrackUserModule.getAllUsers();
-```
-
-**Rückgabe:** Array von Benutzerobjekten
-
----
-
-#### `getUserById(userId)`
-Gibt einen Benutzer nach ID zurück.
-
-```javascript
-const user = CatchTrackUserModule.getUserById('test-user-001');
-```
-
-**Parameter:**
-- `userId` (string) - Benutzer-ID
-
-**Rückgabe:** Benutzer-Objekt oder undefined
-
----
-
-#### `createUser(userData)`
-Erstellt einen neuen Benutzer.
-
-```javascript
-const newUser = CatchTrackUserModule.createUser({
-    name: 'Jane Doe',
-    email: 'jane@catchtrack.local',
-    role: 'user'
-});
-```
-
-**Parameter:**
-- `userData` (object) - Benutzerdaten mit `name`, `email`, `role`
-
-**Rückgabe:** Neu erstelltes Benutzerobjekt
-
----
-
-#### `updateUser(userId, updates)`
-Aktualisiert einen Benutzer.
-
-```javascript
-const updated = CatchTrackUserModule.updateUser('test-user-001', {
-    name: 'Updated Name'
-});
-```
-
-**Parameter:**
-- `userId` (string) - Benutzer-ID
-- `updates` (object) - Zu aktualisierende Felder
-
-**Rückgabe:** Aktualisiertes Benutzerobjekt oder null
-
----
-
-#### `deleteUser(userId)`
-Löscht einen Benutzer.
-
-```javascript
-const success = CatchTrackUserModule.deleteUser('test-user-001');
-```
-
-**Parameter:**
-- `userId` (string) - Benutzer-ID
-
-**Rückgabe:** Boolean (erfolgreich gelöscht)
-
----
-
-#### `hasRole(role)`
-Prüft, ob der aktuelle Benutzer eine Rolle hat.
-
-```javascript
-if (CatchTrackUserModule.hasRole('admin')) {
-    // Admin-Aktionen
-}
-```
-
-**Parameter:**
-- `role` (string) - Zu prüfende Rolle
-
-**Rückgabe:** Boolean
-
----
-
-#### `isAdmin()`
-Prüft, ob der aktuelle Benutzer ein Admin ist.
-
-```javascript
-if (CatchTrackUserModule.isAdmin()) {
-    // Admin-Aktionen
-}
-```
-
-**Rückgabe:** Boolean
-
-## Events
-
-Das Modul gibt folgende Events aus:
-
-- `user-module:initialized` - Modul wurde initialisiert
-- `user-module:authenticated` - Benutzer authentifiziert
-- `user-module:auth-failed` - Authentifizierung fehlgeschlagen
-- `user-module:logout` - Benutzer abgemeldet
-- `user-module:user-created` - Benutzer erstellt
-- `user-module:user-updated` - Benutzer aktualisiert
-- `user-module:user-deleted` - Benutzer gelöscht
-
-## Benutzer-Objektstruktur
-
-```javascript
-{
-    id: string,              // Eindeutige Benutzer-ID
-    name: string,            // Benutzername
-    email: string,           // E-Mail-Adresse
-    role: string,            // Rolle (user, admin, developer)
-    active: boolean,         // Benutzer aktiv
-    createdAt: string        // ISO-Zeitstempel der Erstellung
-}
-```
-
-## Dateistruktur
-
-```
-Modules/user-module/
-├── user-module.js          # Hauptmodul
-├── user-interface.js       # Modulschnittstelle
-└── README.md               # Diese Datei
-```
 
 ## Zukünftige Erweiterungen
 
-- Permanente Speicherung in Datenbank
+- Persistente Speicherung in Datenbank
 - Passwort-Verwaltung
-- Berechtigungssystem
-- Sessionsmanagement
+- Session-Management
 - Audit-Logging

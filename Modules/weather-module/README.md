@@ -155,6 +155,8 @@ CatchTrackWeatherModule.setLocation(48.137, 11.576, 'München');
 
 Das Modul benötigt kein Location-Modul und ist von keinem anderen Modul abhängig.
 
+In der App-UI wird beim Öffnen der Wetteransicht automatisch versucht, eine aktuelle GPS-Position zu ermitteln. Bei Erfolg wird der Standort für das Wetter gesetzt; bei Fehlschlag bleibt der vorhandene Standort/Fallback aktiv.
+
 ## Events
 
 | Event | Auslöser |
@@ -170,6 +172,5 @@ Das Modul benötigt kein Location-Modul und ist von keinem anderen Modul abhäng
 ## Bekannte Einschränkungen
 
 - Kostenlos nur für nicht-kommerzielle Nutzung (Open-Meteo)
-- Keine GPS-Automatik (Standort muss manuell gesetzt werden, bis Location-Modul verfügbar)
 - Standardstandort ist Köln (Entwicklungsphase)
 - Keine Wetterradar-Daten oder Satellitenbilder

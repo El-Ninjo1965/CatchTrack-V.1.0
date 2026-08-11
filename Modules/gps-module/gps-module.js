@@ -274,8 +274,73 @@
             if (typeof lat !== 'number' || typeof lon !== 'number') {
                 throw new Error('Ungültige Koordinaten für Reverse Geocoding');
             }
-            const lang = navigator.language || navigator.userLanguage || 'de';
-            const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=${lang}`;
+            const locale = this._getPreferredLocale();
+            const langHeader = this._getPreferredLanguage();
+            const om = await this._reverseGeocodeOpenMeteo(lat, lon, locale).catch(() => null);
+            const nm = await this._reverseGeocodeNominatim(lat, lon, langHeader).catch(() => null);
+
+            if (!om && !nm) {
+                throw new Error('Reverse Geocoding fehlgeschlagen');
+            }
+
+            const city = (om && om.city) || (nm && nm.city) || null;
+            const province = (om && om.province) || (nm && nm.province) || null;
+            const countryCode = (om && om.countryCode) || (nm && nm.countryCode) || null;
+            const countryRaw = (om && om.country) || (nm && nm.country) || null;
+            const country = this._localizeCountryName(countryRaw, countryCode, locale);
+            const displayName = (om && om.displayName) || (nm && nm.displayName) || null;
+
+            return {
+                city,
+                province,
+                country,
+                countryCode,
+                displayName
+            };
+        },
+
+        async _reverseGeocodeOpenMeteo(lat, lon, locale) {
+            const url = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=${encodeURIComponent(locale)}&count=1`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const resp = await fetch(url, {
+                    signal: controller.signal,
+                    headers: { 'User-Agent': 'CatchTrack/1.0 (catchtrack-app)' }
+                });
+                clearTimeout(timeout);
+
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                const r = Array.isArray(data.results) && data.results[0] ? data.results[0] : null;
+                if (!r) throw new Error('Keine Open-Meteo Reverse-Geocoding-Daten');
+
+                const city = r.name || r.city || null;
+                const province = r.admin1 || r.admin2 || null;
+                const countryCode = (r.country_code || '').toUpperCase() || null;
+                const countryRaw = r.country || null;
+                const country = this._localizeCountryName(countryRaw, countryCode, locale);
+                const displayName = [city, province, country].filter(Boolean).join(', ') || null;
+
+                return {
+                    city,
+                    province,
+                    country,
+                    countryCode,
+                    displayName
+                };
+            } catch (err) {
+                clearTimeout(timeout);
+                if (err.name === 'AbortError') {
+                    throw new Error('Reverse Geocoding (Open-Meteo): Zeitüberschreitung');
+                }
+                throw err;
+            }
+        },
+
+        async _reverseGeocodeNominatim(lat, lon, langHeader) {
+            const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=${encodeURIComponent(langHeader)}`;
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 8000);
 
@@ -304,6 +369,53 @@
                 }
                 throw err;
             }
+        },
+
+        _getPreferredLocale() {
+            const fromI18n = window.CatchTrackI18n?.getLocale?.() || window.CatchTrackI18n?.getDeviceLocale?.();
+            const fromNav = navigator.language || navigator.userLanguage || 'de';
+            const raw = (fromI18n || fromNav || 'de').toString().replace('_', '-').toLowerCase();
+            return raw.split('-')[0] || 'de';
+        },
+
+        _getPreferredLanguage() {
+            const langs = [];
+            const appLocale = this._getPreferredLocale();
+
+            if (appLocale) langs.push(appLocale);
+
+            if (Array.isArray(navigator.languages)) {
+                navigator.languages.forEach((l) => {
+                    if (typeof l === 'string' && l.trim()) {
+                        langs.push(l.trim().replace('_', '-').toLowerCase());
+                    }
+                });
+            }
+
+            langs.push('en');
+
+            const normalized = [];
+            langs.forEach((l) => {
+                const short = l.split('-')[0];
+                if (short && !normalized.includes(short)) normalized.push(short);
+            });
+
+            return normalized.join(',');
+        },
+
+        _localizeCountryName(country, countryCode, locale) {
+            const code = (countryCode || '').toUpperCase();
+            if (!code) return country || null;
+            try {
+                if (typeof Intl !== 'undefined' && Intl.DisplayNames) {
+                    const display = new Intl.DisplayNames([locale || 'de'], { type: 'region' });
+                    const localized = display.of(code);
+                    if (localized) return localized;
+                }
+            } catch (_) {
+                // Fallback unten
+            }
+            return country || code;
         },
 
         // ──── Interne Methoden ────

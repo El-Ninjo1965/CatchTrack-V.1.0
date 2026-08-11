@@ -147,4 +147,4 @@ if (CatchTrackGpsModule.hasValidPosition()) {
 - Genauigkeit abhängig von Gerät und Umgebung (Gebäude, Wälder reduzieren Genauigkeit)
 - Safari/iOS benötigt HTTPS für Geolocation
 - Kontinuierliches Tracking erhöht den Akkuverbrauch
-- Kein automatischer Standortname (Reverse Geocoding nicht implementiert)
+- Reverse Geocoding hängt von externen Diensten ab (Open-Meteo/Nominatim) und kann bei Netzproblemen ausfallen

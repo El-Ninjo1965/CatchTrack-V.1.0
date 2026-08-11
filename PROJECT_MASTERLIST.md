@@ -158,7 +158,7 @@ Status: Erster Entwicklungsblock ✓ ABGESCHLOSSEN
 
 Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert und funktionsfähig.
 
-CatchTrack ist nunzu testfähig und kann als Basis für weitere Module verwendet werden.
+CatchTrack ist nun testfähig und kann als Basis für weitere Module verwendet werden.
 
 **Letzte Aktualisierung:** 2026-08-11
 

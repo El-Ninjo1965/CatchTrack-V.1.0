@@ -282,12 +282,6 @@ GPS-Modul vollständig implementiert:
 
 Commit: folgt
 
-## Chronikstatus
-
-**Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 18  
-**Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
-
 ### CT-0019
 **Status:** Abgeschlossen
 
@@ -305,15 +299,24 @@ i18n-Modul vollständig implementiert – CatchTrack ist jetzt multilingual:
 Sprachen: DE (Deutsch) + EN (English)
 Sprachauswahl: Gerätesprache automatisch oder manuell in Einstellungen
 
+### CT-0020
+**Status:** Abgeschlossen
+
+Wetter-Ansicht lädt jetzt automatisch mit aktueller Geräteposition, ohne vorherigen manuellen GPS-Klick:
+
+- `index.html` (`CTApp.loadWeather`) auf `async` umgestellt.
+- Vor dem Wetterabruf wird bei fehlender gültiger GPS-Position automatisch `getCurrentPosition()` ausgeführt.
+- Erfolgreiche Position wird direkt ins Weather-Modul übernommen; Ortsname wird per Reverse-Geocoding ergänzt.
+- Wenn sich die Wetter-Position ändert, wird der Abruf mit Refresh erzwungen, damit kein alter Cache-Ort angezeigt wird.
+- Bei GPS-Fehlern bleibt der Wetter-Fallback aktiv (kein harter Abbruch der Wetteransicht).
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 19  
+**Einträge:** 20  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
 
-**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul + GPS-Modul + i18n-Modul
-
-—
+**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul + GPS-Modul + i18n-Modul + Wetter/GPS-Autoposition
 
 ## Fortsetzung
 
