@@ -260,7 +260,14 @@
             return this._simulated;
         },
 
-        // Reverse Geocoding: Koordinaten → Stadt, Bundesland/Provinz, Staat
+        // Geocoding-Ergebnis in _position zurückschreiben (damit getLastPosition() es enthält)
+        setLocationInfo(city, province, country) {
+            if (this._position) {
+                this._position.city     = city    || null;
+                this._position.province = province || null;
+                this._position.country  = country  || null;
+            }
+        },
         // Quelle: Nominatim (OpenStreetMap) – kein API-Key, Attribution erforderlich
         // Lizenz: ODbL (OpenStreetMap) – kostenlos, Attribution: "© OpenStreetMap-Mitwirkende"
         async reverseGeocode(lat, lon) {

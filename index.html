@@ -1684,6 +1684,8 @@ const CTApp = {
 
       // Reverse Geocoding asynchron – aktualisiert die Anzeige ohne den GPS-Fluss zu blockieren
       gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
+        // Geocoding-Ergebnis dauerhaft im GPS-Modul speichern
+        gm.setLocationInfo(geo.city, geo.province, geo.country);
         pos.city     = geo.city;
         pos.province = geo.province;
         pos.country  = geo.country;
@@ -1753,7 +1755,8 @@ const CTApp = {
 
       // Ortsname für Weather-Modul ermitteln (asynchron, Fallback auf Koordinaten)
       gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
-        const name = geo.city || [geo.city, geo.province, geo.country].filter(Boolean).join(', ')
+        gm.setLocationInfo(geo.city, geo.province, geo.country);
+        const name = [geo.city, geo.country].filter(Boolean).join(', ')
           || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
         wm.setLocation(pos.latitude, pos.longitude, name);
       }).catch(() => {
@@ -1783,7 +1786,8 @@ const CTApp = {
     gm.getCurrentPosition().then(pos => {
       // Ortsname ermitteln, dann Wetter laden
       gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
-        const name = geo.city || [geo.city, geo.province, geo.country].filter(Boolean).join(', ')
+        gm.setLocationInfo(geo.city, geo.province, geo.country);
+        const name = [geo.city, geo.country].filter(Boolean).join(', ')
           || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
         wm.setLocation(pos.latitude, pos.longitude, name);
       }).catch(() => {

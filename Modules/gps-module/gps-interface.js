@@ -53,7 +53,8 @@
                 setSimulatedPosition:   (lat, lon, opts) => window.CatchTrackGpsModule?.setSimulatedPosition(lat, lon, opts),
                 clearSimulatedPosition: ()              => window.CatchTrackGpsModule?.clearSimulatedPosition(),
                 isSimulated:            ()              => window.CatchTrackGpsModule?.isSimulated(),
-                reverseGeocode:         (lat, lon)      => window.CatchTrackGpsModule?.reverseGeocode(lat, lon)
+                reverseGeocode:         (lat, lon)           => window.CatchTrackGpsModule?.reverseGeocode(lat, lon),
+                setLocationInfo:        (city, prov, country) => window.CatchTrackGpsModule?.setLocationInfo(city, prov, country)
             }
         }
     };
