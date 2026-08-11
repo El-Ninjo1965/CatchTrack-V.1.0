@@ -30,6 +30,8 @@
         window.CatchTrackModuleManager.register(I18nModuleInstance);
         window.CatchTrackModuleManager.activate(I18nModuleInstance.id);
     } catch (error) {
-        window.CatchTrackCoreErrorHandler?.handle(error, { type: 'i18n-module-loader' });
+        if (window.CatchTrackCoreErrorHandler) {
+            window.CatchTrackCoreErrorHandler.handle(error, { type: 'i18n-module-loader' });
+        }
     }
 })();

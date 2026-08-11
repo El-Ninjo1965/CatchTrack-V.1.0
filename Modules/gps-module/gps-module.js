@@ -372,7 +372,14 @@
         },
 
         _getPreferredLocale() {
-            const fromI18n = window.CatchTrackI18n?.getLocale?.() || window.CatchTrackI18n?.getDeviceLocale?.();
+            let fromI18n = null;
+            if (window.CatchTrackI18n) {
+                if (typeof window.CatchTrackI18n.getLocale === 'function') {
+                    fromI18n = window.CatchTrackI18n.getLocale();
+                } else if (typeof window.CatchTrackI18n.getDeviceLocale === 'function') {
+                    fromI18n = window.CatchTrackI18n.getDeviceLocale();
+                }
+            }
             const fromNav = navigator.language || navigator.userLanguage || 'de';
             const raw = (fromI18n || fromNav || 'de').toString().replace('_', '-').toLowerCase();
             return raw.split('-')[0] || 'de';

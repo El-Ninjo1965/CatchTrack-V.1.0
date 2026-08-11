@@ -233,7 +233,7 @@
 
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('auth:logout', {
-                    userId: previousUser?.id,
+                    userId: previousUser ? previousUser.id : null,
                     timestamp: new Date().toISOString()
                 });
             }

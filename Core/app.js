@@ -77,7 +77,11 @@
             });
 
             // Starte automatisch Tests (optional)
-            if (window.CatchTrackTestRunner && window.CatchTrackConfigManager?.getPath('app.debug')) {
+            if (
+                window.CatchTrackTestRunner &&
+                window.CatchTrackConfigManager &&
+                window.CatchTrackConfigManager.getPath('app.debug')
+            ) {
                 setTimeout(() => {
                     window.CatchTrackTestRunner.run();
                 }, 2000);
@@ -148,9 +152,11 @@
                 window.CatchTrackModuleManager.register(smokeTestModule);
                 window.CatchTrackModuleManager.activate(smokeTestModule.id);
             } catch (error) {
-                window.CatchTrackCoreErrorHandler?.handle(error, {
-                    type: 'smoke-test-module'
-                });
+                if (window.CatchTrackCoreErrorHandler) {
+                    window.CatchTrackCoreErrorHandler.handle(error, {
+                        type: 'smoke-test-module'
+                    });
+                }
             }
         },
 

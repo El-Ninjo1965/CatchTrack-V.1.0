@@ -37,10 +37,12 @@
             try {
                 return JSON.parse(storedValue);
             } catch (error) {
-                window.CatchTrackErrorLog?.record(error, {
-                    type: 'storage-read',
-                    key
-                });
+                if (window.CatchTrackErrorLog) {
+                    window.CatchTrackErrorLog.record(error, {
+                        type: 'storage-read',
+                        key
+                    });
+                }
 
                 return defaultValue;
             }

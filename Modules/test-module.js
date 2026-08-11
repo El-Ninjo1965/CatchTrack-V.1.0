@@ -46,8 +46,10 @@
         window.CatchTrackModuleManager.register(TestModule);
         window.CatchTrackModuleManager.activate(TestModule.id);
     } catch (error) {
-        window.CatchTrackCoreErrorHandler?.handle(error, {
-            type: 'test-module'
-        });
+        if (window.CatchTrackCoreErrorHandler) {
+            window.CatchTrackCoreErrorHandler.handle(error, {
+                type: 'test-module'
+            });
+        }
     }
 })();

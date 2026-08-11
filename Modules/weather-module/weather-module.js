@@ -195,7 +195,9 @@
             const c            = raw.current;
             const hourlyTimes  = (raw.hourly && raw.hourly.time)  || [];
             const dailyDates   = (raw.daily  && raw.daily.time)   || [];
-            const provider     = window.CatchTrackWeatherProviderRegistry?.getActive();
+            const provider     = window.CatchTrackWeatherProviderRegistry
+                ? window.CatchTrackWeatherProviderRegistry.getActive()
+                : null;
 
             // Aktuellen stündlichen Index bestimmen
             const nowPrefix = new Date().toISOString().slice(0, 13); // 'YYYY-MM-DDTHH'

@@ -1894,7 +1894,13 @@ const CTApp = {
     if (!panel) return;
 
     const t = (k, p) => this.t(k, p);
-    const locale = (window.CatchTrackI18n?.getLocale?.() || window.CatchTrackI18n?.getDeviceLocale?.() || navigator.language || 'de').replace('_', '-');
+    const i18n = window.CatchTrackI18n;
+    const localeValue = i18n
+      ? (typeof i18n.getLocale === 'function'
+        ? i18n.getLocale()
+        : (typeof i18n.getDeviceLocale === 'function' ? i18n.getDeviceLocale() : null))
+      : null;
+    const locale = (localeValue || navigator.language || 'de').replace('_', '-');
 
     if (!pos) {
       panel.innerHTML = `<div style="text-align:center;padding:24px 0;color:var(--c-text-muted);font-size:0.87rem">${t('gps.no_pos')}</div>`;

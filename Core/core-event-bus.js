@@ -58,13 +58,15 @@
                 try {
                     callback(data);
                 } catch (error) {
-                    window.CatchTrackCoreErrorHandler?.handle(
-                        error,
-                        {
-                            type: 'event-handler',
-                            eventName
-                        }
-                    );
+                    if (window.CatchTrackCoreErrorHandler) {
+                        window.CatchTrackCoreErrorHandler.handle(
+                            error,
+                            {
+                                type: 'event-handler',
+                                eventName
+                            }
+                        );
+                    }
                 }
             });
         },

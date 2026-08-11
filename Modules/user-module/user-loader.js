@@ -36,8 +36,10 @@
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        window.CatchTrackCoreErrorHandler?.handle(error, {
-            type: 'user-module-loader'
-        });
+        if (window.CatchTrackCoreErrorHandler) {
+            window.CatchTrackCoreErrorHandler.handle(error, {
+                type: 'user-module-loader'
+            });
+        }
     }
 })();

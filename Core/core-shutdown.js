@@ -21,22 +21,28 @@
             }
 
             const activeModules =
-                window.CatchTrackCore?.getModules() || [];
+                window.CatchTrackCore
+                    ? window.CatchTrackCore.getModules()
+                    : [];
 
             activeModules.forEach((module) => {
                 if (module.active) {
                     try {
-                        window.CatchTrackModuleManager?.deactivate(
-                            module.id
-                        );
+                        if (window.CatchTrackModuleManager) {
+                            window.CatchTrackModuleManager.deactivate(
+                                module.id
+                            );
+                        }
                     } catch (error) {
-                        window.CatchTrackCoreErrorHandler?.handle(
-                            error,
-                            {
-                                type: 'module-shutdown',
-                                moduleId: module.id
-                            }
-                        );
+                        if (window.CatchTrackCoreErrorHandler) {
+                            window.CatchTrackCoreErrorHandler.handle(
+                                error,
+                                {
+                                    type: 'module-shutdown',
+                                    moduleId: module.id
+                                }
+                            );
+                        }
                     }
                 }
             });

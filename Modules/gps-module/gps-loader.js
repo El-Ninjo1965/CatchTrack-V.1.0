@@ -32,6 +32,8 @@
         window.CatchTrackModuleManager.register(GpsModuleInstance);
         window.CatchTrackModuleManager.activate(GpsModuleInstance.id);
     } catch (error) {
-        window.CatchTrackCoreErrorHandler?.handle(error, { type: 'gps-module-loader' });
+        if (window.CatchTrackCoreErrorHandler) {
+            window.CatchTrackCoreErrorHandler.handle(error, { type: 'gps-module-loader' });
+        }
     }
 })();

@@ -16,19 +16,23 @@
                     ? error
                     : new Error(String(error));
 
-            const entry = window.CatchTrackErrorLog?.record(
-                normalizedError,
-                context
-            );
+            const entry = window.CatchTrackErrorLog
+                ? window.CatchTrackErrorLog.record(
+                    normalizedError,
+                    context
+                )
+                : null;
 
-            window.CatchTrackCore?.emit(
-                'error:handled',
-                {
-                    error: normalizedError,
-                    context,
-                    entry
-                }
-            );
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit(
+                    'error:handled',
+                    {
+                        error: normalizedError,
+                        context,
+                        entry
+                    }
+                );
+            }
 
             return entry;
         }

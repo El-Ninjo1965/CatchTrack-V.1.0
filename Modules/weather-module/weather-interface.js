@@ -36,13 +36,13 @@
             },
 
             api: {
-                getWeather:           (forceRefresh) => window.CatchTrackWeatherModule?.getWeather(forceRefresh),
-                getLastData:          ()             => window.CatchTrackWeatherModule?.getLastData(),
-                getState:             ()             => window.CatchTrackWeatherModule?.getState(),
-                setLocation:          (lat, lon, name) => window.CatchTrackWeatherModule?.setLocation(lat, lon, name),
-                getLocation:          ()             => window.CatchTrackWeatherModule?.getLocation(),
-                clearCache:           ()             => window.CatchTrackWeatherModule?.clearCache(),
-                windDirectionLabel:   (deg)          => window.CatchTrackWeatherModule?.windDirectionLabel(deg)
+                getWeather:           (forceRefresh) => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.getWeather(forceRefresh) : undefined,
+                getLastData:          ()             => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.getLastData() : undefined,
+                getState:             ()             => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.getState() : undefined,
+                setLocation:          (lat, lon, name) => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.setLocation(lat, lon, name) : undefined,
+                getLocation:          ()             => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.getLocation() : undefined,
+                clearCache:           ()             => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.clearCache() : undefined,
+                windDirectionLabel:   (deg)          => window.CatchTrackWeatherModule ? window.CatchTrackWeatherModule.windDirectionLabel(deg) : undefined
             }
         }
     };

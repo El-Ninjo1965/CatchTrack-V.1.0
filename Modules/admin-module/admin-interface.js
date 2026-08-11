@@ -46,13 +46,13 @@
              * Öffentliche API des Admin-Moduls
              */
             api: {
-                getSystemStats: () => window.CatchTrackAdminModule?.getSystemStats(),
-                getLoadedModules: () => window.CatchTrackAdminModule?.getLoadedModules(),
-                getErrorLog: () => window.CatchTrackAdminModule?.getErrorLog(),
-                clearErrorLog: () => window.CatchTrackAdminModule?.clearErrorLog(),
-                performHealthCheck: () => window.CatchTrackAdminModule?.performHealthCheck(),
-                getDebugInfo: () => window.CatchTrackAdminModule?.getDebugInfo(),
-                logError: (error) => window.CatchTrackAdminModule?.logError(error)
+                getSystemStats: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getSystemStats() : undefined,
+                getLoadedModules: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getLoadedModules() : undefined,
+                getErrorLog: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getErrorLog() : undefined,
+                clearErrorLog: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.clearErrorLog() : undefined,
+                performHealthCheck: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.performHealthCheck() : undefined,
+                getDebugInfo: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getDebugInfo() : undefined,
+                logError: (error) => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.logError(error) : undefined
             }
         }
     };

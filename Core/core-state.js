@@ -17,10 +17,12 @@
 
             state.set(key, value);
 
-            window.CatchTrackCore?.emit('state:changed', {
-                key,
-                value
-            });
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit('state:changed', {
+                    key,
+                    value
+                });
+            }
         },
 
         get(key, defaultValue = null) {
@@ -43,9 +45,11 @@
             const existed = state.delete(key);
 
             if (existed) {
-                window.CatchTrackCore?.emit('state:removed', {
-                    key
-                });
+                if (window.CatchTrackCore) {
+                    window.CatchTrackCore.emit('state:removed', {
+                        key
+                    });
+                }
             }
 
             return existed;
@@ -58,7 +62,9 @@
         clear() {
             state.clear();
 
-            window.CatchTrackCore?.emit('state:cleared');
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit('state:cleared');
+            }
         },
 
         validateKey(key) {

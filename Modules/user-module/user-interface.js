@@ -50,17 +50,17 @@
              * Öffentliche API des User-Moduls
              */
             api: {
-                authenticate: (userId) => window.CatchTrackUserModule?.authenticate(userId),
-                getCurrentUser: () => window.CatchTrackUserModule?.getCurrentUser(),
-                logout: () => window.CatchTrackUserModule?.logout(),
-                getAllUsers: () => window.CatchTrackUserModule?.getAllUsers(),
-                getUserById: (userId) => window.CatchTrackUserModule?.getUserById(userId),
-                getUserByUsername: (username) => window.CatchTrackUserModule?.getUserByUsername(username),
-                createUser: (userData) => window.CatchTrackUserModule?.createUser(userData),
-                updateUser: (userId, updates) => window.CatchTrackUserModule?.updateUser(userId, updates),
-                deleteUser: (userId) => window.CatchTrackUserModule?.deleteUser(userId),
-                hasRole: (role) => window.CatchTrackUserModule?.hasRole(role),
-                isAdmin: () => window.CatchTrackUserModule?.isAdmin()
+                authenticate: (userId) => window.CatchTrackUserModule ? window.CatchTrackUserModule.authenticate(userId) : undefined,
+                getCurrentUser: () => window.CatchTrackUserModule ? window.CatchTrackUserModule.getCurrentUser() : undefined,
+                logout: () => window.CatchTrackUserModule ? window.CatchTrackUserModule.logout() : undefined,
+                getAllUsers: () => window.CatchTrackUserModule ? window.CatchTrackUserModule.getAllUsers() : undefined,
+                getUserById: (userId) => window.CatchTrackUserModule ? window.CatchTrackUserModule.getUserById(userId) : undefined,
+                getUserByUsername: (username) => window.CatchTrackUserModule ? window.CatchTrackUserModule.getUserByUsername(username) : undefined,
+                createUser: (userData) => window.CatchTrackUserModule ? window.CatchTrackUserModule.createUser(userData) : undefined,
+                updateUser: (userId, updates) => window.CatchTrackUserModule ? window.CatchTrackUserModule.updateUser(userId, updates) : undefined,
+                deleteUser: (userId) => window.CatchTrackUserModule ? window.CatchTrackUserModule.deleteUser(userId) : undefined,
+                hasRole: (role) => window.CatchTrackUserModule ? window.CatchTrackUserModule.hasRole(role) : undefined,
+                isAdmin: () => window.CatchTrackUserModule ? window.CatchTrackUserModule.isAdmin() : undefined
             }
         }
     };

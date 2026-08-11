@@ -87,7 +87,7 @@
             this.currentUser = null;
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:logout', {
-                    userId: prev?.id,
+                    userId: prev ? prev.id : null,
                     timestamp: new Date().toISOString()
                 });
             }
@@ -174,7 +174,7 @@
         },
 
         hasRole(role) {
-            return this.currentUser?.role === role;
+            return !!this.currentUser && this.currentUser.role === role;
         },
 
         isAdmin() {

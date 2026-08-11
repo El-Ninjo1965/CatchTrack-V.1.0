@@ -32,6 +32,8 @@
         window.CatchTrackModuleManager.register(WeatherModuleInstance);
         window.CatchTrackModuleManager.activate(WeatherModuleInstance.id);
     } catch (error) {
-        window.CatchTrackCoreErrorHandler?.handle(error, { type: 'weather-module-loader' });
+        if (window.CatchTrackCoreErrorHandler) {
+            window.CatchTrackCoreErrorHandler.handle(error, { type: 'weather-module-loader' });
+        }
     }
 })();

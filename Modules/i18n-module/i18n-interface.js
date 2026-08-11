@@ -35,12 +35,12 @@
             },
 
             api: {
-                t:                    (key, params) => window.CatchTrackI18n?.t(key, params),
-                setLocale:            (locale)      => window.CatchTrackI18n?.setLocale(locale),
-                getLocale:            ()            => window.CatchTrackI18n?.getLocale(),
-                getStoredPreference:  ()            => window.CatchTrackI18n?.getStoredPreference(),
-                getSupportedLocales:  ()            => window.CatchTrackI18n?.getSupportedLocales(),
-                getDeviceLocale:      ()            => window.CatchTrackI18n?.getDeviceLocale()
+                t:                    (key, params) => window.CatchTrackI18n ? window.CatchTrackI18n.t(key, params) : undefined,
+                setLocale:            (locale)      => window.CatchTrackI18n ? window.CatchTrackI18n.setLocale(locale) : undefined,
+                getLocale:            ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getLocale() : undefined,
+                getStoredPreference:  ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getStoredPreference() : undefined,
+                getSupportedLocales:  ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getSupportedLocales() : undefined,
+                getDeviceLocale:      ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getDeviceLocale() : undefined
             }
         }
     };

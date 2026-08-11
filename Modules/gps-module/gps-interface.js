@@ -41,20 +41,20 @@
 
             // Öffentliche GPS-API – verwendbar von anderen Modulen ohne direkten Zugriff auf gps-module.js
             api: {
-                isSupported:            ()              => window.CatchTrackGpsModule?.isSupported(),
-                getStatus:              ()              => window.CatchTrackGpsModule?.getStatus(),
-                getLastPosition:        ()              => window.CatchTrackGpsModule?.getLastPosition(),
-                hasValidPosition:       ()              => window.CatchTrackGpsModule?.hasValidPosition(),
-                checkPermission:        ()              => window.CatchTrackGpsModule?.checkPermission(),
-                getCurrentPosition:     (opts)          => window.CatchTrackGpsModule?.getCurrentPosition(opts),
-                startTracking:          (opts, upd, err) => window.CatchTrackGpsModule?.startTracking(opts, upd, err),
-                stopTracking:           ()              => window.CatchTrackGpsModule?.stopTracking(),
-                isTracking:             ()              => window.CatchTrackGpsModule?.isTracking(),
-                setSimulatedPosition:   (lat, lon, opts) => window.CatchTrackGpsModule?.setSimulatedPosition(lat, lon, opts),
-                clearSimulatedPosition: ()              => window.CatchTrackGpsModule?.clearSimulatedPosition(),
-                isSimulated:            ()              => window.CatchTrackGpsModule?.isSimulated(),
-                reverseGeocode:         (lat, lon)           => window.CatchTrackGpsModule?.reverseGeocode(lat, lon),
-                setLocationInfo:        (city, prov, country) => window.CatchTrackGpsModule?.setLocationInfo(city, prov, country)
+                isSupported:            ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.isSupported() : undefined,
+                getStatus:              ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.getStatus() : undefined,
+                getLastPosition:        ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.getLastPosition() : undefined,
+                hasValidPosition:       ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.hasValidPosition() : undefined,
+                checkPermission:        ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.checkPermission() : undefined,
+                getCurrentPosition:     (opts)            => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.getCurrentPosition(opts) : undefined,
+                startTracking:          (opts, upd, err)  => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.startTracking(opts, upd, err) : undefined,
+                stopTracking:           ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.stopTracking() : undefined,
+                isTracking:             ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.isTracking() : undefined,
+                setSimulatedPosition:   (lat, lon, opts)  => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.setSimulatedPosition(lat, lon, opts) : undefined,
+                clearSimulatedPosition: ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.clearSimulatedPosition() : undefined,
+                isSimulated:            ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.isSimulated() : undefined,
+                reverseGeocode:         (lat, lon)        => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.reverseGeocode(lat, lon) : undefined,
+                setLocationInfo:        (city, prov, country) => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.setLocationInfo(city, prov, country) : undefined
             }
         }
     };
