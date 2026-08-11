@@ -1690,6 +1690,13 @@ const CTApp = {
         const name = [geo.city, geo.province, geo.country].filter(Boolean).join(', ');
         if (name) this._setText('gps-banner-sub', name + ` · ±${Math.round(pos.accuracy)} m`);
         this._renderGpsData(pos);
+        // GPS-Position automatisch auch für das Wetter übernehmen
+        if (window.CatchTrackWeatherModule) {
+          const wxName = [geo.city, geo.country].filter(Boolean).join(', ')
+            || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+          window.CatchTrackWeatherModule.setLocation(pos.latitude, pos.longitude, wxName);
+          window.CatchTrackWeatherModule.clearCache();
+        }
       }).catch(() => {
         pos.city = pos.province = pos.country = '–';
         this._renderGpsData(pos);
@@ -1821,10 +1828,19 @@ const CTApp = {
 
   loadWeather(forceRefresh) {
     const wm = window.CatchTrackWeatherModule;
+    const gm = window.CatchTrackGpsModule;
 
     if (!wm) {
       this._wxShowError('Weather-Modul nicht geladen.');
       return;
+    }
+
+    // Vorhandene GPS-Position automatisch verwenden (keine neue Anfrage)
+    if (gm && gm.hasValidPosition()) {
+      const pos = gm.getLastPosition();
+      const wxName = [pos.city, pos.country].filter(Boolean).join(', ')
+        || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+      wm.setLocation(pos.latitude, pos.longitude, wxName);
     }
 
     const loc = wm.getLocation();
