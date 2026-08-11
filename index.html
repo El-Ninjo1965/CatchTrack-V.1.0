@@ -868,7 +868,97 @@
 
     .lang-btn:hover { border-color: var(--c-primary); background: var(--c-surface-dim); }
     .lang-btn.active { border-color: var(--c-primary); background: var(--c-primary); color: #fff; font-weight: 700; }
+
+    .boot-alert {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 10000;
+      background: #fff7ed;
+      color: #7c2d12;
+      border: 1px solid #fdba74;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      box-shadow: var(--sh-sm);
+    }
+
+    .boot-alert strong { display: block; margin-bottom: 4px; }
   </style>
+  <script>
+    (function () {
+      'use strict';
+
+      var pendingMessage = '';
+
+      function setLoadingMessage(text) {
+        var msg = document.getElementById('ct-loading-msg');
+        if (msg) {
+          msg.textContent = text;
+        } else {
+          pendingMessage = text;
+        }
+      }
+
+      function showBootAlert(title, detail) {
+        var old = document.getElementById('ct-boot-alert');
+        if (old && old.parentNode) old.parentNode.removeChild(old);
+
+        var alert = document.createElement('div');
+        alert.id = 'ct-boot-alert';
+        alert.className = 'boot-alert';
+
+        var head = document.createElement('strong');
+        head.textContent = title;
+        alert.appendChild(head);
+
+        var body = document.createElement('div');
+        body.textContent = detail;
+        alert.appendChild(body);
+
+        document.body.appendChild(alert);
+      }
+
+      function showShellFallback(reason) {
+        if (window.__ctBootDone) return;
+
+        var loading = document.getElementById('ct-loading');
+        var app = document.getElementById('ct-app');
+
+        if (loading) loading.style.display = 'none';
+        if (app) app.style.display = 'flex';
+
+        showBootAlert('Startproblem erkannt', reason);
+      }
+
+      window.__ctShowFallback = showShellFallback;
+
+      window.addEventListener('DOMContentLoaded', function () {
+        if (pendingMessage) setLoadingMessage(pendingMessage);
+
+        setTimeout(function () {
+          if (!window.__ctBootDone) {
+            setLoadingMessage('Start dauert zu lange – Fallback wird aktiviert…');
+            showShellFallback('Die App wurde im Notfallmodus angezeigt. Bitte Seite neu laden.');
+          }
+        }, 8000);
+      });
+
+      window.addEventListener('error', function (event) {
+        var src = event && event.filename ? String(event.filename).split('/').pop() : 'unknown';
+        var line = event && event.lineno ? event.lineno : 0;
+        var message = event && event.message ? event.message : 'Unbekannter Fehler';
+        setLoadingMessage('Fehler beim Start: ' + message + ' (' + src + ':' + line + ')');
+      });
+
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = event && event.reason;
+        var text = reason && reason.message ? reason.message : String(reason || 'Unbekannte Promise-Ablehnung');
+        setLoadingMessage('Startabbruch: ' + text);
+      });
+    })();
+  </script>
 </head>
 <body>
 
@@ -1534,10 +1624,13 @@ const CTApp = {
   },
 
   _showAppShell() {
+    window.__ctBootDone = true;
     const loading = document.getElementById('ct-loading');
     const app     = document.getElementById('ct-app');
     if (loading) loading.style.display = 'none';
     if (app) app.style.display = 'flex';
+    const alert = document.getElementById('ct-boot-alert');
+    if (alert && alert.parentNode) alert.parentNode.removeChild(alert);
   },
 
   nav(view) {
