@@ -549,6 +549,212 @@
     @media (min-width: 769px) and (max-width: 1024px) {
       .g4 { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ===== Weather Module ===== */
+    .wx-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 11px 16px;
+      margin-bottom: 14px;
+      box-shadow: var(--sh-sm);
+    }
+
+    .wx-loc-info {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.91rem;
+      font-weight: 600;
+    }
+
+    .wx-refresh {
+      background: none;
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-sm);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-family: var(--font);
+      color: var(--c-text-muted);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .wx-refresh:hover:not(:disabled) { background: var(--c-surface-dim); color: var(--c-text); }
+    .wx-refresh:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .wx-notice {
+      padding: 9px 14px;
+      border-radius: var(--r-sm);
+      font-size: 0.82rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wx-notice.stale   { background: #fff8e1; border: 1px solid #ffd54f; color: #705200; }
+    .wx-notice.offline { background: #fce4e4; border: 1px solid #ef9a9a; color: #700000; }
+    .wx-notice.error   { background: #fce4e4; border: 1px solid #ef9a9a; color: #700000; }
+    .wx-notice.hidden  { display: none; }
+
+    .wx-state-panel {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--c-text-muted);
+      font-size: 0.9rem;
+    }
+
+    .wx-state-icon { font-size: 2.4rem; margin-bottom: 12px; }
+
+    .wx-state-panel .wx-retry {
+      margin-top: 14px;
+      background: var(--c-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-sm);
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-family: var(--font);
+      cursor: pointer;
+    }
+
+    /* Current weather card */
+    .wx-current {
+      background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-light) 100%);
+      border-radius: var(--r-lg);
+      padding: 22px 24px;
+      color: #fff;
+      display: flex;
+      gap: 24px;
+      margin-bottom: 14px;
+    }
+
+    .wx-cur-left {
+      min-width: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .wx-main-icon  { font-size: 3.2rem; line-height: 1; margin-bottom: 2px; }
+    .wx-main-temp  { font-size: 2.6rem; font-weight: 800; line-height: 1.1; }
+    .wx-main-desc  { font-size: 0.9rem;  opacity: 0.88; margin-top: 4px; }
+    .wx-main-feels { font-size: 0.78rem; opacity: 0.68; margin-top: 2px; }
+
+    .wx-cur-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .wx-fact {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.83rem;
+      opacity: 0.9;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 4px;
+    }
+
+    .wx-fact:last-child { border-bottom: none; padding-bottom: 0; }
+    .wx-fact-val { font-weight: 600; }
+
+    /* Sun bar */
+    .wx-sun {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 13px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--sh-sm);
+      margin-bottom: 0;
+    }
+
+    .wx-sun-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .wx-sun-label { font-size: 0.7rem;  color: var(--c-text-muted); line-height: 1.3; }
+    .wx-sun-val   { font-size: 0.96rem; font-weight: 700; }
+    .wx-sun-div   { width: 1px; height: 36px; background: var(--c-border); flex-shrink: 0; }
+
+    /* Hourly scroll */
+    .wx-hourly {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .wx-h {
+      flex-shrink: 0;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      text-align: center;
+      min-width: 64px;
+      box-shadow: var(--sh-sm);
+    }
+
+    .wx-h.now {
+      border-color: var(--c-primary);
+      background: var(--c-primary);
+      color: #fff;
+    }
+
+    .wx-h-time { font-size: 0.7rem;  font-weight: 600; color: var(--c-text-muted); margin-bottom: 3px; }
+    .wx-h.now .wx-h-time { color: rgba(255,255,255,0.65); }
+    .wx-h-icon { font-size: 1.25rem; margin: 3px 0; }
+    .wx-h-temp { font-size: 0.86rem; font-weight: 700; }
+    .wx-h-rain { font-size: 0.65rem; color: var(--c-text-muted); margin-top: 2px; }
+    .wx-h.now .wx-h-rain { color: rgba(255,255,255,0.65); }
+
+    /* Daily rows */
+    .wx-day {
+      display: flex;
+      align-items: center;
+      padding: 11px 18px;
+      border-bottom: 1px solid var(--c-border);
+      gap: 10px;
+    }
+
+    .wx-day:last-child { border-bottom: none; }
+    .wx-day-name { font-size: 0.87rem; font-weight: 600; min-width: 56px; }
+    .wx-day-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .wx-day-desc { flex: 1; font-size: 0.78rem; color: var(--c-text-muted); }
+    .wx-day-rain { font-size: 0.76rem; color: #2563b0; min-width: 42px; text-align: right; }
+    .wx-day-temps { font-size: 0.84rem; font-weight: 600; min-width: 74px; text-align: right; white-space: nowrap; }
+    .wx-day-temps .tmin { color: var(--c-text-muted); font-weight: 400; }
+
+    .wx-attr {
+      font-size: 0.7rem;
+      color: var(--c-text-muted);
+      text-align: center;
+      margin-top: 18px;
+    }
+
+    .wx-attr a { color: var(--c-text-muted); }
+
+    @media (max-width: 768px) {
+      .wx-current { flex-direction: column; gap: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -594,10 +800,9 @@
         <span class="nav-pill">Bald</span>
       </button>
 
-      <button class="nav-btn nav-disabled" data-view="weather" title="Modul in Entwicklung">
+      <button class="nav-btn" data-view="weather" onclick="CTApp.nav('weather')">
         <span class="nav-icon">🌤️</span>
         <span class="nav-text">Wetter</span>
-        <span class="nav-pill">Bald</span>
       </button>
 
       <button class="nav-btn nav-disabled" data-view="stats" title="Modul in Entwicklung">
@@ -707,11 +912,11 @@
             <div class="mod-card-desc">Fischarten, Schonzeiten, Maße und Gewässerinformationen.</div>
             <div class="chip">In Entwicklung</div>
           </div>
-          <div class="mod-card">
+          <div class="mod-card" style="cursor:pointer" onclick="CTApp.nav('weather')">
             <div class="mod-card-icon">🌤️</div>
             <div class="mod-card-title">Wetter</div>
-            <div class="mod-card-desc">Aktuelle Wetterdaten und Angelprognosen für deinen Spot.</div>
-            <div class="chip">In Entwicklung</div>
+            <div class="mod-card-desc">Aktuelle Wetterdaten und 7-Tage-Vorhersage für deinen Spot.</div>
+            <div class="chip" style="background:#f0fdf6;border-color:#86efac;color:#15803d">✓ Verfügbar</div>
           </div>
           <div class="mod-card">
             <div class="mod-card-icon">📊</div>
@@ -775,18 +980,89 @@
       <div class="view" id="view-weather">
         <div class="page-header">
           <h2>🌤️ Wetter</h2>
-          <p>Aktuelle Wetterdaten für deine Angelspots.</p>
+          <p>Aktuelle Wetterdaten für deinen Angelspot.</p>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <div class="placeholder">
-              <div class="placeholder-icon">🌤️</div>
-              <h3>Wetterdaten</h3>
-              <p>Das Wetter-Modul befindet sich noch in Entwicklung.</p>
-              <div class="chip">Kommt bald</div>
+
+        <!-- Standort-Leiste -->
+        <div class="wx-topbar">
+          <div class="wx-loc-info">
+            <span>📍</span>
+            <span id="wx-location-name">–</span>
+          </div>
+          <button class="wx-refresh" id="wx-refresh-btn" onclick="CTApp.loadWeather(true)">🔄 Aktualisieren</button>
+        </div>
+
+        <!-- Veraltete/Offline-Hinweis -->
+        <div id="wx-notice" class="wx-notice hidden"></div>
+
+        <!-- Ladezustand -->
+        <div id="wx-loading" class="wx-state-panel">
+          <div class="wx-state-icon">⏳</div>
+          <div>Wetterdaten werden geladen…</div>
+        </div>
+
+        <!-- Fehlerzustand -->
+        <div id="wx-error" class="wx-state-panel hidden">
+          <div class="wx-state-icon">⚠️</div>
+          <div id="wx-error-msg">Wetterdaten konnten nicht geladen werden.</div>
+          <button class="wx-retry" onclick="CTApp.loadWeather(true)">Erneut versuchen</button>
+        </div>
+
+        <!-- Wetterdaten -->
+        <div id="wx-data" class="hidden">
+
+          <!-- Aktuelles Wetter -->
+          <div class="wx-current">
+            <div class="wx-cur-left">
+              <div class="wx-main-icon" id="wx-icon">🌡️</div>
+              <div class="wx-main-temp" id="wx-temp">–</div>
+              <div class="wx-main-desc" id="wx-desc">–</div>
+              <div class="wx-main-feels" id="wx-feels"></div>
+            </div>
+            <div class="wx-cur-right">
+              <div class="wx-fact"><span>💨 Wind</span><span class="wx-fact-val" id="wx-wind">–</span></div>
+              <div class="wx-fact"><span>💨 Böen</span><span class="wx-fact-val" id="wx-gusts">–</span></div>
+              <div class="wx-fact"><span>🌡️ Luftdruck</span><span class="wx-fact-val" id="wx-pressure">–</span></div>
+              <div class="wx-fact"><span>💧 Luftfeuchte</span><span class="wx-fact-val" id="wx-humidity">–</span></div>
+              <div class="wx-fact"><span>🌧️ Regenwahrsch.</span><span class="wx-fact-val" id="wx-precip">–</span></div>
+              <div class="wx-fact"><span>☁️ Bewölkung</span><span class="wx-fact-val" id="wx-clouds">–</span></div>
             </div>
           </div>
-        </div>
+
+          <!-- Sonnenaufgang / Sonnenuntergang -->
+          <div class="wx-sun">
+            <div class="wx-sun-item">
+              <span>🌅</span>
+              <div>
+                <div class="wx-sun-label">Sonnenaufgang</div>
+                <div class="wx-sun-val" id="wx-sunrise">–</div>
+              </div>
+            </div>
+            <div class="wx-sun-div"></div>
+            <div class="wx-sun-item">
+              <span>🌇</span>
+              <div>
+                <div class="wx-sun-label">Sonnenuntergang</div>
+                <div class="wx-sun-val" id="wx-sunset">–</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stündliche Vorhersage -->
+          <div class="section-label mt-22">Stündliche Vorhersage (24 h)</div>
+          <div class="wx-hourly mt-6" id="wx-hourly"></div>
+
+          <!-- 7-Tage-Vorhersage -->
+          <div class="section-label mt-22">7-Tage-Vorhersage</div>
+          <div class="card mt-6" id="wx-daily"></div>
+
+          <!-- Quellenangabe -->
+          <div class="wx-attr">
+            Wetterdaten: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
+            (open-meteo.com) – CC BY 4.0 &nbsp;·&nbsp; Aktualisiert: <span id="wx-fetched-at">–</span>
+          </div>
+
+        </div><!-- /wx-data -->
       </div>
 
       <!-- ===== Statistiken ===== -->
@@ -906,9 +1182,9 @@
         <span class="bnav-icon">🎣</span>
         <span class="bnav-label">Fänge</span>
       </button>
-      <button class="bnav-btn disabled" disabled>
-        <span class="bnav-icon">🐟</span>
-        <span class="bnav-label">Fische</span>
+      <button class="bnav-btn" data-view="weather" onclick="CTApp.nav('weather')">
+        <span class="bnav-icon">🌤️</span>
+        <span class="bnav-label">Wetter</span>
       </button>
       <button class="bnav-btn" data-view="profile" onclick="CTApp.nav('profile')">
         <span class="bnav-icon">👤</span>
@@ -1026,6 +1302,7 @@ const CTApp = {
 
     // Profildaten bei Wechsel ins Profil aktualisieren
     if (view === 'profile') this._renderProfile();
+    if (view === 'weather') this.loadWeather();
   },
 
   _initial(user) {
@@ -1099,7 +1376,143 @@ const CTApp = {
   _setText(id, val) {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
-  }
+  },
+
+  // ───── Weather ─────
+
+  loadWeather(forceRefresh) {
+    const wm = window.CatchTrackWeatherModule;
+
+    if (!wm) {
+      this._wxShowError('Weather-Modul nicht geladen.');
+      return;
+    }
+
+    const loc = wm.getLocation();
+    this._setText('wx-location-name', loc ? loc.name : '–');
+
+    // Loading-Zustand
+    document.getElementById('wx-loading').classList.remove('hidden');
+    document.getElementById('wx-data').classList.add('hidden');
+    document.getElementById('wx-error').classList.add('hidden');
+    document.getElementById('wx-notice').classList.add('hidden');
+    const btn = document.getElementById('wx-refresh-btn');
+    if (btn) btn.disabled = true;
+
+    wm.getWeather(!!forceRefresh).then(data => {
+      document.getElementById('wx-loading').classList.add('hidden');
+      if (btn) btn.disabled = false;
+
+      if (data._stale) {
+        const age = Math.round((Date.now() - new Date(data.fetchedAt).getTime()) / 60000);
+        this._wxShowNotice('stale',
+          `⚠️ Zwischengespeicherte Daten (${age} Min. alt) – ${data._staleReason || 'keine Verbindung'}`);
+      }
+
+      this._renderWeather(data);
+
+    }).catch(err => {
+      document.getElementById('wx-loading').classList.add('hidden');
+      if (btn) btn.disabled = false;
+      this._wxShowError(this._wxErrMsg(err));
+    });
+  },
+
+  _wxShowError(msg) {
+    document.getElementById('wx-loading').classList.add('hidden');
+    document.getElementById('wx-data').classList.add('hidden');
+    document.getElementById('wx-error').classList.remove('hidden');
+    this._setText('wx-error-msg', msg);
+  },
+
+  _wxShowNotice(type, msg) {
+    const el = document.getElementById('wx-notice');
+    if (!el) return;
+    el.className  = 'wx-notice ' + type;
+    el.textContent = msg;
+  },
+
+  _wxErrMsg(err) {
+    if (!navigator.onLine) return 'Keine Internetverbindung. Wetterdaten nicht verfügbar.';
+    if (err.message && err.message.includes('Zeitüberschreitung')) return err.message;
+    return 'Wetterdaten konnten nicht geladen werden: ' + (err.message || 'Unbekannter Fehler');
+  },
+
+  _renderWeather(data) {
+    const c  = data.current;
+    const wm = window.CatchTrackWeatherModule;
+    const fmtTime = iso => iso
+      ? new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+      : '–';
+    const round = v => v != null ? Math.round(v) : null;
+    const fmt   = (v, unit) => v != null ? `${round(v)} ${unit}` : '–';
+
+    document.getElementById('wx-data').classList.remove('hidden');
+
+    // Aktuelles Wetter
+    this._setText('wx-icon',     c.weatherIcon || '🌡️');
+    this._setText('wx-temp',     c.temperature != null ? `${round(c.temperature)}°C` : '–');
+    this._setText('wx-desc',     c.weatherDescription || '–');
+    this._setText('wx-feels',    c.apparentTemperature != null
+      ? `Gefühlt ${round(c.apparentTemperature)}°C` : '');
+
+    const dir = wm ? wm.windDirectionLabel(c.windDirection) : '';
+    this._setText('wx-wind',     c.windSpeed != null
+      ? `${round(c.windSpeed)} km/h ${dir}` : '–');
+    this._setText('wx-gusts',    fmt(c.windGusts, 'km/h'));
+    this._setText('wx-pressure', fmt(c.pressure, 'hPa'));
+    this._setText('wx-humidity', fmt(c.humidity, '%'));
+    this._setText('wx-precip',   fmt(c.precipitationProbability, '%'));
+    this._setText('wx-clouds',   fmt(c.cloudCover, '%'));
+
+    // Sonne
+    this._setText('wx-sunrise',    fmtTime(data.todaySunrise));
+    this._setText('wx-sunset',     fmtTime(data.todaySunset));
+    this._setText('wx-fetched-at', fmtTime(data.fetchedAt));
+
+    // Stündliche Vorhersage
+    const hourlyEl = document.getElementById('wx-hourly');
+    if (hourlyEl && data.hourly && data.hourly.length) {
+      hourlyEl.innerHTML = data.hourly.slice(0, 24).map((h, i) => {
+        const isNow = i === 0;
+        const time  = h.time
+          ? new Date(h.time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+          : '–';
+        const temp  = h.temperature != null ? `${round(h.temperature)}°` : '–';
+        const rain  = h.precipitationProbability != null && h.precipitationProbability > 0
+          ? `🌧 ${round(h.precipitationProbability)}%` : '';
+        return `<div class="wx-h${isNow ? ' now' : ''}">` +
+          `<div class="wx-h-time">${isNow ? 'Jetzt' : time}</div>` +
+          `<div class="wx-h-icon">${h.weatherIcon || '🌡️'}</div>` +
+          `<div class="wx-h-temp">${temp}</div>` +
+          `<div class="wx-h-rain">${rain}</div>` +
+          `</div>`;
+      }).join('');
+    }
+
+    // 7-Tage-Vorhersage
+    const dailyEl = document.getElementById('wx-daily');
+    if (dailyEl && data.daily && data.daily.length) {
+      const DAYS = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+      dailyEl.innerHTML = data.daily.map((d, i) => {
+        const date    = d.date ? new Date(d.date + 'T12:00:00') : null;
+        const dayName = i === 0 ? 'Heute'
+          : i === 1 ? 'Morgen'
+          : (date ? DAYS[date.getDay()] : '–');
+        const tMax  = d.tempMax != null ? `${round(d.tempMax)}°` : '–';
+        const tMin  = d.tempMin != null ? ` ${round(d.tempMin)}°` : '';
+        const rain  = d.precipitationProbabilityMax != null && d.precipitationProbabilityMax > 0
+          ? `🌧 ${round(d.precipitationProbabilityMax)}%` : '';
+        return `<div class="wx-day">` +
+          `<div class="wx-day-name">${dayName}</div>` +
+          `<div class="wx-day-icon">${d.weatherIcon || '🌡️'}</div>` +
+          `<div class="wx-day-desc">${d.weatherDescription || ''}</div>` +
+          `<div class="wx-day-rain">${rain}</div>` +
+          `<div class="wx-day-temps">${tMax}<span class="tmin">${tMin}</span></div>` +
+          `</div>`;
+      }).join('');
+    }
+  },
 };
 
 document.addEventListener('DOMContentLoaded', () => CTApp.init());

@@ -215,13 +215,47 @@ CatchTrack App-UI vollständig implementiert:
 
 Commit: folgt
 
+### CT-0017
+**Status:** Abgeschlossen
+
+Weather-Modul vollständig implementiert:
+
+**Entscheidung Wetterprovider:** Open-Meteo (open-meteo.com)
+- Kein API-Key erforderlich
+- CORS-fähig für Browser
+- Alle benötigten Datenfelder verfügbar
+- Kostenlos für nicht-kommerzielle Nutzung (CC BY 4.0)
+- Kommerzielle Nutzung erfordert kostenpflichtigen Plan → dokumentiert
+
+**Dateien:**
+- `weather-provider.js`: Provider-Abstraktion + Open-Meteo-Implementierung (austauschbar)
+- `weather-module.js`: Hauptlogik (Fetch, WMO-Codes, Normalisierung, Cache, Offline-Handling)
+- `weather-interface.js`: Öffentliche API für Core-Integration
+- `weather-loader.js`: Registrierung + Aktivierung im ModuleManager
+- `README.md`: Vollständige Dokumentation inkl. Lizenz, Provider-Wechsel, Datenstruktur
+
+**Funktionen:**
+- Aktuelles Wetter (Temp, Gefühlt, Wind, Böen, Druck, Feuchte, Niederschlag, Bewölkung)
+- Sonnenaufgang/Sonnenuntergang
+- 24h stündliche Vorhersage
+- 7-Tage-Vorhersage
+- WMO-Code → deutsche Beschreibung + Emoji-Icon
+- Offline-Handling: Cache 30 Min. gültig, veralteter Cache mit Kennzeichnung
+- Provider-Abstraktion: späterer Wechsel ohne Modulumbau möglich
+
+**Geänderte Dateien:**
+- `Core/app.js`: Weather-Scripts in loadModuleScripts aufgenommen
+- `index.html`: Wetter-View aktiviert (echte UI), Nav-Buttons aktiv, Dashboard-Karte aktualisiert
+
+Commit: folgt
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 16  
+**Einträge:** 17  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
 
-**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI dokumentiert
+**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul
 
 —
 

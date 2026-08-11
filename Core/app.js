@@ -30,6 +30,11 @@
                 'Database/database-manager.js',
                 'Services/service-manager.js',
                 'Tests/test-runner.js',
+                // Weather Module (Provider vor Modul laden)
+                'Modules/weather-module/weather-provider.js',
+                'Modules/weather-module/weather-module.js',
+                'Modules/weather-module/weather-interface.js',
+                'Modules/weather-module/weather-loader.js',
                 // User und Admin Module
                 'Modules/test-module.js',
                 'Modules/user-module/user-module.js',
