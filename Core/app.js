@@ -12,7 +12,7 @@
     const App = {
         version: '1.0.0',
 
-        start() {
+        async start() {
             if (!window.CatchTrackCore) {
                 throw new Error('CatchTrack Core is not available.');
             }
@@ -22,6 +22,11 @@
             }
 
             this.registerSystemEvents();
+
+            await this.loadModuleScripts([
+                'Modules/test-module.js'
+            ]);
+
             this.registerSmokeTestModule();
 
             if (window.CatchTrackCoreEntry) {
@@ -31,6 +36,25 @@
             window.CatchTrackCore.emit('app:started', {
                 version: this.version
             });
+        },
+
+        loadModuleScripts(modulePaths) {
+            if (!Array.isArray(modulePaths)) {
+                return Promise.resolve();
+            }
+
+            const loadScript = (path) => {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = path;
+                    script.async = false;
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error(`Failed to load module script: ${path}`));
+                    document.head.appendChild(script);
+                });
+            };
+
+            return Promise.all(modulePaths.map(loadScript));
         },
 
         registerSmokeTestModule() {

@@ -39,11 +39,13 @@ Duplikate, überflüssige Wrapper und doppelte API-Strukturen wurden entfernt.
 Die verbleibenden Core-Dateien sind syntaktisch geprüft und das Ergebnis auf `main` gepusht.
 
 ### CT-0003
-**Status:** In Arbeit
+**Status:** Abgeschlossen
 
 Ein minimaler Modulordner `Modules` wurde angelegt.
 
 Ein erstes Testmodul (`test-module.js`) wurde erstellt, um die Core-Registrierung, Aktivierung und das Event-System zu prüfen.
+
+Das App-Startup wurde erweitert, um Modul-Skripte aus `Modules/` zu laden, bevor die Core-Runtime gestartet wird.
 
 ## Chronikstatus
 
