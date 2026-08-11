@@ -30,6 +30,13 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 **Teststatus:** ✓ Syntax geprüft  
 **Letzte Aktualisierung:** 2026-08-11
 
+## Letzte Änderungen
+
+| Datum | Komponente | Änderung |
+|---|---|---|
+| 2026-08-11 | User Module | v1.1.0: username, displayName, avatar, status, lastLoginAt |
+| 2026-08-11 | User Module | Fix: Object.freeze readonly-Fehler behoben |
+
 ## Projektstruktur
 
 | Bereich | Status |
@@ -50,7 +57,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Modul | Version | Status | Dateien |
 |—|—|—|—|
-| User Module | 1.0.0 | ✓ Abgeschlossen | user-module.js, user-interface.js, user-loader.js, README.md |
+| User Module | 1.1.0 | ✓ Abgeschlossen | user-module.js, user-interface.js, user-loader.js, README.md |
 | Admin Module | 1.0.0 | ✓ Abgeschlossen | admin-module.js, admin-interface.js, admin-loader.js, README.md |
 
 ## Infrastruktur-Komponenten
@@ -70,7 +77,7 @@ Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert:
 
 - ✓ Core-Grundgerüst (18 Dateien)
 - ✓ Modul-System & Modulschnittstelle
-- ✓ User-Modul mit Testbenutzer
+- ✓ User-Modul v1.1.0 (vollständige Benutzeridentität: username, displayName, avatar, status, lastLoginAt)
 - ✓ Admin-Modul mit Diagnostik
 - ✓ Config-System
 - ✓ Database-Layer

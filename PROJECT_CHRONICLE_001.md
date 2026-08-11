@@ -164,13 +164,40 @@ Alle Markdown-Dateien dokumentiert:
 
 CatchTrack v1.0.0 ist nun testfähig und kann als Basis für weitere Module verwendet werden.
 
+### CT-0014
+**Status:** Abgeschlossen
+
+Fix: "Attempted to assign to readonly property" in user-module.js
+
+`Object.freeze()` wurde entfernt, da `UserModule` veränderlichen Zustand hält (`currentUser`, `initialized`, `users`). Die Methoden `authenticate()`, `logout()` und `init()` funktionieren wieder korrekt.
+
+Betroffene Datei: `Modules/user-module/user-module.js`
+
+### CT-0015
+**Status:** Abgeschlossen
+
+User-Modul auf v1.1.0 erweitert – vollständige Benutzeridentität:
+
+- `username`: eindeutig, Pflichtfeld, Referenz in Catches/Leaderboards/Community
+- `displayName`: Anzeigename getrennt vom Username
+- `avatar`: Profilbild-Referenz (null by default)
+- `status`: `'active' | 'inactive' | 'banned'` ersetzt `active: boolean`
+- `lastLoginAt`: wird bei `authenticate()` automatisch gesetzt
+- `getUserByUsername()`: Suche nach eindeutigem Username
+- `isUsernameAvailable()`: interne Eindeutigkeitsprüfung
+- `createUser()` / `updateUser()`: Username-Validierung mit Fehler bei Duplikat
+- `id` und `createdAt` schreibgeschützt in `updateUser()`
+
+Geänderte Dateien: `user-module.js`, `user-interface.js`, `README.md`, `index.html`  
+Commit: `6966e06`
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 13 (Abgeschlossen)  
+**Einträge:** 15  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
 
-**Chronik-Umfang:** 100% - Erster Entwicklungsblock dokumentiert
+**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 dokumentiert
 
 —
 
