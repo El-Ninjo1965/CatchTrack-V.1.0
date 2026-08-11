@@ -848,6 +848,26 @@
     }
 
     .gps-sim-field input:focus { outline: 2px solid var(--c-primary); border-color: transparent; }
+
+    /* ===== Language Selector ===== */
+    .lang-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 16px;
+      border: 2px solid var(--c-border);
+      border-radius: var(--r-sm);
+      background: var(--c-surface);
+      color: var(--c-text);
+      font-size: 0.88rem;
+      font-family: var(--font);
+      cursor: pointer;
+      font-weight: 500;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .lang-btn:hover { border-color: var(--c-primary); background: var(--c-surface-dim); }
+    .lang-btn.active { border-color: var(--c-primary); background: var(--c-primary); color: #fff; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -878,48 +898,47 @@
 
       <button class="nav-btn nav-active" data-view="dashboard" onclick="CTApp.nav('dashboard')">
         <span class="nav-icon">🏠</span>
-        <span class="nav-text">Dashboard</span>
+        <span class="nav-text" data-i18n="nav.dashboard">Dashboard</span>
       </button>
 
       <button class="nav-btn nav-disabled" data-view="catches" title="Modul in Entwicklung">
         <span class="nav-icon">🎣</span>
-        <span class="nav-text">Meine Fänge</span>
-        <span class="nav-pill">Bald</span>
+        <span class="nav-text" data-i18n="nav.catches">Meine Fänge</span>
+        <span class="nav-pill" data-i18n="nav.soon">Bald</span>
       </button>
 
       <button class="nav-btn nav-disabled" data-view="fishdb" title="Modul in Entwicklung">
         <span class="nav-icon">🐟</span>
-        <span class="nav-text">Fischdatenbank</span>
-        <span class="nav-pill">Bald</span>
+        <span class="nav-text" data-i18n="nav.fishdb">Fischdatenbank</span>
+        <span class="nav-pill" data-i18n="nav.soon">Bald</span>
       </button>
 
       <button class="nav-btn" data-view="weather" onclick="CTApp.nav('weather')">
         <span class="nav-icon">🌤️</span>
-        <span class="nav-text">Wetter</span>
+        <span class="nav-text" data-i18n="nav.weather">Wetter</span>
       </button>
 
       <button class="nav-btn" data-view="gps" onclick="CTApp.nav('gps')">
         <span class="nav-icon">📡</span>
-        <span class="nav-text">GPS & Standort</span>
+        <span class="nav-text" data-i18n="nav.gps">GPS & Standort</span>
       </button>
 
       <button class="nav-btn nav-disabled" data-view="stats" title="Modul in Entwicklung">
         <span class="nav-icon">📊</span>
-        <span class="nav-text">Statistiken</span>
-        <span class="nav-pill">Bald</span>
+        <span class="nav-text" data-i18n="nav.stats">Statistiken</span>
+        <span class="nav-pill" data-i18n="nav.soon">Bald</span>
       </button>
 
       <div class="sb-nav-label" style="margin-top:8px">Konto</div>
 
       <button class="nav-btn" data-view="profile" onclick="CTApp.nav('profile')">
         <span class="nav-icon">👤</span>
-        <span class="nav-text">Mein Profil</span>
+        <span class="nav-text" data-i18n="nav.profile">Mein Profil</span>
       </button>
 
-      <button class="nav-btn nav-disabled" data-view="settings" title="Modul in Entwicklung">
+      <button class="nav-btn nav-disabled" data-view="settings" onclick="CTApp.nav('settings')">
         <span class="nav-icon">⚙️</span>
-        <span class="nav-text">Einstellungen</span>
-        <span class="nav-pill">Bald</span>
+        <span class="nav-text" data-i18n="nav.settings">Einstellungen</span>
       </button>
     </nav>
 
@@ -963,7 +982,7 @@
 
         <!-- System Status -->
         <div class="sys-bar">
-          <span class="sys-bar-title">System</span>
+          <span class="sys-bar-title" data-i18n="sys.label">System</span>
           <div class="sys-item"><div class="sys-dot" id="sys-core"></div><span class="sys-name">Core</span></div>
           <div class="sys-item"><div class="sys-dot" id="sys-user"></div><span class="sys-name">User</span></div>
           <div class="sys-item"><div class="sys-dot" id="sys-db"></div><span class="sys-name">DB</span></div>
@@ -971,32 +990,32 @@
         </div>
 
         <!-- Stats -->
-        <div class="section-label">Übersicht</div>
+        <div class="section-label" data-i18n="dashboard.overview">Übersicht</div>
         <div class="g4">
           <div class="stat">
             <div class="stat-icon">🎣</div>
             <div class="stat-val">–</div>
-            <div class="stat-lbl">Gesamte Fänge</div>
+            <div class="stat-lbl" data-i18n="stat.catches">Gesamte Fänge</div>
           </div>
           <div class="stat">
             <div class="stat-icon">📅</div>
             <div class="stat-val">–</div>
-            <div class="stat-lbl">Diese Woche</div>
+            <div class="stat-lbl" data-i18n="stat.week">Diese Woche</div>
           </div>
           <div class="stat">
             <div class="stat-icon">🐟</div>
             <div class="stat-val">–</div>
-            <div class="stat-lbl">Fischarten</div>
+            <div class="stat-lbl" data-i18n="stat.species">Fischarten</div>
           </div>
           <div class="stat">
             <div class="stat-icon">⚙️</div>
             <div class="stat-val" id="stat-modules">–</div>
-            <div class="stat-lbl">Aktive Module</div>
+            <div class="stat-lbl" data-i18n="stat.modules">Aktive Module</div>
           </div>
         </div>
 
         <!-- Module Preview -->
-        <div class="section-label mt-22">Module</div>
+        <div class="section-label mt-22" data-i18n="dashboard.modules">Module</div>
         <div class="g3 mt-6">
           <div class="mod-card">
             <div class="mod-card-icon">🎣</div>
@@ -1346,16 +1365,33 @@
       <!-- ===== Einstellungen ===== -->
       <div class="view" id="view-settings">
         <div class="page-header">
-          <h2>⚙️ Einstellungen</h2>
-          <p>App-Einstellungen und Konfiguration.</p>
+          <h2 data-i18n="settings.page_title">⚙️ Einstellungen</h2>
+          <p data-i18n="settings.page_sub">App-Einstellungen und Konfiguration.</p>
         </div>
-        <div class="card">
+
+        <div class="section-label" data-i18n="settings.lang_title">Sprache</div>
+        <div class="card mt-6">
+          <div class="card-head" data-i18n="settings.lang_head">🌐 Sprachauswahl</div>
+          <div class="card-body">
+            <p data-i18n="settings.lang_desc" style="font-size:0.84rem;color:var(--c-text-muted);margin-bottom:16px;line-height:1.55">
+              Anzeigesprache der App. Änderungen werden sofort angewendet.
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px" id="lang-selector">
+              <button class="lang-btn" data-locale="auto" onclick="CTApp.setLocale('auto')">🖥️ Auto</button>
+              <button class="lang-btn" data-locale="de"   onclick="CTApp.setLocale('de')">🇩🇪 Deutsch</button>
+              <button class="lang-btn" data-locale="en"   onclick="CTApp.setLocale('en')">🇬🇧 English</button>
+            </div>
+            <p id="lang-current" style="margin-top:12px;font-size:0.78rem;color:var(--c-text-muted)"></p>
+          </div>
+        </div>
+
+        <div class="section-label mt-22" data-i18n="settings.other_title">Weitere Einstellungen</div>
+        <div class="card mt-6">
           <div class="card-body">
             <div class="placeholder">
               <div class="placeholder-icon">⚙️</div>
-              <h3>Einstellungen</h3>
-              <p>Das Einstellungen-Modul befindet sich noch in Entwicklung.</p>
-              <div class="chip">Kommt bald</div>
+              <p data-i18n="settings.other_ph">Weitere Einstellungen sind noch in Entwicklung.</p>
+              <div class="chip" data-i18n="ph.coming_soon">Kommt bald</div>
             </div>
           </div>
         </div>
@@ -1369,19 +1405,19 @@
     <div class="bnav-inner">
       <button class="bnav-btn active" data-view="dashboard" onclick="CTApp.nav('dashboard')">
         <span class="bnav-icon">🏠</span>
-        <span class="bnav-label">Home</span>
+        <span class="bnav-label" data-i18n="bnav.home">Home</span>
       </button>
       <button class="bnav-btn disabled" disabled>
         <span class="bnav-icon">🎣</span>
-        <span class="bnav-label">Fänge</span>
+        <span class="bnav-label" data-i18n="bnav.catches">Fänge</span>
       </button>
       <button class="bnav-btn" data-view="weather" onclick="CTApp.nav('weather')">
         <span class="bnav-icon">🌤️</span>
-        <span class="bnav-label">Wetter</span>
+        <span class="bnav-label" data-i18n="bnav.weather">Wetter</span>
       </button>
       <button class="bnav-btn" data-view="profile" onclick="CTApp.nav('profile')">
         <span class="bnav-icon">👤</span>
-        <span class="bnav-label">Profil</span>
+        <span class="bnav-label" data-i18n="bnav.profile">Profil</span>
       </button>
     </div>
   </nav>
@@ -1413,16 +1449,23 @@ const CTApp = {
   view: 'dashboard',
   user: null,
 
-  // Titel-Map für Mobile Header
-  _titles: {
-    dashboard: 'Dashboard',
-    catches:   'Meine Fänge',
-    fishdb:    'Fischdatenbank',
-    weather:   'Wetter',
-    gps:       'GPS & Standort',
-    stats:     'Statistiken',
-    profile:   'Mein Profil',
-    settings:  'Einstellungen'
+  // i18n Shortcut
+  t(key, params) {
+    return window.CatchTrackI18n ? window.CatchTrackI18n.t(key, params) : key;
+  },
+
+  // Titel-Map (übersetzt)
+  get _titles() {
+    return {
+      dashboard: this.t('nav.dashboard'),
+      catches:   this.t('nav.catches'),
+      fishdb:    this.t('nav.fishdb'),
+      weather:   this.t('nav.weather'),
+      gps:       this.t('nav.gps'),
+      stats:     this.t('nav.stats'),
+      profile:   this.t('nav.profile'),
+      settings:  this.t('nav.settings')
+    };
   },
 
   init() {
@@ -1465,8 +1508,19 @@ const CTApp = {
       const app     = document.getElementById('ct-app');
       if (loading) loading.style.display = 'none';
       if (app)     app.style.display     = 'flex';
+      // i18n anwenden
+      this._applyI18n();
       // GPS-Position beim Start automatisch ermitteln (stille Anfrage)
       this._autoGpsInit();
+      // Auf Sprachänderungen reagieren
+      if (window.CatchTrackCore) {
+        window.CatchTrackCore.on('i18n:locale-changed', () => {
+          this._applyI18n();
+          if (this.view === 'profile') this._renderProfile();
+          if (this.view === 'gps')     this._renderGpsView();
+          if (this.view === 'settings') this._renderSettingsView();
+        });
+      }
     }, 350);
   },
 
@@ -1500,6 +1554,7 @@ const CTApp = {
     if (view === 'profile') this._renderProfile();
     if (view === 'weather') this.loadWeather();
     if (view === 'gps')     this._renderGpsView();
+    if (view === 'settings') this._renderSettingsView();
   },
 
   _initial(user) {
@@ -1575,6 +1630,163 @@ const CTApp = {
     if (el) el.textContent = val;
   },
 
+  // ───── i18n ─────
+
+  setLocale(locale) {
+    if (window.CatchTrackI18n) window.CatchTrackI18n.setLocale(locale);
+  },
+
+  _applyI18n() {
+    const t = (k) => this.t(k);
+
+    // Alle data-i18n Elemente
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+
+    // Mobile Header-Titel
+    const titleEl = document.getElementById('tb-title');
+    if (titleEl) titleEl.textContent = this._titles[this.view] || 'CatchTrack';
+
+    // Loading-Text
+    this._setText('ct-loading-msg', t('app.loading'));
+
+    // Welcome sub wenn kein User
+    if (!this.user) this._setText('welcome-sub', t('dashboard.welcome_sub'));
+
+    // Dashboard Module-Karten (Texte übersetzen)
+    this._renderDashboardCards();
+
+    // Wetter- und GPS-Labels
+    this._applyWeatherLabels();
+    this._applyGpsHtmlLabels();
+  },
+
+  _renderDashboardCards() {
+    const grid = document.querySelector('#view-dashboard .g3.mt-6');
+    if (!grid) return;
+    const t = (k) => this.t(k);
+    grid.innerHTML =
+      `<div class="mod-card">
+        <div class="mod-card-icon">🎣</div>
+        <div class="mod-card-title">${t('mod.catches.title')}</div>
+        <div class="mod-card-desc">${t('mod.catches.desc')}</div>
+        <div class="chip">${t('mod.in_dev')}</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-card-icon">🐟</div>
+        <div class="mod-card-title">${t('mod.fishdb.title')}</div>
+        <div class="mod-card-desc">${t('mod.fishdb.desc')}</div>
+        <div class="chip">${t('mod.in_dev')}</div>
+      </div>
+      <div class="mod-card" style="cursor:pointer" onclick="CTApp.nav('weather')">
+        <div class="mod-card-icon">🌤️</div>
+        <div class="mod-card-title">${t('mod.weather.title')}</div>
+        <div class="mod-card-desc">${t('mod.weather.desc')}</div>
+        <div class="chip" style="background:#f0fdf6;border-color:#86efac;color:#15803d">${t('mod.available')}</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-card-icon">📊</div>
+        <div class="mod-card-title">${t('mod.stats.title')}</div>
+        <div class="mod-card-desc">${t('mod.stats.desc')}</div>
+        <div class="chip">${t('mod.in_dev')}</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-card-icon">🏆</div>
+        <div class="mod-card-title">${t('mod.leader.title')}</div>
+        <div class="mod-card-desc">${t('mod.leader.desc')}</div>
+        <div class="chip">${t('mod.planned')}</div>
+      </div>
+      <div class="mod-card">
+        <div class="mod-card-icon">📍</div>
+        <div class="mod-card-title">${t('mod.spots.title')}</div>
+        <div class="mod-card-desc">${t('mod.spots.desc')}</div>
+        <div class="chip">${t('mod.planned')}</div>
+      </div>`;
+  },
+
+  _applyWeatherLabels() {
+    const t = (k) => this.t(k);
+    // Sun labels
+    const sl = document.querySelectorAll('.wx-sun-label');
+    if (sl[0]) sl[0].textContent = t('weather.sunrise');
+    if (sl[1]) sl[1].textContent = t('weather.sunset');
+    // Section labels in weather view
+    const wsl = document.querySelectorAll('#view-weather .section-label');
+    if (wsl[0]) wsl[0].textContent = t('weather.hourly');
+    if (wsl[1]) wsl[1].textContent = t('weather.daily');
+    // Buttons
+    const rbtn = document.getElementById('wx-refresh-btn');
+    if (rbtn) rbtn.textContent = t('weather.refresh');
+    const gbtn = document.getElementById('wx-gps-btn');
+    if (gbtn) gbtn.textContent = t('weather.gps');
+    // Loading / retry
+    const ldiv = document.querySelector('#wx-loading div:last-child');
+    if (ldiv) ldiv.textContent = t('weather.loading');
+    const rBtn = document.querySelector('#wx-error .wx-retry');
+    if (rBtn) rBtn.textContent = t('weather.retry');
+    // wx-fact labels
+    const facts = document.querySelectorAll('.wx-fact > span:first-child');
+    const factKeys = ['weather.wind','weather.gusts','weather.pressure','weather.humidity','weather.rain','weather.clouds'];
+    facts.forEach((el, i) => { if (factKeys[i]) el.textContent = t(factKeys[i]); });
+  },
+
+  _applyGpsHtmlLabels() {
+    const t = (k) => this.t(k);
+    // Action buttons
+    const gb = document.getElementById('gps-get-btn');
+    if (gb) gb.textContent = t('gps.get');
+    const tb = document.getElementById('gps-track-btn');
+    if (tb && window.CatchTrackGpsModule) {
+      tb.textContent = window.CatchTrackGpsModule.isTracking() ? t('gps.track_stop') : t('gps.track_start');
+      tb.className   = 'gps-btn ' + (window.CatchTrackGpsModule.isTracking() ? 'red' : 'sec');
+    }
+    // Module info row labels
+    const rowLabels = document.querySelectorAll('#gps-banner + div + .card .gps-row-label');
+    const rowKeys = ['gps.r_loaded','gps.r_support','gps.r_perm','gps.r_status','gps.r_sim'];
+    rowLabels.forEach((el, i) => { if (rowKeys[i]) el.textContent = t(rowKeys[i]); });
+    // GPS section labels
+    const gsl = document.querySelectorAll('#view-gps .section-label');
+    if (gsl[0]) gsl[0].textContent = t('gps.pos_data');
+    if (gsl[1]) gsl[1].textContent = t('gps.mod_status');
+    if (gsl[2]) gsl[2].textContent = t('gps.test_title');
+    // sim field labels
+    const sfl = document.querySelectorAll('#view-gps .gps-sim-field label');
+    if (sfl[0]) sfl[0].textContent = t('gps.f_lat');
+    if (sfl[1]) sfl[1].textContent = t('gps.f_lon');
+    if (sfl[2]) sfl[2].textContent = t('gps.f_name');
+    // sim buttons
+    const sbtns = document.querySelectorAll('#view-gps .gps-sim-form .gps-btn');
+    if (sbtns[0]) sbtns[0].textContent = t('gps.sim_btn');
+    if (sbtns[1]) sbtns[1].textContent = t('gps.sim_clear');
+    // test description
+    const tdesc = document.querySelector('#view-gps .gps-sim-form').previousElementSibling;
+    if (tdesc && tdesc.tagName === 'P') tdesc.textContent = t('gps.test_desc');
+  },
+
+  _renderSettingsView() {
+    const t  = (k, p) => this.t(k, p);
+    const i18n = window.CatchTrackI18n;
+    if (!i18n) return;
+
+    const stored = i18n.getStoredPreference();
+    const locale = i18n.getLocale();
+    const device = i18n.getDeviceLocale();
+
+    document.querySelectorAll('#lang-selector .lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.locale === stored);
+    });
+
+    const label = document.getElementById('lang-current');
+    if (label) {
+      label.textContent = stored === 'auto'
+        ? t('settings.lang_device', { locale: device.toUpperCase() })
+        : t('settings.lang_current', { locale: locale.toUpperCase() });
+    }
+  },
+
+  // ───── GPS ─────
+
   // Stille GPS-Initialisierung beim App-Start – kein Fehler bei Ablehnung
   _autoGpsInit() {
     const gm = window.CatchTrackGpsModule;
@@ -1604,29 +1816,33 @@ const CTApp = {
 
   // ───── GPS ─────
 
-  _gpsStatusInfo: {
-    idle:        { icon: '📡', title: 'Bereit',               sub: 'Position noch nicht ermittelt' },
-    requesting:  { icon: '⏳', title: 'Ermittlung läuft…',    sub: 'Bitte Berechtigung erteilen' },
-    available:   { icon: '✅', title: 'Position verfügbar',    sub: '' },
-    stale:       { icon: '⏰', title: 'Position veraltet',     sub: 'Daten älter als 5 Minuten' },
-    denied:      { icon: '🚫', title: 'Berechtigung verweigert', sub: 'Standortzugriff in Browser-Einstellungen aktivieren' },
-    unavailable: { icon: '❌', title: 'GPS nicht verfügbar',   sub: 'Standortdienste deaktiviert oder nicht unterstützt' },
-    timeout:     { icon: '⌛', title: 'Zeitüberschreitung',    sub: 'Position konnte nicht rechtzeitig ermittelt werden' },
-    error:       { icon: '⚠️', title: 'Fehler',               sub: 'Fehler bei der Positionsermittlung' }
+  _gpsStatusInfo(status) {
+    const t = (k) => this.t(k);
+    const map = {
+      idle:        { icon: '📡', title: t('gps.st.idle.title'),        sub: t('gps.st.idle.sub') },
+      requesting:  { icon: '⏳', title: t('gps.st.requesting.title'),  sub: t('gps.st.requesting.sub') },
+      available:   { icon: '✅', title: t('gps.st.available.title'),   sub: '' },
+      stale:       { icon: '⏰', title: t('gps.st.stale.title'),       sub: t('gps.st.stale.sub') },
+      denied:      { icon: '🚫', title: t('gps.st.denied.title'),      sub: t('gps.st.denied.sub') },
+      unavailable: { icon: '❌', title: t('gps.st.unavailable.title'), sub: t('gps.st.unavailable.sub') },
+      timeout:     { icon: '⌛', title: t('gps.st.timeout.title'),     sub: t('gps.st.timeout.sub') },
+      error:       { icon: '⚠️', title: t('gps.st.error.title'),       sub: t('gps.st.error.sub') }
+    };
+    return map[status] || map.idle;
   },
 
   _renderGpsView() {
     const gm = window.CatchTrackGpsModule;
 
-    this._setText('gps-info-loaded',     gm ? '✓ Geladen' : '✗ Nicht geladen');
-    this._setText('gps-info-supported',  gm && gm.isSupported() ? '✓ Unterstützt' : '✗ Nicht unterstützt');
+    this._setText('gps-info-loaded',     gm ? this.t('gps.v.loaded') : this.t('gps.v.not_loaded'));
+    this._setText('gps-info-supported',  gm && gm.isSupported() ? this.t('gps.v.supported') : this.t('gps.v.not_supported'));
     this._setText('gps-info-state',      gm ? gm.getStatus() : '–');
-    this._setText('gps-info-simulated',  gm && gm.isSimulated() ? '✓ Aktiv' : 'Nein');
+    this._setText('gps-info-simulated',  gm && gm.isSimulated() ? this.t('gps.v.sim_yes') : this.t('gps.v.sim_no'));
 
     if (gm) {
       gm.checkPermission().then(perm => {
-        const labels = { granted: '✓ Erteilt', denied: '✗ Verweigert', prompt: '⏳ Noch nicht entschieden', unknown: 'Unbekannt' };
-        this._setText('gps-info-permission', labels[perm] || perm);
+        const permKeys = { granted: 'gps.perm.granted', denied: 'gps.perm.denied', prompt: 'gps.perm.prompt', unknown: 'gps.perm.unknown' };
+        this._setText('gps-info-permission', this.t(permKeys[perm] || 'gps.perm.unknown'));
       });
     } else {
       this._setText('gps-info-permission', '–');
@@ -1639,11 +1855,9 @@ const CTApp = {
   },
 
   _updateGpsBanner(status) {
-    const info = this._gpsStatusInfo[status] || this._gpsStatusInfo.idle;
+    const info = this._gpsStatusInfo(status);
     const banner = document.getElementById('gps-banner');
-    if (banner) {
-      banner.className = 'gps-banner ' + status;
-    }
+    if (banner) banner.className = 'gps-banner ' + status;
     this._setText('gps-banner-icon',  info.icon);
     this._setText('gps-banner-title', info.title);
     this._setText('gps-banner-sub',   info.sub);

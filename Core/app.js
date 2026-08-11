@@ -30,6 +30,10 @@
                 'Database/database-manager.js',
                 'Services/service-manager.js',
                 'Tests/test-runner.js',
+                // i18n zuerst – andere Module können t() nutzen
+                'Modules/i18n-module/i18n-module.js',
+                'Modules/i18n-module/i18n-interface.js',
+                'Modules/i18n-module/i18n-loader.js',
                 // Weather Module (Provider vor Modul laden)
                 'Modules/weather-module/weather-provider.js',
                 'Modules/weather-module/weather-module.js',

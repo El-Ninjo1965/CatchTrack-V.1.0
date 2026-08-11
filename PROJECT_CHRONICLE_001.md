@@ -288,7 +288,30 @@ Commit: folgt
 **Einträge:** 18  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
 
-**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul + GPS-Modul
+### CT-0019
+**Status:** Abgeschlossen
+
+i18n-Modul vollständig implementiert – CatchTrack ist jetzt multilingual:
+
+- `i18n-module.js`: Übersetzungen DE + EN (~100 Keys), `navigator.language` Auto-Erkennung, `localStorage`-Persistenz
+- `i18n-interface.js`: öffentliche API (`t()`, `setLocale()`, `getLocale()`, etc.)
+- `i18n-loader.js`: Core-Registrierung
+- `Core/app.js`: i18n zuerst geladen (vor Weather, GPS, anderen Modulen)
+- `index.html`: `data-i18n` Attribute auf statischen Elementen, CTApp `t()` Helper,
+  `_applyI18n()` + `_renderDashboardCards()`, GPS/Wetter-Methoden übersetzen Ausgaben,
+  GPS-Status-Map als Methode mit `t()`, Einstellungen-View mit Sprachauswahl
+  (🖥️ Auto, 🇩🇪 Deutsch, 🇬🇧 English)
+
+Sprachen: DE (Deutsch) + EN (English)
+Sprachauswahl: Gerätesprache automatisch oder manuell in Einstellungen
+
+## Chronikstatus
+
+**Datei:** PROJECT_CHRONICLE_001.md  
+**Einträge:** 19  
+**Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
+
+**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul + GPS-Modul + i18n-Modul
 
 —
 
