@@ -2223,6 +2223,7 @@ const CTApp = {
     if (btn) btn.disabled = true;
 
     let locationChanged = false;
+    let gpsInfoNotice = null;
 
     const updateWeatherLocation = (lat, lon, name) => {
       const prev = wm.getLocation();
@@ -2256,8 +2257,13 @@ const CTApp = {
           }
         } catch (_) {
           // Kein harter Fehler: Wetter lädt weiterhin mit vorhandenem/fallback Standort.
+          gpsInfoNotice = '📍 GPS nicht verfügbar. Wetter nutzt den gespeicherten Standort.';
         }
       }
+    } else if (gm && !gm.isSupported()) {
+      gpsInfoNotice = '📍 GPS wird von diesem Browser nicht unterstützt. Wetter nutzt den gespeicherten Standort.';
+    } else if (!gm) {
+      gpsInfoNotice = '📍 GPS-Modul nicht geladen. Wetter nutzt den gespeicherten Standort.';
     }
 
     const loc = wm.getLocation();
@@ -2271,6 +2277,8 @@ const CTApp = {
         const age = Math.round((Date.now() - new Date(data.fetchedAt).getTime()) / 60000);
         this._wxShowNotice('stale',
           `⚠️ Zwischengespeicherte Daten (${age} Min. alt) – ${data._staleReason || 'keine Verbindung'}`);
+      } else if (gpsInfoNotice) {
+        this._wxShowNotice('stale', gpsInfoNotice);
       }
 
       this._renderWeather(data);
