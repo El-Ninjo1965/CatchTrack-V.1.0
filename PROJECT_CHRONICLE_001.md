@@ -249,13 +249,46 @@ Weather-Modul vollständig implementiert:
 
 Commit: folgt
 
+### CT-0018
+**Status:** Abgeschlossen
+
+GPS-Modul vollständig implementiert:
+
+**Dateien:**
+- `gps-module.js`: Hauptlogik (Browser Geolocation API, Normalisierung, Stale-Detection, Simulation)
+- `gps-interface.js`: Öffentliche Schnittstelle – andere Module verwenden nur diese API
+- `gps-loader.js`: Registrierung und Aktivierung im ModuleManager
+- `README.md`: Vollständige Dokumentation
+
+**Funktionen:**
+- `getCurrentPosition()`: Einmalige asynchrone Positionsabfrage (Promise)
+- `startTracking()` / `stopTracking()`: Kontinuierliches Tracking via `watchPosition`
+- `getLastPosition()`: Letzter bekannter Positionsdatensatz
+- `getStatus()`: Aktueller Zustand (`idle|requesting|available|stale|denied|unavailable|timeout|error`)
+- `hasValidPosition()`: True nur wenn frische, gültige Position vorhanden
+- `checkPermission()`: Browser-Permission-Status abfragen
+- `setSimulatedPosition()`: Testposition setzen (kein Einfluss auf produktiven Datenfluss)
+- Veraltungserkennung: Position gilt nach 5 Minuten als `stale`
+
+**Normalisiertes Datenformat:**  
+`{ latitude, longitude, accuracy, altitude, altitudeAccuracy, speed, heading, timestamp, source, status }`
+
+**Eigenständigkeit:** Keine Abhängigkeiten zu anderen Modulen. Datenfluss:  
+`Andere Module → GPS-Schnittstelle` (niemals umgekehrt)
+
+**Geänderte Dateien:**
+- `Core/app.js`: GPS-Scripts in loadModuleScripts aufgenommen
+- `index.html`: GPS-View, Nav-Button, CTApp-GPS-Methoden, Weather-GPS-Integration
+
+Commit: folgt
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 17  
+**Einträge:** 18  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
 
-**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul
+**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul + GPS-Modul
 
 —
 

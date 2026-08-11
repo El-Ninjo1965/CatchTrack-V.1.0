@@ -35,6 +35,10 @@
                 'Modules/weather-module/weather-module.js',
                 'Modules/weather-module/weather-interface.js',
                 'Modules/weather-module/weather-loader.js',
+                // GPS Module
+                'Modules/gps-module/gps-module.js',
+                'Modules/gps-module/gps-interface.js',
+                'Modules/gps-module/gps-loader.js',
                 // User und Admin Module
                 'Modules/test-module.js',
                 'Modules/user-module/user-module.js',

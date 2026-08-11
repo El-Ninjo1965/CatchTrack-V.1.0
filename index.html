@@ -756,6 +756,98 @@
     @media (max-width: 768px) {
       .wx-current { flex-direction: column; gap: 16px; }
     }
+
+    /* ===== GPS Module ===== */
+    .gps-banner {
+      border-radius: var(--r-lg);
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .gps-banner.idle        { background: linear-gradient(130deg,#6b7280,#9ca3af); }
+    .gps-banner.requesting  { background: linear-gradient(130deg,var(--c-primary),var(--c-primary-light)); }
+    .gps-banner.available   { background: linear-gradient(130deg,#15803d,#16a34a); }
+    .gps-banner.stale       { background: linear-gradient(130deg,#d97706,#f59e0b); }
+    .gps-banner.denied      { background: linear-gradient(130deg,#b91c1c,#dc2626); }
+    .gps-banner.unavailable { background: linear-gradient(130deg,#7c3aed,#8b5cf6); }
+    .gps-banner.timeout     { background: linear-gradient(130deg,#b45309,#d97706); }
+    .gps-banner.error       { background: linear-gradient(130deg,#b91c1c,#dc2626); }
+
+    .gps-banner-icon  { font-size: 2.8rem; flex-shrink: 0; }
+    .gps-banner-info h3 { font-size: 1.1rem; font-weight: 700; }
+    .gps-banner-info p  { opacity: 0.78; font-size: 0.85rem; margin-top: 2px; }
+
+    .gps-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .gps-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--c-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-sm);
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .gps-btn:hover:not(:disabled) { background: var(--c-primary-dark); }
+    .gps-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .gps-btn.sec { background: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border); }
+    .gps-btn.sec:hover:not(:disabled) { background: var(--c-surface-dim); }
+    .gps-btn.red { background: #dc2626; }
+    .gps-btn.red:hover:not(:disabled) { background: #b91c1c; }
+
+    .gps-row {
+      display: flex;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--c-border);
+      gap: 12px;
+    }
+
+    .gps-row:last-child { border-bottom: none; }
+    .gps-row-icon  { font-size: 0.95rem; color: var(--c-text-muted); width: 20px; text-align: center; flex-shrink: 0; }
+    .gps-row-label { font-size: 0.79rem; color: var(--c-text-muted); min-width: 110px; }
+    .gps-row-value { font-size: 0.88rem; font-weight: 600; font-family: monospace; }
+    .gps-row-value.txt { font-family: var(--font); font-weight: 500; }
+
+    .gps-sim-form {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-top: 12px;
+    }
+
+    .gps-sim-field { display: flex; flex-direction: column; gap: 4px; }
+    .gps-sim-field label { font-size: 0.7rem; color: var(--c-text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .gps-sim-field input {
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-sm);
+      padding: 8px 10px;
+      font-size: 0.87rem;
+      font-family: var(--font);
+      width: 130px;
+      color: var(--c-text);
+      background: var(--c-surface);
+    }
+
+    .gps-sim-field input:focus { outline: 2px solid var(--c-primary); border-color: transparent; }
   </style>
 </head>
 <body>
@@ -804,6 +896,11 @@
       <button class="nav-btn" data-view="weather" onclick="CTApp.nav('weather')">
         <span class="nav-icon">🌤️</span>
         <span class="nav-text">Wetter</span>
+      </button>
+
+      <button class="nav-btn" data-view="gps" onclick="CTApp.nav('gps')">
+        <span class="nav-icon">📡</span>
+        <span class="nav-text">GPS & Standort</span>
       </button>
 
       <button class="nav-btn nav-disabled" data-view="stats" title="Modul in Entwicklung">
@@ -991,6 +1088,7 @@
             <span id="wx-location-name">–</span>
           </div>
           <button class="wx-refresh" id="wx-refresh-btn" onclick="CTApp.loadWeather(true)">🔄 Aktualisieren</button>
+          <button class="wx-refresh" id="wx-gps-btn" onclick="CTApp.weatherUseGps()" title="GPS-Position für Wetter verwenden">📡 GPS</button>
         </div>
 
         <!-- Veraltete/Offline-Hinweis -->
@@ -1064,6 +1162,100 @@
           </div>
 
         </div><!-- /wx-data -->
+      </div>
+
+      <!-- ===== GPS & Standort ===== -->
+      <div class="view" id="view-gps">
+        <div class="page-header">
+          <h2>📡 GPS & Standort</h2>
+          <p>Aktuelle Geräteposition – Schnittstelle für andere Module.</p>
+        </div>
+
+        <!-- Status-Banner -->
+        <div class="gps-banner idle" id="gps-banner">
+          <div class="gps-banner-icon" id="gps-banner-icon">📡</div>
+          <div class="gps-banner-info">
+            <h3 id="gps-banner-title">Bereit</h3>
+            <p id="gps-banner-sub">Position noch nicht ermittelt</p>
+          </div>
+        </div>
+
+        <!-- Aktions-Buttons -->
+        <div class="gps-actions">
+          <button class="gps-btn" id="gps-get-btn" onclick="CTApp.gpsGetPosition()">📍 Position ermitteln</button>
+          <button class="gps-btn sec" id="gps-track-btn" onclick="CTApp.gpsToggleTracking()">▶ Tracking starten</button>
+          <button class="gps-btn sec" onclick="CTApp.gpsUseForWeather()">🌤️ Für Wetter nutzen</button>
+        </div>
+
+        <!-- Positionsdaten -->
+        <div class="section-label">Positionsdaten</div>
+        <div class="card mt-6">
+          <div class="card-body" id="gps-data-panel">
+            <div style="text-align:center;padding:24px 0;color:var(--c-text-muted);font-size:0.87rem">
+              Noch keine Position verfügbar.
+            </div>
+          </div>
+        </div>
+
+        <!-- Modul-Info -->
+        <div class="section-label mt-22">Modul-Status</div>
+        <div class="card mt-6">
+          <div class="card-head">🔗 GPS-Schnittstelle</div>
+          <div class="card-body">
+            <div class="gps-row">
+              <span class="gps-row-icon">📡</span>
+              <span class="gps-row-label">Modul geladen</span>
+              <span class="gps-row-value txt" id="gps-info-loaded">–</span>
+            </div>
+            <div class="gps-row">
+              <span class="gps-row-icon">🔧</span>
+              <span class="gps-row-label">Browser-Support</span>
+              <span class="gps-row-value txt" id="gps-info-supported">–</span>
+            </div>
+            <div class="gps-row">
+              <span class="gps-row-icon">🔑</span>
+              <span class="gps-row-label">Berechtigung</span>
+              <span class="gps-row-value txt" id="gps-info-permission">–</span>
+            </div>
+            <div class="gps-row">
+              <span class="gps-row-icon">⚙️</span>
+              <span class="gps-row-label">Status</span>
+              <span class="gps-row-value txt" id="gps-info-state">–</span>
+            </div>
+            <div class="gps-row">
+              <span class="gps-row-icon">🎭</span>
+              <span class="gps-row-label">Simuliert</span>
+              <span class="gps-row-value txt" id="gps-info-simulated">–</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Test / Simulation -->
+        <div class="section-label mt-22">Test – Simulierte Position</div>
+        <div class="card mt-6">
+          <div class="card-head">🧪 Testposition</div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--c-text-muted);margin-bottom:12px;line-height:1.55">
+              Setzt eine simulierte GPS-Position für Tests ohne reale Hardware. Der produktive Geolocation-Datenfluss wird nicht verändert.
+            </p>
+            <div class="gps-sim-form">
+              <div class="gps-sim-field">
+                <label>Latitude</label>
+                <input type="number" id="gps-sim-lat" value="50.938" step="0.001">
+              </div>
+              <div class="gps-sim-field">
+                <label>Longitude</label>
+                <input type="number" id="gps-sim-lon" value="6.960" step="0.001">
+              </div>
+              <div class="gps-sim-field">
+                <label>Name</label>
+                <input type="text" id="gps-sim-name" value="Köln">
+              </div>
+              <button class="gps-btn" onclick="CTApp.gpsSetSimulated()">Simulieren</button>
+              <button class="gps-btn red" onclick="CTApp.gpsClearSimulated()">Löschen</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ===== Statistiken ===== -->
@@ -1227,6 +1419,7 @@ const CTApp = {
     catches:   'Meine Fänge',
     fishdb:    'Fischdatenbank',
     weather:   'Wetter',
+    gps:       'GPS & Standort',
     stats:     'Statistiken',
     profile:   'Mein Profil',
     settings:  'Einstellungen'
@@ -1304,6 +1497,7 @@ const CTApp = {
     // Profildaten bei Wechsel ins Profil aktualisieren
     if (view === 'profile') this._renderProfile();
     if (view === 'weather') this.loadWeather();
+    if (view === 'gps')     this._renderGpsView();
   },
 
   _initial(user) {
@@ -1377,6 +1571,218 @@ const CTApp = {
   _setText(id, val) {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
+  },
+
+  // ───── GPS ─────
+
+  _gpsStatusInfo: {
+    idle:        { icon: '📡', title: 'Bereit',               sub: 'Position noch nicht ermittelt' },
+    requesting:  { icon: '⏳', title: 'Ermittlung läuft…',    sub: 'Bitte Berechtigung erteilen' },
+    available:   { icon: '✅', title: 'Position verfügbar',    sub: '' },
+    stale:       { icon: '⏰', title: 'Position veraltet',     sub: 'Daten älter als 5 Minuten' },
+    denied:      { icon: '🚫', title: 'Berechtigung verweigert', sub: 'Standortzugriff in Browser-Einstellungen aktivieren' },
+    unavailable: { icon: '❌', title: 'GPS nicht verfügbar',   sub: 'Standortdienste deaktiviert oder nicht unterstützt' },
+    timeout:     { icon: '⌛', title: 'Zeitüberschreitung',    sub: 'Position konnte nicht rechtzeitig ermittelt werden' },
+    error:       { icon: '⚠️', title: 'Fehler',               sub: 'Fehler bei der Positionsermittlung' }
+  },
+
+  _renderGpsView() {
+    const gm = window.CatchTrackGpsModule;
+
+    this._setText('gps-info-loaded',     gm ? '✓ Geladen' : '✗ Nicht geladen');
+    this._setText('gps-info-supported',  gm && gm.isSupported() ? '✓ Unterstützt' : '✗ Nicht unterstützt');
+    this._setText('gps-info-state',      gm ? gm.getStatus() : '–');
+    this._setText('gps-info-simulated',  gm && gm.isSimulated() ? '✓ Aktiv' : 'Nein');
+
+    if (gm) {
+      gm.checkPermission().then(perm => {
+        const labels = { granted: '✓ Erteilt', denied: '✗ Verweigert', prompt: '⏳ Noch nicht entschieden', unknown: 'Unbekannt' };
+        this._setText('gps-info-permission', labels[perm] || perm);
+      });
+    } else {
+      this._setText('gps-info-permission', '–');
+    }
+
+    const pos = gm ? gm.getLastPosition() : null;
+    this._renderGpsData(pos);
+    this._updateGpsBanner(gm ? gm.getStatus() : 'idle');
+    this._updateGpsTrackBtn();
+  },
+
+  _updateGpsBanner(status) {
+    const info = this._gpsStatusInfo[status] || this._gpsStatusInfo.idle;
+    const banner = document.getElementById('gps-banner');
+    if (banner) {
+      banner.className = 'gps-banner ' + status;
+    }
+    this._setText('gps-banner-icon',  info.icon);
+    this._setText('gps-banner-title', info.title);
+    this._setText('gps-banner-sub',   info.sub);
+    this._setText('gps-info-state',   status);
+  },
+
+  _updateGpsTrackBtn() {
+    const gm = window.CatchTrackGpsModule;
+    const btn = document.getElementById('gps-track-btn');
+    if (!btn || !gm) return;
+    const tracking = gm.isTracking();
+    btn.textContent = tracking ? '⏹ Tracking stoppen' : '▶ Tracking starten';
+    btn.className   = 'gps-btn ' + (tracking ? 'red' : 'sec');
+  },
+
+  _renderGpsData(pos) {
+    const panel = document.getElementById('gps-data-panel');
+    if (!panel) return;
+
+    if (!pos) {
+      panel.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--c-text-muted);font-size:0.87rem">Noch keine Position verfügbar.</div>';
+      return;
+    }
+
+    const fmtNum = (v, dec) => v != null ? v.toFixed(dec) : '–';
+    const fmtTime = iso => iso ? new Date(iso).toLocaleString('de-DE') : '–';
+
+    const rows = [
+      ['🌐', 'Latitude',          fmtNum(pos.latitude, 6),           false],
+      ['🌐', 'Longitude',         fmtNum(pos.longitude, 6),          false],
+      ['🎯', 'Genauigkeit',       pos.accuracy != null ? `±${Math.round(pos.accuracy)} m` : '–', true],
+      ['⛰️', 'Höhe',             pos.altitude != null ? `${Math.round(pos.altitude)} m` : 'N/A', true],
+      ['💨', 'Geschwindigkeit',   pos.speed != null ? `${(pos.speed * 3.6).toFixed(1)} km/h` : 'N/A', true],
+      ['🧭', 'Richtung',          pos.heading != null ? `${Math.round(pos.heading)}°` : 'N/A', true],
+      ['🕐', 'Zeitstempel',       fmtTime(pos.timestamp),            true],
+      ['📡', 'Quelle',            pos.source || 'gps',               true],
+      ['⚠️', 'Veraltet',          pos.isStale ? 'Ja (> 5 Min.)' : 'Nein', true]
+    ];
+
+    panel.innerHTML = rows.map(([icon, label, value, isTxt]) =>
+      `<div class="gps-row">` +
+      `<span class="gps-row-icon">${icon}</span>` +
+      `<span class="gps-row-label">${label}</span>` +
+      `<span class="gps-row-value${isTxt ? ' txt' : ''}">${value}</span>` +
+      `</div>`
+    ).join('');
+  },
+
+  gpsGetPosition() {
+    const gm = window.CatchTrackGpsModule;
+    if (!gm) { alert('GPS-Modul nicht geladen'); return; }
+
+    const btn = document.getElementById('gps-get-btn');
+    if (btn) btn.disabled = true;
+
+    this._updateGpsBanner('requesting');
+
+    gm.getCurrentPosition().then(pos => {
+      if (btn) btn.disabled = false;
+      this._renderGpsData(pos);
+      this._updateGpsBanner('available');
+      this._setText('gps-banner-sub', `${pos.latitude.toFixed(4)}, ${pos.longitude.toFixed(4)} · ±${Math.round(pos.accuracy)} m`);
+      this._setText('gps-info-simulated', gm.isSimulated() ? '✓ Aktiv' : 'Nein');
+    }).catch(err => {
+      if (btn) btn.disabled = false;
+      this._updateGpsBanner(gm.getStatus());
+      this._setText('gps-banner-sub', err.message);
+    });
+  },
+
+  gpsToggleTracking() {
+    const gm = window.CatchTrackGpsModule;
+    if (!gm) return;
+
+    if (gm.isTracking()) {
+      gm.stopTracking();
+      this._updateGpsTrackBtn();
+      this._updateGpsBanner(gm.getStatus());
+    } else {
+      this._updateGpsBanner('requesting');
+      gm.startTracking(null,
+        (pos) => {
+          this._renderGpsData(pos);
+          this._updateGpsBanner('available');
+          this._setText('gps-banner-sub', `${pos.latitude.toFixed(4)}, ${pos.longitude.toFixed(4)} · ±${Math.round(pos.accuracy)} m`);
+          this._updateGpsTrackBtn();
+        },
+        (err) => {
+          this._updateGpsBanner(gm.getStatus());
+          this._setText('gps-banner-sub', err.message);
+          this._updateGpsTrackBtn();
+        }
+      );
+      this._updateGpsTrackBtn();
+    }
+  },
+
+  // GPS-Position für das Weather-Modul verwenden (UI-Integration – keine Modulabhängigkeit)
+  gpsUseForWeather() {
+    const gm = window.CatchTrackGpsModule;
+    const wm = window.CatchTrackWeatherModule;
+    if (!gm || !wm) { alert('GPS- oder Weather-Modul nicht verfügbar'); return; }
+
+    const btn = document.getElementById('gps-get-btn');
+    if (btn) btn.disabled = true;
+    this._updateGpsBanner('requesting');
+
+    gm.getCurrentPosition().then(pos => {
+      if (btn) btn.disabled = false;
+      this._renderGpsData(pos);
+      this._updateGpsBanner('available');
+      this._setText('gps-banner-sub', `${pos.latitude.toFixed(4)}, ${pos.longitude.toFixed(4)} · ±${Math.round(pos.accuracy)} m`);
+
+      wm.setLocation(pos.latitude, pos.longitude, `GPS (${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)})`);
+      this.nav('weather');
+    }).catch(err => {
+      if (btn) btn.disabled = false;
+      this._updateGpsBanner(gm.getStatus());
+      this._setText('gps-banner-sub', err.message);
+    });
+  },
+
+  // Weather-GPS-Button: GPS-Position für Wetter aus der Wetter-View heraus
+  weatherUseGps() {
+    const gm = window.CatchTrackGpsModule;
+    const wm = window.CatchTrackWeatherModule;
+    if (!gm || !wm) {
+      this._wxShowError(gm ? 'Weather-Modul nicht verfügbar' : 'GPS-Modul nicht verfügbar');
+      return;
+    }
+
+    const btn = document.getElementById('wx-gps-btn');
+    if (btn) btn.disabled = true;
+
+    gm.getCurrentPosition().then(pos => {
+      if (btn) btn.disabled = false;
+      wm.setLocation(pos.latitude, pos.longitude, `GPS (${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)})`);
+      this.loadWeather(true);
+    }).catch(err => {
+      if (btn) btn.disabled = false;
+      this._wxShowNotice('error', '📡 GPS: ' + err.message);
+    });
+  },
+
+  gpsSetSimulated() {
+    const gm = window.CatchTrackGpsModule;
+    if (!gm) return;
+    const lat  = parseFloat(document.getElementById('gps-sim-lat').value);
+    const lon  = parseFloat(document.getElementById('gps-sim-lon').value);
+    const name = document.getElementById('gps-sim-name').value.trim() || null;
+    try {
+      gm.setSimulatedPosition(lat, lon, name ? { name } : undefined);
+      this._renderGpsData(gm.getLastPosition());
+      this._updateGpsBanner('available');
+      this._setText('gps-banner-sub', `Simuliert: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+      this._setText('gps-info-simulated', '✓ Aktiv');
+    } catch (err) {
+      alert('Ungültige Koordinaten: ' + err.message);
+    }
+  },
+
+  gpsClearSimulated() {
+    const gm = window.CatchTrackGpsModule;
+    if (!gm) return;
+    gm.clearSimulatedPosition();
+    this._renderGpsData(null);
+    this._updateGpsBanner('idle');
+    this._setText('gps-info-simulated', 'Nein');
   },
 
   // ───── Weather ─────

@@ -34,6 +34,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Datum | Komponente | Änderung |
 |---|---|---|
+| 2026-08-11 | GPS Module | v1.0.0: vollständiges GPS-Modul (Browser Geolocation, Simulation, Provider-unabhängige Schnittstelle) |
 | 2026-08-11 | Weather Module | v1.0.0: vollständiges Wetter-Modul (Open-Meteo, Provider-Abstraktion, Offline-Handling) |
 | 2026-08-11 | App-UI | index.html: professionelle Fishing-App UI; dev.html: Entwickler-Testoberfläche |
 | 2026-08-11 | User Module | v1.1.0: username, displayName, avatar, status, lastLoginAt |
@@ -60,6 +61,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Modul | Version | Status | Dateien |
 |—|—|—|—|
+| GPS Module | 1.0.0 | ✓ Abgeschlossen | gps-module.js, gps-interface.js, gps-loader.js, README.md |
 | Weather Module | 1.0.0 | ✓ Abgeschlossen | weather-module.js, weather-provider.js, weather-interface.js, weather-loader.js, README.md |
 | User Module | 1.1.0 | ✓ Abgeschlossen | user-module.js, user-interface.js, user-loader.js, README.md |
 | Admin Module | 1.0.0 | ✓ Abgeschlossen | admin-module.js, admin-interface.js, admin-loader.js, README.md |
@@ -82,6 +84,7 @@ Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert:
 - ✓ Core-Grundgerüst (18 Dateien)
 - ✓ Modul-System & Modulschnittstelle
 - ✓ User-Modul v1.1.0 (vollständige Benutzeridentität: username, displayName, avatar, status, lastLoginAt)
+- ✓ GPS-Modul v1.0.0 (Browser Geolocation, Simulation, eigenständige Schnittstelle für andere Module)
 - ✓ Weather-Modul v1.0.0 (Open-Meteo, Provider-Abstraktion, Offline-Handling, 7-Tage-Vorhersage)
 - ✓ App-UI (index.html) – professionelle Fishing-App Oberfläche
 - ✓ Dev-UI (dev.html) – Entwickler- und Teststoberfläche
