@@ -1,4 +1,4 @@
-CatchTrack V1.0 – Verifizierte Fehler direkt beheben
+CatchTrack V1.0 – Verifizierte Fehler direkt beheben.
 
 Auftrag
 
