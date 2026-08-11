@@ -8,11 +8,11 @@
 (() => {
     'use strict';
 
-    const CoreRuntime = {
-        running: false,
+    let running = false;
 
+    const CoreRuntime = {
         start() {
-            if (this.running) {
+            if (running) {
                 return;
             }
 
@@ -22,19 +22,19 @@
                 window.CatchTrackCoreLifecycle.phases.RUNNING
             );
 
-            this.running = true;
+            running = true;
 
             window.CatchTrackCore.emit('runtime:started');
         },
 
         stop() {
-            if (!this.running) {
+            if (!running) {
                 return;
             }
 
             window.CatchTrackCoreShutdown.stop();
 
-            this.running = false;
+            running = false;
 
             window.CatchTrackCore.emit('runtime:stopped');
         },

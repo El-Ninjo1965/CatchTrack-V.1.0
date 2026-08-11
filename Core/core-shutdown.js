@@ -8,11 +8,11 @@
 (() => {
     'use strict';
 
-    const CoreShutdown = {
-        stopped: false,
+    let stopped = false;
 
+    const CoreShutdown = {
         stop() {
-            if (this.stopped) {
+            if (stopped) {
                 return;
             }
 
@@ -47,7 +47,7 @@
 
             window.CatchTrackCore.emit('core:stopped');
 
-            this.stopped = true;
+            stopped = true;
         }
     };
 

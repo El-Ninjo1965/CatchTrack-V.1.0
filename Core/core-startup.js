@@ -9,11 +9,11 @@
 (() => {
     'use strict';
 
-    const CoreStartup = {
-        started: false,
+    let started = false;
 
+    const CoreStartup = {
         start() {
-            if (this.started) {
+            if (started) {
                 return;
             }
 
@@ -55,7 +55,7 @@
                 window.CatchTrackCoreLifecycle.phases.READY
             );
 
-            this.started = true;
+            started = true;
 
             window.CatchTrackCore.emit('core:started', {
                 version: window.CatchTrackCoreConfig.core.version
