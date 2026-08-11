@@ -23,7 +23,14 @@
 
             this.registerSystemEvents();
 
+            // Lade alle Module
             await this.loadModuleScripts([
+                // Core Infrastruktur
+                'Config/config-manager.js',
+                'Database/database-manager.js',
+                'Services/service-manager.js',
+                'Tests/test-runner.js',
+                // User und Admin Module
                 'Modules/test-module.js',
                 'Modules/user-module/user-module.js',
                 'Modules/user-module/user-interface.js',
@@ -32,6 +39,19 @@
                 'Modules/admin-module/admin-interface.js',
                 'Modules/admin-module/admin-loader.js'
             ]);
+
+            // Initialisiere Infrastruktur
+            if (window.CatchTrackConfigManager) {
+                window.CatchTrackConfigManager.init();
+            }
+
+            if (window.CatchTrackDatabaseManager) {
+                await window.CatchTrackDatabaseManager.init();
+            }
+
+            if (window.CatchTrackServiceManager) {
+                window.CatchTrackServiceManager.init();
+            }
 
             this.registerSmokeTestModule();
 
@@ -42,6 +62,13 @@
             window.CatchTrackCore.emit('app:started', {
                 version: this.version
             });
+
+            // Starte automatisch Tests (optional)
+            if (window.CatchTrackTestRunner && window.CatchTrackConfigManager?.getPath('app.debug')) {
+                setTimeout(() => {
+                    window.CatchTrackTestRunner.run();
+                }, 2000);
+            }
         },
 
         loadModuleScripts(modulePaths) {

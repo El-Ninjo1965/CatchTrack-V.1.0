@@ -35,12 +35,12 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 |—|—|
 | Root-Struktur | In Aufbau |
 | Core | Abgeschlossen |
+| Config | Abgeschlossen |
+| Database | Abgeschlossen |
+| Services | Abgeschlossen |
+| Tests | Abgeschlossen |
 | User-Modul | Abgeschlossen |
 | Admin-Modul | Abgeschlossen |
-| Config | Offen |
-| Database | Offen |
-| Services | Offen |
-| Tests | Offen |
 | Dokumentation | In Aufbau |
 
 ## Module

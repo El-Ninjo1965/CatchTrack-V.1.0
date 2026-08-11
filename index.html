@@ -194,7 +194,7 @@
     <div class="container">
         <div class="header">
             <h1>🎯 CatchTrack</h1>
-            <p>v1.0.0 - Core + Modul-System</p>
+            <p>v1.0.0 - Core + Services + Modules + Tests</p>
         </div>
 
         <div class="content">
@@ -207,8 +207,16 @@
                         <span class="status-badge" id="core-status">Prüfung...</span>
                     </div>
                     <div class="status-item">
-                        <strong>Module Manager</strong>
-                        <span class="status-badge" id="manager-status">Prüfung...</span>
+                        <strong>Config Manager</strong>
+                        <span class="status-badge" id="config-status">Prüfung...</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>Database</strong>
+                        <span class="status-badge" id="db-status">Prüfung...</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>Services</strong>
+                        <span class="status-badge" id="services-status">Prüfung...</span>
                     </div>
                     <div class="status-item">
                         <strong>User Module</strong>
@@ -217,6 +225,48 @@
                     <div class="status-item">
                         <strong>Admin Module</strong>
                         <span class="status-badge" id="admin-status">Prüfung...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config Section -->
+            <div class="section">
+                <h2>⚙️ Config Manager</h2>
+                <div class="card">
+                    <h3>Konfigurationsverwaltung</h3>
+                    <p>Zentrale Konfigurationsverwaltung für die Anwendung.</p>
+                    <div class="button-group">
+                        <button onclick="testConfigGet()">Konfiguration abrufen</button>
+                        <button onclick="testConfigSet()">Konfiguration ändern</button>
+                        <button onclick="testConfigAll()">Alle Configs anzeigen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database Section -->
+            <div class="section">
+                <h2>🗄️ Database Layer</h2>
+                <div class="card">
+                    <h3>Datenbankzugriff</h3>
+                    <p>IndexedDB-basierte Datenverwaltung.</p>
+                    <div class="button-group">
+                        <button onclick="testDBStats()">DB-Statistiken</button>
+                        <button onclick="testDBSaveUser()">Benutzer speichern</button>
+                        <button onclick="testDBGetUser()">Benutzer abrufen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Section -->
+            <div class="section">
+                <h2>🔧 Services</h2>
+                <div class="card">
+                    <h3>Service-Manager</h3>
+                    <p>Verwaltung von Business-Services.</p>
+                    <div class="button-group">
+                        <button onclick="testServicesList()">Services auflisten</button>
+                        <button onclick="testServiceUser()">User Service testen</button>
+                        <button onclick="testServiceCache()">Cache Service testen</button>
                     </div>
                 </div>
             </div>
@@ -246,6 +296,19 @@
                         <button onclick="testAdminStats()">System-Statistiken</button>
                         <button onclick="testAdminHealthCheck()">Health Check</button>
                         <button onclick="testAdminErrorLog()">Fehlerprotokoll</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Suite Section -->
+            <div class="section">
+                <h2>🧪 Test Suite</h2>
+                <div class="card">
+                    <h3>Automatisierte Tests</h3>
+                    <p>Führt alle Unit- und Integrationstests aus.</p>
+                    <div class="button-group">
+                        <button onclick="runTests()" style="background: #28a745; font-weight: bold;">▶ Tests ausführen</button>
+                        <button onclick="testResults()">Ergebnisse anzeigen</button>
                         <button class="secondary" onclick="clearConsole()">Console löschen</button>
                     </div>
                 </div>
@@ -301,16 +364,20 @@
 
         function updateStatus() {
             const coreOk = !!window.CatchTrackCore;
-            const managerOk = !!window.CatchTrackModuleManager;
+            const configOk = !!window.CatchTrackConfigManager;
+            const dbOk = !!window.CatchTrackDatabaseManager;
+            const servicesOk = !!window.CatchTrackServiceManager;
             const userOk = !!window.CatchTrackUserModule;
             const adminOk = !!window.CatchTrackAdminModule;
 
             updateStatusBadge('core-status', coreOk);
-            updateStatusBadge('manager-status', managerOk);
+            updateStatusBadge('config-status', configOk);
+            updateStatusBadge('db-status', dbOk);
+            updateStatusBadge('services-status', servicesOk);
             updateStatusBadge('user-status', userOk);
             updateStatusBadge('admin-status', adminOk);
 
-            if (coreOk && managerOk && userOk && adminOk) {
+            if (coreOk && configOk && dbOk && servicesOk && userOk && adminOk) {
                 log('✅ Alle Systeme OK', 'success');
             }
         }
@@ -430,6 +497,199 @@
                 });
             } catch (error) {
                 log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Config Tests
+        function testConfigGet() {
+            if (!window.CatchTrackConfigManager) {
+                log('❌ Config Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const appConfig = window.CatchTrackConfigManager.get('app');
+                log(`✓ App-Konfiguration: ${appConfig.name} v${appConfig.version}`, 'success');
+                const dbConfig = window.CatchTrackConfigManager.get('database');
+                log(`✓ Datenbank: ${dbConfig.type} (${dbConfig.stores.length} Stores)`);
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testConfigSet() {
+            if (!window.CatchTrackConfigManager) {
+                log('❌ Config Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                window.CatchTrackConfigManager.set('test-config', { testValue: 'OK' });
+                const testConfig = window.CatchTrackConfigManager.get('test-config');
+                log(`✓ Test-Konfiguration gespeichert: ${testConfig.testValue}`, 'success');
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testConfigAll() {
+            if (!window.CatchTrackConfigManager) {
+                log('❌ Config Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const all = window.CatchTrackConfigManager.getAll();
+                log(`✓ Alle Konfigurationen (${Object.keys(all).length} Einträge):`, 'success');
+                Object.keys(all).slice(0, 5).forEach(key => {
+                    log(`  - ${key}`);
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Database Tests
+        function testDBStats() {
+            if (!window.CatchTrackDatabaseManager) {
+                log('❌ Database Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                window.CatchTrackDatabaseManager.getStats().then(stats => {
+                    log(`✓ Datenbank-Statistiken:`, 'success');
+                    Object.entries(stats.storeStats).forEach(([store, data]) => {
+                        log(`  ${store}: ${data.count || 0} Einträge`);
+                    });
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testDBSaveUser() {
+            if (!window.CatchTrackDatabaseManager) {
+                log('❌ Database Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const user = {
+                    id: `user-${Date.now()}`,
+                    name: 'DB Test User',
+                    email: 'db@catchtrack.local',
+                    active: true
+                };
+
+                window.CatchTrackDatabaseManager.save('users', user).then(() => {
+                    log(`✓ Benutzer in DB gespeichert: ${user.name}`, 'success');
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testDBGetUser() {
+            if (!window.CatchTrackDatabaseManager) {
+                log('❌ Database Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                window.CatchTrackDatabaseManager.getAll('users').then(users => {
+                    log(`✓ ${users.length} Benutzer aus DB geladen`, 'success');
+                    users.slice(0, 2).forEach(user => {
+                        log(`  - ${user.name || 'Unbekannt'}`);
+                    });
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Service Tests
+        function testServicesList() {
+            if (!window.CatchTrackServiceManager) {
+                log('❌ Service Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const services = window.CatchTrackServiceManager.getAll();
+                log(`✓ Registrierte Services (${services.length}):`, 'success');
+                services.forEach(service => {
+                    log(`  - ${service}`);
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testServiceUser() {
+            if (!window.CatchTrackServiceManager) {
+                log('❌ Service Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const userService = window.CatchTrackServiceManager.get('user');
+                userService.getAllUsers().then(users => {
+                    log(`✓ User Service: ${users.length} Benutzer`, 'success');
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testServiceCache() {
+            if (!window.CatchTrackServiceManager) {
+                log('❌ Service Manager nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const cacheService = window.CatchTrackServiceManager.get('cache');
+                cacheService.set('test-key', 'test-value').then(() => {
+                    log(`✓ Cache Service: Wert gespeichert`, 'success');
+                    return cacheService.get('test-key');
+                }).then(value => {
+                    log(`✓ Cache abgerufen: ${value}`);
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Test Runner
+        async function runTests() {
+            if (!window.CatchTrackTestRunner) {
+                log('❌ Test Runner nicht geladen', 'error');
+                return;
+            }
+
+            clearConsole();
+            log('🧪 Starte Test Suite...', 'success');
+            const results = await window.CatchTrackTestRunner.run();
+        }
+
+        function testResults() {
+            if (!window.CatchTrackTestRunner) {
+                log('❌ Test Runner nicht geladen', 'error');
+                return;
+            }
+
+            const results = window.CatchTrackTestRunner.getResults();
+            log(`Test Results:`, 'info');
+            log(`  Gesamt: ${results.total}`);
+            log(`  Bestanden: ${results.passed}`);
+            log(`  Fehlgeschlagen: ${results.failed}`);
+
+            if (results.errors.length > 0) {
+                log(`Fehler:`, 'error');
+                results.errors.slice(0, 3).forEach(err => {
+                    log(`  - ${err.test}`);
+                });
             }
         }
 
