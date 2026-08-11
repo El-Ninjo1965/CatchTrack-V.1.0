@@ -40,9 +40,58 @@ Nach Abschluss der Anforderungsdefinition erstellt die KI die vollständigen Dat
 
 Jede Datei wird separat ausgegeben.
 
-Beispiel:
+Jede Ausgabe enthält:
 
-Datei: `module/module.js`
+- Dateiname
+- vollständigen Pfad
+- vollständigen Dateiinhalt
 
-```text
-vollständiger Dateiinhalt
+## 4. Übergabe
+
+Der Benutzer übernimmt die Dateien in Working Copy und führt den Commit durch.
+
+Danach kann der GitHub-Stand geprüft werden.
+
+## 5. Prüfung
+
+Ein Modul ist erst abgeschlossen, wenn der tatsächlich auf GitHub vorhandene Stand geprüft wurde und die Tests erfolgreich sind.
+
+Ein bloß erstellter Quellcode gilt nicht als abgeschlossen.
+
+## 6. Fehlerbehandlung
+
+Treten beim Test Fehler auf:
+
+1. Fehler feststellen
+2. Ursache bestimmen
+3. notwendige Datei ändern
+4. erneut committen
+5. erneut testen
+
+Die Chronik wird erst nach erfolgreichem Abschluss aktualisiert.
+
+## 7. Abschlussmeldung
+
+Nach erfolgreichem Abschluss werden mindestens dokumentiert:
+
+- Modul
+- Status
+- relevante Dateien
+- GitHub-Commit
+- Testergebnis
+
+## 8. Weiterarbeit
+
+Nach einem bestätigten Abschluss kann unmittelbar mit dem nächsten vorgesehenen Arbeitsschritt fortgefahren werden.
+
+Es wird nicht erneut über bereits abgeschlossene Grundlagen diskutiert, sofern keine neue technische Notwendigkeit besteht.
+
+## 9. Kommunikation
+
+Die KI gibt keine unnötigen Beschreibungen ihrer internen Arbeitsschritte aus.
+
+Bei einem eindeutigen Auftrag wird die Aufgabe direkt ausgeführt.
+
+Nachfragen erfolgen nur bei fehlenden oder technisch notwendigen Entscheidungen.
+
+Nach erfolgreicher Übergabe der Dateien ist keine zusätzliche Bestätigung durch den Benutzer erforderlich, sofern der vereinbarte nächste Schritt eindeutig ist.
