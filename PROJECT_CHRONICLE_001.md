@@ -320,8 +320,17 @@ Startup-Stabilisierung für UI-Ladevorgang umgesetzt:
 - `CTApp._onReady()` nutzt fehlertolerantes User-Login (Fallback auf `null` statt Abbruch).
 - Neue Hilfsmethode `CTApp._showAppShell()` zentralisiert das Umschalten von Loading-Screen auf App-Ansicht.
 
+### CT-0022
+**Status:** Abgeschlossen
+
+Startup-Fix für ältere Browser umgesetzt:
+
+- Verbleibende Nullish-Coalescing-Syntax (`??`) im Weather-Modul entfernt.
+- Dadurch kann der Modul-Script-Loader auch auf älteren Engines ohne Parse-Abbruch durchlaufen.
+- Der zuvor sichtbare Notfallmodus-Hinweis wurde auf diesen Startabbruch zurückgeführt.
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 21  
+**Einträge:** 22  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)

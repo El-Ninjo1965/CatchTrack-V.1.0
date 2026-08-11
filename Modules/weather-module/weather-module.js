@@ -241,7 +241,9 @@
                 };
             });
 
-            const currentCode = c.weather_code ?? 0;
+            const currentCode = c.weather_code !== undefined && c.weather_code !== null
+                ? c.weather_code
+                : 0;
 
             return {
                 location:     { ...this.location },
@@ -250,17 +252,17 @@
                 fetchedAt:    new Date().toISOString(),
                 timezone:     raw.timezone || 'UTC',
                 current: {
-                    time:                    c.time                     ?? null,
-                    temperature:             c.temperature_2m           ?? null,
-                    apparentTemperature:     c.apparent_temperature     ?? null,
-                    humidity:                c.relative_humidity_2m     ?? null,
-                    pressure:                c.surface_pressure         ?? null,
-                    windSpeed:               c.wind_speed_10m           ?? null,
-                    windDirection:           c.wind_direction_10m       ?? null,
-                    windGusts:               c.wind_gusts_10m           ?? null,
-                    precipitation:           c.precipitation            ?? null,
-                    precipitationProbability: c.precipitation_probability ?? null,
-                    cloudCover:              c.cloud_cover              ?? null,
+                    time:                    c.time                     !== undefined && c.time !== null ? c.time : null,
+                    temperature:             c.temperature_2m           !== undefined && c.temperature_2m !== null ? c.temperature_2m : null,
+                    apparentTemperature:     c.apparent_temperature     !== undefined && c.apparent_temperature !== null ? c.apparent_temperature : null,
+                    humidity:                c.relative_humidity_2m     !== undefined && c.relative_humidity_2m !== null ? c.relative_humidity_2m : null,
+                    pressure:                c.surface_pressure         !== undefined && c.surface_pressure !== null ? c.surface_pressure : null,
+                    windSpeed:               c.wind_speed_10m           !== undefined && c.wind_speed_10m !== null ? c.wind_speed_10m : null,
+                    windDirection:           c.wind_direction_10m       !== undefined && c.wind_direction_10m !== null ? c.wind_direction_10m : null,
+                    windGusts:               c.wind_gusts_10m           !== undefined && c.wind_gusts_10m !== null ? c.wind_gusts_10m : null,
+                    precipitation:           c.precipitation            !== undefined && c.precipitation !== null ? c.precipitation : null,
+                    precipitationProbability: c.precipitation_probability !== undefined && c.precipitation_probability !== null ? c.precipitation_probability : null,
+                    cloudCover:              c.cloud_cover              !== undefined && c.cloud_cover !== null ? c.cloud_cover : null,
                     weatherCode:             currentCode,
                     weatherDescription:      this._wmoDesc(currentCode),
                     weatherIcon:             this._wmoIcon(currentCode),

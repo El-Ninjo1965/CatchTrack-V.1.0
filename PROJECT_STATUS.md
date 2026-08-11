@@ -34,6 +34,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Datum | Komponente | Änderung |
 |---|---|---|
+| 2026-08-11 | Weather Module / Startup | `weather-module.js`: Nullish-Coalescing (`??`) entfernt, um Parse-Abbruch auf älteren Browsern zu verhindern und Loader-Hänger zu beheben |
 | 2026-08-11 | App-Startup | `index.html`: Loader-Hänger behoben; App-Shell wird bei Core-Verfügbarkeit/Timeout zuverlässig eingeblendet, auch bei verzögertem User-Modul |
 | 2026-08-11 | Weather/GPS Integration | `index.html`: Wetter lädt jetzt automatisch erst die aktuelle GPS-Position (wenn verfügbar), übernimmt Standort + Ortsnamen und erzwingt Refresh bei Standortwechsel |
 | 2026-08-11 | i18n Module | v1.0.0: Multilanguage DE/EN, navigator.language, manuell wählbar, Sprachauswahl in Einstellungen |
