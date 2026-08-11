@@ -17,9 +17,7 @@
             }
 
             if (!window.CatchTrackCoreLifecycle) {
-                throw new Error(
-                    'CatchTrack Core Lifecycle is not available.'
-                );
+                throw new Error('CatchTrack Core Lifecycle is not available.');
             }
 
             const activeModules =
@@ -28,7 +26,7 @@
             activeModules.forEach((module) => {
                 if (module.active) {
                     try {
-                        window.CatchTrackCoreModuleManager?.deactivate(
+                        window.CatchTrackModuleManager?.deactivate(
                             module.id
                         );
                     } catch (error) {
@@ -47,9 +45,7 @@
                 window.CatchTrackCoreLifecycle.phases.STOPPED
             );
 
-            window.CatchTrackCoreEventBus?.publish(
-                'core:stopped'
-            );
+            window.CatchTrackCore.emit('core:stopped');
 
             this.stopped = true;
         }

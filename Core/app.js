@@ -23,6 +23,10 @@
 
             this.registerSystemEvents();
 
+            if (window.CatchTrackCoreEntry) {
+                window.CatchTrackCoreEntry.start();
+            }
+
             window.CatchTrackCore.emit('app:started', {
                 version: this.version
             });

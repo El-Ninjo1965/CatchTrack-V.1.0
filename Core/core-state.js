@@ -17,7 +17,7 @@
 
             state.set(key, value);
 
-            window.CatchTrackCoreEvents?.emit('state:changed', {
+            window.CatchTrackCore?.emit('state:changed', {
                 key,
                 value
             });
@@ -43,7 +43,7 @@
             const existed = state.delete(key);
 
             if (existed) {
-                window.CatchTrackCoreEvents?.emit('state:removed', {
+                window.CatchTrackCore?.emit('state:removed', {
                     key
                 });
             }
@@ -58,7 +58,7 @@
         clear() {
             state.clear();
 
-            window.CatchTrackCoreEvents?.emit('state:cleared');
+            window.CatchTrackCore?.emit('state:cleared');
         },
 
         validateKey(key) {

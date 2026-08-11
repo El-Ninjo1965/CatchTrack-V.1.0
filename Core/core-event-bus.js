@@ -14,17 +14,12 @@
 
     const EventBus = {
         subscribe(eventName, callback) {
-            if (
-                typeof eventName !== 'string' ||
-                !eventName.trim()
-            ) {
+            if (typeof eventName !== 'string' || !eventName.trim()) {
                 throw new Error('Event name is required.');
             }
 
             if (typeof callback !== 'function') {
-                throw new TypeError(
-                    'Event callback must be a function.'
-                );
+                throw new TypeError('Event callback must be a function.');
             }
 
             if (!channels.has(eventName)) {

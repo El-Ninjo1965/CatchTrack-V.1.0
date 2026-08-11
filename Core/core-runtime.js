@@ -24,9 +24,7 @@
 
             this.running = true;
 
-            window.CatchTrackCoreEventBus.publish(
-                'runtime:started'
-            );
+            window.CatchTrackCore.emit('runtime:started');
         },
 
         stop() {
@@ -38,9 +36,7 @@
 
             this.running = false;
 
-            window.CatchTrackCoreEventBus.publish(
-                'runtime:stopped'
-            );
+            window.CatchTrackCore.emit('runtime:stopped');
         },
 
         isRunning() {

@@ -21,7 +21,7 @@
                 context
             );
 
-            window.CatchTrackCoreEvents?.emit(
+            window.CatchTrackCore?.emit(
                 'error:handled',
                 {
                     error: normalizedError,

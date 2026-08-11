@@ -9,9 +9,9 @@
 (() => {
     'use strict';
 
-    if (!window.CatchTrackCoreBootstrap) {
-        throw new Error('CatchTrack Core Bootstrap is not available.');
+    if (!window.CatchTrackCoreEntry) {
+        throw new Error('CatchTrack Core Entry is not available.');
     }
 
-    window.CatchTrackCoreBootstrap.start();
+    window.CatchTrackCoreEntry.start();
 })();

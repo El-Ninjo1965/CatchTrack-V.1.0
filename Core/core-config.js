@@ -17,14 +17,6 @@
 
         core: Object.freeze({
             version: '1.0.0'
-        }),
-
-        modules: Object.freeze({
-            directory: 'Modules'
-        }),
-
-        development: Object.freeze({
-            enabled: true
         })
     });
 

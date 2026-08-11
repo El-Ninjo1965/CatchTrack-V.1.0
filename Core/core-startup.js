@@ -19,48 +19,15 @@
 
             const requiredComponents = [
                 'CatchTrackCore',
-                'CatchTrackModuleManager',
-                'CatchTrackModuleInterface',
-                'CatchTrackErrorLog',
-                'CatchTrackCoreConfig',
-                'CatchTrackCoreAPI',
-                'CatchTrackCoreEvents',
-                'CatchTrackCoreStorage',
-                'CatchTrackCoreRouter',
-                'CatchTrackCoreUI',
+                'CatchTrackCoreLoader',
                 'CatchTrackCoreContext',
-                'CatchTrackCoreModuleLoader',
-                'CatchTrackCoreDiagnostics',
-                'CatchTrackCoreEnvironment',
-                'CatchTrackCoreVersion',
-                'CatchTrackCoreLogger',
-                'CatchTrackCoreUtils',
-                'CatchTrackCoreRegistry',
-                'CatchTrackCorePermissions',
-                'CatchTrackCoreServices',
-                'CatchTrackCoreState',
-                'CatchTrackCoreModuleRegistry',
-                'CatchTrackCoreLifecycle',
-                'CatchTrackCoreConstants',
-                'CatchTrackCoreErrorHandler',
-                'CatchTrackCoreDatabase',
-                'CatchTrackCoreMigration',
-                'CatchTrackCoreDatabaseAdapter',
-                'CatchTrackCoreModuleState',
-                'CatchTrackCoreModuleConfig',
-                'CatchTrackCoreSecurity',
-                'CatchTrackCoreDependencyManager',
-                'CatchTrackCoreModuleInstaller',
-                'CatchTrackCoreModuleValidator',
-                'CatchTrackCoreModuleLifecycle',
-                'CatchTrackCoreEventBus',
-                'CatchTrackCoreModuleAPI'
+                'CatchTrackCoreConfig',
+                'CatchTrackCoreLifecycle'
             ];
 
-            const missingComponents =
-                requiredComponents.filter(
-                    (component) => !window[component]
-                );
+            const missingComponents = requiredComponents.filter(
+                (component) => !window[component]
+            );
 
             if (missingComponents.length > 0) {
                 throw new Error(
@@ -90,13 +57,9 @@
 
             this.started = true;
 
-            window.CatchTrackCoreEventBus.publish(
-                'core:started',
-                {
-                    version:
-                        window.CatchTrackCoreConfig.core.version
-                }
-            );
+            window.CatchTrackCore.emit('core:started', {
+                version: window.CatchTrackCoreConfig.core.version
+            });
         }
     };
 

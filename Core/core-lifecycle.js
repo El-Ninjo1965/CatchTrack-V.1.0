@@ -39,13 +39,10 @@
 
             currentPhase = phase;
 
-            window.CatchTrackCoreEvents?.emit(
-                'lifecycle:changed',
-                {
-                    previousPhase,
-                    currentPhase: phase
-                }
-            );
+            window.CatchTrackCore.emit('lifecycle:changed', {
+                previousPhase,
+                currentPhase: phase
+            });
         },
 
         is(phase) {

@@ -9,6 +9,8 @@
 (() => {
     'use strict';
 
+    const catchTrackEvents = new Map();
+
     const CatchTrackCore = {
         version: '1.0.0',
 
@@ -112,24 +114,30 @@
             return true;
         },
 
-        events: new Map(),
-
         on(eventName, callback) {
             if (typeof callback !== 'function') {
                 throw new TypeError('Event callback must be a function.');
             }
 
-            if (!this.events.has(eventName)) {
-                this.events.set(eventName, new Set());
+            if (window.CatchTrackCoreEventBus) {
+                return window.CatchTrackCoreEventBus.subscribe(eventName, callback);
             }
 
-            this.events.get(eventName).add(callback);
+            if (!catchTrackEvents.has(eventName)) {
+                catchTrackEvents.set(eventName, new Set());
+            }
+
+            catchTrackEvents.get(eventName).add(callback);
 
             return () => this.off(eventName, callback);
         },
 
         off(eventName, callback) {
-            const listeners = this.events.get(eventName);
+            if (window.CatchTrackCoreEventBus) {
+                return window.CatchTrackCoreEventBus.unsubscribe(eventName, callback);
+            }
+
+            const listeners = catchTrackEvents.get(eventName);
 
             if (!listeners) {
                 return;
@@ -138,12 +146,16 @@
             listeners.delete(callback);
 
             if (listeners.size === 0) {
-                this.events.delete(eventName);
+                catchTrackEvents.delete(eventName);
             }
         },
 
         emit(eventName, data = null) {
-            const listeners = this.events.get(eventName);
+            if (window.CatchTrackCoreEventBus) {
+                return window.CatchTrackCoreEventBus.publish(eventName, data);
+            }
+
+            const listeners = catchTrackEvents.get(eventName);
 
             if (!listeners) {
                 return;
