@@ -1,7 +1,0 @@
-{
-    "name": "fishDatabase",
-    "version": "1.0",
-    "status": "active",
-    "enabled": true,
-    "description": "Fischdatenbank mit Arteninformationen"
-}
