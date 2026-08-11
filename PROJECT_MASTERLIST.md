@@ -54,19 +54,19 @@ Der erste funktionsfähige Entwicklungsstand besteht aus:
 2. Modul-System / Modulschnittstelle
 3. User-Modul
 4. Admin-Modul
-5. Testbenutzer für die Entwicklungs- und Testphase
+5. Demo-Benutzer für die Entwicklungsphase
 
-Diese Bestandteile werden gemeinsam so weit umgesetzt, dass CatchTrack erstmals als testfähige Anwendung gestartet und die grundlegende Modulstruktur geprüft werden kann.
+Diese Bestandteile werden gemeinsam so weit umgesetzt, dass CatchTrack erstmals als funktionsfähige Anwendung gestartet und die grundlegende Modulstruktur geprüft werden kann.
 
 User-Modul
 
 Das User-Modul wird als eigenständiges Modul unter Modules aufgebaut.
 
-Es dient zunächst ausschließlich der Entwicklungs- und Testfähigkeit des Systems.
+Es dient zunächst der Entwicklungsfähigkeit des Systems.
 
-Für die Entwicklungsphase wird mindestens ein definierter Testbenutzer bereitgestellt.
+Für die Entwicklungsphase wird mindestens ein definierter Demo-Benutzer bereitgestellt.
 
-Der Testbenutzer dient unter anderem dazu, Module bereits während der Entwicklung unter einer real vorhandenen User-ID testen zu können.
+Der Demo-Benutzer dient unter anderem dazu, Module bereits während der Entwicklung unter einer real vorhandenen User-ID zu prüfen.
 
 Die endgültige Benutzerverwaltung, Accountstruktur, Rollen, Berechtigungen und weitere Benutzerfunktionen werden zu einem späteren Zeitpunkt festgelegt und können innerhalb des User-Moduls erweitert oder geändert werden.
 
@@ -102,9 +102,9 @@ Ein Modul soll möglichst:
 * aktiviert und deaktiviert werden können
 * später erweitert oder ersetzt werden können
 
-User und Admin bilden die ersten beiden Entwicklungs-/Testmodule.
+User und Admin bilden die ersten beiden Entwicklungsmodule.
 
-Weitere funktionale Module werden erst nach Fertigstellung und erfolgreichem Test dieses ersten Entwicklungsblocks integriert.
+Weitere funktionale Module werden erst nach Fertigstellung dieses ersten Entwicklungsblocks integriert.
 
 ⸻
 
@@ -115,14 +115,14 @@ Phase 1 – Grundsystem
 * Core-Grundgerüst
 * grundlegende Modulschnittstelle
 * Modulstruktur
-* technische Voraussetzungen für den Start und Test der Anwendung
+* technische Voraussetzungen für den Start der Anwendung
 
-Phase 2 – Entwicklungs-/Testmodule
+Phase 2 – Entwicklungsmodule
 
 * User-Modul
-* Testbenutzer
+* Demo-Benutzer
 * Admin-Modul
-* grundlegende Modulverwaltung und Testmöglichkeiten
+* grundlegende Modulverwaltung
 
 Phase 3 – Weitere Module
 
@@ -136,7 +136,7 @@ Serverseitiger Admin-Bereich
 
 Ein serverseitiger Admin-Bereich gehört nicht zum ersten Entwicklungsblock.
 
-Er wird zu einem späteren Zeitpunkt entwickelt, sobald die lokale bzw. app-interne Modul- und Benutzerstruktur stabil und ausreichend getestet ist.
+Er wird zu einem späteren Zeitpunkt entwickelt, sobald die lokale bzw. app-interne Modul- und Benutzerstruktur stabil und ausreichend validiert ist.
 
 ⸻
 
@@ -144,7 +144,7 @@ Statuskennzeichnungen
 
 * OFFEN – noch nicht begonnen
 * IN ARBEIT – aktuell in Bearbeitung
-* TEST – Implementierung abgeschlossen, Prüfung läuft
+* VALIDIERUNG – Implementierung abgeschlossen, Prüfung läuft
 * ✓ ABGESCHLOSSEN – vollständig geprüft und auf GitHub vorhanden
 * BLOCKIERT – Bearbeitung kann wegen einer offenen Voraussetzung nicht fortgesetzt werden
 
@@ -153,12 +153,12 @@ Statuskennzeichnungen
 Status: Erster Entwicklungsblock ✓ ABGESCHLOSSEN
 
 **Phase 1 – Grundsystem:** ✓ Abgeschlossen  
-**Phase 2 – Entwicklungs-/Testmodule:** ✓ Abgeschlossen  
+**Phase 2 – Entwicklungsmodule:** ✓ Abgeschlossen  
 **Phase 3 – Infrastruktur:** ✓ Abgeschlossen
 
 Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert und funktionsfähig.
 
-CatchTrack ist nun testfähig und kann als Basis für weitere Module verwendet werden.
+CatchTrack ist nun als Basis für weitere Module verwendbar.
 
 **Letzte Aktualisierung:** 2026-08-11
 

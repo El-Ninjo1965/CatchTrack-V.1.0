@@ -25,14 +25,14 @@ Das User-Modul verwaltet Benutzeridentitäten in CatchTrack. Es stellt eine stab
 }
 ```
 
-## Testbenutzer
+## Demo-Benutzer
 
-Das Modul erstellt automatisch zwei Testbenutzer:
+Das Modul erstellt automatisch zwei Demo-Benutzer:
 
 | ID | Username | Anzeigename | E-Mail | Rolle |
 |---|---|---|---|---|
-| `test-user-001` | `devuser` | Dev User | dev@catchtrack.local | developer |
-| `test-admin-001` | `admin` | Administrator | admin@catchtrack.local | admin |
+| `demo-user-001` | `demo-user` | Demo User | demo@catchtrack.local | developer |
+| `demo-admin-001` | `admin` | Administrator | admin@catchtrack.local | admin |
 
 ## Öffentliche API
 
@@ -72,7 +72,7 @@ Shortcut für `hasRole('admin')`.
 ## Beispiele
 
 ```javascript
-const user = CatchTrackUserModule.authenticate('test-user-001');
+const user = CatchTrackUserModule.authenticate('demo-user-001');
 if (user) {
     console.log('Angemeldet als', user.username);
 }

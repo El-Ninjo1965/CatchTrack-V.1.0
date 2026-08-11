@@ -51,9 +51,6 @@ const state = CatchTrackGpsModule.getStatus();
 // Browser-Permission prüfen
 const perm = await CatchTrackGpsModule.checkPermission();
 
-// Simulierte Testposition
-CatchTrackGpsModule.setSimulatedPosition(48.137, 11.576, { accuracy: 10 });
-CatchTrackGpsModule.clearSimulatedPosition();
 ```
 
 ## Normalisiertes Datenformat
@@ -95,25 +92,12 @@ Das Modul fordert die Berechtigung erst beim ersten Aufruf von `getCurrentPositi
 
 Die Browser Geolocation API funktioniert ohne Internetverbindung (GPS, WLAN-Triangulation, Mobilfunk). Das Modul ist vollständig Offline-first.
 
-## Tests
+## Nutzung
 
 ### Mit realer GPS-Hardware
 - Seite öffnen → GPS-View aufrufen → „Position ermitteln"
 - Berechtigung im Browser erteilen
 - Position wird angezeigt
-
-### Ohne GPS-Hardware (Testmodus)
-```javascript
-// Testposition setzen (kein Einfluss auf produktiven Datenfluss)
-CatchTrackGpsModule.setSimulatedPosition(48.137, 11.576, { accuracy: 15 });
-
-// Testen
-const pos = await CatchTrackGpsModule.getCurrentPosition();
-console.log(pos.source); // 'simulated'
-
-// Simulation beenden
-CatchTrackGpsModule.clearSimulatedPosition();
-```
 
 ## Events
 

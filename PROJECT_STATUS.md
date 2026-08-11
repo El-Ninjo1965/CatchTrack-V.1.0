@@ -27,7 +27,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 | 06 | PROJECT_MASTERLIST.md | ✓ Erstellt |
 
 **GitHub-Status:** ✓ Bestätigt  
-**Teststatus:** ✓ Syntax geprüft  
+**Validierungsstatus:** ✓ Syntax geprüft
 **Letzte Aktualisierung:** 2026-08-11
 
 ## Letzte Änderungen
@@ -40,9 +40,9 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 | 2026-08-11 | App-Startup | `index.html`: Loader-Hänger behoben; App-Shell wird bei Core-Verfügbarkeit/Timeout zuverlässig eingeblendet, auch bei verzögertem User-Modul |
 | 2026-08-11 | Weather/GPS Integration | `index.html`: Wetter lädt jetzt automatisch erst die aktuelle GPS-Position (wenn verfügbar), übernimmt Standort + Ortsnamen und erzwingt Refresh bei Standortwechsel |
 | 2026-08-11 | i18n Module | v1.0.0: Multilanguage DE/EN, navigator.language, manuell wählbar, Sprachauswahl in Einstellungen |
-| 2026-08-11 | GPS Module | v1.0.0: vollständiges GPS-Modul (Browser Geolocation, Simulation, Provider-unabhängige Schnittstelle) |
+| 2026-08-11 | GPS Module | v1.0.0: vollständiges GPS-Modul (Browser Geolocation, Provider-unabhängige Schnittstelle) |
 | 2026-08-11 | Weather Module | v1.0.0: vollständiges Wetter-Modul (Open-Meteo, Provider-Abstraktion, Offline-Handling) |
-| 2026-08-11 | App-UI | index.html: professionelle Fishing-App UI; dev.html: Entwickler-Testoberfläche |
+| 2026-08-11 | App-UI | index.html: professionelle Fishing-App UI; dev.html: Entwickleroberfläche |
 | 2026-08-11 | User Module | v1.1.0: username, displayName, avatar, status, lastLoginAt |
 | 2026-08-11 | User Module | Fix: Object.freeze readonly-Fehler behoben |
 
@@ -55,7 +55,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 | Config | ✓ Abgeschlossen |
 | Database | ✓ Abgeschlossen |
 | Services | ✓ Abgeschlossen |
-| Tests | ✓ Abgeschlossen |
+| Infrastruktur-Hilfen | ✓ Abgeschlossen |
 | User-Modul | ✓ Abgeschlossen |
 | Admin-Modul | ✓ Abgeschlossen |
 | App-UI | ✓ Abgeschlossen |
@@ -80,7 +80,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 | Config Manager | 1.0.0 | ✓ Abgeschlossen | config-manager.js, README.md |
 | Database Manager | 1.0.0 | ✓ Abgeschlossen | database-manager.js, README.md |
 | Service Manager | 1.0.0 | ✓ Abgeschlossen | service-manager.js, README.md |
-| Test Suite | 1.0.0 | ✓ Abgeschlossen | test-runner.js, README.md |
+| Infrastruktur-Hilfe | 1.0.0 | ✓ Abgeschlossen | frühere Test- und Prüfhilfen entfernt |
 
 ## Abschlussstatus
 
@@ -92,15 +92,15 @@ Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert:
 - ✓ Modul-System & Modulschnittstelle
 - ✓ User-Modul v1.1.0 (vollständige Benutzeridentität: username, displayName, avatar, status, lastLoginAt)
 - ✓ i18n-Modul v1.0.0 (Multilanguage DE/EN, automatische Spracherkennung, manuell wählbar)
-- ✓ GPS-Modul v1.0.0 (Browser Geolocation, Simulation, eigenständige Schnittstelle für andere Module)
+- ✓ GPS-Modul v1.0.0 (Browser Geolocation, eigenständige Schnittstelle für andere Module)
 - ✓ Weather-Modul v1.0.0 (Open-Meteo, Provider-Abstraktion, Offline-Handling, 7-Tage-Vorhersage)
 - ✓ App-UI (index.html) – professionelle Fishing-App Oberfläche
-- ✓ Dev-UI (dev.html) – Entwickler- und Teststoberfläche
+- ✓ Dev-UI (dev.html) – Entwickleroberfläche
 - ✓ Admin-Modul mit Diagnostik
 - ✓ Config-System
 - ✓ Database-Layer
 - ✓ Services-Layer
-- ✓ Test-Suite
+- ✓ Infrastruktur-Hilfen bereinigt
 - ✓ Interactive UI (index.html)
 
 **Gesamt Status:** ✓ Funktionsfähig und testbar
@@ -114,7 +114,7 @@ Eine Komponente gilt als abgeschlossen, wenn:
 - ✓ Alle erforderlichen Dateien vorhanden
 - ✓ Dateien committed zu GitHub
 - ✓ README.md mit Dokumentation
-- ✓ Tests vorhanden und bestanden
+- ✓ Änderungen syntaktisch geprüft
 - ✓ Chronik aktualisiert
 
 ## Chronik
@@ -129,7 +129,7 @@ Bei Erreichen der festgelegten maximalen Länge wird die nächste Chronikdatei a
 
 ## Nächste Schritte
 
-Der erste Entwicklungsblock ist abgeschlossen. CatchTrack ist jetzt eine testfähige Anwendung mit:
+Der erste Entwicklungsblock ist abgeschlossen. CatchTrack ist jetzt eine funktionsfähige Anwendung mit:
 
 - Voll funktionsfähigem Core
 - Modularem Aufbau
