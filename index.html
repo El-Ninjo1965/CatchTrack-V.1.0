@@ -929,7 +929,13 @@
         if (loading) loading.style.display = 'none';
         if (app) app.style.display = 'flex';
 
-        showBootAlert('Startproblem erkannt', reason);
+        var msg = document.getElementById('ct-loading-msg');
+        var details = reason;
+        if (msg && msg.textContent && msg.textContent !== 'Wird geladen…') {
+          details += ' | ' + msg.textContent;
+        }
+
+        showBootAlert('Startproblem erkannt', details);
       }
 
       window.__ctShowFallback = showShellFallback;
@@ -2207,9 +2213,6 @@ const CTApp = {
         || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
       wm.setLocation(pos.latitude, pos.longitude, wxName);
     }
-
-    const loc = wm.getLocation();
-    this._setText('wx-location-name', loc ? loc.name : '–');
 
     // Loading-Zustand
     document.getElementById('wx-loading').classList.remove('hidden');
