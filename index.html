@@ -1473,22 +1473,34 @@ const CTApp = {
     let waited = 0;
     const poll = setInterval(() => {
       waited += 100;
-      if (window.CatchTrackCore && window.CatchTrackUserModule) {
+      if (window.CatchTrackCore) {
         clearInterval(poll);
-        if (msg) msg.textContent = 'Benutzer wird geladen…';
+        if (msg) {
+          msg.textContent = window.CatchTrackUserModule
+            ? 'Benutzer wird geladen…'
+            : 'App wird im Fallback-Modus gestartet…';
+        }
         this._onReady();
         return;
       }
       if (waited >= 6000) {
         clearInterval(poll);
         if (msg) msg.textContent = 'Fehler beim Laden – bitte Seite neu laden.';
+        // Verhindert einen harten Hänger im Loading-Screen.
+        this._showAppShell();
       }
     }, 100);
   },
 
   _onReady() {
-    // Testbenutzer für Entwicklungsphase einloggen
-    this.user = window.CatchTrackUserModule.authenticate('test-user-001');
+    // Testbenutzer für Entwicklungsphase einloggen (wenn Modul verfügbar)
+    try {
+      this.user = window.CatchTrackUserModule
+        ? window.CatchTrackUserModule.authenticate('test-user-001')
+        : null;
+    } catch (_) {
+      this.user = null;
+    }
 
     this._renderUser();
     this._renderSysBar();
@@ -1504,10 +1516,7 @@ const CTApp = {
 
     // Loading-Screen ausblenden, App zeigen
     setTimeout(() => {
-      const loading = document.getElementById('ct-loading');
-      const app     = document.getElementById('ct-app');
-      if (loading) loading.style.display = 'none';
-      if (app)     app.style.display     = 'flex';
+      this._showAppShell();
       // i18n anwenden
       this._applyI18n();
       // GPS-Position beim Start automatisch ermitteln (stille Anfrage)
@@ -1522,6 +1531,13 @@ const CTApp = {
         });
       }
     }, 350);
+  },
+
+  _showAppShell() {
+    const loading = document.getElementById('ct-loading');
+    const app     = document.getElementById('ct-app');
+    if (loading) loading.style.display = 'none';
+    if (app) app.style.display = 'flex';
   },
 
   nav(view) {

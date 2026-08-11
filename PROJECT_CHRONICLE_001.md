@@ -310,16 +310,18 @@ Wetter-Ansicht lädt jetzt automatisch mit aktueller Geräteposition, ohne vorhe
 - Wenn sich die Wetter-Position ändert, wird der Abruf mit Refresh erzwungen, damit kein alter Cache-Ort angezeigt wird.
 - Bei GPS-Fehlern bleibt der Wetter-Fallback aktiv (kein harter Abbruch der Wetteransicht).
 
+### CT-0021
+**Status:** Abgeschlossen
+
+Startup-Stabilisierung für UI-Ladevorgang umgesetzt:
+
+- `index.html` (`CTApp.init`) startet jetzt, sobald der Core verfügbar ist (nicht mehr blockierend auf `CatchTrackUserModule`).
+- Timeout-Fall blendet die App-Shell jetzt aktiv ein, statt dauerhaft im Loader zu bleiben.
+- `CTApp._onReady()` nutzt fehlertolerantes User-Login (Fallback auf `null` statt Abbruch).
+- Neue Hilfsmethode `CTApp._showAppShell()` zentralisiert das Umschalten von Loading-Screen auf App-Ansicht.
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 20  
+**Einträge:** 21  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
-
-**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI + Weather-Modul + GPS-Modul + i18n-Modul + Wetter/GPS-Autoposition
-
-## Fortsetzung
-
-Der erste Entwicklungsblock ist abgeschlossen. Weitere Einträge folgen für zusätzliche Phasen und Module.
-
-Nächste Phasen werden nach Bedarf in einer neuen Chronikdatei dokumentiert.
