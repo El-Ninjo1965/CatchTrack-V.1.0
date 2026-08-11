@@ -38,6 +38,13 @@ Duplikate, überflüssige Wrapper und doppelte API-Strukturen wurden entfernt.
 
 Die verbleibenden Core-Dateien sind syntaktisch geprüft und das Ergebnis auf `main` gepusht.
 
+### CT-0003
+**Status:** In Arbeit
+
+Ein minimaler Modulordner `Modules` wurde angelegt.
+
+Ein erstes Testmodul (`test-module.js`) wurde erstellt, um die Core-Registrierung, Aktivierung und das Event-System zu prüfen.
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
