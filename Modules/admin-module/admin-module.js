@@ -230,6 +230,6 @@
     };
 
     if (!window.CatchTrackAdminModule) {
-        window.CatchTrackAdminModule = Object.freeze(AdminModule);
+        window.CatchTrackAdminModule = AdminModule;
     }
 })();
