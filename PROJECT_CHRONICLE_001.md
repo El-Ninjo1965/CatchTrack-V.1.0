@@ -329,8 +329,17 @@ Startup-Fix für ältere Browser umgesetzt:
 - Dadurch kann der Modul-Script-Loader auch auf älteren Engines ohne Parse-Abbruch durchlaufen.
 - Der zuvor sichtbare Notfallmodus-Hinweis wurde auf diesen Startabbruch zurückgeführt.
 
+### CT-0023
+**Status:** Abgeschlossen
+
+UI-Startup-Race behoben (i18n/User noch nicht geladen):
+
+- `index.html` (`CTApp.init`) wartet jetzt auf `CatchTrackCore`, `CatchTrackUserModule` und `CatchTrackI18n`.
+- Dadurch werden i18n-Keys nicht mehr als Rohtexte gerendert (`nav.dashboard`, `mod.*`, etc.).
+- Timeout-Meldung zeigt nun explizit, welche Komponenten beim Start fehlen.
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 22  
+**Einträge:** 23  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)

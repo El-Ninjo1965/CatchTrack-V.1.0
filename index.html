@@ -1567,21 +1567,21 @@ const CTApp = {
   init() {
     const msg = document.getElementById('ct-loading-msg');
     let waited = 0;
+    const required = ['CatchTrackCore', 'CatchTrackUserModule', 'CatchTrackI18n'];
     const poll = setInterval(() => {
       waited += 100;
-      if (window.CatchTrackCore) {
+      const missing = required.filter((name) => !window[name]);
+      if (missing.length === 0) {
         clearInterval(poll);
-        if (msg) {
-          msg.textContent = window.CatchTrackUserModule
-            ? 'Benutzer wird geladen…'
-            : 'App wird im Fallback-Modus gestartet…';
-        }
+        if (msg) msg.textContent = this.t('app.user_loading');
         this._onReady();
         return;
       }
       if (waited >= 6000) {
         clearInterval(poll);
-        if (msg) msg.textContent = 'Fehler beim Laden – bitte Seite neu laden.';
+        if (msg) {
+          msg.textContent = `Fehler beim Laden – fehlt: ${missing.join(', ')}`;
+        }
         // Verhindert einen harten Hänger im Loading-Screen.
         this._showAppShell();
       }
