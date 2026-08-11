@@ -1645,7 +1645,10 @@ const CTApp = {
     const rows = [
       ['🌐', 'Latitude',          fmtNum(pos.latitude, 6),           false],
       ['🌐', 'Longitude',         fmtNum(pos.longitude, 6),          false],
-      ['🎯', 'Genauigkeit',       pos.accuracy != null ? `±${Math.round(pos.accuracy)} m` : '–', true],
+      ['�️', 'Stadt',            pos.city     || 'wird geladen…',    true],
+      ['🗺️', 'Provinz/Bundesland', pos.province || 'wird geladen…', true],
+      ['🌍', 'Staat',             pos.country  || 'wird geladen…',   true],
+      ['�🎯', 'Genauigkeit',       pos.accuracy != null ? `±${Math.round(pos.accuracy)} m` : '–', true],
       ['⛰️', 'Höhe',             pos.altitude != null ? `${Math.round(pos.altitude)} m` : 'N/A', true],
       ['💨', 'Geschwindigkeit',   pos.speed != null ? `${(pos.speed * 3.6).toFixed(1)} km/h` : 'N/A', true],
       ['🧭', 'Richtung',          pos.heading != null ? `${Math.round(pos.heading)}°` : 'N/A', true],
@@ -1678,6 +1681,19 @@ const CTApp = {
       this._updateGpsBanner('available');
       this._setText('gps-banner-sub', `${pos.latitude.toFixed(4)}, ${pos.longitude.toFixed(4)} · ±${Math.round(pos.accuracy)} m`);
       this._setText('gps-info-simulated', gm.isSimulated() ? '✓ Aktiv' : 'Nein');
+
+      // Reverse Geocoding asynchron – aktualisiert die Anzeige ohne den GPS-Fluss zu blockieren
+      gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
+        pos.city     = geo.city;
+        pos.province = geo.province;
+        pos.country  = geo.country;
+        const name = [geo.city, geo.province, geo.country].filter(Boolean).join(', ');
+        if (name) this._setText('gps-banner-sub', name + ` · ±${Math.round(pos.accuracy)} m`);
+        this._renderGpsData(pos);
+      }).catch(() => {
+        pos.city = pos.province = pos.country = '–';
+        this._renderGpsData(pos);
+      });
     }).catch(err => {
       if (btn) btn.disabled = false;
       this._updateGpsBanner(gm.getStatus());
@@ -1728,8 +1744,16 @@ const CTApp = {
       this._updateGpsBanner('available');
       this._setText('gps-banner-sub', `${pos.latitude.toFixed(4)}, ${pos.longitude.toFixed(4)} · ±${Math.round(pos.accuracy)} m`);
 
-      wm.setLocation(pos.latitude, pos.longitude, `GPS (${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)})`);
-      this.nav('weather');
+      // Ortsname für Weather-Modul ermitteln (asynchron, Fallback auf Koordinaten)
+      gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
+        const name = geo.city || [geo.city, geo.province, geo.country].filter(Boolean).join(', ')
+          || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+        wm.setLocation(pos.latitude, pos.longitude, name);
+      }).catch(() => {
+        wm.setLocation(pos.latitude, pos.longitude, `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`);
+      }).finally(() => {
+        this.nav('weather');
+      });
     }).catch(err => {
       if (btn) btn.disabled = false;
       this._updateGpsBanner(gm.getStatus());
@@ -1750,9 +1774,17 @@ const CTApp = {
     if (btn) btn.disabled = true;
 
     gm.getCurrentPosition().then(pos => {
-      if (btn) btn.disabled = false;
-      wm.setLocation(pos.latitude, pos.longitude, `GPS (${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)})`);
-      this.loadWeather(true);
+      // Ortsname ermitteln, dann Wetter laden
+      gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
+        const name = geo.city || [geo.city, geo.province, geo.country].filter(Boolean).join(', ')
+          || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+        wm.setLocation(pos.latitude, pos.longitude, name);
+      }).catch(() => {
+        wm.setLocation(pos.latitude, pos.longitude, `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`);
+      }).finally(() => {
+        if (btn) btn.disabled = false;
+        this.loadWeather(true);
+      });
     }).catch(err => {
       if (btn) btn.disabled = false;
       this._wxShowNotice('error', '📡 GPS: ' + err.message);

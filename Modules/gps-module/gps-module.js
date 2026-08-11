@@ -260,6 +260,44 @@
             return this._simulated;
         },
 
+        // Reverse Geocoding: Koordinaten → Stadt, Bundesland/Provinz, Staat
+        // Quelle: Nominatim (OpenStreetMap) – kein API-Key, Attribution erforderlich
+        // Lizenz: ODbL (OpenStreetMap) – kostenlos, Attribution: "© OpenStreetMap-Mitwirkende"
+        async reverseGeocode(lat, lon) {
+            if (typeof lat !== 'number' || typeof lon !== 'number') {
+                throw new Error('Ungültige Koordinaten für Reverse Geocoding');
+            }
+            const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=de`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const resp = await fetch(url, {
+                    signal: controller.signal,
+                    headers: { 'User-Agent': 'CatchTrack/1.0 (catchtrack-app)' }
+                });
+                clearTimeout(timeout);
+
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                const a = data.address || {};
+
+                return {
+                    city:        a.city || a.town || a.village || a.hamlet || a.suburb || null,
+                    province:    a.state || a.region || a.county || null,
+                    country:     a.country || null,
+                    countryCode: (a.country_code || '').toUpperCase() || null,
+                    displayName: data.display_name || null
+                };
+            } catch (err) {
+                clearTimeout(timeout);
+                if (err.name === 'AbortError') {
+                    throw new Error('Reverse Geocoding: Zeitüberschreitung');
+                }
+                throw err;
+            }
+        },
+
         // ──── Interne Methoden ────
 
         _normalize(geoPos, source) {
