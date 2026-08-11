@@ -1,708 +1,1108 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatchTrack v1.0</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#14594a">
+  <title>CatchTrack</title>
+  <style>
+    /* ===== Design System ===== */
+    :root {
+      --c-primary:        #14594a;
+      --c-primary-dark:   #0d3d31;
+      --c-primary-light:  #1e8a6e;
+      --c-accent:         #e8960a;
+      --c-accent-dark:    #c47c08;
+      --c-surface:        #ffffff;
+      --c-surface-dim:    #f3f6f5;
+      --c-border:         #dde8e4;
+      --c-text:           #151f1c;
+      --c-text-muted:     #6a7d77;
+      --c-text-inv:       #ffffff;
+      --c-ok:             #1a8c5b;
+      --c-warn:           #e8960a;
+      --c-error:          #d94040;
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+      --nav-h:     64px;
+      --header-h:  56px;
+      --sidebar-w: 232px;
 
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 1000px;
-            width: 100%;
-            overflow: hidden;
-        }
+      --r-sm:   8px;
+      --r-md:   12px;
+      --r-lg:   20px;
+      --r-full: 9999px;
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px 30px;
-            text-align: center;
-        }
+      --sh-sm: 0 1px 4px rgba(0,0,0,0.07);
+      --sh-md: 0 4px 16px rgba(0,0,0,0.10);
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
 
-        .content {
-            padding: 40px;
-        }
+    body {
+      font-family: var(--font);
+      background: var(--c-surface-dim);
+      color: var(--c-text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        .section {
-            margin-bottom: 40px;
-        }
+    /* ===== Loading Screen ===== */
+    #ct-loading {
+      position: fixed;
+      inset: 0;
+      background: var(--c-primary-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 9999;
+      color: var(--c-text-inv);
+    }
 
-        .section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
-        }
+    #ct-loading .brand { font-size: 3.5rem; }
+    #ct-loading h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; }
+    #ct-loading .tagline { opacity: 0.55; font-size: 0.88rem; }
 
-        .card {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-        }
+    .spinner {
+      width: 34px; height: 34px;
+      border: 3px solid rgba(255,255,255,0.18);
+      border-top-color: var(--c-accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
 
-        .card h3 {
-            color: #667eea;
-            margin-bottom: 10px;
-        }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-        .card p {
-            color: #555;
-            line-height: 1.6;
-            font-size: 0.95em;
-        }
+    /* ===== App Shell ===== */
+    #ct-app { display: none; min-height: 100vh; }
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
+    /* ===== Sidebar (Desktop) ===== */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--c-primary-dark);
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+    }
 
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.95em;
-            transition: background 0.3s;
-        }
+    .sb-brand {
+      padding: 22px 18px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.09);
+    }
 
-        button:hover {
-            background: #764ba2;
-        }
+    .sb-brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--c-text-inv);
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
 
-        button.secondary {
-            background: #6c757d;
-        }
+    .sb-brand-icon { font-size: 1.5rem; }
+    .sb-brand-version {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.38);
+      margin-top: 3px;
+      font-weight: 400;
+    }
 
-        button.secondary:hover {
-            background: #5a6268;
-        }
+    .sb-nav {
+      flex: 1;
+      padding: 12px 0;
+      overflow-y: auto;
+    }
 
-        .console {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 20px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-            max-height: 300px;
-            overflow-y: auto;
-            margin-top: 20px;
-        }
+    /* nav group label */
+    .sb-nav-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 14px 18px 6px;
+    }
 
-        .console-line {
-            padding: 5px 0;
-            word-break: break-all;
-        }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      width: 100%;
+      padding: 10px 18px;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.65);
+      font-family: var(--font);
+      font-size: 0.91rem;
+      cursor: pointer;
+      text-align: left;
+      position: relative;
+      transition: background 0.15s, color 0.15s;
+    }
 
-        .console-line.error {
-            color: #ff6b6b;
-        }
+    .nav-btn:hover:not(.nav-disabled) {
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+    }
 
-        .console-line.success {
-            color: #51cf66;
-        }
+    .nav-btn.nav-active {
+      color: #fff;
+      background: rgba(255,255,255,0.10);
+    }
 
-        .status {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
+    .nav-btn.nav-active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 5px; bottom: 5px;
+      width: 3px;
+      background: var(--c-accent);
+      border-radius: 0 3px 3px 0;
+    }
 
-        .status-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            border-left: 4px solid #667eea;
-        }
+    .nav-btn.nav-disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
 
-        .status-item strong {
-            color: #333;
-        }
+    .nav-icon { font-size: 1.05rem; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-text { flex: 1; }
 
-        .status-item.ok {
-            border-left-color: #51cf66;
-        }
+    .nav-pill {
+      font-size: 0.6rem;
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.55);
+      padding: 2px 7px;
+      border-radius: var(--r-full);
+    }
 
-        .status-item.error {
-            border-left-color: #ff6b6b;
-        }
+    .sb-user {
+      padding: 14px 18px;
+      border-top: 1px solid rgba(255,255,255,0.09);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: bold;
-            margin-left: 10px;
-        }
+    .sb-user:hover { background: rgba(255,255,255,0.06); }
 
-        .status-badge.ok {
-            background: #d3f9d8;
-            color: #2f9e44;
-        }
+    .sb-user-info { flex: 1; overflow: hidden; }
+    .sb-user-name {
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-        .status-badge.error {
-            background: #ffe0e0;
-            color: #c92a2a;
-        }
+    .sb-user-handle {
+      color: rgba(255,255,255,0.42);
+      font-size: 0.73rem;
+    }
 
-        .footer {
-            background: #f8f9fa;
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            border-top: 1px solid #ddd;
-        }
-    </style>
+    /* ===== Main Area ===== */
+    .main {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== Mobile Header ===== */
+    .top-bar {
+      display: none;
+      background: var(--c-primary);
+      color: var(--c-text-inv);
+      height: var(--header-h);
+      align-items: center;
+      padding: 0 14px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: var(--sh-sm);
+    }
+
+    .top-bar-icon { font-size: 1.3rem; }
+    .top-bar-title { flex: 1; font-size: 1.05rem; font-weight: 700; }
+
+    /* ===== Content ===== */
+    .content {
+      flex: 1;
+      padding: 28px 30px;
+      max-width: 1080px;
+      width: 100%;
+    }
+
+    /* ===== Views ===== */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ===== Page Header ===== */
+    .page-header { margin-bottom: 24px; }
+    .page-header h2 { font-size: 1.55rem; font-weight: 700; }
+    .page-header p { color: var(--c-text-muted); font-size: 0.9rem; margin-top: 3px; }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      box-shadow: var(--sh-sm);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--c-border);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--c-text);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .card-body { padding: 18px; }
+
+    /* ===== Grid ===== */
+    .g2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+    /* ===== Welcome Banner ===== */
+    .welcome {
+      background: linear-gradient(130deg, var(--c-primary) 0%, var(--c-primary-light) 100%);
+      border-radius: var(--r-lg);
+      padding: 26px 28px;
+      margin-bottom: 22px;
+      color: var(--c-text-inv);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .welcome h2 { font-size: 1.3rem; font-weight: 700; }
+    .welcome p { opacity: 0.78; font-size: 0.88rem; margin-top: 3px; }
+    .welcome-fish { font-size: 3.8rem; opacity: 0.3; flex-shrink: 0; }
+
+    /* ===== Stat Cards ===== */
+    .stat {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 18px;
+      box-shadow: var(--sh-sm);
+    }
+
+    .stat-icon { font-size: 1.6rem; margin-bottom: 8px; }
+    .stat-val { font-size: 1.8rem; font-weight: 700; color: var(--c-primary); line-height: 1; }
+    .stat-lbl { font-size: 0.78rem; color: var(--c-text-muted); margin-top: 3px; }
+
+    /* ===== Module Preview Cards ===== */
+    .mod-card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 18px;
+      box-shadow: var(--sh-sm);
+    }
+
+    .mod-card-icon { font-size: 1.7rem; margin-bottom: 8px; }
+    .mod-card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+    .mod-card-desc { font-size: 0.82rem; color: var(--c-text-muted); line-height: 1.5; }
+
+    /* ===== System Status Bar ===== */
+    .sys-bar {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      box-shadow: var(--sh-sm);
+    }
+
+    .sys-bar-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--c-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .sys-item { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; }
+
+    .sys-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #b0b8b5;
+      flex-shrink: 0;
+    }
+
+    .sys-dot.ok    { background: var(--c-ok); }
+    .sys-dot.error { background: var(--c-error); }
+    .sys-name { color: var(--c-text-muted); }
+
+    /* ===== Avatar ===== */
+    .avatar {
+      border-radius: var(--r-full);
+      background: var(--c-primary-light);
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .avatar-sm { width: 36px; height: 36px; font-size: 0.85rem; }
+    .avatar-lg { width: 72px; height: 72px; font-size: 1.6rem; }
+
+    /* ===== Profile ===== */
+    .profile-banner {
+      background: linear-gradient(130deg, var(--c-primary) 0%, var(--c-primary-light) 100%);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: var(--c-text-inv);
+      margin-bottom: 22px;
+    }
+
+    .profile-banner h3 { font-size: 1.35rem; font-weight: 700; }
+    .profile-banner p  { opacity: 0.75; font-size: 0.88rem; margin-top: 2px; }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--c-border);
+      gap: 12px;
+    }
+
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row-icon  { font-size: 0.95rem; color: var(--c-text-muted); width: 20px; text-align: center; }
+    .profile-row-label { font-size: 0.78rem; color: var(--c-text-muted); min-width: 110px; }
+    .profile-row-value { font-size: 0.9rem; font-weight: 500; color: var(--c-text); }
+
+    /* ===== Badges ===== */
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: var(--r-full);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-dev    { background: #e8f0fe; color: #1a56db; }
+    .badge-admin  { background: #f5f0fe; color: #7c3aed; }
+    .badge-user   { background: #f0fdf6; color: #15803d; }
+
+    .status-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.82rem;
+    }
+
+    .status-dot::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.active   { color: #15803d; }
+    .status-dot.active::before   { background: #16a34a; }
+    .status-dot.inactive { color: #6b7280; }
+    .status-dot.inactive::before { background: #9ca3af; }
+    .status-dot.banned   { color: #b91c1c; }
+    .status-dot.banned::before   { background: #dc2626; }
+
+    /* ===== Placeholder ===== */
+    .placeholder {
+      text-align: center;
+      padding: 56px 20px;
+      color: var(--c-text-muted);
+    }
+
+    .placeholder-icon { font-size: 3rem; opacity: 0.35; margin-bottom: 14px; }
+    .placeholder h3 { font-size: 1.05rem; color: var(--c-text-muted); margin-bottom: 6px; }
+    .placeholder p  { font-size: 0.84rem; max-width: 280px; margin: 0 auto; line-height: 1.6; }
+
+    .chip {
+      display: inline-block;
+      margin-top: 14px;
+      background: var(--c-surface-dim);
+      color: var(--c-text-muted);
+      font-size: 0.72rem;
+      padding: 4px 12px;
+      border-radius: var(--r-full);
+      border: 1px solid var(--c-border);
+    }
+
+    /* ===== Button ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: var(--r-sm);
+      border: none;
+      cursor: pointer;
+      font-size: 0.87rem;
+      font-weight: 600;
+      font-family: var(--font);
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-ghost { background: rgba(255,255,255,0.14); color: #fff; }
+    .btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.22); }
+
+    /* ===== Bottom Nav (Mobile) ===== */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      background: var(--c-surface);
+      border-top: 1px solid var(--c-border);
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.07);
+      z-index: 100;
+    }
+
+    .bnav-inner { display: flex; height: 100%; }
+
+    .bnav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--c-text-muted);
+      font-family: var(--font);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s;
+      padding: 0;
+    }
+
+    .bnav-btn.active { color: var(--c-primary); }
+    .bnav-btn.disabled { opacity: 0.3; cursor: not-allowed; }
+    .bnav-icon { font-size: 1.2rem; line-height: 1; }
+    .bnav-label { font-size: 0.63rem; font-weight: 500; }
+
+    /* ===== Utilities ===== */
+    .mt-6  { margin-top: 6px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-22 { margin-top: 22px; }
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--c-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .sidebar    { display: none; }
+      .top-bar    { display: flex; }
+      .bottom-nav { display: block; }
+      .main       { margin-left: 0; }
+      .content {
+        padding: 14px;
+        padding-bottom: calc(var(--nav-h) + 14px);
+      }
+      .g4 { grid-template-columns: repeat(2, 1fr); }
+      .g3 { grid-template-columns: repeat(2, 1fr); }
+      .g2 { grid-template-columns: 1fr; }
+      .welcome { flex-direction: column; align-items: flex-start; }
+      .welcome-fish { display: none; }
+      .profile-banner { flex-direction: column; text-align: center; }
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .g4 { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 CatchTrack</h1>
-            <p>v1.0.0 - Core + Services + Modules + Tests</p>
-        </div>
 
-        <div class="content">
-            <!-- Status Section -->
-            <div class="section">
-                <h2>📊 System-Status</h2>
-                <div class="status" id="status-container">
-                    <div class="status-item">
-                        <strong>Core</strong>
-                        <span class="status-badge" id="core-status">Prüfung...</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>Config Manager</strong>
-                        <span class="status-badge" id="config-status">Prüfung...</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>Database</strong>
-                        <span class="status-badge" id="db-status">Prüfung...</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>Services</strong>
-                        <span class="status-badge" id="services-status">Prüfung...</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>User Module</strong>
-                        <span class="status-badge" id="user-status">Prüfung...</span>
-                    </div>
-                    <div class="status-item">
-                        <strong>Admin Module</strong>
-                        <span class="status-badge" id="admin-status">Prüfung...</span>
-                    </div>
-                </div>
-            </div>
+<!-- ===== Loading Screen ===== -->
+<div id="ct-loading">
+  <div class="brand">🎣</div>
+  <h1>CatchTrack</h1>
+  <div class="spinner"></div>
+  <p class="tagline" id="ct-loading-msg">Wird geladen…</p>
+</div>
 
-            <!-- Config Section -->
-            <div class="section">
-                <h2>⚙️ Config Manager</h2>
-                <div class="card">
-                    <h3>Konfigurationsverwaltung</h3>
-                    <p>Zentrale Konfigurationsverwaltung für die Anwendung.</p>
-                    <div class="button-group">
-                        <button onclick="testConfigGet()">Konfiguration abrufen</button>
-                        <button onclick="testConfigSet()">Konfiguration ändern</button>
-                        <button onclick="testConfigAll()">Alle Configs anzeigen</button>
-                    </div>
-                </div>
-            </div>
+<!-- ===== App Shell ===== -->
+<div id="ct-app">
 
-            <!-- Database Section -->
-            <div class="section">
-                <h2>🗄️ Database Layer</h2>
-                <div class="card">
-                    <h3>Datenbankzugriff</h3>
-                    <p>IndexedDB-basierte Datenverwaltung.</p>
-                    <div class="button-group">
-                        <button onclick="testDBStats()">DB-Statistiken</button>
-                        <button onclick="testDBSaveUser()">Benutzer speichern</button>
-                        <button onclick="testDBGetUser()">Benutzer abrufen</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Services Section -->
-            <div class="section">
-                <h2>🔧 Services</h2>
-                <div class="card">
-                    <h3>Service-Manager</h3>
-                    <p>Verwaltung von Business-Services.</p>
-                    <div class="button-group">
-                        <button onclick="testServicesList()">Services auflisten</button>
-                        <button onclick="testServiceUser()">User Service testen</button>
-                        <button onclick="testServiceCache()">Cache Service testen</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Module Section -->
-            <div class="section">
-                <h2>👤 User-Modul</h2>
-                <div class="card">
-                    <h3>Benutzerverwaltung</h3>
-                    <p>Das User-Modul verwaltet Benutzer und Authentifizierung.</p>
-                    <div class="button-group">
-                        <button onclick="testUserModuleAuth()">Test Authentifizierung</button>
-                        <button onclick="testUserModuleList()">Alle Benutzer anzeigen</button>
-                        <button onclick="testUserModuleCreate()">Neuen Benutzer erstellen</button>
-                        <button class="secondary" onclick="clearConsole()">Console löschen</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Module Section -->
-            <div class="section">
-                <h2>⚙️ Admin-Modul</h2>
-                <div class="card">
-                    <h3>System-Verwaltung</h3>
-                    <p>Das Admin-Modul bietet Systemstatistiken und Diagnostik.</p>
-                    <div class="button-group">
-                        <button onclick="testAdminStats()">System-Statistiken</button>
-                        <button onclick="testAdminHealthCheck()">Health Check</button>
-                        <button onclick="testAdminErrorLog()">Fehlerprotokoll</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Test Suite Section -->
-            <div class="section">
-                <h2>🧪 Test Suite</h2>
-                <div class="card">
-                    <h3>Automatisierte Tests</h3>
-                    <p>Führt alle Unit- und Integrationstests aus.</p>
-                    <div class="button-group">
-                        <button onclick="runTests()" style="background: #28a745; font-weight: bold;">▶ Tests ausführen</button>
-                        <button onclick="testResults()">Ergebnisse anzeigen</button>
-                        <button class="secondary" onclick="clearConsole()">Console löschen</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Console Output -->
-            <div class="section">
-                <h2>📝 Ausgabe</h2>
-                <div class="console" id="console">
-                    <div class="console-line">CatchTrack v1.0.0 - Starte...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>CatchTrack v1.0.0 | Ein Projekt zur Modulverwaltung und Systemsteuerung</p>
-        </div>
+  <!-- Sidebar (Desktop) -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-title">
+        <span class="sb-brand-icon">🎣</span>
+        CatchTrack
+      </div>
+      <div class="sb-brand-version">v1.0.0</div>
     </div>
 
-    <!-- Scripts in der korrekten Reihenfolge -->
-    <script src="Core/core.js"></script>
-    <script src="Core/core-config.js"></script>
-    <script src="Core/core-context.js"></script>
-    <script src="Core/core-state.js"></script>
-    <script src="Core/core-storage.js"></script>
-    <script src="Core/core-event-bus.js"></script>
-    <script src="Core/core-lifecycle.js"></script>
-    <script src="Core/core-runtime.js"></script>
-    <script src="Core/core-error-handler.js"></script>
-    <script src="Core/error-log.js"></script>
-    <script src="Core/core-startup.js"></script>
-    <script src="Core/core-entry.js"></script>
-    <script src="Core/core-loader.js"></script>
-    <script src="Core/module-interface.js"></script>
-    <script src="Core/module-manager.js"></script>
-    <script src="Core/app.js"></script>
+    <nav class="sb-nav">
+      <div class="sb-nav-label">Navigation</div>
 
-    <script>
-        // Hilfsfunktionen für die UI
-        function log(message, type = 'info') {
-            const console = document.getElementById('console');
-            const line = document.createElement('div');
-            line.className = `console-line ${type}`;
-            const timestamp = new Date().toLocaleTimeString('de-DE');
-            line.textContent = `[${timestamp}] ${message}`;
-            console.appendChild(line);
-            console.scrollTop = console.scrollHeight;
-        }
+      <button class="nav-btn nav-active" data-view="dashboard" onclick="CTApp.nav('dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-text">Dashboard</span>
+      </button>
 
-        function clearConsole() {
-            document.getElementById('console').innerHTML = '';
-        }
+      <button class="nav-btn nav-disabled" data-view="catches" title="Modul in Entwicklung">
+        <span class="nav-icon">🎣</span>
+        <span class="nav-text">Meine Fänge</span>
+        <span class="nav-pill">Bald</span>
+      </button>
 
-        function updateStatus() {
-            const coreOk = !!window.CatchTrackCore;
-            const configOk = !!window.CatchTrackConfigManager;
-            const dbOk = !!window.CatchTrackDatabaseManager;
-            const servicesOk = !!window.CatchTrackServiceManager;
-            const userOk = !!window.CatchTrackUserModule;
-            const adminOk = !!window.CatchTrackAdminModule;
+      <button class="nav-btn nav-disabled" data-view="fishdb" title="Modul in Entwicklung">
+        <span class="nav-icon">🐟</span>
+        <span class="nav-text">Fischdatenbank</span>
+        <span class="nav-pill">Bald</span>
+      </button>
 
-            updateStatusBadge('core-status', coreOk);
-            updateStatusBadge('config-status', configOk);
-            updateStatusBadge('db-status', dbOk);
-            updateStatusBadge('services-status', servicesOk);
-            updateStatusBadge('user-status', userOk);
-            updateStatusBadge('admin-status', adminOk);
+      <button class="nav-btn nav-disabled" data-view="weather" title="Modul in Entwicklung">
+        <span class="nav-icon">🌤️</span>
+        <span class="nav-text">Wetter</span>
+        <span class="nav-pill">Bald</span>
+      </button>
 
-            if (coreOk && configOk && dbOk && servicesOk && userOk && adminOk) {
-                log('✅ Alle Systeme OK', 'success');
-            }
-        }
+      <button class="nav-btn nav-disabled" data-view="stats" title="Modul in Entwicklung">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">Statistiken</span>
+        <span class="nav-pill">Bald</span>
+      </button>
 
-        function updateStatusBadge(id, ok) {
-            const badge = document.getElementById(id);
-            badge.textContent = ok ? '✓ OK' : '✗ Fehler';
-            badge.className = ok ? 'status-badge ok' : 'status-badge error';
-        }
+      <div class="sb-nav-label" style="margin-top:8px">Konto</div>
 
-        // User Module Tests
-        function testUserModuleAuth() {
-            if (!window.CatchTrackUserModule) {
-                log('❌ User-Modul nicht geladen', 'error');
-                return;
-            }
+      <button class="nav-btn" data-view="profile" onclick="CTApp.nav('profile')">
+        <span class="nav-icon">👤</span>
+        <span class="nav-text">Mein Profil</span>
+      </button>
 
-            try {
-                const user = window.CatchTrackUserModule.authenticate('test-user-001');
-                if (user) {
-                    log(`✓ Authentifiziert als: ${user.displayName} (@${user.username}) [${user.role}]`, 'success');
-                    log(`ID: ${user.id} | Letzter Login: ${user.lastLoginAt}`);
-                } else {
-                    log('❌ Authentifizierung fehlgeschlagen', 'error');
-                }
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+      <button class="nav-btn nav-disabled" data-view="settings" title="Modul in Entwicklung">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-text">Einstellungen</span>
+        <span class="nav-pill">Bald</span>
+      </button>
+    </nav>
 
-        function testUserModuleList() {
-            if (!window.CatchTrackUserModule) {
-                log('❌ User-Modul nicht geladen', 'error');
-                return;
-            }
+    <div class="sb-user" onclick="CTApp.nav('profile')">
+      <div class="avatar avatar-sm" id="sb-avatar">?</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name"  id="sb-name">–</div>
+        <div class="sb-user-handle" id="sb-handle">@–</div>
+      </div>
+    </div>
+  </aside>
 
-            try {
-                const users = window.CatchTrackUserModule.getAllUsers();
-                log(`✓ ${users.length} Benutzer gefunden:`, 'success');
-                users.forEach(user => {
-                    log(`  - @${user.username} | ${user.displayName} | ${user.email} [${user.role}] (${user.status})`);
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+  <!-- Main -->
+  <div class="main">
 
-        function testUserModuleCreate() {
-            if (!window.CatchTrackUserModule) {
-                log('❌ User-Modul nicht geladen', 'error');
-                return;
-            }
+    <!-- Mobile Top Bar -->
+    <header class="top-bar">
+      <span class="top-bar-icon">🎣</span>
+      <span class="top-bar-title" id="tb-title">Dashboard</span>
+      <div class="avatar avatar-sm" id="tb-avatar" onclick="CTApp.nav('profile')" style="cursor:pointer">?</div>
+    </header>
 
-            try {
-                const newUser = window.CatchTrackUserModule.createUser({
-                    username: 'devuser2',
-                    displayName: 'Test Developer 2',
-                    email: 'dev2@catchtrack.local',
-                    role: 'developer'
-                });
-                log(`✓ Neuer Benutzer erstellt:`, 'success');
-                log(`  Username: @${newUser.username}`);
-                log(`  Anzeigename: ${newUser.displayName}`);
-                log(`  E-Mail: ${newUser.email}`);
-                log(`  ID: ${newUser.id}`);
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+    <!-- Content -->
+    <main class="content">
 
-        // Admin Module Tests
-        function testAdminStats() {
-            if (!window.CatchTrackAdminModule) {
-                log('❌ Admin-Modul nicht geladen', 'error');
-                return;
-            }
+      <!-- ===== Dashboard ===== -->
+      <div class="view active" id="view-dashboard">
 
-            try {
-                const stats = window.CatchTrackAdminModule.getSystemStats();
-                log('✓ System-Statistiken:', 'success');
-                log(`  Laufzeit: ${Math.floor(stats.uptime / 1000)}s`);
-                log(`  Geladene Module: ${stats.moduleCount}`);
-                log(`  Fehler: ${stats.errorCount}`);
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+        <div class="welcome">
+          <div>
+            <h2 id="welcome-title">Willkommen!</h2>
+            <p id="welcome-sub">Schön, dass du wieder dabei bist.</p>
+            <div style="margin-top:14px">
+              <button class="btn btn-ghost" disabled title="Catch-Modul noch nicht verfügbar">
+                ➕ Neuen Fang erfassen
+              </button>
+            </div>
+          </div>
+          <div class="welcome-fish">🎣</div>
+        </div>
 
-        function testAdminHealthCheck() {
-            if (!window.CatchTrackAdminModule) {
-                log('❌ Admin-Modul nicht geladen', 'error');
-                return;
-            }
+        <!-- System Status -->
+        <div class="sys-bar">
+          <span class="sys-bar-title">System</span>
+          <div class="sys-item"><div class="sys-dot" id="sys-core"></div><span class="sys-name">Core</span></div>
+          <div class="sys-item"><div class="sys-dot" id="sys-user"></div><span class="sys-name">User</span></div>
+          <div class="sys-item"><div class="sys-dot" id="sys-db"></div><span class="sys-name">DB</span></div>
+          <div class="sys-item"><div class="sys-dot" id="sys-svc"></div><span class="sys-name">Services</span></div>
+        </div>
 
-            try {
-                const health = window.CatchTrackAdminModule.performHealthCheck();
-                log(`✓ Health Check: ${health.healthy ? '✅ Healthy' : '❌ Probleme erkannt'}`, 
-                    health.healthy ? 'success' : 'error');
-                log(`  Core: ${health.coreLoaded ? '✓' : '✗'}`);
-                log(`  Module Manager: ${health.moduleManagerLoaded ? '✓' : '✗'}`);
-                log(`  Events: ${health.eventsWorking ? '✓' : '✗'}`);
-                log(`  Storage: ${health.storageAccessible ? '✓' : '✗'}`);
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+        <!-- Stats -->
+        <div class="section-label">Übersicht</div>
+        <div class="g4">
+          <div class="stat">
+            <div class="stat-icon">🎣</div>
+            <div class="stat-val">–</div>
+            <div class="stat-lbl">Gesamte Fänge</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">📅</div>
+            <div class="stat-val">–</div>
+            <div class="stat-lbl">Diese Woche</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">🐟</div>
+            <div class="stat-val">–</div>
+            <div class="stat-lbl">Fischarten</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">⚙️</div>
+            <div class="stat-val" id="stat-modules">–</div>
+            <div class="stat-lbl">Aktive Module</div>
+          </div>
+        </div>
 
-        function testAdminErrorLog() {
-            if (!window.CatchTrackAdminModule) {
-                log('❌ Admin-Modul nicht geladen', 'error');
-                return;
-            }
+        <!-- Module Preview -->
+        <div class="section-label mt-22">Module</div>
+        <div class="g3 mt-6">
+          <div class="mod-card">
+            <div class="mod-card-icon">🎣</div>
+            <div class="mod-card-title">Fangbuch</div>
+            <div class="mod-card-desc">Erfasse deine Fänge, Gewässer und Angelausflüge.</div>
+            <div class="chip">In Entwicklung</div>
+          </div>
+          <div class="mod-card">
+            <div class="mod-card-icon">🐟</div>
+            <div class="mod-card-title">Fischdatenbank</div>
+            <div class="mod-card-desc">Fischarten, Schonzeiten, Maße und Gewässerinformationen.</div>
+            <div class="chip">In Entwicklung</div>
+          </div>
+          <div class="mod-card">
+            <div class="mod-card-icon">🌤️</div>
+            <div class="mod-card-title">Wetter</div>
+            <div class="mod-card-desc">Aktuelle Wetterdaten und Angelprognosen für deinen Spot.</div>
+            <div class="chip">In Entwicklung</div>
+          </div>
+          <div class="mod-card">
+            <div class="mod-card-icon">📊</div>
+            <div class="mod-card-title">Statistiken</div>
+            <div class="mod-card-desc">Auswertungen, Trends und persönliche Bestleistungen.</div>
+            <div class="chip">In Entwicklung</div>
+          </div>
+          <div class="mod-card">
+            <div class="mod-card-icon">🏆</div>
+            <div class="mod-card-title">Leaderboard</div>
+            <div class="mod-card-desc">Ranglisten und Community-Vergleiche nach Fischarten.</div>
+            <div class="chip">Geplant</div>
+          </div>
+          <div class="mod-card">
+            <div class="mod-card-icon">📍</div>
+            <div class="mod-card-title">Gewässer</div>
+            <div class="mod-card-desc">Gewässerverwaltung mit GPS und Spotmarkierungen.</div>
+            <div class="chip">Geplant</div>
+          </div>
+        </div>
 
-            try {
-                const errors = window.CatchTrackAdminModule.getErrorLog();
-                log(`✓ Fehlerprotokoll: ${errors.length} Einträge`, errors.length > 0 ? 'success' : 'info');
-                errors.slice(-3).forEach(error => {
-                    log(`  [${error.type}] ${error.message}`);
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+      </div><!-- /dashboard -->
 
-        // Config Tests
-        function testConfigGet() {
-            if (!window.CatchTrackConfigManager) {
-                log('❌ Config Manager nicht geladen', 'error');
-                return;
-            }
+      <!-- ===== Meine Fänge ===== -->
+      <div class="view" id="view-catches">
+        <div class="page-header">
+          <h2>🎣 Meine Fänge</h2>
+          <p>Erfasste Angelaktivitäten und Fangdaten.</p>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="placeholder">
+              <div class="placeholder-icon">🎣</div>
+              <h3>Fangbuch</h3>
+              <p>Das Fangbuch-Modul befindet sich noch in Entwicklung.</p>
+              <div class="chip">Kommt bald</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            try {
-                const appConfig = window.CatchTrackConfigManager.get('app');
-                log(`✓ App-Konfiguration: ${appConfig.name} v${appConfig.version}`, 'success');
-                const dbConfig = window.CatchTrackConfigManager.get('database');
-                log(`✓ Datenbank: ${dbConfig.type} (${dbConfig.stores.length} Stores)`);
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+      <!-- ===== Fischdatenbank ===== -->
+      <div class="view" id="view-fishdb">
+        <div class="page-header">
+          <h2>🐟 Fischdatenbank</h2>
+          <p>Informationen zu Fischarten, Schonzeiten und Maßen.</p>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="placeholder">
+              <div class="placeholder-icon">🐟</div>
+              <h3>Fischdatenbank</h3>
+              <p>Die Fischdatenbank befindet sich noch in Entwicklung.</p>
+              <div class="chip">Kommt bald</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        function testConfigSet() {
-            if (!window.CatchTrackConfigManager) {
-                log('❌ Config Manager nicht geladen', 'error');
-                return;
-            }
+      <!-- ===== Wetter ===== -->
+      <div class="view" id="view-weather">
+        <div class="page-header">
+          <h2>🌤️ Wetter</h2>
+          <p>Aktuelle Wetterdaten für deine Angelspots.</p>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="placeholder">
+              <div class="placeholder-icon">🌤️</div>
+              <h3>Wetterdaten</h3>
+              <p>Das Wetter-Modul befindet sich noch in Entwicklung.</p>
+              <div class="chip">Kommt bald</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            try {
-                window.CatchTrackConfigManager.set('test-config', { testValue: 'OK' });
-                const testConfig = window.CatchTrackConfigManager.get('test-config');
-                log(`✓ Test-Konfiguration gespeichert: ${testConfig.testValue}`, 'success');
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+      <!-- ===== Statistiken ===== -->
+      <div class="view" id="view-stats">
+        <div class="page-header">
+          <h2>📊 Statistiken</h2>
+          <p>Auswertungen deiner Angelaktivitäten.</p>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="placeholder">
+              <div class="placeholder-icon">📊</div>
+              <h3>Statistiken</h3>
+              <p>Das Statistik-Modul befindet sich noch in Entwicklung.</p>
+              <div class="chip">Kommt bald</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        function testConfigAll() {
-            if (!window.CatchTrackConfigManager) {
-                log('❌ Config Manager nicht geladen', 'error');
-                return;
-            }
+      <!-- ===== Profil ===== -->
+      <div class="view" id="view-profile">
+        <div class="page-header">
+          <h2>👤 Mein Profil</h2>
+          <p>Deine Benutzerinformationen und Kontodaten.</p>
+        </div>
 
-            try {
-                const all = window.CatchTrackConfigManager.getAll();
-                log(`✓ Alle Konfigurationen (${Object.keys(all).length} Einträge):`, 'success');
-                Object.keys(all).slice(0, 5).forEach(key => {
-                    log(`  - ${key}`);
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+        <div class="profile-banner">
+          <div class="avatar avatar-lg" id="prof-avatar">?</div>
+          <div>
+            <h3 id="prof-displayname">–</h3>
+            <p id="prof-handle">@–</p>
+            <div style="margin-top:8px">
+              <span class="badge" id="prof-role-badge">–</span>
+            </div>
+          </div>
+        </div>
 
-        // Database Tests
-        function testDBStats() {
-            if (!window.CatchTrackDatabaseManager) {
-                log('❌ Database Manager nicht geladen', 'error');
-                return;
-            }
+        <div class="card">
+          <div class="card-head">🪪 Benutzerinformationen</div>
+          <div class="card-body">
+            <div class="profile-row">
+              <span class="profile-row-icon">👤</span>
+              <span class="profile-row-label">Username</span>
+              <span class="profile-row-value" id="prof-username">–</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">📛</span>
+              <span class="profile-row-label">Anzeigename</span>
+              <span class="profile-row-value" id="prof-dname">–</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">✉️</span>
+              <span class="profile-row-label">E-Mail</span>
+              <span class="profile-row-value" id="prof-email">–</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">🔑</span>
+              <span class="profile-row-label">Rolle</span>
+              <span class="profile-row-value" id="prof-role">–</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">🟢</span>
+              <span class="profile-row-label">Status</span>
+              <span class="profile-row-value">
+                <span class="status-dot" id="prof-status">–</span>
+              </span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">📅</span>
+              <span class="profile-row-label">Dabei seit</span>
+              <span class="profile-row-value" id="prof-created">–</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">🕐</span>
+              <span class="profile-row-label">Letzter Login</span>
+              <span class="profile-row-value" id="prof-lastlogin">–</span>
+            </div>
+            <div class="profile-row">
+              <span class="profile-row-icon">🪪</span>
+              <span class="profile-row-label">Benutzer-ID</span>
+              <span class="profile-row-value" id="prof-id" style="font-family:monospace;font-size:0.8rem">–</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-            try {
-                window.CatchTrackDatabaseManager.getStats().then(stats => {
-                    log(`✓ Datenbank-Statistiken:`, 'success');
-                    Object.entries(stats.storeStats).forEach(([store, data]) => {
-                        log(`  ${store}: ${data.count || 0} Einträge`);
-                    });
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+      <!-- ===== Einstellungen ===== -->
+      <div class="view" id="view-settings">
+        <div class="page-header">
+          <h2>⚙️ Einstellungen</h2>
+          <p>App-Einstellungen und Konfiguration.</p>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="placeholder">
+              <div class="placeholder-icon">⚙️</div>
+              <h3>Einstellungen</h3>
+              <p>Das Einstellungen-Modul befindet sich noch in Entwicklung.</p>
+              <div class="chip">Kommt bald</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        function testDBSaveUser() {
-            if (!window.CatchTrackDatabaseManager) {
-                log('❌ Database Manager nicht geladen', 'error');
-                return;
-            }
+    </main>
+  </div><!-- /main -->
 
-            try {
-                const user = {
-                    id: `user-${Date.now()}`,
-                    name: 'DB Test User',
-                    email: 'db@catchtrack.local',
-                    active: true
-                };
+  <!-- Bottom Nav (Mobile) -->
+  <nav class="bottom-nav">
+    <div class="bnav-inner">
+      <button class="bnav-btn active" data-view="dashboard" onclick="CTApp.nav('dashboard')">
+        <span class="bnav-icon">🏠</span>
+        <span class="bnav-label">Home</span>
+      </button>
+      <button class="bnav-btn disabled" disabled>
+        <span class="bnav-icon">🎣</span>
+        <span class="bnav-label">Fänge</span>
+      </button>
+      <button class="bnav-btn disabled" disabled>
+        <span class="bnav-icon">🐟</span>
+        <span class="bnav-label">Fische</span>
+      </button>
+      <button class="bnav-btn" data-view="profile" onclick="CTApp.nav('profile')">
+        <span class="bnav-icon">👤</span>
+        <span class="bnav-label">Profil</span>
+      </button>
+    </div>
+  </nav>
 
-                window.CatchTrackDatabaseManager.save('users', user).then(() => {
-                    log(`✓ Benutzer in DB gespeichert: ${user.name}`, 'success');
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+</div><!-- /ct-app -->
 
-        function testDBGetUser() {
-            if (!window.CatchTrackDatabaseManager) {
-                log('❌ Database Manager nicht geladen', 'error');
-                return;
-            }
+<!-- ===== Core (gleiche Reihenfolge wie dev.html) ===== -->
+<script src="Core/core.js"></script>
+<script src="Core/core-config.js"></script>
+<script src="Core/core-context.js"></script>
+<script src="Core/core-state.js"></script>
+<script src="Core/core-storage.js"></script>
+<script src="Core/core-event-bus.js"></script>
+<script src="Core/core-lifecycle.js"></script>
+<script src="Core/core-runtime.js"></script>
+<script src="Core/core-error-handler.js"></script>
+<script src="Core/error-log.js"></script>
+<script src="Core/core-startup.js"></script>
+<script src="Core/core-entry.js"></script>
+<script src="Core/core-loader.js"></script>
+<script src="Core/module-interface.js"></script>
+<script src="Core/module-manager.js"></script>
+<script src="Core/app.js"></script>
 
-            try {
-                window.CatchTrackDatabaseManager.getAll('users').then(users => {
-                    log(`✓ ${users.length} Benutzer aus DB geladen`, 'success');
-                    users.slice(0, 2).forEach(user => {
-                        log(`  - ${user.name || 'Unbekannt'}`);
-                    });
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+<script>
+'use strict';
 
-        // Service Tests
-        function testServicesList() {
-            if (!window.CatchTrackServiceManager) {
-                log('❌ Service Manager nicht geladen', 'error');
-                return;
-            }
+const CTApp = {
+  view: 'dashboard',
+  user: null,
 
-            try {
-                const services = window.CatchTrackServiceManager.getAll();
-                log(`✓ Registrierte Services (${services.length}):`, 'success');
-                services.forEach(service => {
-                    log(`  - ${service}`);
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+  // Titel-Map für Mobile Header
+  _titles: {
+    dashboard: 'Dashboard',
+    catches:   'Meine Fänge',
+    fishdb:    'Fischdatenbank',
+    weather:   'Wetter',
+    stats:     'Statistiken',
+    profile:   'Mein Profil',
+    settings:  'Einstellungen'
+  },
 
-        function testServiceUser() {
-            if (!window.CatchTrackServiceManager) {
-                log('❌ Service Manager nicht geladen', 'error');
-                return;
-            }
+  init() {
+    const msg = document.getElementById('ct-loading-msg');
+    let waited = 0;
+    const poll = setInterval(() => {
+      waited += 100;
+      if (window.CatchTrackCore && window.CatchTrackUserModule) {
+        clearInterval(poll);
+        if (msg) msg.textContent = 'Benutzer wird geladen…';
+        this._onReady();
+        return;
+      }
+      if (waited >= 6000) {
+        clearInterval(poll);
+        if (msg) msg.textContent = 'Fehler beim Laden – bitte Seite neu laden.';
+      }
+    }, 100);
+  },
 
-            try {
-                const userService = window.CatchTrackServiceManager.get('user');
-                userService.getAllUsers().then(users => {
-                    log(`✓ User Service: ${users.length} Benutzer`, 'success');
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+  _onReady() {
+    // Testbenutzer für Entwicklungsphase einloggen
+    this.user = window.CatchTrackUserModule.authenticate('test-user-001');
 
-        function testServiceCache() {
-            if (!window.CatchTrackServiceManager) {
-                log('❌ Service Manager nicht geladen', 'error');
-                return;
-            }
+    this._renderUser();
+    this._renderSysBar();
+    this._renderModuleCount();
 
-            try {
-                const cacheService = window.CatchTrackServiceManager.get('cache');
-                cacheService.set('test-key', 'test-value').then(() => {
-                    log(`✓ Cache Service: Wert gespeichert`, 'success');
-                    return cacheService.get('test-key');
-                }).then(value => {
-                    log(`✓ Cache abgerufen: ${value}`);
-                });
-            } catch (error) {
-                log(`❌ Fehler: ${error.message}`, 'error');
-            }
-        }
+    // Auf spätere Authentifizierungs-Events reagieren
+    if (window.CatchTrackCore) {
+      window.CatchTrackCore.on('user-module:authenticated', () => {
+        this.user = window.CatchTrackUserModule.getCurrentUser();
+        this._renderUser();
+      });
+    }
 
-        // Test Runner
-        async function runTests() {
-            if (!window.CatchTrackTestRunner) {
-                log('❌ Test Runner nicht geladen', 'error');
-                return;
-            }
+    // Loading-Screen ausblenden, App zeigen
+    setTimeout(() => {
+      const loading = document.getElementById('ct-loading');
+      const app     = document.getElementById('ct-app');
+      if (loading) loading.style.display = 'none';
+      if (app)     app.style.display     = 'flex';
+    }, 350);
+  },
 
-            clearConsole();
-            log('🧪 Starte Test Suite...', 'success');
-            const results = await window.CatchTrackTestRunner.run();
-        }
+  nav(view) {
+    this.view = view;
 
-        function testResults() {
-            if (!window.CatchTrackTestRunner) {
-                log('❌ Test Runner nicht geladen', 'error');
-                return;
-            }
+    // Views umschalten
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.id === 'view-' + view);
+    });
 
-            const results = window.CatchTrackTestRunner.getResults();
-            log(`Test Results:`, 'info');
-            log(`  Gesamt: ${results.total}`);
-            log(`  Bestanden: ${results.passed}`);
-            log(`  Fehlgeschlagen: ${results.failed}`);
+    // Sidebar aktiv-Zustand
+    document.querySelectorAll('.sidebar .nav-btn').forEach(btn => {
+      if (!btn.classList.contains('nav-disabled')) {
+        btn.classList.toggle('nav-active', btn.dataset.view === view);
+      }
+    });
 
-            if (results.errors.length > 0) {
-                log(`Fehler:`, 'error');
-                results.errors.slice(0, 3).forEach(err => {
-                    log(`  - ${err.test}`);
-                });
-            }
-        }
+    // Bottom Nav aktiv-Zustand
+    document.querySelectorAll('.bnav-btn').forEach(btn => {
+      if (!btn.classList.contains('disabled')) {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      }
+    });
 
-        // Initial Log Entry
-        setTimeout(() => {
-            log('🚀 CatchTrack initialisiert', 'success');
-            updateStatus();
-        }, 1000);
+    // Mobile Titel
+    const titleEl = document.getElementById('tb-title');
+    if (titleEl) titleEl.textContent = this._titles[view] || 'CatchTrack';
 
-        // Periodisches Status-Update
-        setInterval(updateStatus, 5000);
-    </script>
+    // Profildaten bei Wechsel ins Profil aktualisieren
+    if (view === 'profile') this._renderProfile();
+  },
+
+  _initial(user) {
+    return ((user.displayName || user.username || '?')[0]).toUpperCase();
+  },
+
+  _renderUser() {
+    const u = this.user;
+    if (!u) return;
+    const init = this._initial(u);
+
+    this._setText('sb-avatar',  init);
+    this._setText('sb-name',    u.displayName || u.username);
+    this._setText('sb-handle',  '@' + u.username);
+    this._setText('tb-avatar',  init);
+    this._setText('welcome-title', 'Willkommen, ' + (u.displayName || u.username) + '!');
+  },
+
+  _renderSysBar() {
+    const dot = (id, ok) => {
+      const el = document.getElementById(id);
+      if (el) el.className = 'sys-dot ' + (ok ? 'ok' : 'error');
+    };
+    dot('sys-core', !!window.CatchTrackCore);
+    dot('sys-user', !!window.CatchTrackUserModule);
+    dot('sys-db',   !!window.CatchTrackDatabaseManager);
+    dot('sys-svc',  !!window.CatchTrackServiceManager);
+  },
+
+  _renderModuleCount() {
+    const el = document.getElementById('stat-modules');
+    if (!el || !window.CatchTrackModuleManager) return;
+    try {
+      const mods = window.CatchTrackModuleManager.getAll();
+      el.textContent = mods ? mods.length : '–';
+    } catch (_) { el.textContent = '–'; }
+  },
+
+  _renderProfile() {
+    const u = this.user;
+    if (!u) return;
+
+    const fmt = iso => iso ? new Date(iso).toLocaleString('de-DE') : 'Noch nie';
+    const init = this._initial(u);
+
+    this._setText('prof-avatar',      init);
+    this._setText('prof-displayname', u.displayName || u.username);
+    this._setText('prof-handle',      '@' + u.username);
+    this._setText('prof-username',    '@' + u.username);
+    this._setText('prof-dname',       u.displayName || '–');
+    this._setText('prof-email',       u.email || '–');
+    this._setText('prof-role',        u.role || '–');
+    this._setText('prof-created',     fmt(u.createdAt));
+    this._setText('prof-lastlogin',   fmt(u.lastLoginAt));
+    this._setText('prof-id',          u.id || '–');
+
+    const roleBadge = document.getElementById('prof-role-badge');
+    if (roleBadge) {
+      roleBadge.textContent = u.role || '–';
+      roleBadge.className = 'badge badge-' + (u.role === 'administrator' ? 'admin' : (u.role || 'user'));
+    }
+
+    const statusEl = document.getElementById('prof-status');
+    if (statusEl) {
+      const labels = { active: 'Aktiv', inactive: 'Inaktiv', banned: 'Gesperrt' };
+      statusEl.textContent = labels[u.status] || u.status || '–';
+      statusEl.className   = 'status-dot ' + (u.status || 'inactive');
+    }
+  },
+
+  _setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => CTApp.init());
+</script>
 </body>
 </html>

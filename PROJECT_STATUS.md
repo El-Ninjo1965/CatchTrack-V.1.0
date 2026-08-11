@@ -34,6 +34,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Datum | Komponente | Änderung |
 |---|---|---|
+| 2026-08-11 | App-UI | index.html: professionelle Fishing-App UI; dev.html: Entwickler-Testoberfläche |
 | 2026-08-11 | User Module | v1.1.0: username, displayName, avatar, status, lastLoginAt |
 | 2026-08-11 | User Module | Fix: Object.freeze readonly-Fehler behoben |
 
@@ -41,15 +42,16 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Bereich | Status |
 |—|—|
-| Root-Struktur | In Aufbau |
-| Core | Abgeschlossen |
-| Config | Abgeschlossen |
-| Database | Abgeschlossen |
-| Services | Abgeschlossen |
-| Tests | Abgeschlossen |
-| User-Modul | Abgeschlossen |
-| Admin-Modul | Abgeschlossen |
-| Dokumentation | In Aufbau |
+| Root-Struktur | ✓ Abgeschlossen |
+| Core | ✓ Abgeschlossen |
+| Config | ✓ Abgeschlossen |
+| Database | ✓ Abgeschlossen |
+| Services | ✓ Abgeschlossen |
+| Tests | ✓ Abgeschlossen |
+| User-Modul | ✓ Abgeschlossen |
+| Admin-Modul | ✓ Abgeschlossen |
+| App-UI | ✓ Abgeschlossen |
+| Dokumentation | ✓ Abgeschlossen |
 
 ## Module
 
@@ -78,6 +80,8 @@ Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert:
 - ✓ Core-Grundgerüst (18 Dateien)
 - ✓ Modul-System & Modulschnittstelle
 - ✓ User-Modul v1.1.0 (vollständige Benutzeridentität: username, displayName, avatar, status, lastLoginAt)
+- ✓ App-UI (index.html) – professionelle Fishing-App Oberfläche
+- ✓ Dev-UI (dev.html) – Entwickler- und Teststoberfläche
 - ✓ Admin-Modul mit Diagnostik
 - ✓ Config-System
 - ✓ Database-Layer

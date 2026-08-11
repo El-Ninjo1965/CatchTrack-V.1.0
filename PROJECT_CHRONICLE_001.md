@@ -191,13 +191,37 @@ User-Modul auf v1.1.0 erweitert – vollständige Benutzeridentität:
 Geänderte Dateien: `user-module.js`, `user-interface.js`, `README.md`, `index.html`  
 Commit: `6966e06`
 
+### CT-0016
+**Status:** Abgeschlossen
+
+CatchTrack App-UI vollständig implementiert:
+
+- `index.html`: Professionelle Fishing-App Benutzeroberfläche
+  - Sidebar-Navigation (Desktop) mit Gruppenstruktur
+  - Mobile-Navigation (Bottom Nav + Top Bar)
+  - 7 Views: Dashboard, Fänge, Fischdatenbank, Wetter, Statistiken, Profil, Einstellungen
+  - Dashboard: Welcome-Banner mit Benutzername, System-Statusleiste, Stat-Cards, Modul-Vorschaukarten
+  - Profil-View: echte Benutzerdaten aus UserModule (username, displayName, email, Rolle, Status, Timestamps)
+  - Responsive Design: Sidebar auf Desktop, Bottom-Nav auf Mobile
+  - Professionelles Design-System (CSS Custom Properties, Fishing-Farbpalette)
+  - Loading-Screen mit Spinner
+  - Nicht verfügbare Module korrekt als deaktiviert markiert (kein "Coming soon" als Funktion vorgetäuscht)
+  - Lädt denselben Core wie bisher (gleiche Script-Reihenfolge)
+  - UI-Controller `CTApp` ohne Konflikte mit `CatchTrackApp` aus app.js
+
+- `dev.html`: Bestehende Entwickler-/Testoberfläche (umbenannt von `index.html`)
+  - Alle Test-Buttons für User-Modul, Admin-Modul, Config, DB, Services, Tests weiterhin verfügbar
+  - Keine inhaltlichen Änderungen
+
+Commit: folgt
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 15  
+**Einträge:** 16  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)
 
-**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 dokumentiert
+**Chronik-Umfang:** Erster Entwicklungsblock + User-Modul v1.1.0 + App-UI dokumentiert
 
 —
 
