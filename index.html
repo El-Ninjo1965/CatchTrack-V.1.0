@@ -1544,6 +1544,8 @@
 const CTApp = {
   view: 'dashboard',
   user: null,
+  _wxGpsRetryTimer: null,
+  _wxGpsRetryIntervalMs: 30000,
 
   // i18n Shortcut
   t(key, params) {
@@ -1665,11 +1667,55 @@ const CTApp = {
     const titleEl = document.getElementById('tb-title');
     if (titleEl) titleEl.textContent = this._titles[view] || 'CatchTrack';
 
+    // Wetter-GPS-Autoretry nur in der Wetteransicht aktiv halten
+    if (view === 'weather') this._startWeatherGpsRetry();
+    else this._stopWeatherGpsRetry();
+
     // Profildaten bei Wechsel ins Profil aktualisieren
     if (view === 'profile') this._renderProfile();
     if (view === 'weather') this.loadWeather();
     if (view === 'gps')     this._renderGpsView();
     if (view === 'settings') this._renderSettingsView();
+  },
+
+  _startWeatherGpsRetry() {
+    this._stopWeatherGpsRetry();
+
+    const tick = () => {
+      if (this.view !== 'weather') {
+        this._stopWeatherGpsRetry();
+        return;
+      }
+
+      const gm = window.CatchTrackGpsModule;
+      if (!gm || !gm.isSupported || !gm.isSupported()) {
+        this._stopWeatherGpsRetry();
+        return;
+      }
+
+      if (gm.hasValidPosition && gm.hasValidPosition()) {
+        this._stopWeatherGpsRetry();
+        return;
+      }
+
+      if (gm.getStatus && gm.getStatus() === 'requesting') return;
+
+      gm.checkPermission().then((perm) => {
+        if (this.view !== 'weather') return;
+        if (perm !== 'granted') return;
+        this.loadWeather(true);
+      }).catch(() => {});
+    };
+
+    tick();
+    this._wxGpsRetryTimer = setInterval(tick, this._wxGpsRetryIntervalMs);
+  },
+
+  _stopWeatherGpsRetry() {
+    if (this._wxGpsRetryTimer !== null) {
+      clearInterval(this._wxGpsRetryTimer);
+      this._wxGpsRetryTimer = null;
+    }
   },
 
   _initial(user) {
@@ -2212,6 +2258,7 @@ const CTApp = {
       const wxName = [pos.city, pos.country].filter(Boolean).join(', ')
         || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
       wm.setLocation(pos.latitude, pos.longitude, wxName);
+      this._stopWeatherGpsRetry();
     }
 
     // Loading-Zustand
@@ -2268,6 +2315,10 @@ const CTApp = {
 
     const loc = wm.getLocation();
     this._setText('wx-location-name', loc ? loc.name : '–');
+
+    if (gm && gm.hasValidPosition && gm.hasValidPosition()) {
+      this._stopWeatherGpsRetry();
+    }
 
     wm.getWeather(!!forceRefresh || locationChanged).then(data => {
       document.getElementById('wx-loading').classList.add('hidden');

@@ -338,8 +338,18 @@ UI-Startup-Race behoben (i18n/User noch nicht geladen):
 - Dadurch werden i18n-Keys nicht mehr als Rohtexte gerendert (`nav.dashboard`, `mod.*`, etc.).
 - Timeout-Meldung zeigt nun explizit, welche Komponenten beim Start fehlen.
 
+### CT-0024
+**Status:** Abgeschlossen
+
+Weather-GPS Auto-Retry implementiert:
+
+- `index.html` (`CTApp`) startet in der Wetteransicht automatisch ein Retry-Intervall (30s).
+- Auto-Retry versucht nur bei erteilter GPS-Berechtigung (`granted`) eine erneute Wetteraktualisierung.
+- Intervall stoppt automatisch bei gültiger GPS-Position oder beim Verlassen der Wetteransicht.
+- Bestehende Wetter- und GPS-Logik bleibt unverändert, nur Trigger- und Lebenszyklussteuerung ergänzt.
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 23  
+**Einträge:** 24  
 **Nächste Datei:** PROJECT_CHRONICLE_002.md (bei Bedarf)

@@ -34,6 +34,7 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 
 | Datum | Komponente | Änderung |
 |---|---|---|
+| 2026-08-11 | Weather/GPS UX | `index.html`: Auto-Retry für GPS in der Wetteransicht (30s), nur bei Permission `granted`, Stop bei gültiger Position oder View-Wechsel |
 | 2026-08-11 | App-Startup / i18n | `index.html`: Start wartet wieder auf Core + User + i18n; verhindert Rohanzeige von Übersetzungs-Keys und zeigt fehlende Komponenten im Timeout klar an |
 | 2026-08-11 | Weather Module / Startup | `weather-module.js`: Nullish-Coalescing (`??`) entfernt, um Parse-Abbruch auf älteren Browsern zu verhindern und Loader-Hänger zu beheben |
 | 2026-08-11 | App-Startup | `index.html`: Loader-Hänger behoben; App-Shell wird bei Core-Verfügbarkeit/Timeout zuverlässig eingeblendet, auch bei verzögertem User-Modul |
