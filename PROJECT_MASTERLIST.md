@@ -20,26 +20,27 @@ AI- und Projektsteuerung
 
 | Nr. | Datei | Status |
 |—:|—|—|
-| 01 | VISION.md | Offen |
-| 02 | RULES.md | Offen |
-| 03 | WORKFLOW.md | Offen |
-| 04 | PROJECT_STATUS.md | Offen |
-| 05 | PROJECT_CHRONICLE_001.md | Offen |
-| 06 | PROJECT_MASTERLIST.md | Offen |
+| 01 | VISION.md | ✓ Abgeschlossen |
+| 02 | RULES.md | ✓ Abgeschlossen |
+| 03 | WORKFLOW.md | ✓ Abgeschlossen |
+| 04 | PROJECT_STATUS.md | ✓ Abgeschlossen |
+| 05 | PROJECT_CHRONICLE_001.md | ✓ Abgeschlossen |
+| 06 | PROJECT_MASTERLIST.md | ✓ Abgeschlossen |
 
 ⸻
 
 Hauptstruktur
 
-| Bereich | Status |
-|—|—|
-| Root | In Aufbau |
-| Core | Abgeschlossen |
-| Config | Offen |
-| Database | Offen |
-| Modules | Offen |
-| Services | Offen |
-| Tests | Offen |
+| Bereich | Status | Commit |
+|—|—|—|
+| Root | ✓ Abgeschlossen | - |
+| Core | ✓ Abgeschlossen | b70c514 |
+| Config | ✓ Abgeschlossen | d33a27d |
+| Database | ✓ Abgeschlossen | d33a27d |
+| Services | ✓ Abgeschlossen | d33a27d |
+| Tests | ✓ Abgeschlossen | d33a27d |
+| Modules | ✓ Abgeschlossen | 1074202 |
+| UI | ✓ Abgeschlossen | 1074202 |
 
 Der Bereich Modules enthält die eigenständigen CatchTrack-Module.
 
@@ -144,8 +145,22 @@ Statuskennzeichnungen
 * OFFEN – noch nicht begonnen
 * IN ARBEIT – aktuell in Bearbeitung
 * TEST – Implementierung abgeschlossen, Prüfung läuft
-* ABGESCHLOSSEN – vollständig geprüft und auf GitHub vorhanden
+* ✓ ABGESCHLOSSEN – vollständig geprüft und auf GitHub vorhanden
 * BLOCKIERT – Bearbeitung kann wegen einer offenen Voraussetzung nicht fortgesetzt werden
+
+⸻
+
+Status: Erster Entwicklungsblock ✓ ABGESCHLOSSEN
+
+**Phase 1 – Grundsystem:** ✓ Abgeschlossen  
+**Phase 2 – Entwicklungs-/Testmodule:** ✓ Abgeschlossen  
+**Phase 3 – Infrastruktur:** ✓ Abgeschlossen
+
+Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert und funktionsfähig.
+
+CatchTrack ist nunzu testfähig und kann als Basis für weitere Module verwendet werden.
+
+**Letzte Aktualisierung:** 2026-08-11
 
 ⸻
 
