@@ -46,5 +46,7 @@
         }
     };
 
-    window.CatchTrackModuleInterface = ModuleInterface;
+    if (!window.CatchTrackModuleInterface) {
+        window.CatchTrackModuleInterface = ModuleInterface;
+    }
 })();

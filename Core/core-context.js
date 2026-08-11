@@ -53,5 +53,7 @@
         CoreContext.updateOnlineState();
     });
 
-    window.CatchTrackCoreContext = Object.freeze(CoreContext);
+    if (!window.CatchTrackCoreContext) {
+        window.CatchTrackCoreContext = Object.freeze(CoreContext);
+    }
 })();

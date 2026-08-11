@@ -68,5 +68,7 @@
         }
     };
 
-    window.CatchTrackCoreState = Object.freeze(CoreState);
+    if (!window.CatchTrackCoreState) {
+        window.CatchTrackCoreState = Object.freeze(CoreState);
+    }
 })();

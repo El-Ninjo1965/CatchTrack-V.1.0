@@ -39,7 +39,9 @@
         }
     };
 
-    window.CatchTrackErrorLog = ErrorLog;
+    if (!window.CatchTrackErrorLog) {
+        window.CatchTrackErrorLog = ErrorLog;
+    }
 
     window.addEventListener('error', (event) => {
         ErrorLog.record(event.error || event.message, {
