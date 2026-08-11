@@ -50,9 +50,6 @@
                 startTracking:          (opts, upd, err)  => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.startTracking(opts, upd, err) : undefined,
                 stopTracking:           ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.stopTracking() : undefined,
                 isTracking:             ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.isTracking() : undefined,
-                setSimulatedPosition:   (lat, lon, opts)  => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.setSimulatedPosition(lat, lon, opts) : undefined,
-                clearSimulatedPosition: ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.clearSimulatedPosition() : undefined,
-                isSimulated:            ()                => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.isSimulated() : undefined,
                 reverseGeocode:         (lat, lon)        => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.reverseGeocode(lat, lon) : undefined,
                 setLocationInfo:        (city, prov, country) => window.CatchTrackGpsModule ? window.CatchTrackGpsModule.setLocationInfo(city, prov, country) : undefined
             }

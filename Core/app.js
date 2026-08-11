@@ -29,7 +29,6 @@
                 'Config/config-manager.js',
                 'Database/database-manager.js',
                 'Services/service-manager.js',
-                'Tests/test-runner.js',
                 // i18n zuerst – andere Module können t() nutzen
                 'Modules/i18n-module/i18n-module.js',
                 'Modules/i18n-module/i18n-interface.js',
@@ -44,7 +43,6 @@
                 'Modules/gps-module/gps-interface.js',
                 'Modules/gps-module/gps-loader.js',
                 // User und Admin Module
-                'Modules/test-module.js',
                 'Modules/user-module/user-module.js',
                 'Modules/user-module/user-interface.js',
                 'Modules/user-module/user-loader.js',
@@ -66,8 +64,6 @@
                 window.CatchTrackServiceManager.init();
             }
 
-            this.registerSmokeTestModule();
-
             if (window.CatchTrackCoreEntry) {
                 window.CatchTrackCoreEntry.start();
             }
@@ -76,16 +72,6 @@
                 version: this.version
             });
 
-            // Starte automatisch Tests (optional)
-            if (
-                window.CatchTrackTestRunner &&
-                window.CatchTrackConfigManager &&
-                window.CatchTrackConfigManager.getPath('app.debug')
-            ) {
-                setTimeout(() => {
-                    window.CatchTrackTestRunner.run();
-                }, 2000);
-            }
         },
 
         loadModuleScripts(modulePaths) {
@@ -105,59 +91,6 @@
             };
 
             return Promise.all(modulePaths.map(loadScript));
-        },
-
-        registerSmokeTestModule() {
-            if (
-                !window.CatchTrackModuleInterface ||
-                !window.CatchTrackModuleManager ||
-                !window.CatchTrackCore
-            ) {
-                return;
-            }
-
-            const smokeTestModule = window.CatchTrackModuleInterface.create({
-                id: 'smoke-test-module',
-                name: 'CatchTrack Smoke Test Module',
-                version: '1.0.0',
-                description:
-                    'Minimalmodul zur Überprüfung der Core-Modulregistrierung und des Event-Systems.',
-                onActivate(module) {
-                    window.CatchTrackCore.emit('smoke-test:activated', {
-                        id: module.id,
-                        time: new Date().toISOString()
-                    });
-
-                    window.CatchTrackCore.on('smoke-test:ping', (payload) => {
-                        console.info(
-                            '[CatchTrack] smoke-test:ping empfangen',
-                            payload
-                        );
-                    });
-
-                    window.CatchTrackCore.emit('smoke-test:ping', {
-                        source: module.id,
-                        startedAt: new Date().toISOString()
-                    });
-                },
-                onDeactivate(module) {
-                    window.CatchTrackCore.emit('smoke-test:deactivated', {
-                        id: module.id,
-                        time: new Date().toISOString()
-                    });
-                }
-            });
-
-            try {
-                window.CatchTrackModuleManager.register(smokeTestModule);
-                window.CatchTrackModuleManager.activate(smokeTestModule.id);
-            } catch (error) {
-                if (window.CatchTrackCoreErrorHandler) {
-                    window.CatchTrackCoreErrorHandler.handle(error, {
-                        type: 'smoke-test-module'
-                    });
-                }
-            }
         },
 
         registerSystemEvents() {

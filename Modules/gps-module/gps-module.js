@@ -22,7 +22,6 @@
         _status:    'idle',   // idle|requesting|available|stale|denied|unavailable|timeout|error
         _position:  null,     // normalisiertes Positionsobjekt
         _watchId:   null,     // für kontinuierliches Tracking
-        _simulated: false,    // simulierte Position aktiv (nur für Tests)
 
         init() {
             if (this.initialized) return;
@@ -84,10 +83,6 @@
                 throw new Error('Geolocation wird von diesem Browser nicht unterstützt');
             }
 
-            if (this._simulated && this._position) {
-                return Object.assign({}, this._position);
-            }
-
             this._status = 'requesting';
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('gps-module:requesting', {});
@@ -144,12 +139,6 @@
 
             if (this._watchId !== null) {
                 this.stopTracking();
-            }
-
-            // Bei aktiver Simulation: einmalig onUpdate aufrufen
-            if (this._simulated && this._position) {
-                if (onUpdate) onUpdate(Object.assign({}, this._position));
-                return;
             }
 
             const opts = Object.assign({
@@ -213,51 +202,6 @@
 
         isTracking() {
             return this._watchId !== null;
-        },
-
-        // Simulierte Position für Tests – verfälscht keinen produktiven GPS-Datenfluss
-        setSimulatedPosition(lat, lon, options) {
-            if (typeof lat !== 'number' || typeof lon !== 'number') {
-                throw new Error('Ungültige Koordinaten: lat und lon müssen Zahlen sein');
-            }
-            if (lat < -90 || lat > 90) throw new Error('Latitude muss zwischen -90 und 90 liegen');
-            if (lon < -180 || lon > 180) throw new Error('Longitude muss zwischen -180 und 180 liegen');
-
-            const opts = options || {};
-            this._position = {
-                latitude:         lat,
-                longitude:        lon,
-                accuracy:         opts.accuracy  !== undefined ? opts.accuracy  : 10,
-                altitude:         opts.altitude  !== undefined ? opts.altitude  : null,
-                altitudeAccuracy: opts.altitudeAccuracy !== undefined ? opts.altitudeAccuracy : null,
-                speed:            opts.speed     !== undefined ? opts.speed     : null,
-                heading:          opts.heading   !== undefined ? opts.heading   : null,
-                timestamp:        new Date().toISOString(),
-                source:           'simulated',
-                status:           'available'
-            };
-            this._status    = 'available';
-            this._simulated = true;
-
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('gps-module:position-updated', {
-                    latitude:  lat,
-                    longitude: lon,
-                    accuracy:  this._position.accuracy,
-                    source:    'simulated'
-                });
-            }
-        },
-
-        clearSimulatedPosition() {
-            if (!this._simulated) return;
-            this._position  = null;
-            this._status    = 'idle';
-            this._simulated = false;
-        },
-
-        isSimulated() {
-            return this._simulated;
         },
 
         // Geocoding-Ergebnis in _position zurückschreiben (damit getLastPosition() es enthält)

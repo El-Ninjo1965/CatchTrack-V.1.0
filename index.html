@@ -1351,11 +1351,6 @@
               <span class="gps-row-label">Status</span>
               <span class="gps-row-value txt" id="gps-info-state">–</span>
             </div>
-            <div class="gps-row">
-              <span class="gps-row-icon">🎭</span>
-              <span class="gps-row-label">Simuliert</span>
-              <span class="gps-row-value txt" id="gps-info-simulated">–</span>
-            </div>
           </div>
         </div>
 
@@ -1579,14 +1574,7 @@ const CTApp = {
   },
 
   _onReady() {
-    // Testbenutzer für Entwicklungsphase einloggen (wenn Modul verfügbar)
-    try {
-      this.user = window.CatchTrackUserModule
-        ? window.CatchTrackUserModule.authenticate('test-user-001')
-        : null;
-    } catch (_) {
-      this.user = null;
-    }
+    this.user = window.CatchTrackUserModule ? window.CatchTrackUserModule.getCurrentUser() : null;
 
     this._renderUser();
     this._renderSysBar();
@@ -1901,7 +1889,7 @@ const CTApp = {
     }
     // Module info row labels
     const rowLabels = document.querySelectorAll('#gps-banner + div + .card .gps-row-label');
-    const rowKeys = ['gps.r_loaded','gps.r_support','gps.r_perm','gps.r_status','gps.r_sim'];
+    const rowKeys = ['gps.r_loaded','gps.r_support','gps.r_perm','gps.r_status'];
     rowLabels.forEach((el, i) => { if (rowKeys[i]) el.textContent = t(rowKeys[i]); });
     // GPS section labels
     const gsl = document.querySelectorAll('#view-gps .section-label');
@@ -1982,7 +1970,6 @@ const CTApp = {
     this._setText('gps-info-loaded',     gm ? this.t('gps.v.loaded') : this.t('gps.v.not_loaded'));
     this._setText('gps-info-supported',  gm && gm.isSupported() ? this.t('gps.v.supported') : this.t('gps.v.not_supported'));
     this._setText('gps-info-state',      gm ? gm.getStatus() : '–');
-    this._setText('gps-info-simulated',  gm && gm.isSimulated() ? this.t('gps.v.sim_yes') : this.t('gps.v.sim_no'));
 
     if (gm) {
       gm.checkPermission().then(perm => {
@@ -2077,7 +2064,6 @@ const CTApp = {
       this._renderGpsData(pos);
       this._updateGpsBanner('available');
       this._setText('gps-banner-sub', `${pos.latitude.toFixed(4)}, ${pos.longitude.toFixed(4)} · ±${Math.round(pos.accuracy)} m`);
-      this._setText('gps-info-simulated', gm.isSimulated() ? '✓ Aktiv' : 'Nein');
 
       // Reverse Geocoding asynchron – aktualisiert die Anzeige ohne den GPS-Fluss zu blockieren
       gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
@@ -2197,32 +2183,6 @@ const CTApp = {
       if (btn) btn.disabled = false;
       this._wxShowNotice('error', '📡 GPS: ' + err.message);
     });
-  },
-
-  gpsSetSimulated() {
-    const gm = window.CatchTrackGpsModule;
-    if (!gm) return;
-    const lat  = parseFloat(document.getElementById('gps-sim-lat').value);
-    const lon  = parseFloat(document.getElementById('gps-sim-lon').value);
-    const name = document.getElementById('gps-sim-name').value.trim() || null;
-    try {
-      gm.setSimulatedPosition(lat, lon, name ? { name } : undefined);
-      this._renderGpsData(gm.getLastPosition());
-      this._updateGpsBanner('available');
-      this._setText('gps-banner-sub', `Simuliert: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
-      this._setText('gps-info-simulated', '✓ Aktiv');
-    } catch (err) {
-      alert('Ungültige Koordinaten: ' + err.message);
-    }
-  },
-
-  gpsClearSimulated() {
-    const gm = window.CatchTrackGpsModule;
-    if (!gm) return;
-    gm.clearSimulatedPosition();
-    this._renderGpsData(null);
-    this._updateGpsBanner('idle');
-    this._setText('gps-info-simulated', 'Nein');
   },
 
   // ───── Weather ─────

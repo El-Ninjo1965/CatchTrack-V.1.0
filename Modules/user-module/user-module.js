@@ -18,7 +18,7 @@
 
         init() {
             if (this.initialized) return;
-            this.createTestUsers();
+            this.createDefaultUsers();
             this.initialized = true;
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:initialized', {
@@ -27,14 +27,14 @@
             }
         },
 
-        createTestUsers() {
+        createDefaultUsers() {
             const now = new Date().toISOString();
             [
                 {
-                    id: 'test-user-001',
-                    username: 'devuser',
-                    displayName: 'Dev User',
-                    email: 'dev@catchtrack.local',
+                    id: 'demo-user-001',
+                    username: 'demo-user',
+                    displayName: 'Demo User',
+                    email: 'demo@catchtrack.local',
                     avatar: null,
                     role: 'developer',
                     status: 'active',
@@ -42,7 +42,7 @@
                     lastLoginAt: null
                 },
                 {
-                    id: 'test-admin-001',
+                    id: 'demo-admin-001',
                     username: 'admin',
                     displayName: 'Administrator',
                     email: 'admin@catchtrack.local',
