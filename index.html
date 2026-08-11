@@ -1465,6 +1465,8 @@ const CTApp = {
       const app     = document.getElementById('ct-app');
       if (loading) loading.style.display = 'none';
       if (app)     app.style.display     = 'flex';
+      // GPS-Position beim Start automatisch ermitteln (stille Anfrage)
+      this._autoGpsInit();
     }, 350);
   },
 
@@ -1571,6 +1573,33 @@ const CTApp = {
   _setText(id, val) {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
+  },
+
+  // Stille GPS-Initialisierung beim App-Start – kein Fehler bei Ablehnung
+  _autoGpsInit() {
+    const gm = window.CatchTrackGpsModule;
+    const wm = window.CatchTrackWeatherModule;
+    if (!gm || !gm.isSupported()) return;
+
+    gm.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 })
+      .then(pos => {
+        gm.reverseGeocode(pos.latitude, pos.longitude).then(geo => {
+          gm.setLocationInfo(geo.city, geo.province, geo.country);
+          if (wm) {
+            const name = [geo.city, geo.country].filter(Boolean).join(', ')
+              || `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`;
+            wm.setLocation(pos.latitude, pos.longitude, name);
+            wm.clearCache();
+          }
+        }).catch(() => {
+          if (wm) {
+            wm.setLocation(pos.latitude, pos.longitude,
+              `${pos.latitude.toFixed(3)}, ${pos.longitude.toFixed(3)}`);
+            wm.clearCache();
+          }
+        });
+      })
+      .catch(() => {}); // Berechtigung verweigert oder GPS nicht verfügbar → Köln bleibt Fallback
   },
 
   // ───── GPS ─────

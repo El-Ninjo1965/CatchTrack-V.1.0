@@ -274,7 +274,8 @@
             if (typeof lat !== 'number' || typeof lon !== 'number') {
                 throw new Error('Ungültige Koordinaten für Reverse Geocoding');
             }
-            const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=de`;
+            const lang = navigator.language || navigator.userLanguage || 'de';
+            const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=${lang}`;
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 8000);
 
