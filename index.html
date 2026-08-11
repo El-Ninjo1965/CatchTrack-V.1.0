@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CatchTrack v1.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1000px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        .console {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .console-line {
+            padding: 5px 0;
+            word-break: break-all;
+        }
+
+        .console-line.error {
+            color: #ff6b6b;
+        }
+
+        .console-line.success {
+            color: #51cf66;
+        }
+
+        .status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-item strong {
+            color: #333;
+        }
+
+        .status-item.ok {
+            border-left-color: #51cf66;
+        }
+
+        .status-item.error {
+            border-left-color: #ff6b6b;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-badge.ok {
+            background: #d3f9d8;
+            color: #2f9e44;
+        }
+
+        .status-badge.error {
+            background: #ffe0e0;
+            color: #c92a2a;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 CatchTrack</h1>
+            <p>v1.0.0 - Core + Modul-System</p>
+        </div>
+
+        <div class="content">
+            <!-- Status Section -->
+            <div class="section">
+                <h2>📊 System-Status</h2>
+                <div class="status" id="status-container">
+                    <div class="status-item">
+                        <strong>Core</strong>
+                        <span class="status-badge" id="core-status">Prüfung...</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>Module Manager</strong>
+                        <span class="status-badge" id="manager-status">Prüfung...</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>User Module</strong>
+                        <span class="status-badge" id="user-status">Prüfung...</span>
+                    </div>
+                    <div class="status-item">
+                        <strong>Admin Module</strong>
+                        <span class="status-badge" id="admin-status">Prüfung...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Module Section -->
+            <div class="section">
+                <h2>👤 User-Modul</h2>
+                <div class="card">
+                    <h3>Benutzerverwaltung</h3>
+                    <p>Das User-Modul verwaltet Benutzer und Authentifizierung.</p>
+                    <div class="button-group">
+                        <button onclick="testUserModuleAuth()">Test Authentifizierung</button>
+                        <button onclick="testUserModuleList()">Alle Benutzer anzeigen</button>
+                        <button onclick="testUserModuleCreate()">Neuen Benutzer erstellen</button>
+                        <button class="secondary" onclick="clearConsole()">Console löschen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Module Section -->
+            <div class="section">
+                <h2>⚙️ Admin-Modul</h2>
+                <div class="card">
+                    <h3>System-Verwaltung</h3>
+                    <p>Das Admin-Modul bietet Systemstatistiken und Diagnostik.</p>
+                    <div class="button-group">
+                        <button onclick="testAdminStats()">System-Statistiken</button>
+                        <button onclick="testAdminHealthCheck()">Health Check</button>
+                        <button onclick="testAdminErrorLog()">Fehlerprotokoll</button>
+                        <button class="secondary" onclick="clearConsole()">Console löschen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Console Output -->
+            <div class="section">
+                <h2>📝 Ausgabe</h2>
+                <div class="console" id="console">
+                    <div class="console-line">CatchTrack v1.0.0 - Starte...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>CatchTrack v1.0.0 | Ein Projekt zur Modulverwaltung und Systemsteuerung</p>
+        </div>
+    </div>
+
+    <!-- Scripts in der korrekten Reihenfolge -->
+    <script src="Core/core.js"></script>
+    <script src="Core/core-config.js"></script>
+    <script src="Core/core-context.js"></script>
+    <script src="Core/core-state.js"></script>
+    <script src="Core/core-storage.js"></script>
+    <script src="Core/core-event-bus.js"></script>
+    <script src="Core/core-lifecycle.js"></script>
+    <script src="Core/core-runtime.js"></script>
+    <script src="Core/core-error-handler.js"></script>
+    <script src="Core/error-log.js"></script>
+    <script src="Core/core-startup.js"></script>
+    <script src="Core/core-entry.js"></script>
+    <script src="Core/core-loader.js"></script>
+    <script src="Core/module-interface.js"></script>
+    <script src="Core/module-manager.js"></script>
+    <script src="Core/app.js"></script>
+
+    <script>
+        // Hilfsfunktionen für die UI
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            const timestamp = new Date().toLocaleTimeString('de-DE');
+            line.textContent = `[${timestamp}] ${message}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console').innerHTML = '';
+        }
+
+        function updateStatus() {
+            const coreOk = !!window.CatchTrackCore;
+            const managerOk = !!window.CatchTrackModuleManager;
+            const userOk = !!window.CatchTrackUserModule;
+            const adminOk = !!window.CatchTrackAdminModule;
+
+            updateStatusBadge('core-status', coreOk);
+            updateStatusBadge('manager-status', managerOk);
+            updateStatusBadge('user-status', userOk);
+            updateStatusBadge('admin-status', adminOk);
+
+            if (coreOk && managerOk && userOk && adminOk) {
+                log('✅ Alle Systeme OK', 'success');
+            }
+        }
+
+        function updateStatusBadge(id, ok) {
+            const badge = document.getElementById(id);
+            badge.textContent = ok ? '✓ OK' : '✗ Fehler';
+            badge.className = ok ? 'status-badge ok' : 'status-badge error';
+        }
+
+        // User Module Tests
+        function testUserModuleAuth() {
+            if (!window.CatchTrackUserModule) {
+                log('❌ User-Modul nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const user = window.CatchTrackUserModule.authenticate('test-user-001');
+                if (user) {
+                    log(`✓ Authentifiziert als: ${user.name} (${user.role})`, 'success');
+                    log(`Benutzer-ID: ${user.id}`);
+                } else {
+                    log('❌ Authentifizierung fehlgeschlagen', 'error');
+                }
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testUserModuleList() {
+            if (!window.CatchTrackUserModule) {
+                log('❌ User-Modul nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const users = window.CatchTrackUserModule.getAllUsers();
+                log(`✓ ${users.length} Benutzer gefunden:`, 'success');
+                users.forEach(user => {
+                    log(`  - ${user.name} (${user.email}) [${user.role}]`);
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testUserModuleCreate() {
+            if (!window.CatchTrackUserModule) {
+                log('❌ User-Modul nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const newUser = window.CatchTrackUserModule.createUser({
+                    name: 'Test Developer 2',
+                    email: 'dev2@catchtrack.local',
+                    role: 'developer'
+                });
+                log(`✓ Neuer Benutzer erstellt:`, 'success');
+                log(`  Name: ${newUser.name}`);
+                log(`  E-Mail: ${newUser.email}`);
+                log(`  ID: ${newUser.id}`);
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Admin Module Tests
+        function testAdminStats() {
+            if (!window.CatchTrackAdminModule) {
+                log('❌ Admin-Modul nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const stats = window.CatchTrackAdminModule.getSystemStats();
+                log('✓ System-Statistiken:', 'success');
+                log(`  Laufzeit: ${Math.floor(stats.uptime / 1000)}s`);
+                log(`  Geladene Module: ${stats.moduleCount}`);
+                log(`  Fehler: ${stats.errorCount}`);
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testAdminHealthCheck() {
+            if (!window.CatchTrackAdminModule) {
+                log('❌ Admin-Modul nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const health = window.CatchTrackAdminModule.performHealthCheck();
+                log(`✓ Health Check: ${health.healthy ? '✅ Healthy' : '❌ Probleme erkannt'}`, 
+                    health.healthy ? 'success' : 'error');
+                log(`  Core: ${health.coreLoaded ? '✓' : '✗'}`);
+                log(`  Module Manager: ${health.moduleManagerLoaded ? '✓' : '✗'}`);
+                log(`  Events: ${health.eventsWorking ? '✓' : '✗'}`);
+                log(`  Storage: ${health.storageAccessible ? '✓' : '✗'}`);
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        function testAdminErrorLog() {
+            if (!window.CatchTrackAdminModule) {
+                log('❌ Admin-Modul nicht geladen', 'error');
+                return;
+            }
+
+            try {
+                const errors = window.CatchTrackAdminModule.getErrorLog();
+                log(`✓ Fehlerprotokoll: ${errors.length} Einträge`, errors.length > 0 ? 'success' : 'info');
+                errors.slice(-3).forEach(error => {
+                    log(`  [${error.type}] ${error.message}`);
+                });
+            } catch (error) {
+                log(`❌ Fehler: ${error.message}`, 'error');
+            }
+        }
+
+        // Initial Log Entry
+        setTimeout(() => {
+            log('🚀 CatchTrack initialisiert', 'success');
+            updateStatus();
+        }, 1000);
+
+        // Periodisches Status-Update
+        setInterval(updateStatus, 5000);
+    </script>
+</body>
+</html>

@@ -35,17 +35,28 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 |—|—|
 | Root-Struktur | In Aufbau |
 | Core | Abgeschlossen |
-| Admin | Offen |
+| User-Modul | Abgeschlossen |
+| Admin-Modul | Abgeschlossen |
 | Config | Offen |
 | Database | Offen |
-| Modules | Offen |
 | Services | Offen |
 | Tests | Offen |
 | Dokumentation | In Aufbau |
 
 ## Module
 
-Noch kein Modul abgeschlossen.
+### Abgeschlossene Module
+
+| Modul | Version | Status | Dateien |
+|—|—|—|—|
+| User Module | 1.0.0 | ✓ Abgeschlossen | user-module.js, user-interface.js, user-loader.js, README.md |
+| Admin Module | 1.0.0 | ✓ Abgeschlossen | admin-module.js, admin-interface.js, admin-loader.js, README.md |
+
+### Test-Module
+
+| Modul | Status |
+|—|—|
+| test-module.js | ✓ Aktiv |
 
 ## Abschlussdefinition
 

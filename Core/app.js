@@ -24,7 +24,13 @@
             this.registerSystemEvents();
 
             await this.loadModuleScripts([
-                'Modules/test-module.js'
+                'Modules/test-module.js',
+                'Modules/user-module/user-module.js',
+                'Modules/user-module/user-interface.js',
+                'Modules/user-module/user-loader.js',
+                'Modules/admin-module/admin-module.js',
+                'Modules/admin-module/admin-interface.js',
+                'Modules/admin-module/admin-loader.js'
             ]);
 
             this.registerSmokeTestModule();
