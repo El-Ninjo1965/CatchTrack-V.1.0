@@ -55,6 +55,7 @@
                 logout: () => window.CatchTrackUserModule?.logout(),
                 getAllUsers: () => window.CatchTrackUserModule?.getAllUsers(),
                 getUserById: (userId) => window.CatchTrackUserModule?.getUserById(userId),
+                getUserByUsername: (username) => window.CatchTrackUserModule?.getUserByUsername(username),
                 createUser: (userData) => window.CatchTrackUserModule?.createUser(userData),
                 updateUser: (userId, updates) => window.CatchTrackUserModule?.updateUser(userId, updates),
                 deleteUser: (userId) => window.CatchTrackUserModule?.deleteUser(userId),

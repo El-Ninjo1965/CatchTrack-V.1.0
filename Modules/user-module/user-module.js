@@ -1,9 +1,9 @@
 /*
  * CatchTrack User Module
- * Version: 1.0
+ * Version: 1.1.0
  *
- * Verwaltung von Benutzern und Authentifizierung für die CatchTrack-Anwendung.
- * Dieses Modul stellt Benutzerfunktionen bereit und verwaltet Benutzerdaten.
+ * Verwaltung von Benutzern für die CatchTrack-Anwendung.
+ * Vollständige Benutzeridentität inkl. Username, Anzeigename, Avatar und Status.
  */
 
 (() => {
@@ -11,224 +11,178 @@
 
     const UserModule = {
         name: 'user-module',
-        version: '1.0.0',
+        version: '1.1.0',
         initialized: false,
         currentUser: null,
         users: new Map(),
 
-        /**
-         * Initialisiert das User-Modul
-         */
         init() {
-            if (this.initialized) {
-                return;
-            }
-
-            // Testbenutzer hinzufügen
+            if (this.initialized) return;
             this.createTestUsers();
-
             this.initialized = true;
-
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:initialized', {
-                    message: 'User-Modul initialisiert',
                     userCount: this.users.size
                 });
             }
         },
 
-        /**
-         * Erstellt Test-Benutzer für die Entwicklung
-         */
         createTestUsers() {
-            const testUsers = [
+            const now = new Date().toISOString();
+            [
                 {
                     id: 'test-user-001',
-                    name: 'Test Developer',
+                    username: 'devuser',
+                    displayName: 'Dev User',
                     email: 'dev@catchtrack.local',
+                    avatar: null,
                     role: 'developer',
-                    active: true,
-                    createdAt: new Date().toISOString()
+                    status: 'active',
+                    createdAt: now,
+                    lastLoginAt: null
                 },
                 {
                     id: 'test-admin-001',
-                    name: 'Test Administrator',
+                    username: 'admin',
+                    displayName: 'Administrator',
                     email: 'admin@catchtrack.local',
+                    avatar: null,
                     role: 'admin',
-                    active: true,
-                    createdAt: new Date().toISOString()
+                    status: 'active',
+                    createdAt: now,
+                    lastLoginAt: null
                 }
-            ];
-
-            testUsers.forEach(user => {
-                this.users.set(user.id, user);
-            });
+            ].forEach(user => this.users.set(user.id, user));
         },
 
-        /**
-         * Authentifiziert einen Benutzer
-         * @param {string} userId - Benutzer-ID
-         * @returns {object|null} Benutzer-Objekt oder null
-         */
         authenticate(userId) {
             const user = this.users.get(userId);
-            if (user && user.active) {
+            if (user && user.status === 'active') {
+                user.lastLoginAt = new Date().toISOString();
                 this.currentUser = { ...user };
-                
                 if (window.CatchTrackCore) {
                     window.CatchTrackCore.emit('user-module:authenticated', {
                         userId: user.id,
-                        name: user.name,
+                        username: user.username,
                         role: user.role
                     });
                 }
-
                 return this.currentUser;
             }
-
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:auth-failed', {
-                    userId: userId,
+                    userId,
                     timestamp: new Date().toISOString()
                 });
             }
-
             return null;
         },
 
-        /**
-         * Gibt den aktuellen Benutzer zurück
-         * @returns {object|null} Aktueller Benutzer oder null
-         */
         getCurrentUser() {
             return this.currentUser;
         },
 
-        /**
-         * Logout des aktuellen Benutzers
-         */
         logout() {
-            const previousUser = this.currentUser;
+            const prev = this.currentUser;
             this.currentUser = null;
-
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:logout', {
-                    userId: previousUser?.id,
+                    userId: prev?.id,
                     timestamp: new Date().toISOString()
                 });
             }
         },
 
-        /**
-         * Gibt alle Benutzer zurück
-         * @returns {array} Array von Benutzerobjekten
-         */
         getAllUsers() {
             return Array.from(this.users.values());
         },
 
-        /**
-         * Gibt einen Benutzer nach ID zurück
-         * @param {string} userId - Benutzer-ID
-         * @returns {object|undefined} Benutzerobjekt oder undefined
-         */
         getUserById(userId) {
-            return this.users.get(userId);
+            return this.users.get(userId) || null;
         },
 
-        /**
-         * Erstellt einen neuen Benutzer
-         * @param {object} userData - Benutzerdaten
-         * @returns {object} Neu erstelltes Benutzerobjekt
-         */
+        // Suche nach eindeutigem Username (für Leaderboards, Catch-Einträge etc.)
+        getUserByUsername(username) {
+            for (const user of this.users.values()) {
+                if (user.username === username) return { ...user };
+            }
+            return null;
+        },
+
+        isUsernameAvailable(username, excludeId = null) {
+            for (const [id, user] of this.users.entries()) {
+                if (user.username === username && id !== excludeId) return false;
+            }
+            return true;
+        },
+
         createUser(userData) {
-            const userId = `user-${Date.now()}`;
+            if (!userData.username || !userData.username.trim()) {
+                throw new Error('Username ist erforderlich');
+            }
+            const username = userData.username.trim();
+            if (!this.isUsernameAvailable(username)) {
+                throw new Error(`Username "${username}" ist bereits vergeben`);
+            }
+            const userId = `usr-${Date.now()}`;
             const newUser = {
                 id: userId,
-                name: userData.name || 'Unknown',
+                username,
+                displayName: userData.displayName || username,
                 email: userData.email || '',
+                avatar: userData.avatar || null,
                 role: userData.role || 'user',
-                active: true,
-                createdAt: new Date().toISOString()
+                status: 'active',
+                createdAt: new Date().toISOString(),
+                lastLoginAt: null
             };
-
             this.users.set(userId, newUser);
-
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:user-created', {
                     userId: newUser.id,
-                    name: newUser.name
+                    username: newUser.username
                 });
             }
-
-            return newUser;
+            return { ...newUser };
         },
 
-        /**
-         * Aktualisiert einen Benutzer
-         * @param {string} userId - Benutzer-ID
-         * @param {object} updates - Zu aktualisierende Felder
-         * @returns {object|null} Aktualisiertes Benutzerobjekt oder null
-         */
         updateUser(userId, updates) {
             const user = this.users.get(userId);
-            if (!user) {
-                return null;
-            }
-
-            const updatedUser = { ...user, ...updates, id: userId };
-            this.users.set(userId, updatedUser);
-
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('user-module:user-updated', {
-                    userId: userId,
-                    changes: updates
-                });
-            }
-
-            return updatedUser;
-        },
-
-        /**
-         * Löscht einen Benutzer
-         * @param {string} userId - Benutzer-ID
-         * @returns {boolean} Erfolgreich gelöscht
-         */
-        deleteUser(userId) {
-            if (this.users.has(userId)) {
-                this.users.delete(userId);
-
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('user-module:user-deleted', {
-                        userId: userId
-                    });
+            if (!user) return null;
+            if (updates.username && updates.username !== user.username) {
+                if (!this.isUsernameAvailable(updates.username, userId)) {
+                    throw new Error(`Username "${updates.username}" ist bereits vergeben`);
                 }
-
-                return true;
             }
-
-            return false;
+            // id und createdAt sind unveränderlich
+            const { id: _id, createdAt: _ca, ...safeUpdates } = updates;
+            const updated = { ...user, ...safeUpdates };
+            this.users.set(userId, updated);
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit('user-module:user-updated', { userId });
+            }
+            return { ...updated };
         },
 
-        /**
-         * Prüft, ob ein Benutzer eine bestimmte Rolle hat
-         * @param {string} role - Zu prüfende Rolle
-         * @returns {boolean} Hat der aktuelle Benutzer die Rolle
-         */
+        deleteUser(userId) {
+            if (!this.users.has(userId)) return false;
+            this.users.delete(userId);
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit('user-module:user-deleted', { userId });
+            }
+            return true;
+        },
+
         hasRole(role) {
             return this.currentUser?.role === role;
         },
 
-        /**
-         * Prüft, ob ein Benutzer Admin ist
-         * @returns {boolean} Ist der aktuelle Benutzer ein Admin
-         */
         isAdmin() {
             return this.hasRole('admin');
         }
     };
 
     if (!window.CatchTrackUserModule) {
-        window.CatchTrackUserModule = Object.freeze(UserModule);
+        window.CatchTrackUserModule = UserModule;
     }
 })();

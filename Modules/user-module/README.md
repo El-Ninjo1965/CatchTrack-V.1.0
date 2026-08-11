@@ -1,13 +1,114 @@
 # CatchTrack User Module
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Status:** ✓ Abgeschlossen  
 **Rolle:** Benutzerverwaltung und Authentifizierung  
 **Letzte Aktualisierung:** 2026-08-11
 
 ## Zweck
 
-Das User-Modul verwaltet Benutzer und Authentifizierung in der CatchTrack-Anwendung. Es stellt die Grundlagen für die Benutzeridentifizierung und Rollenverwaltung bereit.
+Das User-Modul verwaltet Benutzer in der CatchTrack-Anwendung. Es stellt vollständige Benutzeridentitäten bereit – mit eindeutigem Username, Anzeigenamen, Avatar-Referenz, Status und Login-Tracking.
+
+## Benutzerdatenstruktur
+
+```javascript
+{
+    id: string,           // Eindeutige Benutzer-ID
+    username: string,     // Eindeutiger Username (für Catches, Leaderboards, Community)
+    displayName: string,  // Anzeigename in der UI
+    email: string,        // E-Mail-Adresse
+    avatar: string|null,  // URL/Referenz auf Profilbild (null = kein Avatar)
+    role: string,         // Rolle: 'user' | 'admin' | 'developer'
+    status: string,       // Status: 'active' | 'inactive' | 'banned'
+    createdAt: string,    // ISO-Zeitstempel der Erstellung
+    lastLoginAt: string|null  // ISO-Zeitstempel des letzten Logins
+}
+```
+
+## Testbenutzer
+
+Das Modul erstellt automatisch zwei Test-Benutzer:
+
+| ID | Username | Anzeigename | E-Mail | Rolle |
+|---|---|---|---|---|
+| `test-user-001` | `devuser` | Dev User | dev@catchtrack.local | developer |
+| `test-admin-001` | `admin` | Administrator | admin@catchtrack.local | admin |
+
+## API
+
+### `authenticate(userId)`
+Authentifiziert einen Benutzer. Setzt `lastLoginAt` auf den aktuellen Zeitstempel.
+
+```javascript
+const user = CatchTrackUserModule.authenticate('test-user-001');
+```
+
+### `getCurrentUser()`
+Gibt den aktuell eingeloggten Benutzer zurück.
+
+### `logout()`
+Meldet den aktuellen Benutzer ab.
+
+### `getAllUsers()`
+Gibt alle Benutzer als Array zurück.
+
+### `getUserById(userId)`
+Gibt einen Benutzer nach ID zurück (oder `null`).
+
+### `getUserByUsername(username)`
+Gibt einen Benutzer nach eindeutigem Username zurück (oder `null`).
+
+```javascript
+const user = CatchTrackUserModule.getUserByUsername('devuser');
+```
+
+### `createUser(userData)`
+Erstellt einen neuen Benutzer. `username` ist Pflichtfeld und muss eindeutig sein.
+
+```javascript
+const newUser = CatchTrackUserModule.createUser({
+    username: 'janedoe',
+    displayName: 'Jane Doe',
+    email: 'jane@catchtrack.local',
+    role: 'user'
+});
+```
+
+Wirft einen Fehler wenn `username` fehlt oder bereits vergeben ist.
+
+### `updateUser(userId, updates)`
+Aktualisiert Felder eines Benutzers. `id` und `createdAt` sind schreibgeschützt. Bei Username-Änderung wird Eindeutigkeit geprüft.
+
+### `deleteUser(userId)`
+Löscht einen Benutzer. Gibt `true` zurück bei Erfolg.
+
+### `hasRole(role)`
+Prüft die Rolle des eingeloggten Benutzers.
+
+### `isAdmin()`
+Shortcut für `hasRole('admin')`.
+
+## Events
+
+| Event | Auslöser |
+|---|---|
+| `user-module:initialized` | Modul geladen |
+| `user-module:authenticated` | Login erfolgreich |
+| `user-module:auth-failed` | Login fehlgeschlagen |
+| `user-module:logout` | Abmeldung |
+| `user-module:user-created` | Neuer Benutzer erstellt |
+| `user-module:user-updated` | Benutzer aktualisiert |
+| `user-module:user-deleted` | Benutzer gelöscht |
+
+## Dateistruktur
+
+```
+Modules/user-module/
+├── user-module.js      # Hauptmodul mit Datenstruktur und Logik
+├── user-interface.js   # Modulschnittstelle (öffentliche API)
+├── user-loader.js      # Registrierung und Aktivierung im Core
+└── README.md           # Diese Datei
+```
 
 ## Funktionen
 

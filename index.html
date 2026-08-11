@@ -398,8 +398,8 @@
             try {
                 const user = window.CatchTrackUserModule.authenticate('test-user-001');
                 if (user) {
-                    log(`✓ Authentifiziert als: ${user.name} (${user.role})`, 'success');
-                    log(`Benutzer-ID: ${user.id}`);
+                    log(`✓ Authentifiziert als: ${user.displayName} (@${user.username}) [${user.role}]`, 'success');
+                    log(`ID: ${user.id} | Letzter Login: ${user.lastLoginAt}`);
                 } else {
                     log('❌ Authentifizierung fehlgeschlagen', 'error');
                 }
@@ -418,7 +418,7 @@
                 const users = window.CatchTrackUserModule.getAllUsers();
                 log(`✓ ${users.length} Benutzer gefunden:`, 'success');
                 users.forEach(user => {
-                    log(`  - ${user.name} (${user.email}) [${user.role}]`);
+                    log(`  - @${user.username} | ${user.displayName} | ${user.email} [${user.role}] (${user.status})`);
                 });
             } catch (error) {
                 log(`❌ Fehler: ${error.message}`, 'error');
@@ -433,12 +433,14 @@
 
             try {
                 const newUser = window.CatchTrackUserModule.createUser({
-                    name: 'Test Developer 2',
+                    username: 'devuser2',
+                    displayName: 'Test Developer 2',
                     email: 'dev2@catchtrack.local',
                     role: 'developer'
                 });
                 log(`✓ Neuer Benutzer erstellt:`, 'success');
-                log(`  Name: ${newUser.name}`);
+                log(`  Username: @${newUser.username}`);
+                log(`  Anzeigename: ${newUser.displayName}`);
                 log(`  E-Mail: ${newUser.email}`);
                 log(`  ID: ${newUser.id}`);
             } catch (error) {
