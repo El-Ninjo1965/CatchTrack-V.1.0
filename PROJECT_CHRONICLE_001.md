@@ -29,10 +29,19 @@ Der bisherige `ai-info`-Ordner wurde als Altbestand verworfen.
 
 Die neue AI-/Projektsteuerung wird direkt im Root-Verzeichnis abgelegt.
 
+### CT-0002
+**Status:** Abgeschlossen
+
+Der Core wurde auf ein schlankes Grundgerüst reduziert und auf 18 notwendige Dateien beschränkt.
+
+Duplikate, überflüssige Wrapper und doppelte API-Strukturen wurden entfernt.
+
+Die verbleibenden Core-Dateien sind syntaktisch geprüft und das Ergebnis auf `main` gepusht.
+
 ## Chronikstatus
 
 **Datei:** PROJECT_CHRONICLE_001.md  
-**Einträge:** 1  
+**Einträge:** 2  
 **Nächste Datei:** Noch nicht erforderlich
 
 —

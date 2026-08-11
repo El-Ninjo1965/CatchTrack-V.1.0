@@ -34,7 +34,7 @@ Hauptstruktur
 | Bereich | Status |
 |—|—|
 | Root | In Aufbau |
-| Core | Offen |
+| Core | Abgeschlossen |
 | Config | Offen |
 | Database | Offen |
 | Modules | Offen |

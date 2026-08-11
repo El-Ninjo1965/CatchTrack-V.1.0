@@ -26,15 +26,15 @@ Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
 | 05 | PROJECT_CHRONICLE_001.md | Erstellt |
 | 06 | PROJECT_MASTERLIST.md | Erstellt |
 
-**GitHub-Status:** Noch nicht bestätigt  
-**Teststatus:** Noch nicht abgeschlossen
+**GitHub-Status:** Bestätigt  
+**Teststatus:** Syntax geprüft
 
 ## Projektstruktur
 
 | Bereich | Status |
 |—|—|
 | Root-Struktur | In Aufbau |
-| Core | Offen |
+| Core | Abgeschlossen |
 | Admin | Offen |
 | Config | Offen |
 | Database | Offen |
