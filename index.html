@@ -1359,32 +1359,6 @@
           </div>
         </div>
 
-        <!-- Test / Simulation -->
-        <div class="section-label mt-22">Test – Simulierte Position</div>
-        <div class="card mt-6">
-          <div class="card-head">🧪 Testposition</div>
-          <div class="card-body">
-            <p style="font-size:0.82rem;color:var(--c-text-muted);margin-bottom:12px;line-height:1.55">
-              Setzt eine simulierte GPS-Position für Tests ohne reale Hardware. Der produktive Geolocation-Datenfluss wird nicht verändert.
-            </p>
-            <div class="gps-sim-form">
-              <div class="gps-sim-field">
-                <label>Latitude</label>
-                <input type="number" id="gps-sim-lat" value="50.938" step="0.001">
-              </div>
-              <div class="gps-sim-field">
-                <label>Longitude</label>
-                <input type="number" id="gps-sim-lon" value="6.960" step="0.001">
-              </div>
-              <div class="gps-sim-field">
-                <label>Name</label>
-                <input type="text" id="gps-sim-name" value="Köln">
-              </div>
-              <button class="gps-btn" onclick="CTApp.gpsSetSimulated()">Simulieren</button>
-              <button class="gps-btn red" onclick="CTApp.gpsClearSimulated()">Löschen</button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ===== Statistiken ===== -->
@@ -1933,19 +1907,6 @@ const CTApp = {
     const gsl = document.querySelectorAll('#view-gps .section-label');
     if (gsl[0]) gsl[0].textContent = t('gps.pos_data');
     if (gsl[1]) gsl[1].textContent = t('gps.mod_status');
-    if (gsl[2]) gsl[2].textContent = t('gps.test_title');
-    // sim field labels
-    const sfl = document.querySelectorAll('#view-gps .gps-sim-field label');
-    if (sfl[0]) sfl[0].textContent = t('gps.f_lat');
-    if (sfl[1]) sfl[1].textContent = t('gps.f_lon');
-    if (sfl[2]) sfl[2].textContent = t('gps.f_name');
-    // sim buttons
-    const sbtns = document.querySelectorAll('#view-gps .gps-sim-form .gps-btn');
-    if (sbtns[0]) sbtns[0].textContent = t('gps.sim_btn');
-    if (sbtns[1]) sbtns[1].textContent = t('gps.sim_clear');
-    // test description
-    const tdesc = document.querySelector('#view-gps .gps-sim-form').previousElementSibling;
-    if (tdesc && tdesc.tagName === 'P') tdesc.textContent = t('gps.test_desc');
   },
 
   _renderSettingsView() {
