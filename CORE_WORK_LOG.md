@@ -244,3 +244,177 @@ Die folgenden Bereiche wurden im Rahmen dieses Auftrags nicht verändert:
 ## 14. Abschluss
 
 Das Protokoll dokumentiert die tatsächlich durchgeführten Arbeiten und den realen Repository-Zustand des Core-Refactors. Es schließt keine zukünftigen Arbeits- oder Fortsetzungsanweisungen ein und ersetzt nicht [STATE.md](STATE.md).
+
+## 15. Aktueller Core-Korrekturauftrag (2026-08-12)
+
+### 15.1 Vorheriger Core-Stand
+
+- Commit: 8de56b2
+- Commit-Nachricht: refactor: clean up core architecture
+- Repository-Zustand vor diesem Korrekturauftrag: Core-Refactor war vorhanden, aber die Lifecycle-Validierung, der Modulvertrag und die Shutdown-Logik waren noch nicht vollständig mit dem im Auftrag geforderten Core-Vertrag konsistent.
+
+### 15.2 Korrektur Lifecycle
+
+- Geänderte Datei: [Core/core-lifecycle.js](Core/core-lifecycle.js)
+- Problem: Die vorhandene Implementierung prüfte nur, ob ein übergebener Wert ein gültiger Phase-Wert war. Es gab keine Übergangsprüfung. Dadurch war ein ungültiger Ablauf wie `stopped -> running` oder ähnliche nicht wiederkehrende Zustände technisch möglich, obwohl die Zielarchitektur eine kontrollierte Laufzeitfolge verlangt.
+- Vorher mögliche Übergänge: jede gültige Phase konnte ohne Zustandslogik gesetzt werden; es gab nur eine Wertvalidierung, nicht die Validierung der erlaubten Folge.
+- Jetzt erlaubte Übergänge:
+  - created -> initializing
+  - initializing -> ready
+  - ready -> running
+  - running -> stopped
+  - stopped -> keine weitere Übergänge
+- Behandlung ungültiger Übergänge: `setPhase()` wirft einen Fehler mit der Meldung `Invalid lifecycle transition: <previous> -> <next>`. Der Verlauf bleibt unverändert, wenn derselbe Zustand erneut gesetzt wird.
+- Prüfungen: `node --check Core/core-lifecycle.js` und ein Laufzeitcheck via `node` mit `vm.runInNewContext(...)` für die gültigen Zustandsfolgen sowie den erwarteten Fehler bei einem ungültigen Restart nach `stopped`.
+
+### 15.3 Korrektur Module Interface
+
+- Bisheriger Modulvertrag: [Core/module-interface.js](Core/module-interface.js) hatte lediglich `id`, `name`, `version`, `description`, `active` und die Methoden `activate()`/`deactivate()`. Der Vertrag war zu eng und deckte den Modul-Lifecycle nicht vollständig ab.
+- Festgestelltes Problem: Die Module- und Core-Logik benötigte `install`, `initialize`, `enable`, `disable`, `update` und `uninstall`, aber der alte Vertrag bot dafür keine konsistente Status- und Lifecycle-Struktur. Das führte dazu, dass Status und aktive Zustände nicht auf einem konsistenten Modell lagen.
+- Neuer Modulvertrag: jede Module-Instanz besitzt nun zusätzlich:
+  - `status` mit dem Status-Set `available`, `installed`, `enabled`, `disabled`
+  - `dependencies`, `permissions`, `capabilities`
+  - `install()`, `initialize()`, `enable()`, `disable()`, `update()`, `uninstall()`
+  - `activate()` und `deactivate()` als kompatible Wrapper auf `enable()` und `disable()`
+- Unterstützte Lifecycle-Operationen:
+  - install
+  - initialize
+  - enable
+  - disable
+  - update
+  - uninstall
+- Auswirkungen auf bestehende Referenzen: vorhandene `activate()`/`deactivate()`-Aufrufe bleiben kompatibel, aber die systematische Status-Logik wird nun über `status` und `active` gesteuert. Die Implementierung hält `active` als booleschen Kompatibilitätswert, ohne die Statuslogik daran zu binden.
+
+### 15.4 Korrektur Module Manager
+
+- Geänderte Datei: [Core/module-manager.js](Core/module-manager.js)
+- Durchgeführte Änderungen:
+  - `normalizeModule()` ergänzt verlässliche Standardwerte für `status` und `active`
+  - `getStatus()` liefert den tatsächlichen Modulstatus
+  - `install()`, `initialize()`, `enable()`, `disable()`, `update()`, `uninstall()` ergänzt und an den neuen Modulvertrag angepasst
+  - `activate()`/`deactivate()` als kompatible Delegationsmethoden beibehalten
+  - `status` und `active` werden bei Aktivierung/Deaktivierung konsistent gesetzt, bevor das Modul selbst entsprechend aufgerufen wird
+- Verantwortlichkeiten des Managers:
+  - technische Registerverwaltung bleibt in der Registry
+  - Manager koordiniert Modul-Lifecycle, Aktivierung und Deaktivierung
+  - Manager hält die Verbindung zur zentralen Core-Event-Emission und zum aktiven Modul-Status
+- Abgrenzung zur Module Registry:
+  - [Core/module-registry.js](Core/module-registry.js) verwaltet nur das technische `Map`-Register und die technischen CRUD-Operationen.
+  - Der Manager ist die Lifecycle- und Orchestrations-Schicht, nicht die technische Speicherinstanz.
+- Abgrenzung zum Core:
+  - [Core/core.js](Core/core.js) bleibt schlank und hält keine Modul-Logik.
+  - Der Manager übernimmt die Zustandskoordination, ohne dass die Core-Fassade als Modulverwaltung dient.
+- Anpassungen an den neuen Modulvertrag: alle Methoden nutzen die in [Core/module-interface.js](Core/module-interface.js) eingeführten Statuswerte und die kompatiblen Methoden, ohne den Modulkontrakt zu verlassen.
+
+### 15.5 Korrektur Shutdown
+
+- Geänderte Datei: [Core/core-shutdown.js](Core/core-shutdown.js)
+- Vorheriges Problem: Shutdown prüfte nur `module.active`. Der alte Ansatz war unzuverlässig, weil der Modulstatus nicht sauber im neuen Vertrag abgebildet war und aktivierte Module nicht immer als `enabled` erkennbar waren.
+- Neue Statusprüfung: `module.status === 'enabled' || module.active === true`
+- Verhalten beim Deaktivieren von Modulen:
+  - alle Module werden in `modulesToDisable` gesammelt
+  - nur Module mit aktivem oder enabled Status werden deaktiviert
+  - für jedes passende Modul wird `CatchTrackModuleManager.disable(module.id)` aufgerufen
+  - Fehler einzelner Module werden pro Modul abgefangen und über [Core/core-error-handler.js](Core/core-error-handler.js) behandelt
+- Fehlerbehandlung während des Shutdowns: `try/catch` rundet jede Modul-Deaktivierung ab und schreibt Fehlersituationen in den zentralen Fehlersystempfad. Der gesamte Shutdown-Prozess bricht dadurch bei einem einzelnen Modul-Fehler nicht vollständig ab.
+- Reihenfolge des Shutdowns:
+  1. Module deaktivieren
+  2. Lifecycle-Status auf `stopped` setzen, wenn noch nicht bereits gestoppt
+  3. `core:stopped`-Event auslösen
+  4. `stopped`-Flag setzen, um wiederholte Aufrufe zu verhindern
+
+### 15.6 Referenzprüfung
+
+Tatsächlich geprüfte Referenzen und Fundstellen:
+
+- `activate`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: kompatibel erhalten und über `enable()` erreichbar
+- `deactivate`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: kompatibel erhalten und über `disable()` erreichbar
+- `active`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js), [Core/core-shutdown.js](Core/core-shutdown.js); Ergebnis: weiterhin als Kompatibilitätswert beibehalten, aber nicht mehr als alleinige Zustandsquelle verwendet
+- `install`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: implementiert und mit Statusmanagement verbunden
+- `initialize`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: implementiert und mit Statusmanagement verbunden
+- `enable`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: implementiert und setzt `status` auf `enabled`
+- `disable`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: implementiert und setzt `status` auf `disabled`
+- `update`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: implementiert als Modul-Lifecycle-Operation
+- `uninstall`: [Core/module-interface.js](Core/module-interface.js), [Core/module-manager.js](Core/module-manager.js); Ergebnis: implementiert und zurück zur verfügbaren/technisch neutralen State-Variante
+
+Zusätzlich geprüft wurden die Zustandsreferenzen in [Core/core-shutdown.js](Core/core-shutdown.js) und [Core/core-lifecycle.js](Core/core-lifecycle.js). Ergebnis: die Core-Logik verwendet nun den neuen Status-Vertrag und keine rein aktive- bzw. alte `activate`-Basissicht mehr als alleinige Quelle.
+
+### 15.7 Geänderte Dateien
+
+A. Geänderte Dateien
+- [Core/core-lifecycle.js](Core/core-lifecycle.js)
+- [Core/core-shutdown.js](Core/core-shutdown.js)
+- [Core/module-interface.js](Core/module-interface.js)
+- [Core/module-manager.js](Core/module-manager.js)
+- [CORE_WORK_LOG.md](CORE_WORK_LOG.md)
+
+B. Neue Dateien
+Keine.
+
+C. Gelöschte Dateien
+Keine.
+
+D. Verschobene oder umbenannte Dateien
+Keine.
+
+### 15.8 Validierung
+
+| Prüfung | Befehl / Methode | Ergebnis | Status |
+|---|---|---|---|
+| JavaScript-Syntax | `node --check Core/core-lifecycle.js && node --check Core/module-interface.js && node --check Core/module-manager.js && node --check Core/core-shutdown.js` | Syntaxprüfung der betroffenen Dateien erfolgreich | bestanden |
+| Lifecycle | `node`-Script mit `vm.runInNewContext(...)` und gültigen Zustandsübergängen `created -> initializing -> ready -> running -> stopped` sowie dem erwarteten Fehler bei `stopped -> running` | Übergangslogik validiert | bestanden |
+| Module Interface | `node`-Script mit `ModuleInterface.create(...)` | `status`, `install()`, `initialize()`, `enable()`, `disable()`, `update()`, `uninstall()`, `activate()`/`deactivate()` korrekt im Verhalten | bestanden |
+| Module Manager | `node`-Script mit `CatchTrackModuleManager.register()`, `install()`, `initialize()`, `enable()`, `disable()` | Statuswechsel und Manager-Semantik korrekt | bestanden |
+| Shutdown | `node`-Script mit `CatchTrackCoreShutdown.stop()` und aktivem Modulstatus | Lifecycle wurde auf `stopped` gesetzt und Module wurden deaktiviert | bestanden |
+| Abhängigkeiten | grep über `activate`, `deactivate`, `active`, `install`, `initialize`, `enable`, `disable`, `update`, `uninstall` in Core-Dateien | eindeutige, konsistente Referenzen und keine widersprüchlichen alten Semantiken | bestanden |
+| Referenzen | `grep_search` in den Core-Dateien | konkrete Referenzen in den betroffenen Dateien gefunden und geprüft | bestanden |
+
+### 15.9 Offene Probleme
+
+Keine bekannten offenen Probleme.
+
+### 15.10 Nicht geänderte Bereiche
+
+Ausdrücklich nicht geändert wurden:
+
+- Fachmodule
+- UI
+- User-Menü
+- [Core/app.js](Core/app.js) wurde nicht fachlich erweitert; nur die Core-Architektur blieb im Fokus.
+- [Core/core.js](Core/core.js) wurde nicht als Modulmanager genutzt; die Core-Fassade blieb schlank.
+- [Modules/admin-module/admin-module.js](Modules/admin-module/admin-module.js)
+- [Modules/gps-module/gps-module.js](Modules/gps-module/gps-module.js)
+- [Modules/weather-module/weather-module.js](Modules/weather-module/weather-module.js)
+- [Modules/i18n-module/i18n-module.js](Modules/i18n-module/i18n-module.js)
+- [Modules/user-module/user-module.js](Modules/user-module/user-module.js)
+- [STATE.md](STATE.md)
+- [RULES.md](RULES.md)
+- [WORKFLOW.md](WORKFLOW.md)
+- [PROJECT.md](PROJECT.md)
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [CORE_TARGET_STRUCTURE.md](CORE_TARGET_STRUCTURE.md)
+- [CORE_INVENTORY.md](CORE_INVENTORY.md)
+
+### 15.11 Git
+
+- Branch: main
+- Vorheriger Core-Commit: 8de56b2 (`refactor: clean up core architecture`)
+- Neuer Commit: f80b53d
+- Commit-Nachricht: `fix: align core lifecycle and module contract`
+- Push-Status: erfolgreich, auf origin/main aktualisiert
+- Ergebnis von `git status`: leer, keine uncommitteten Änderungen
+- Verbleibende uncommittete Änderungen: keine
+- Verbleibende untracked Dateien: keine
+
+### 15.12 Abschlussbewertung
+
+- ERFÜLLT: Lifecycle-Übergänge sind nun validiert und auf die Zielarchitektur ausgerichtet.
+- ERFÜLLT: Modulvertrag erweitert und konsistent mit Install/Initialize/Enable/Disable/Update/Uninstall umgesetzt.
+- ERFÜLLT: Module Manager ordnet die Lebenszyklen und Statuswechsel korrekt dem neuen Vertrag zu.
+- ERFÜLLT: Shutdown verwendet nun den Modulstatus als relevante Entscheidungsgrundlage statt nur `module.active`.
+- OFFEN: die eigentliche Core-Freeze-Entscheidung bleibt unabhängig von diesem Protokoll und wird nicht durch den Agenten selbst erklärt.
+- NICHT GEPRÜFT: komplette Browser-/UI-End-to-End-Prüfung und ein externer Freeze-Abnahmeprozess.
+
+## 16. Abschluss des aktuellen Korrekturauftrags
+
+Das Protokoll dokumentiert ausschließlich die tatsächlich durchgeführten Änderungen dieses Core-Korrekturauftrags. Es enthält keine Arbeitscursor-, Führungs- oder nächsten-Schritt-Anweisungen, sondern nur die real durchgeführten Korrekturen, Prüfungen und Zustände.
