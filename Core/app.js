@@ -9,6 +9,8 @@
 (() => {
     'use strict';
 
+    let systemEventsRegistered = false;
+
     const App = {
         version: '1.0.0',
 
@@ -29,9 +31,11 @@
         },
 
         registerSystemEvents() {
-            if (!window.CatchTrackCore) {
+            if (systemEventsRegistered || !window.CatchTrackCore) {
                 return;
             }
+
+            systemEventsRegistered = true;
 
             window.CatchTrackCore.on('module:registered', (event) => {
                 console.info(`[CatchTrack] Module registered: ${event.id}`);

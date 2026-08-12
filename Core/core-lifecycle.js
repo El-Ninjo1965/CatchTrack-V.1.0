@@ -22,7 +22,7 @@
         [phases.INITIALIZING]: [phases.READY],
         [phases.READY]: [phases.RUNNING],
         [phases.RUNNING]: [phases.STOPPED],
-        [phases.STOPPED]: []
+        [phases.STOPPED]: [phases.INITIALIZING]
     });
 
     let currentPhase = phases.CREATED;

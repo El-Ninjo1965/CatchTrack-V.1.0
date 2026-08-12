@@ -11,6 +11,10 @@
     let stopped = false;
 
     const CoreShutdown = {
+        reset() {
+            stopped = false;
+        },
+
         stop() {
             if (stopped) {
                 return;
@@ -56,6 +60,10 @@
                 window.CatchTrackCoreLifecycle.setPhase(
                     window.CatchTrackCoreLifecycle.phases.STOPPED
                 );
+            }
+
+            if (window.CatchTrackCoreStartup && typeof window.CatchTrackCoreStartup.reset === 'function') {
+                window.CatchTrackCoreStartup.reset();
             }
 
             if (window.CatchTrackCore && typeof window.CatchTrackCore.emit === 'function') {

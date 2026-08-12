@@ -218,6 +218,69 @@ Nach der Aktualisierung von [CORE_WORK_LOG.md](CORE_WORK_LOG.md) wurde geprüft:
 - Branch: main
 - Tatsächlich belegte Phase-1-Commit: 8de56b2
 - Tatsächlich belegte Phase-2-Commit: f80b53d
+
+## 15. Lifecycle-Restart-Korrektur (dieser Auftrag)
+
+### Problem
+
+Der Core konnte nach einem erfolgreichen Start und Stop nicht erneut gestartet werden. Der Ablauf war:
+
+- START
+- READY
+- RUNNING
+- STOP
+- STOPPED
+- erneuter START
+- Fehler
+
+### Ursache
+
+Die Start-Guard-Variable in [Core/core-startup.js](Core/core-startup.js) blieb nach dem erfolgreichen Start auf `true` stehen und wurde beim Stop nicht zurückgesetzt. Dadurch beendete `CoreStartup.start()` sofort mit `return`, obwohl der Core bereits gestoppt war. Anschließend versuchte `CoreRuntime.start()` den Lifecycle-Übergang von `stopped -> running`, der in [Core/core-lifecycle.js](Core/core-lifecycle.js) als ungültig definiert war.
+
+### Betroffene Dateien
+
+- [Core/core-startup.js](Core/core-startup.js)
+- [Core/core-lifecycle.js](Core/core-lifecycle.js)
+- [Core/core-shutdown.js](Core/core-shutdown.js)
+- [Core/app.js](Core/app.js)
+
+### Vorgenommene Änderung
+
+- Start-Guard in [Core/core-startup.js](Core/core-startup.js) nach einem Startvorgang nur noch über eine sichere Reset-Logik weitergeführt.
+- `started` wird bei einem Fehler des Starts wieder zurückgesetzt, damit kein blockierter Zustand bleibt.
+- In [Core/core-shutdown.js](Core/core-shutdown.js) wird der Start-Status nach dem erfolgreichen Stop zurückgesetzt.
+- In [Core/core-lifecycle.js](Core/core-lifecycle.js) wurde der Übergang `stopped -> initializing` als gültig zugelassen, damit ein erneuter Start nach STOPPED korrekt in `READY -> RUNNING` laufen kann.
+- In [Core/app.js](Core/app.js) wurde die einmalige Registrierung der System-Event-Listener mit einer kleinen Schutzvariable ergänzt, sodass `App.start()` mehrfach aufgerufen werden kann, ohne die Listener unkontrolliert zu vervielfachen.
+
+### Durchgeführte Tests
+
+1. Reproduktion des Fehlers mit einem minimalen Node-Script: `START -> STOP -> START` führte vor der Änderung zu `Invalid lifecycle transition: stopped -> running`.
+2. Validierung des normalen Startpfads: `START` muss in `READY -> RUNNING` enden.
+3. Validierung des Mehrfachstarts: `START -> START` darf keinen Fehler erzeugen.
+4. Validierung des vollständigen Restartpfads: `START -> STOP -> START` muss ohne Fehler in `RUNNING -> STOPPED -> READY -> RUNNING` laufen.
+5. Validierung des mehrfachen Stop/Restart-Pfads: `START -> STOP -> START -> STOP` darf keinen Fehler erzeugen.
+6. Validierung der App-Mehrfachstarts: `App.start()` mehrfach aufrufen darf keine doppelten `module:registered`, `module:activated` und `module:deactivated` Listener verursachen.
+7. Syntaxprüfung der geänderten JavaScript-Dateien mit Node-Parsing.
+
+### Testergebnisse
+
+- Restartfehler reproduziert: JA
+- Ursache isoliert und behoben: JA
+- `START` korrekt nach `READY -> RUNNING`: JA
+- `START -> START` ohne Fehler: JA
+- `START -> STOP` in `RUNNING -> STOPPED`: JA
+- `START -> STOP -> START` ohne Fehler: JA
+- `START -> STOP -> START -> STOP` ohne Fehler: JA
+- Mehrfachstart der App ohne doppelte Listener: JA
+- Syntaxprüfung ohne Fehler: JA
+
+### Ergebnis des Restart-Tests
+
+Der Restart-Test wurde erfolgreich bestanden: Der Core unterstützt jetzt den Ablauf
+
+`START -> READY -> RUNNING -> STOP -> STOPPED -> START -> READY -> RUNNING`
+
+ohne Fehler.
 - Commit-Nachricht Phase 2: fix: align core lifecycle and module contract
 - Der aktuelle Repository-Stand wurde mit Git geprüft; der Code-Stand entspricht den dokumentierten Commits.
 - Das Protokoll beschreibt ausschließlich bereits durchgeführte Arbeiten und enthält keine zukünftige Handlungsanweisung.
