@@ -416,21 +416,6 @@ NOT STARTED
 CORE-FREEZE:
 NOT ALLOWED
 
-## Nächster Arbeitsschritt
+Die weitere Arbeitssteuerung erfolgt ausschließlich über `STATE.md`.
 
-CORE-TARGET-STRUCTURE
-
-Erstellung der endgültigen Zielstruktur des Core einschließlich:
-
-- Dateiliste
-- Verantwortlichkeiten
-- Abhängigkeiten
-- Lade-/Startreihenfolge
-- Module-Grenze
-- Infrastruktur-Grenzen
-
-Erst danach beginnt die eigentliche Core-Bereinigung.
-
-## Fortsetzungsschlüssel
-
-CORE-TARGET-STRUCTURE
+Die Datei enthält keine eigene Arbeitscursor- oder Fortsetzungsdefinition.
