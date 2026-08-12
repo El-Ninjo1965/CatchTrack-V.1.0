@@ -1,150 +1,257 @@
-# CatchTrack – Project Status
+CatchTrack V1.0 – Project Status
 
-## Projekt
+1. Statusprinzip
 
-**Name:** CatchTrack  
-**Version:** V1.0  
-**Status:** Neuaufbau  
-**Branch:** main
+Diese Datei beschreibt den verbindlich bestätigten Projektstatus.
 
-## Aktueller Stand
+Sie ist kein laufendes Entwicklungsprotokoll.
 
-Das Projekt wird von Grund auf neu aufgebaut.
+Der laufende Fortschritt wird in:
 
-Der bisherige `ai-info`-Ordner und dessen Dateien gehören nicht zur neuen Projektgrundlage.
+PROJECT_CHRONICLE_001.md
 
-Die neue AI-/Projektsteuerung liegt direkt im Root-Verzeichnis.
+dokumentiert.
 
-## Grundlagendateien
+Diese Datei darf nicht von AI-Agenten eigenständig aktualisiert werden.
 
-| Nr. | Datei | Status |
-|—:|—|—|
-| 01 | VISION.md | ✓ Erstellt |
-| 02 | RULES.md | ✓ Erstellt |
-| 03 | WORKFLOW.md | ✓ Erstellt |
-| 04 | PROJECT_STATUS.md | ✓ Erstellt |
-| 05 | PROJECT_CHRONICLE_001.md | ✓ Erstellt |
-| 06 | PROJECT_MASTERLIST.md | ✓ Erstellt |
+⸻
 
-**GitHub-Status:** ✓ Bestätigt  
-**Validierungsstatus:** ✓ Syntax geprüft
-**Letzte Aktualisierung:** 2026-08-11
+2. Aktueller Gesamtstatus
 
-## Letzte Änderungen
+PROJECT STATUS: RESTRUCTURING
 
-| Datum | Komponente | Änderung |
-|---|---|---|
-| 2026-08-12 | User/Admin/Weather Fix | `index.html`, `user-module.js`, `weather-module.js`: Auto-Authentifizierung wiederhergestellt (Fallback auf aktiven Demo-User), Admin-Bereich in der App wieder sichtbar (rollenbasiert), Wetter-Hourly-Index und Zeitdarstellung auf Provider-/Standortzeit korrigiert |
-| 2026-08-11 | Weather/GPS UX | `index.html`: Auto-Retry für GPS in der Wetteransicht (30s), nur bei Permission `granted`, Stop bei gültiger Position oder View-Wechsel |
-| 2026-08-11 | App-Startup / i18n | `index.html`: Start wartet wieder auf Core + User + i18n; verhindert Rohanzeige von Übersetzungs-Keys und zeigt fehlende Komponenten im Timeout klar an |
-| 2026-08-11 | Weather Module / Startup | `weather-module.js`: Nullish-Coalescing (`??`) entfernt, um Parse-Abbruch auf älteren Browsern zu verhindern und Loader-Hänger zu beheben |
-| 2026-08-11 | App-Startup | `index.html`: Loader-Hänger behoben; App-Shell wird bei Core-Verfügbarkeit/Timeout zuverlässig eingeblendet, auch bei verzögertem User-Modul |
-| 2026-08-11 | Weather/GPS Integration | `index.html`: Wetter lädt jetzt automatisch erst die aktuelle GPS-Position (wenn verfügbar), übernimmt Standort + Ortsnamen und erzwingt Refresh bei Standortwechsel |
-| 2026-08-11 | i18n Module | v1.0.0: Multilanguage DE/EN, navigator.language, manuell wählbar, Sprachauswahl in Einstellungen |
-| 2026-08-11 | GPS Module | v1.0.0: vollständiges GPS-Modul (Browser Geolocation, Provider-unabhängige Schnittstelle) |
-| 2026-08-11 | Weather Module | v1.0.0: vollständiges Wetter-Modul (Open-Meteo, Provider-Abstraktion, Offline-Handling) |
-| 2026-08-11 | App-UI | index.html: professionelle Fishing-App UI; dev.html: Entwickleroberfläche |
-| 2026-08-11 | User Module | v1.1.0: username, displayName, avatar, status, lastLoginAt |
-| 2026-08-11 | User Module | Fix: Object.freeze readonly-Fehler behoben |
+CatchTrack V1.0 befindet sich in einer strukturellen Neuordnung.
 
-## Projektstruktur
+Die bisherige Implementierung wird nicht automatisch als endgültige Architektur betrachtet.
 
-| Bereich | Status |
-|—|—|
-| Root-Struktur | ✓ Abgeschlossen |
-| Core | ✓ Abgeschlossen |
-| Config | ✓ Abgeschlossen |
-| Database | ✓ Abgeschlossen |
-| Services | ✓ Abgeschlossen |
-| Infrastruktur-Hilfen | ✓ Abgeschlossen |
-| User-Modul | ✓ Abgeschlossen |
-| Admin-Modul | ✓ Abgeschlossen |
-| App-UI | ✓ Abgeschlossen |
-| Dokumentation | ✓ Abgeschlossen |
+⸻
 
-## Module
+3. Architekturstatus
 
-### Abgeschlossene Module
+Architecture Definition
+STATUS: DEFINED
 
-| Modul | Version | Status | Dateien |
-|—|—|—|—|
-| i18n Module | 1.0.0 | ✓ Abgeschlossen | i18n-module.js, i18n-interface.js, i18n-loader.js |
-| GPS Module | 1.0.0 | ✓ Abgeschlossen | gps-module.js, gps-interface.js, gps-loader.js, README.md |
-| Weather Module | 1.0.0 | ✓ Abgeschlossen | weather-module.js, weather-provider.js, weather-interface.js, weather-loader.js, README.md |
-| User Module | 1.1.0 | ✓ Abgeschlossen | user-module.js, user-interface.js, user-loader.js, README.md |
-| Admin Module | 1.0.0 | ✓ Abgeschlossen | admin-module.js, admin-interface.js, admin-loader.js, README.md |
+Die Zielarchitektur basiert auf:
 
-## Infrastruktur-Komponenten
+* stabilem Core
+* generischem Module System
+* User-Modul
+* Admin-Modul
+* Permissions
+* Package/Entitlements
+* dynamischer Navigation
+* installierbaren Fachmodulen
 
-| Komponente | Version | Status | Dateien |
-|—|—|—|—|
-| Config Manager | 1.0.0 | ✓ Abgeschlossen | config-manager.js, README.md |
-| Database Manager | 1.0.0 | ✓ Abgeschlossen | database-manager.js, README.md |
-| Service Manager | 1.0.0 | ✓ Abgeschlossen | service-manager.js, README.md |
-| Infrastruktur-Hilfe | 1.0.0 | ✓ Abgeschlossen | frühere Test- und Prüfhilfen entfernt |
+⸻
 
-## Abschlussstatus
+4. Core Status
 
-**Erster Entwicklungsblock:** ✓ **Abgeschlossen**
+CORE
+STATUS: NOT FROZEN
 
-Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert:
+Der Core ist derzeit noch nicht als endgültig abgenommen zu betrachten.
 
-- ✓ Core-Grundgerüst (18 Dateien)
-- ✓ Modul-System & Modulschnittstelle
-- ✓ User-Modul v1.1.0 (vollständige Benutzeridentität: username, displayName, avatar, status, lastLoginAt)
-- ✓ i18n-Modul v1.0.0 (Multilanguage DE/EN, automatische Spracherkennung, manuell wählbar)
-- ✓ GPS-Modul v1.0.0 (Browser Geolocation, eigenständige Schnittstelle für andere Module)
-- ✓ Weather-Modul v1.0.0 (Open-Meteo, Provider-Abstraktion, Offline-Handling, 7-Tage-Vorhersage)
-- ✓ App-UI (index.html) – professionelle Fishing-App Oberfläche
-- ✓ Dev-UI (dev.html) – Entwickleroberfläche
-- ✓ Admin-Modul mit Diagnostik
-- ✓ Config-System
-- ✓ Database-Layer
-- ✓ Services-Layer
-- ✓ Infrastruktur-Hilfen bereinigt
-- ✓ Interactive UI (index.html)
+Vor dem Core-Freeze müssen:
 
-**Gesamt Status:** ✓ Funktionsfähig und testbar
+* alle Core-Dateien inventarisiert werden
+* doppelte Dateien identifiziert werden
+* überflüssige Dateien entfernt werden
+* fachliche Funktionen aus dem Core entfernt werden
+* notwendige Core-Komponenten fertiggestellt werden
+* Module Interface und Module Manager validiert werden
+* Datenbank-Lifecycle geprüft werden
+* Permissions geprüft werden
+* Startup und Runtime geprüft werden
+* Tests durchgeführt werden
 
-## Abschlussdefinition pro Komponente
+⸻
 
-Eine Komponente gilt als abgeschlossen, wenn:
+5. Core Freeze
 
-- ✓ Anforderungen definiert
-- ✓ Code erstellt und funktionsfähig
-- ✓ Alle erforderlichen Dateien vorhanden
-- ✓ Dateien committed zu GitHub
-- ✓ README.md mit Dokumentation
-- ✓ Änderungen syntaktisch geprüft
-- ✓ Chronik aktualisiert
+Der Core wird erst nach vollständiger technischer Abnahme eingefroren.
 
-## Chronik
+Ziel:
 
-Die Entwicklung wird fortlaufend in begrenzten Chronikdateien dokumentiert.
+CORE V1.0
+STATUS: FROZEN
 
-Aktuelle Chronik:
+Dieser Status darf erst gesetzt werden, wenn die Abnahme tatsächlich erfolgt ist.
 
-`PROJECT_CHRONICLE_001.md`
+⸻
 
-Bei Erreichen der festgelegten maximalen Länge wird die nächste Chronikdatei angelegt.
+6. Module System
 
-## Nächste Schritte
+STATUS: IN DEVELOPMENT
 
-Der erste Entwicklungsblock ist abgeschlossen. CatchTrack ist jetzt eine funktionsfähige Anwendung mit:
+Das endgültige CMS-artige Modulsystem muss noch vollständig validiert werden.
 
-- Voll funktionsfähigem Core
-- Modularem Aufbau
-- Benutzerverwaltung
-- Systemverwaltung
-- Konfigurationssystem
-- Datenbankzugriff
-- Services-Layer
-- Automatisiertes Testen
+Erforderliche Funktionen:
 
-**Empfogene nächste Phasen:**
+* Module Registry
+* Module Interface
+* Installation
+* Deinstallation
+* Aktivierung
+* Deaktivierung
+* Update
+* Dependencies
+* Permissions
+* Database Lifecycle
 
-1. UI-Framework (Vue/React-Integration)
-2. Erweiterte Modul-Beispiele
-3. Production-Deployment
-4. Erweiterte Berechtigungen
-5. Datenbank-Backend (Server-Sync)
+⸻
+
+7. User Module
+
+STATUS: RESTRUCTURING / DEVELOPMENT
+
+User wird als eigenständiges Modul behandelt.
+
+Der endgültige User-Lifecycle und die Berechtigungsintegration müssen gegen die neue Architektur geprüft werden.
+
+⸻
+
+8. Admin Module
+
+STATUS: RESTRUCTURING / DEVELOPMENT
+
+Admin wird als eigenständiges Modul behandelt.
+
+Ziel ist eine CMS-artige Verwaltung von:
+
+* Users
+* Roles
+* Packages
+* Modules
+* System
+
+⸻
+
+9. Permissions
+
+STATUS: ARCHITECTURE DEFINED
+IMPLEMENTATION: PENDING VALIDATION
+
+Berechtigungen müssen zentral und konsistent funktionieren.
+
+⸻
+
+10. Package System
+
+STATUS: ARCHITECTURE DEFINED
+IMPLEMENTATION: PLANNED
+
+Das System wird auf spätere Packages/Entitlements vorbereitet.
+
+Konkrete Pakete werden später definiert.
+
+⸻
+
+11. Dynamic Navigation
+
+STATUS: ARCHITECTURE DEFINED
+IMPLEMENTATION: PENDING
+
+Die Benutzeroberfläche soll anhand von:
+
+User
+Role
+Package
+Permissions
+Installed Modules
+
+dynamisch aufgebaut werden.
+
+⸻
+
+12. Fachmodule
+
+Geplante Fachmodule:
+
+GPS
+Weather
+Catchbook
+Fish Database
+Tides
+Maps
+Statistics
+Reverse Geocoding
+
+Diese Module werden erst nach Stabilisierung und Freeze des Core endgültig auf die neue Architektur ausgerichtet.
+
+⸻
+
+13. Verbindliche Statusregeln
+
+Ein Bestandteil darf nur dann als:
+
+COMPLETED
+ACCEPTED
+FROZEN
+
+bezeichnet werden, wenn die entsprechende technische Prüfung tatsächlich abgeschlossen wurde.
+
+Ein Commit allein bedeutet nicht:
+
+COMPLETED
+
+Eine vorhandene Datei bedeutet nicht:
+
+IMPLEMENTED
+
+Eine implementierte Funktion bedeutet nicht automatisch:
+
+TESTED
+
+⸻
+
+14. Chronik
+
+Der laufende Fortschritt wird ausschließlich in der Projektchronik dokumentiert.
+
+Aktuell:
+
+PROJECT_CHRONICLE_001.md
+
+Spätere Chroniken:
+
+PROJECT_CHRONICLE_002.md
+PROJECT_CHRONICLE_003.md
+...
+
+Die Chronik dokumentiert den tatsächlichen Entwicklungsverlauf.
+
+⸻
+
+15. Zielstatus
+
+Der endgültige Zielstatus lautet:
+
+ARCHITECTURE
+        ↓
+CORE COMPLETE
+        ↓
+CORE VALIDATED
+        ↓
+CORE ACCEPTED
+        ↓
+CORE FROZEN
+        ↓
+MODULE SYSTEM COMPLETE
+        ↓
+USER / ADMIN
+        ↓
+PERMISSIONS / PACKAGES
+        ↓
+FACHMODULE
+        ↓
+CATCHTRACK V1.0
+
+⸻
+
+16. Wichtigster Abnahmetest
+
+Der Core gilt nicht als vollständig stabil, solange nicht nachgewiesen wurde:
+
+Ein neues Fachmodul kann installiert, registriert, aktiviert und verwendet werden, ohne bestehende Core-Dateien zu verändern.
+
+Dies ist ein zentraler Architekturtest für CatchTrack V1.0.
