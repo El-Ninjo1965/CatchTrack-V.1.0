@@ -1,200 +1,393 @@
-CatchTrack – Project Masterlist
+CatchTrack V1.0 – Project Masterlist
 
-Zweck
+1. Zweck
 
-Diese Masterliste definiert die verbindliche Reihenfolge und den Umfang der Projektentwicklung.
+Diese Masterliste definiert die verbindliche Reihenfolge der Entwicklung.
 
-Sie dient als zentrale Referenz für die Erstellung von Dateien, Ordnern und Modulen.
+Sie verhindert, dass einzelne Module entwickelt werden, bevor die dafür erforderliche Plattform stabil ist.
 
-Grundregel
+Diese Datei ist Frozen.
 
-Dateien werden nicht beliebig erstellt.
-
-Die Projektstruktur wird schrittweise aufgebaut.
-
-Eine Datei wird erst erstellt, wenn sie gemäß Projektplanung benötigt wird.
+Sie wird nicht von AI-Agenten eigenständig verändert.
 
 ⸻
 
-AI- und Projektsteuerung
+PHASE 1 – ARCHITEKTUR
 
-| Nr. | Datei | Status |
-|—:|—|—|
-| 01 | VISION.md | ✓ Abgeschlossen |
-| 02 | RULES.md | ✓ Abgeschlossen |
-| 03 | WORKFLOW.md | ✓ Abgeschlossen |
-| 04 | PROJECT_STATUS.md | ✓ Abgeschlossen |
-| 05 | PROJECT_CHRONICLE_001.md | ✓ Abgeschlossen |
-| 06 | PROJECT_MASTERLIST.md | ✓ Abgeschlossen |
+1.1 Projektdokumentation
 
-⸻
+* VISION.md
+* RULES.md
+* WORKFLOW.md
+* PROJECT_MASTERLIST.md
+* PROJECT_STATUS.md
 
-Hauptstruktur
+Status:
 
-| Bereich | Status | Commit |
-|—|—|—|
-| Root | ✓ Abgeschlossen | - |
-| Core | ✓ Abgeschlossen | b70c514 |
-| Config | ✓ Abgeschlossen | d33a27d |
-| Database | ✓ Abgeschlossen | d33a27d |
-| Services | ✓ Abgeschlossen | d33a27d |
-| Tests | ✓ Abgeschlossen | d33a27d |
-| Modules | ✓ Abgeschlossen | 1074202 |
-| UI | ✓ Abgeschlossen | 1074202 |
-
-Der Bereich Modules enthält die eigenständigen CatchTrack-Module.
+ARCHITECTURE DEFINED
 
 ⸻
 
-Erster Entwicklungsblock
+PHASE 2 – CORE-INVENTUR
 
-Der erste funktionsfähige Entwicklungsstand besteht aus:
+2.1 Vollständige Bestandsaufnahme
 
-1. Core-Grundgerüst
-2. Modul-System / Modulschnittstelle
-3. User-Modul
-4. Admin-Modul
-5. Demo-Benutzer für die Entwicklungsphase
+Alle bestehenden Core- und unterstützenden Dateien prüfen.
 
-Diese Bestandteile werden gemeinsam so weit umgesetzt, dass CatchTrack erstmals als funktionsfähige Anwendung gestartet und die grundlegende Modulstruktur geprüft werden kann.
+Jede Datei erhält genau eine Klassifizierung:
 
-User-Modul
+A – NEU
+B – LÖSCHEN
+C – VOLLSTÄNDIG ERSETZEN
+D – UNVERÄNDERT ÜBERNEHMEN
 
-Das User-Modul wird als eigenständiges Modul unter Modules aufgebaut.
+Ziel:
 
-Es dient zunächst der Entwicklungsfähigkeit des Systems.
-
-Für die Entwicklungsphase wird mindestens ein definierter Demo-Benutzer bereitgestellt.
-
-Der Demo-Benutzer dient unter anderem dazu, Module bereits während der Entwicklung unter einer real vorhandenen User-ID zu prüfen.
-
-Die endgültige Benutzerverwaltung, Accountstruktur, Rollen, Berechtigungen und weitere Benutzerfunktionen werden zu einem späteren Zeitpunkt festgelegt und können innerhalb des User-Moduls erweitert oder geändert werden.
-
-Admin-Modul
-
-Das Admin-Modul wird ebenfalls als eigenständiges Modul unter Modules aufgebaut.
-
-Es dient zunächst als Entwicklungs- und Testwerkzeug für die System- und Modulverwaltung.
-
-Die endgültigen Funktionen und Abläufe des Admin-Bereichs werden zu einem späteren Zeitpunkt festgelegt und können innerhalb des Admin-Moduls erweitert oder geändert werden.
-
-Trennung vom Core
-
-User- und Admin-Funktionen werden nicht fest in den Core integriert.
-
-Der Core stellt lediglich die erforderlichen technischen Grundlagen und Schnittstellen bereit.
-
-Änderungen und Erweiterungen an User und Admin sollen grundsätzlich innerhalb der jeweiligen Module erfolgen.
-
-Der Core soll dadurch nach Fertigstellung des Grundgerüsts möglichst stabil bleiben.
+* keine doppelten Funktionen
+* keine unnötigen Dateien
+* keine parallelen Implementierungen
+* keine versteckten Core-Abhängigkeiten
+* klare Core-Grenze
 
 ⸻
 
-Modulprinzip
+PHASE 3 – CORE-BEREINIGUNG
 
-Module werden eigenständig geplant und anschließend vollständig umgesetzt.
+Der Core wird auf generische Infrastruktur reduziert.
 
-Ein Modul soll möglichst:
+Aus dem Core werden fachliche Funktionen entfernt, die als Module umgesetzt werden müssen.
 
-* unabhängig funktionieren
-* klar definierte Schnittstellen besitzen
-* keine unnötigen Abhängigkeiten zum Core erzeugen
-* aktiviert und deaktiviert werden können
-* später erweitert oder ersetzt werden können
+Beispiele:
 
-User und Admin bilden die ersten beiden Entwicklungsmodule.
-
-Weitere funktionale Module werden erst nach Fertigstellung dieses ersten Entwicklungsblocks integriert.
-
-⸻
-
-Entwicklungsreihenfolge
-
-Phase 1 – Grundsystem
-
-* Core-Grundgerüst
-* grundlegende Modulschnittstelle
-* Modulstruktur
-* technische Voraussetzungen für den Start der Anwendung
-
-Phase 2 – Entwicklungsmodule
-
-* User-Modul
-* Demo-Benutzer
-* Admin-Modul
-* grundlegende Modulverwaltung
-
-Phase 3 – Weitere Module
-
-Weitere CatchTrack-Funktionen werden anschließend als eigenständige Module entwickelt und integriert.
-
-Der Core wird dabei nicht für einzelne Module unnötig verändert.
+GPS → Modul
+Weather → Modul
+Catchbook → Modul
+Fish Database → Modul
+Tides → Modul
+Statistics → Modul
+Maps → Modul
 
 ⸻
 
-Serverseitiger Admin-Bereich
+PHASE 4 – CORE
 
-Ein serverseitiger Admin-Bereich gehört nicht zum ersten Entwicklungsblock.
+Der Core wird vollständig und stabil aufgebaut.
 
-Er wird zu einem späteren Zeitpunkt entwickelt, sobald die lokale bzw. app-interne Modul- und Benutzerstruktur stabil und ausreichend validiert ist.
+Erforderliche Bereiche
 
-⸻
-
-Statuskennzeichnungen
-
-* OFFEN – noch nicht begonnen
-* IN ARBEIT – aktuell in Bearbeitung
-* VALIDIERUNG – Implementierung abgeschlossen, Prüfung läuft
-* ✓ ABGESCHLOSSEN – vollständig geprüft und auf GitHub vorhanden
-* BLOCKIERT – Bearbeitung kann wegen einer offenen Voraussetzung nicht fortgesetzt werden
-
-⸻
-
-Status: Erster Entwicklungsblock ✓ ABGESCHLOSSEN
-
-**Phase 1 – Grundsystem:** ✓ Abgeschlossen  
-**Phase 2 – Entwicklungsmodule:** ✓ Abgeschlossen  
-**Phase 3 – Infrastruktur:** ✓ Abgeschlossen
-
-Alle geplanten Komponenten des ersten Entwicklungsblocks sind implementiert und funktionsfähig.
-
-CatchTrack ist nun als Basis für weitere Module verwendbar.
-
-**Letzte Aktualisierung:** 2026-08-11
+* Application Startup
+* Runtime
+* Lifecycle
+* Event System
+* State
+* Storage
+* Database
+* Error Handling
+* Logging
+* Module Interface
+* Module Registry
+* Module Manager
+* Permissions
+* Package/Entitlements
+* System Configuration
 
 ⸻
 
-Änderungsregel
+PHASE 5 – MODULE SYSTEM
 
-Die Masterliste wird nur geändert, wenn sich die verbindliche Projektstruktur oder Entwicklungsreihenfolge tatsächlich ändert.
+Module Interface
 
-Keine Änderungen aus kosmetischen Gründen.
+Ein einheitliches Interface für installierbare Module definieren.
 
-Die Masterliste ist keine technische Detaildokumentation einzelner Module.
+Module Manifest
+
+Einheitliches Manifest für:
+
+* ID
+* Name
+* Version
+* Beschreibung
+* Entry Point
+* Dependencies
+* Permissions
+* Package Requirements
+* Database Information
+
+Module Registry
+
+Installierte Module eindeutig registrieren.
+
+Module Manager
+
+Unterstützen:
+
+* install
+* uninstall
+* enable
+* disable
+* update
+* status
+* dependencies
 
 ⸻
 
-Chronik
+PHASE 6 – DATABASE LIFECYCLE
 
-Die Entwicklung wird zusätzlich in fortlaufenden Chronikdateien dokumentiert:
+Module erhalten einen definierten Datenbank-Lifecycle.
 
-* PROJECT_CHRONICLE_001.md
-* PROJECT_CHRONICLE_002.md
-* PROJECT_CHRONICLE_003.md
-* usw.
+Installation
 
-Eine Chronikdatei wird nicht unbegrenzt erweitert.
+install module
+→ install database
+→ register module
+
+Update
+
+update module
+→ execute migration
+
+Deinstallation
+
+disable module
+→ handle data
+→ uninstall database
+→ unregister module
+→ remove module
 
 ⸻
 
-Projektabschluss
+PHASE 7 – PERMISSIONS
 
-Ein Projektbestandteil wird erst als abgeschlossen betrachtet, wenn:
+Zentrales Berechtigungssystem implementieren.
 
-* der tatsächliche Code vorhanden ist
-* die erforderlichen Dateien vollständig erstellt sind
-* der Code erfolgreich getestet wurde
-* die Dateien committed sind
-* der Stand auf GitHub vorhanden und überprüfbar ist
-* die vorgesehenen Funktionen erfolgreich geprüft wurden
-* der Abschluss dokumentiert wurde
+Grundmodell:
+
+User
+ ├── Role
+ ├── Package
+ └── Permissions
+
+Berechtigungen müssen unabhängig von einzelnen Fachmodulen definiert werden können.
+
+⸻
+
+PHASE 8 – USER MODULE
+
+User als eigenständiges Modul implementieren.
+
+Zielbereiche:
+
+* User Account
+* Login
+* Logout
+* Session
+* Profile
+* User Status
+* Roles
+* Permissions
+* Package Assignment
+
+⸻
+
+PHASE 9 – ADMIN MODULE
+
+Admin als eigenständiges Modul implementieren.
+
+Zielbereiche:
+
+* Dashboard
+* Users
+* Roles
+* Packages
+* Modules
+* System
+
+Module Management
+
+Das Admin-Modul muss perspektivisch ermöglichen:
+
+Available
+Installed
+Install
+Enable
+Disable
+Update
+Uninstall
+
+⸻
+
+PHASE 10 – PACKAGE SYSTEM
+
+Generische Package-/Entitlement-Infrastruktur vorbereiten.
+
+Beispiel:
+
+FREE
+BASIC
+PRO
+DEVELOPER
+
+Keine endgültige Produktdefinition.
+
+Ziel:
+
+Package
+ ↓
+Entitlements
+ ↓
+Modules / Features
+
+⸻
+
+PHASE 11 – DYNAMIC UI
+
+Navigation darf nicht fachlich fest verdrahtet werden.
+
+Ziel:
+
+User
+ ↓
+Role
+ ↓
+Package
+ ↓
+Permissions
+ ↓
+Installed Modules
+ ↓
+Module Navigation
+ ↓
+Visible UI
+
+Nicht verfügbare Funktionen werden nicht angezeigt.
+
+⸻
+
+PHASE 12 – CORE VALIDATION
+
+Der vollständige Core wird getestet.
+
+Prüfen:
+
+* Startup
+* Runtime
+* Lifecycle
+* Event System
+* Storage
+* Database
+* Error Handling
+* Module Loading
+* Module Registry
+* Module Manager
+* Permissions
+* Security
+* Dependencies
+* Offline-Verhalten
+
+⸻
+
+PHASE 13 – CORE ACCEPTANCE
+
+Der Core wird technisch abgenommen.
+
+Erst danach darf der Core als stabil betrachtet werden.
+
+⸻
+
+PHASE 14 – CORE FREEZE
+
+Nach erfolgreicher Abnahme:
+
+CORE V1.0
+FROZEN
+READ ONLY FOR AI AGENTS
+
+Danach gilt:
+
+Neue Fachfunktion = neues Modul.
+
+⸻
+
+PHASE 15 – FACHMODULE
+
+Erst nach Core-Freeze werden Fachmodule endgültig umgesetzt.
+
+Geplante Module:
+
+GPS
+Weather
+Catchbook
+Fish Database
+Tides
+Maps
+Statistics
+Reverse Geocoding
+
+Weitere Module können später ergänzt werden.
+
+⸻
+
+PHASE 16 – MODULTESTS
+
+Jedes Modul wird separat getestet.
+
+Prüfen:
+
+* Installation
+* Aktivierung
+* Deaktivierung
+* Nutzung
+* Datenbank
+* Update
+* Deinstallation
+* Berechtigungen
+* Package Requirements
+* Fehlerbehandlung
+
+⸻
+
+PHASE 17 – GESAMTSYSTEM
+
+Nach Fertigstellung der Module:
+
+* Integration testen
+* Offline-Verhalten testen
+* Datenintegrität testen
+* Berechtigungen testen
+* Paketlogik testen
+* Modul-Lifecycle testen
+* UI testen
+
+⸻
+
+ENDZUSTAND
+
+CatchTrack V1.0 ist fertig, wenn:
+
+Core
+→ stabil
+→ getestet
+→ eingefroren
+Module System
+→ installierbar
+→ deinstallierbar
+→ aktualisierbar
+→ aktivierbar/deaktivierbar
+User
+→ eigenes Modul
+Admin
+→ eigenes Modul
+Permissions
+→ aktiv
+Packages
+→ vorbereitet/aktiv
+Navigation
+→ dynamisch
+Fachmodule
+→ unabhängig vom Core
+
+Der wichtigste Architekturtest lautet:
+
+Kann ein neues Fachmodul installiert werden, ohne eine bestehende Core-Datei zu verändern?
+
+Wenn nein, ist die Architektur noch nicht fertig.
