@@ -315,7 +315,7 @@ Ein Arbeitsschritt ist erst abgeschlossen, wenn:
 
 1. die Dateien vollständig erstellt oder ersetzt wurden
 2. keine bekannten Fehler verbleiben
-3. die Funktion getestet wurde
+3. die Funktion in der Vorschau vom Entwickler/User getestet wurde
 4. Abhängigkeiten geprüft wurden
 5. die Chronik aktualisiert wurde
 
