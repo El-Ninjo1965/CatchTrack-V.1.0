@@ -6,7 +6,7 @@ Diese Datei definiert die Entwicklungsphasen, Hauptkomponenten und den aktuellen
 
 Alle Projektdateien befinden sich derzeit noch im Aufbau.
 
-Diese Datei ist derzeit NICHT eingefroren.
+Diese Datei ist derzeit **NICHT eingefroren**.
 
 Der Freeze der Master-/Regeldokumentation erfolgt erst nach der einmaligen Abstimmung aller relevanten MD-Dateien.
 
@@ -59,7 +59,6 @@ Nach Abschluss dieser Abstimmung werden die relevanten Masterdateien eingefroren
 
 ## Verbindliche Arbeitsreihenfolge
 
-```text
 DOKUMENTATION
 ↓
 ARCHITEKTUR
@@ -89,7 +88,6 @@ UI-INTEGRATION
 GESAMTTEST
 ↓
 RELEASE-ABNAHME
-```
 
 Diese Reihenfolge darf nicht ohne begründete Architekturentscheidung umgangen werden.
 
@@ -145,13 +143,11 @@ Ein Modul darf grundsätzlich keine Änderung bestehender Core-Dateien benötige
 
 Neue Anforderungen werden zuerst klassifiziert:
 
-```text
 Infrastruktur
 → Core
 
 Fachfunktion
 → Modul
-```
 
 Eine Fachfunktion darf nicht durch eine Änderung des Core implementiert werden.
 
@@ -227,7 +223,6 @@ Commit-Dokumentation soll nachvollziehbar enthalten:
 
 Vor jeder Änderung oder Erstellung einer Datei:
 
-```text
 REGELN LESEN
 ↓
 GITHUB MAIN PRÜFEN
@@ -243,7 +238,6 @@ ARBEITSREIHENFOLGE PRÜFEN
 ENTSCHEIDEN
 ↓
 DATEI VOLLSTÄNDIG ERSTELLEN ODER ERSETZEN
-```
 
 Eine vorhandene Datei wird nicht ohne Prüfung neu erstellt.
 
@@ -271,13 +265,30 @@ Ein bereits erledigter Arbeitsschritt wird nicht erneut ausgeführt oder ausgege
 
 —
 
+## Dateiausgabe
+
+Jede auszugebende Datei wird vollständig ausgegeben.
+
+Das verbindliche Format besteht aus drei separaten Copyblöcken:
+
+1. vollständiger Pfad
+2. exakter Dateiname
+3. vollständiger Quelltext
+
+Der Quelltext darf keinen Dateinamen als zusätzliche erste Zeile enthalten.
+
+Es werden niemals Patches, Teilstücke oder unvollständige Dateien ausgegeben.
+
+Markdown-Codeblöcke innerhalb des Dateiinhalts dürfen den äußeren Copyblock nicht zerstören.
+
+—
+
 ## Testprinzip
 
 Die Entwicklung wird in sinnvollen Abschnitten durchgeführt.
 
 Nach technisch sinnvollen Zwischenständen wird ein Testpunkt eingeplant.
 
-```text
 IMPLEMENTIEREN
 ↓
 TESTEN
@@ -289,7 +300,6 @@ FEHLER
 → analysieren
 → korrigieren
 → erneut testen
-```
 
 Dadurch werden Fehler möglichst früh erkannt.
 
@@ -297,9 +307,7 @@ Dadurch werden Fehler möglichst früh erkannt.
 
 ## Aktueller Fortsetzungsschlüssel
 
-```text
-DOCUMENTATION-SYNC
-```
+`DOCUMENTATION-SYNC`
 
 Bedeutung:
 
@@ -307,10 +315,8 @@ Die Master-/Steuerungsdateien werden aktuell einmalig aufeinander abgestimmt.
 
 Nach Abschluss dieses Blocks:
 
-```text
-DOCUMENTATION-FREEZE
-→ CORE-INVENTORY-DEEP-DIVE
-```
+`DOCUMENTATION-FREEZE`
+→ `CORE-INVENTORY-DEEP-DIVE`
 
 —
 
