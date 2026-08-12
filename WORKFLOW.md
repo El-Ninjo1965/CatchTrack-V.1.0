@@ -413,6 +413,25 @@ PRÜFEN
 
 Nicht raten und nicht rekonstruieren.
 
+### Ausgabe vollständiger Dateien
+
+Wenn eine vollständige Datei zur manuellen Übernahme ausgegeben wird, muss der gesamte Dateiinhalt in genau einem einzigen durchgehenden Copyblock ausgegeben werden.
+
+Innerhalb dieses Copyblocks dürfen keine weiteren verschachtelten Codeblöcke verwendet werden.
+
+Zusätzliche Erklärungen, Kommentare oder Hinweise dürfen nicht innerhalb des Datei-Copyblocks stehen.
+
+Ziel ist, dass die vollständige Datei mit einer einzigen Kopieraktion übernommen werden kann und keine Abschnitte durch die Darstellung verloren gehen oder versehentlich ausgelassen werden.
+
+Dies gilt insbesondere für:
+
+* Markdown-Dateien
+* Konfigurationsdateien
+* Terminal-Arbeitsdateien
+* vollständige Ersatzdateien
+* Agenten-Prompts
+* sonstige Dateien, die vollständig übernommen werden sollen
+
 —
 
 ## 24. Terminal-Prüfungen und terminal.md
