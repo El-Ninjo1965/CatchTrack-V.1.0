@@ -1,262 +1,42 @@
-# CatchTrack V1.0 – Development Workflow
-
-## 1. Zweck
-
-Dieser Workflow definiert den verbindlichen Entwicklungsablauf für CatchTrack V1.0.
-
-Ziele:
-
-- klare Trennung von Core und Modulen
-- keine unnötigen Core-Änderungen
-- keine doppelten oder parallelen Implementierungen
-- nachvollziehbare Entwicklung
-- minimale manuelle Eingriffe des Benutzers
-- reproduzierbare und versionierte Arbeitsschritte
-- möglichst autonomer Arbeitsablauf
-- keine unnötigen Wiederholungen
-
-—
-
-## 2. Grundprinzip
-
-Der Benutzer definiert:
-
-- Ziel
-- gewünschtes Ergebnis
-- besondere Anforderungen
-
-Der AI-Agent bestimmt den technisch sinnvollen Weg dorthin selbstständig.
-
-Grundablauf:
-
-```text
-ZIEL
-→ RULES LESEN
-→ ARBEITSSTAND BESTIMMEN
-→ GITHUB MAIN PRÜFEN
-→ DATEI PRÜFEN
-→ ENTSCHEIDEN
-→ UMSETZEN
-→ TESTEN
-→ KORRIGIEREN
-→ DOKUMENTIEREN
-→ COMMIT
-→ NÄCHSTEN SCHRITT BESTIMMEN
-```
-
-Routineprüfungen, Einlesungen und technische Entscheidungen benötigen keine zusätzliche Benutzerbestätigung.
-
-—
-
-## 3. Regeln vor jeder Arbeit
-
-Vor jedem neuen Arbeitsschritt werden die aktuellen Projektregeln berücksichtigt.
-
-Insbesondere:
-
-- RULES.md
-- WORKFLOW.md
-- aktueller Arbeitszustand
-- Projektchronik
-- relevante weitere Masterdateien
-
-Die Regeln werden nicht nur beim Start eines Entwicklungsblocks berücksichtigt, sondern vor jedem neuen Arbeitsschritt.
-
-—
-
-## 4. GitHub als Referenz
-
-GitHub `main` ist die verbindliche Referenz für den Repository-Stand.
-
-Vor jeder Änderung oder Erstellung einer Datei:
-
-```text
-GITHUB MAIN PRÜFEN
-→ DATEI VORHANDEN?
-→ VORHANDENE VERSION VOLLSTÄNDIG LESEN
-→ AKTUELLEN INHALT BEWERTEN
-→ ZIEL ABGLEICHEN
-```
-
-Eine vorhandene Datei wird niemals aus dem Gedächtnis neu erzeugt.
-
-Wenn die vorhandene Datei bereits dem gewünschten Ziel entspricht:
-
-```text
-NICHT ERNEUT AUSGEBEN
-→ NÄCHSTEN OFFENEN SCHRITT BESTIMMEN
-```
-
-Wenn sie angepasst werden muss:
-
-```text
-AKTUELLE GITHUB-VERSION
-→ ÄNDERUNG
-→ VOLLSTÄNDIGE NEUAUSGABE
-```
-
-Wenn sie nicht vorhanden ist:
-
-```text
-NEUE DATEI ERSTELLEN
-```
-
-—
-
-## 5. Keine unnötigen Dateien
-
-Vor jeder Neuerstellung wird geprüft, ob bereits eine Datei mit derselben oder einer vergleichbaren Aufgabe existiert.
-
-Keine:
-
-- doppelten Dateien
-- parallelen Masterdateien
-- unnötigen Hilfsdateien
-- Ersatzdateien mit identischer Aufgabe
-
-Eine bestehende Datei wird bevorzugt angepasst oder vollständig ersetzt.
-
-—
-
-## 6. Autonomer Arbeitsmodus
-
-Der AI-Agent arbeitet nach Vorgabe des Benutzers selbstständig weiter.
-
-Der AI-Agent:
-
-1. liest relevante Regeln
-2. bestimmt den aktuellen Arbeitsstand
-3. prüft GitHub
-4. liest vorhandene Dateien
-5. prüft Abhängigkeiten
-6. prüft die Arbeitsreihenfolge
-7. trifft technische Entscheidungen
-8. setzt eindeutige Anforderungen direkt um
-9. testet an sinnvollen Zwischenpunkten
-10. dokumentiert relevante Ergebnisse
-11. bestimmt den nächsten offenen Arbeitsschritt
-
-Unnötige Zwischenfragen werden vermieden.
-
-—
-
-## 7. OK-Regel
-
-`OK` bedeutet:
-
-- gelesen
-- verstanden
-- bestätigt
-- vorhandene Vorschläge bestätigt
-- aktueller Arbeitsschritt abgeschlossen
-
-Danach:
-
-```text
-OK
-→ AKTUELLEN STATUS BESTIMMEN
-→ LETZTEN SCHRITT ALS ERLEDIGT BEHANDELN
-→ NÄCHSTEN OFFENEN SCHRITT BESTIMMEN
-→ RULES BERÜCKSICHTIGEN
-→ GITHUB PRÜFEN
-→ DATEI PRÜFEN
-→ NÄCHSTE ERFORDERLICHE DATEI AUSGEBEN
-```
-
-`OK` bedeutet ausdrücklich nicht:
-
-- dieselbe Datei erneut ausgeben
-- denselben Arbeitsschritt wiederholen
-- erneut nach einer bereits beantworteten Entscheidung fragen
-
-Nach `OK` wird unmittelbar mit dem nächsten offenen Arbeitsschritt fortgefahren.
-
-—
-
-## 8. Arbeitszustand und Loop-Schutz
-
-Vor jeder nächsten Dateiausgabe muss festgestellt werden:
-
-- letzter abgeschlossener Schritt
-- aktuell offener Schritt
-- bereits ausgegebene Datei
-- bereits bestätigte Datei
-- nächste erforderliche Datei
-
-Eine Datei, die gerade bestätigt und abgeschlossen wurde, darf nicht erneut als nächste Datei ausgegeben werden.
-
-Der Workflow darf nicht in einen Wiederholungsloop geraten.
-
-—
-
-## 9. Erklärungen
-
-Der Workflow ist auf minimale Kommunikation ausgelegt.
-
-Grundsätzlich werden nur ausgegeben:
-
-- Ergebnis
-- notwendige Hinweise
-- notwendige Entscheidungen
-- nächste Datei bzw. nächster Arbeitsschritt
-
-Keine langen technischen Erklärungen, sofern diese nicht ausdrücklich verlangt werden.
-
-—
-
-## 10. Entwicklungsphasen
-
-CatchTrack wird grundsätzlich in dieser Reihenfolge entwickelt:
-
-### Phase 1
-Architektur und Dokumentation
-
-### Phase 2
-Repository-Inventur
-
-### Phase 3
-Core-Inventur
-
-### Phase 4
-Core-Bereinigung
-
-### Phase 5
-Core-Implementierung
-
-### Phase 6
-Core-Validierung
-
-### Phase 7
-Core-Abnahme
-
-### Phase 8
-Core-Freeze
-
-### Phase 9
-Module-System
-
-### Phase 10
-User / Admin
-
-### Phase 11
-Fachmodule
-
-### Phase 12
-UI-Integration
-
-### Phase 13
-Gesamttest
-
-### Phase 14
-Release-Abnahme
-
-Die Reihenfolge darf nur bei einer begründeten Architekturentscheidung geändert werden.
-
-—
-
-## 11. Aktuelle Dokumentationsphase
-
-Derzeit werden die bestehenden MD-Dateien einmalig konsolidiert.
+# CatchTrack V1.0 Workflow
+
+## 1. Purpose
+This workflow defines the required execution flow for work on CatchTrack V1.0.
+
+## 2. Required sequence
+1. Check repository state.
+2. Read RULES.md and STATE.md.
+3. Compare the current workspace against origin/main.
+4. Inspect affected files and dependencies.
+5. Decide on the minimal valid implementation.
+6. Apply the change.
+7. Validate the result with the smallest relevant checks.
+8. Update STATE.md to reflect the actual status.
+9. Review the final diff.
+10. Commit the change.
+11. Synchronize with origin/main.
+
+## 3. Preconditions
+- Use the current state on origin/main as the reference.
+- Ignore historical duplicates and superseded instructions.
+- Never define a work cursor in RULES.md, WORKFLOW.md, or PROJECT.md.
+- Keep all project-control decisions consistent with STATE.md.
+
+## 4. Implementation standard
+- Change only the files required for the task.
+- Prefer targeted, reversible edits.
+- Do not create extra documentation files.
+- Do not restore deleted historical files.
+- Do not mix unrelated tasks into one change.
+
+## 5. Validation standard
+- Confirm the relevant files are correct.
+- Confirm no unrelated files changed.
+- Confirm the repository is consistent with the intended architecture.
+- Confirm the change is ready for commit and sync.
+
+## 6. Completion rule
+A task is complete only when the work is committed, the repository remains clean, and the current branch matches the remote reference for the target state.
 
 Alle relevanten Dokumentationsdateien sind weiterhin offen.
 

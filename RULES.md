@@ -1,263 +1,50 @@
-# CatchTrack V1.0 – Project Rules
+# CatchTrack V1.0 Rules
+
+## 1. Scope
+This repository uses a reduced project-control structure:
+- RULES.md
+- WORKFLOW.md
+- PROJECT.md
+- STATE.md
+
+These four files are the only root-level project-control documents.
+
+## 2. Authority
+- RULES.md defines binding collaboration and development rules.
+- WORKFLOW.md defines the required work process.
+- PROJECT.md defines the product goal and architecture.
+- STATE.md defines the actual current project state.
+- STATE.md is the only file allowed to define the current work step and next work step.
+
+## 3. Binding rules
+- Use the current repository state on origin/main as the reference baseline.
+- Do not create duplicate project-control files.
+- Do not recreate deleted historical files.
+- Do not define parallel continuation keys outside STATE.md.
+- Do not keep contradictory instructions across the four root documents.
+- Do not add project history to RULES.md, WORKFLOW.md, or PROJECT.md.
+- Do not add operational status text to RULES.md, WORKFLOW.md, or PROJECT.md.
+
+## 4. Architecture rules
+- Core functionality remains generic and infrastructure-focused.
+- Domain logic belongs in modules.
+- Modules must use stable core interfaces.
+- The core must not become module-specific.
+- New features must be implemented in the correct layer: infrastructure in Core, business logic in modules.
+
+## 5. Change rules
+- Prefer the smallest valid change.
+- Prefer existing files over creating new ones.
+- Do not modify unrelated files.
+- Do not keep stale, duplicated, or contradictory project instructions.
+- Keep the root documentation concise and explicit.
+
+## 6. Quality rules
+- Changes must be consistent with the current architecture and repository state.
+- Validation must be performed before completion.
+- Documentation must remain short, accurate, and machine-readable.
+- Final repository state must be clean and synchronized with origin/main.
 
-## 1. Verbindlichkeit
-
-Diese Datei enthält die verbindlichen Projektregeln.
-
-Die Regeln werden vor jeder Projektarbeit berücksichtigt.
-
-Regeln werden nicht eigenmächtig abgeschwächt oder entfernt.
-
-—
-
-## 2. Aktueller Freeze-Status
-
-Alle Projektdateien sind derzeit offen.
-
-Das gilt ausdrücklich für:
-
-- Dokumentationsdateien
-- Core
-- Module
-- UI
-- sonstige Projektdateien
-
-Der Core ist **NICHT eingefroren**.
-
-Ein Freeze erfolgt erst nach vollständiger Prüfung, Tests, Abnahme und ausdrücklicher Projektentscheidung.
-
-—
-
-## 3. Regeln vor jeder Arbeit
-
-Vor jedem neuen Arbeitsschritt:
-
-```text
-RULES LESEN
-→ AKTUELLEN ARBEITSSTAND BESTIMMEN
-→ GITHUB MAIN PRÜFEN
-→ DATEI / DATEIEN PRÜFEN
-→ ZIEL UND ARCHITEKTUR ABGLEICHEN
-→ ENTSCHEIDEN
-→ UMSETZEN
-```
-
-Die Prüfung erfolgt selbstständig.
-
-Der Benutzer muss dafür kein OK geben.
-
-—
-
-## 4. GitHub als Referenz
-
-GitHub `main` ist die verbindliche Referenz für den Repository-Stand.
-
-Vor jeder Erstellung oder Änderung einer Datei muss geprüft werden, ob diese Datei bereits vorhanden ist.
-
-Wenn sie vorhanden ist:
-
-- vollständige aktuelle Version einlesen
-- Inhalt bewerten
-- mit dem aktuellen Ziel vergleichen
-- vorhandene Datei weiterverwenden, ändern oder vollständig ersetzen
-
-Wenn die vorhandene Datei bereits dem Ziel entspricht:
-
-- nicht erneut ausgeben
-- direkt zum nächsten offenen Arbeitsschritt weitergehen
-
-Neue Dateien werden nur erstellt, wenn keine geeignete vorhandene Datei existiert.
-
-Es wird niemals aus Vermutungen, alten Versionen oder Erinnerungen gearbeitet, wenn eine aktuelle Repository-Version verfügbar ist.
-
-—
-
-## 5. Keine unnötigen Dateien
-
-Vor jeder Neuerstellung:
-
-```text
-Existiert bereits eine geeignete Datei?
-→ JA: vorhandene Datei verwenden
-→ NEIN: neue Datei nur bei tatsächlicher Notwendigkeit erstellen
-```
-
-Keine:
-
-- doppelten Dateien
-- parallelen Masterdateien
-- unnötigen Hilfsdateien
-- Ersatzdateien mit gleicher Aufgabe
-
-—
-
-## 6. Autonomer Arbeitsmodus
-
-Der Benutzer definiert Ziel und gewünschtes Ergebnis.
-
-Der AI-Agent bestimmt den technisch sinnvollen Weg dorthin selbstständig.
-
-Der AI-Agent führt selbstständig durch:
-
-- Einlesen
-- Prüfungen
-- Vergleiche
-- Abhängigkeitsprüfungen
-- Repository-Prüfungen
-- technische Entscheidungen
-- Tests
-- Dokumentation
-- Vorbereitung des nächsten Arbeitsschritts
-
-Zusätzliche Bestätigungen für Routineprüfungen sind nicht erforderlich.
-
-Technische Entscheidungen werden nicht unnötig zur Bestätigung vorgelegt.
-
-Nur bei einer echten fachlichen oder architektonischen Entscheidung mit mehreren wesentlichen Alternativen wird gefragt.
-
-—
-
-## 7. Erklärungen
-
-Keine langen technischen Erklärungen.
-
-Grundsätzlich ausgeben:
-
-- Ergebnis
-- notwendige Hinweise
-- notwendige Entscheidung
-- nächste Datei bzw. nächster Arbeitsschritt
-
-Nicht erklären:
-
-- bereits festgelegte Arbeitsregeln
-- bereits bekannte technische Rahmenbedingungen
-- unnötige Hintergrunddetails
-
-Der Benutzer möchte das Ergebnis, nicht eine technische Lehrveranstaltung.
-
-—
-
-## 8. OK-Regel
-
-`OK` bedeutet:
-
-- gelesen
-- verstanden
-- bestätigt
-- vorhandene Vorschläge bestätigt
-- aktueller Arbeitsschritt abgeschlossen
-
-Danach automatisch:
-
-```text
-OK
-→ AKTUELLEN STATUS PRÜFEN
-→ ERLEDIGTEN SCHRITT ABSCHLIESSEN
-→ NÄCHSTEN OFFENEN SCHRITT BESTIMMEN
-→ RULES BERÜCKSICHTIGEN
-→ GITHUB PRÜFEN
-→ DATEI PRÜFEN
-→ NÄCHSTE DATEI AUSGEBEN
-```
-
-`OK` bedeutet ausdrücklich nicht:
-
-- dieselbe Datei erneut ausgeben
-- denselben Arbeitsschritt wiederholen
-- erneut nach einer bereits beantworteten Entscheidung fragen
-
-Ein bereits erledigter Schritt darf nicht erneut als nächster Schritt erscheinen.
-
-—
-
-## 9. Arbeitsfortschritt
-
-Der aktuelle Arbeitszustand muss eindeutig bleiben.
-
-Vor jeder nächsten Ausgabe ist zu bestimmen:
-
-- letzter erledigter Schritt
-- aktuell offener Schritt
-- nächste erforderliche Datei
-- bereits ausgegebene Datei
-- bereits bestätigte Datei
-
-Dadurch wird verhindert, dass der Workflow in einen Loop gerät.
-
-—
-
-## 10. Dateiausgabe
-
-Jede Datei wird vollständig ausgegeben.
-
-Immer genau drei getrennte Copyblöcke:
-
-### Copyblock 1
-
-Nur der vollständige Repository-Pfad.
-
-### Copyblock 2
-
-Nur der exakte Dateiname.
-
-### Copyblock 3
-
-Der vollständige Quelltext.
-
-Keine:
-
-- Patches
-- Teilstücke
-- Auslassungen
-- fragmentierten Dateien
-- zusätzlichen Dateinamen im Quelltextblock
-- Fortsetzungsschlüssel innerhalb eines unvollständigen Blocks
-
-Der dritte Copyblock muss vollständig und direkt kopierbar sein.
-
-Wenn der Dateiinhalt selbst Markdown-Codeblöcke enthält, muss für den äußeren Copyblock eine höhere Markdown-Begrenzung verwendet werden.
-
-Der Quelltext darf niemals durch verschachtelte Codeblöcke zerstört werden.
-
-—
-
-## 11. Vollständigkeitsprinzip
-
-Bei Änderungen an einer Datei wird immer die vollständige aktuelle Datei ausgegeben.
-
-Keine Patch-Ausgabe.
-
-Keine einzelnen Codeabschnitte als Ersatz.
-
-Keine gekürzte Datei.
-
-—
-
-## 12. Working Copy
-
-Working Copy auf dem iPad ist die manuelle Git-Arbeitsumgebung des Benutzers.
-
-Dort werden die von der KI ausgegebenen vollständigen Dateien übernommen, geprüft und committed.
-
-Der Benutzer arbeitet nicht mit dem Terminal.
-
-Der fehlende direkte GitHub-Schreibzugriff des AI-Agenten ist eine bekannte Rahmenbedingung und wird nicht bei jedem Arbeitsschritt erneut erwähnt.
-
-—
-
-## 13. Commit-Prinzip
-
-Ein relevanter Arbeitsschritt gilt erst als abgeschlossen, wenn die betreffende Datei versioniert wurde.
-
-Relevante Commits werden nachvollziehbar dokumentiert.
-
-Nach Möglichkeit werden festgehalten:
-
-- Commit-ID
-- Commit-Nachricht
-- Datum
-- Uhrzeit
 - betroffene Dateipfade
 - Arbeitsschritt
 - Ergebnis
