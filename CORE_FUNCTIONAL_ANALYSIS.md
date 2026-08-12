@@ -504,15 +504,153 @@ Die Auswahl und Installation konkreter Fachmodule darf nicht als fest eingebaute
 
 Die bestehende Kette:
 
-```text
-app.js
-↓
-CoreEntry
-↓
-CoreRuntime
-↓
-CoreStartup
-↓
-CoreLoader
-↓
-Core
+Application Bootstrap
+→ CoreEntry
+→ CoreRuntime
+→ CoreStartup
+→ CoreLoader
+→ Core
+
+ist zu komplex.
+
+Ziel:
+
+Application Entry
+→ Core Startup
+→ Core Runtime
+→ Core Ready
+→ Module System
+→ installierte Module
+
+Dabei müssen Application Entry und Core eindeutig getrennt bleiben.
+
+## 20. Modul-Lifecycle-Ziel
+
+Der zukünftige Module Manager übernimmt:
+
+available
+→ installed
+→ enabled
+→ disabled
+→ updated
+→ uninstalled
+
+Der Core stellt hierfür nur die technischen Schnittstellen bereit.
+
+## 21. Konkrete Fachmodule
+
+Der Core darf keine festen Abhängigkeiten zu:
+
+- User
+- Admin
+- GPS
+- Weather
+- i18n
+
+besitzen.
+
+Diese Module müssen ausschließlich über die definierte Modul-Schnittstelle integriert werden.
+
+## 22. Infrastruktur
+
+Die bestehenden Bereiche:
+
+- Config
+- Database
+- Services
+
+werden separat geprüft.
+
+Dabei wird entschieden:
+
+- Core-Bestandteil
+- technische Subsysteme
+- Modulbestandteil
+
+Die Entscheidung erfolgt nicht anhand des Dateipfads, sondern anhand der tatsächlichen Verantwortung.
+
+## 23. Vorläufige Zielstruktur
+
+Application
+│
+├── Application Entry
+│
+└── Core
+    ├── Core API
+    ├── Context
+    ├── State
+    ├── Event Bus
+    ├── Storage
+    ├── Database
+    ├── Configuration
+    ├── Error Handling
+    ├── Lifecycle
+    └── Module System
+        ├── Module Interface
+        ├── Module Registry
+        └── Module Manager
+
+## 24. Bereinigungsentscheidungen
+
+| Komponente | Entscheidung |
+|—|—|
+| core.js | C |
+| core-context.js | D |
+| core-state.js | D |
+| core-event-bus.js | D |
+| core-storage.js | C |
+| error-log.js | C |
+| core-error-handler.js | D |
+| core-config.js | D |
+| module-interface.js | C |
+| module-manager.js | C |
+| core-lifecycle.js | D |
+| core-loader.js | C |
+| core-startup.js | C |
+| core-runtime.js | C |
+| core-shutdown.js | C |
+| core-entry.js | C |
+| Core/index.js | B |
+| Core/app.js | C |
+
+## 25. Noch offene Prüfung
+
+Vor der tatsächlichen Core-Bereinigung werden zusätzlich geprüft:
+
+- Config Manager
+- Database Manager
+- Service Manager
+- konkrete Modul-Loader
+- HTML-Startup
+- Script-Reihenfolge
+- Abhängigkeiten zwischen Core und Modulen
+- tatsächliche Verwendung aller als D eingestuften Dateien
+
+Erst danach wird die endgültige Core-Dateiliste erstellt.
+
+## Status
+
+CORE-FUNCTIONAL-ANALYSIS:
+COMPLETED
+
+CORE-CLEANUP:
+NOT STARTED
+
+CORE-FREEZE:
+NOT ALLOWED
+
+## Nächster Arbeitsschritt
+
+INFRASTRUCTURE-ANALYSIS
+
+Prüfung von:
+
+- Config
+- Database
+- Services
+
+gegen die geplante Core-Zielarchitektur.
+
+## Fortsetzungsschlüssel
+
+INFRASTRUCTURE-ANALYSIS
