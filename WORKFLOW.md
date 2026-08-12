@@ -1,117 +1,264 @@
 # CatchTrack V1.0 Workflow
 
-## 1. Purpose
-This workflow defines the required execution flow for work on CatchTrack V1.0.
+## 1. Zweck
 
-## 2. Required sequence
-1. Check repository state.
-2. Read RULES.md and STATE.md.
-3. Compare the current workspace against origin/main.
-4. Inspect affected files and dependencies.
-5. Decide on the minimal valid implementation.
-6. Apply the change.
-7. Validate the result with the smallest relevant checks.
-8. Update STATE.md to reflect the actual status.
-9. Review the final diff.
-10. Commit the change.
-11. Synchronize with origin/main.
+Dieser Workflow definiert den verbindlichen Ablauf für Entwicklungs- und Änderungsarbeiten.
 
-## 3. Preconditions
-- Use the current state on origin/main as the reference.
-- Ignore historical duplicates and superseded instructions.
-- Never define a work cursor in RULES.md, WORKFLOW.md, or PROJECT.md.
-- Keep all project-control decisions consistent with STATE.md.
+Der Workflow verhindert:
 
-## 4. Implementation standard
-- Change only the files required for the task.
-- Prefer targeted, reversible edits.
-- Do not create extra documentation files.
-- Do not restore deleted historical files.
-- Do not mix unrelated tasks into one change.
-
-## 5. Validation standard
-- Confirm the relevant files are correct.
-- Confirm no unrelated files changed.
-- Confirm the repository is consistent with the intended architecture.
-- Confirm the change is ready for commit and sync.
-
-## 6. Completion rule
-A task is complete only when the work is committed, the repository remains clean, and the current branch matches the remote reference for the target state.
-
-Alle relevanten Dokumentationsdateien sind weiterhin offen.
-
-Nach Abschluss:
-
-```text
-DOCUMENTATION-SYNC
-→ DOCUMENTATION-FREEZE
-→ CORE-INVENTORY-DEEP-DIVE
-```
-
-Es werden dabei keine unnötigen neuen Dokumentationsdateien erstellt.
+- doppelte Dateien
+- unnötige Änderungen
+- Arbeiten auf veralteten Versionen
+- widersprüchliche Arbeitsstände
+- Wiederholungen
+- Endlosschleifen
 
 —
 
-## 12. Core
+## 2. Verbindlicher Ablauf
 
-Der Core stellt ausschließlich generische Infrastruktur bereit.
+Jeder Arbeitsschritt folgt diesem Ablauf:
 
-Mindestens:
-
-- Startup
-- Runtime
-- Lifecycle
-- Event System
-- State
-- Storage
-- Database
-- Error Handling
-- Logging
-- Module Interface
-- Module Registry
-- Module Manager
-- Permissions
-- Package / Entitlements
-- System Configuration
-
-Fachliche Funktionen gehören nicht in den Core.
-
-Der Core darf keine konkreten Fachmodule kennen oder benötigen.
+```text
+RULES BERÜCKSICHTIGEN
+↓
+STATE LESEN
+↓
+REPOSITORY-STAND PRÜFEN
+↓
+BETROFFENE DATEIEN PRÜFEN
+↓
+ABHÄNGIGKEITEN PRÜFEN
+↓
+ZIEL MIT IST-STAND VERGLEICHEN
+↓
+MINIMALE GÜLTIGE ÄNDERUNG BESTIMMEN
+↓
+UMSETZEN
+↓
+VALIDIEREN
+↓
+STATE AKTUALISIEREN
+↓
+DIFF PRÜFEN
+↓
+COMMIT
+↓
+REMOTE SYNCHRONISIEREN
+↓
+STATE ERNEUT PRÜFEN
+↓
+NÄCHSTEN SCHRITT BESTIMMEN
+```
 
 —
 
-## 13. Core Freeze
-
-Der Core ist derzeit nicht eingefroren.
-
-Vor dem Freeze:
-
-```text
-REPOSITORY-INVENTUR
-→ CORE-INVENTUR
-→ BEREINIGUNG
-→ IMPLEMENTIERUNG
-→ VALIDIERUNG
-→ TESTS
-→ ABNAHME
-→ FREEZE-ENTSCHEIDUNG
-```
-
-Nach dem Freeze gilt:
-
-```text
-/Core/*
-```
-
-grundsätzlich als Read-Only.
-
-Neue Fachfunktionen dürfen danach keine Core-Änderung benötigen.
-
-—
-
-## 14. Änderungsprinzip
+## 3. Beginn eines Arbeitsschrittes
 
 Vor jeder Änderung:
+
+1. `STATE.md` vollständig lesen.
+2. Aktuellen Arbeitsschritt feststellen.
+3. `origin/main` prüfen.
+4. Betroffene Datei auf `origin/main` prüfen.
+5. Datei vollständig lesen.
+6. Abhängigkeiten prüfen.
+7. Ziel und vorhandenen Stand vergleichen.
+
+Erst danach wird entschieden, ob eine Änderung erforderlich ist.
+
+—
+
+## 4. Vorhandene Dateien
+
+Wenn eine benötigte Datei bereits existiert:
+
+```text
+VORHANDEN
+→ VOLLSTÄNDIG LESEN
+→ BEWERTEN
+→ NUR BEI BEDARF ÄNDERN
+```
+
+Wenn sie bereits korrekt ist:
+
+```text
+NICHT ÄNDERN
+→ SCHRITT ALS ERLEDIGT BETRACHTEN
+→ STATE PRÜFEN
+→ NÄCHSTEN SCHRITT
+```
+
+Eine bereits korrekte Datei wird nicht erneut erzeugt oder als neue Datei ausgegeben.
+
+—
+
+## 5. Neue Dateien
+
+Eine neue Datei darf nur erstellt werden, wenn:
+
+- keine geeignete vorhandene Datei existiert
+- die Datei architektonisch notwendig ist
+- ihre Aufgabe nicht bereits durch eine bestehende Datei erfüllt wird
+
+Vorher ist eine Repository-Prüfung verpflichtend.
+
+—
+
+## 6. Änderungen
+
+Es werden nur Dateien geändert, die für den aktuellen Arbeitsschritt erforderlich sind.
+
+Keine:
+
+- unnötigen Nebenänderungen
+- kosmetischen Änderungen ohne Zweck
+- parallelen Implementierungen
+- Wiederherstellung gelöschter Dateien
+- zusätzlichen Dokumentationsdateien
+
+—
+
+## 7. STATE als Arbeitscursor
+
+`STATE.md` ist die einzige Quelle für den aktuellen Arbeitsfortschritt.
+
+Es gibt genau:
+
+- einen aktuellen Arbeitsschritt
+- einen nächsten Arbeitsschritt
+
+Andere Dateien dürfen keinen konkurrierenden Arbeitscursor definieren.
+
+Der Arbeitsablauf darf nicht anhand historischer Dokumente rekonstruiert werden, wenn `STATE.md` den aktuellen Zustand eindeutig enthält.
+
+—
+
+## 8. OK und Fortsetzung
+
+Wenn der Benutzer `OK` sagt:
+
+```text
+AKTUELLEN SCHRITT ABSCHLIESSEN
+↓
+STATE PRÜFEN
+↓
+NÄCHSTEN OFFENEN SCHRITT BESTIMMEN
+```
+
+Danach wird unmittelbar mit dem nächsten erforderlichen Schritt fortgefahren.
+
+Eine bereits abgeschlossene Datei wird nicht erneut ausgegeben.
+
+—
+
+## 9. Loop-Schutz
+
+Vor der Auswahl des nächsten Arbeitsschrittes muss geprüft werden:
+
+```text
+IST DIESER SCHRITT BEREITS ABGESCHLOSSEN?
+→ JA: NICHT ERNEUT AUSFÜHREN
+
+IST DIESE DATEI BEREITS KORREKT?
+→ JA: NICHT ERNEUT ERSTELLEN
+
+IST DIESER SCHRITT DER IN STATE DEFINIERTE NÄCHSTE SCHRITT?
+→ NEIN: NICHT AUSFÜHREN
+```
+
+Bei widersprüchlichen Zuständen wird zuerst `STATE.md` korrigiert.
+
+Es wird nicht durch parallele Dokumente improvisiert.
+
+—
+
+## 10. Umsetzung
+
+Änderungen werden vollständig umgesetzt.
+
+Bei einer Dateiänderung wird die komplette Datei ersetzt bzw. erstellt.
+
+Patches oder Teilstücke werden nicht als Endergebnis verwendet.
+
+—
+
+## 11. Validierung
+
+Nach der Umsetzung:
+
+1. betroffene Datei prüfen
+2. Syntax bzw. Format prüfen
+3. relevante Tests durchführen
+4. Architektur prüfen
+5. `git diff` prüfen
+6. sicherstellen, dass keine unbeabsichtigten Dateien verändert wurden
+
+Bei Fehler:
+
+```text
+FEHLER
+↓
+URSACHE ANALYSIEREN
+↓
+KORRIGIEREN
+↓
+ERNEUT VALIDIEREN
+```
+
+—
+
+## 12. STATE-Aktualisierung
+
+Nach erfolgreicher Validierung wird `STATE.md` so aktualisiert, dass es den tatsächlichen Zustand beschreibt.
+
+Dabei dürfen keine parallelen nächsten Schritte eingetragen werden.
+
+—
+
+## 13. Commit
+
+Ein abgeschlossener relevanter Arbeitsschritt wird committed.
+
+Vor dem Commit:
+
+```text
+git diff
+→ DATEIEN PRÜFEN
+→ UNBEABSICHTIGTE ÄNDERUNGEN AUSSCHLIESSEN
+```
+
+Nach dem Commit:
+
+```text
+REMOTE PRÜFEN
+→ ORIGIN/MAIN SYNCHRONISIEREN
+→ FINALEN STAND PRÜFEN
+```
+
+—
+
+## 14. Repository-Synchronisation
+
+Ein Arbeitsschritt gilt erst als vollständig abgeschlossen, wenn der vorgesehene Stand auf `origin/main` vorhanden ist.
+
+Danach wird geprüft:
+
+```text
+LOCAL HEAD == origin/main
+```
+
+Wenn nicht identisch:
+
+```text
+NICHT ALS ABGESCHLOSSEN BETRACHTEN
+```
+
+—
+
+## 15. Core und Module
+
+Vor jeder funktionalen Änderung:
 
 ```text
 INFRASTRUKTUR?
@@ -121,319 +268,112 @@ FACHFUNKTION?
 → MODUL
 ```
 
-Fachfunktionen dürfen den Core nicht verändern.
+Der Core bleibt generisch.
 
-Vorhandene Dateien werden im Rahmen der Inventur klassifiziert:
+Module verwenden definierte Core-Schnittstellen.
 
-- A – NEU
-- B – LÖSCHEN
-- C – VOLLSTÄNDIG ERSETZEN
-- D – UNVERÄNDERT ÜBERNEHMEN
+Ein Modul darf nicht einfach eine bestehende Core-Datei verändern.
 
 —
 
-## 15. Module
+## 16. Core-Entwicklung
 
-Module werden unabhängig vom Core entwickelt und getestet.
+Der Core befindet sich derzeit im Entwicklungszustand.
 
-Der Module Manager unterstützt konzeptionell:
+Die Core-Arbeit erfolgt grundsätzlich:
 
-- install
-- uninstall
-- enable
-- disable
-- update
-- status
-- registry
-- dependencies
+```text
+INVENTUR
+↓
+ANALYSE
+↓
+BEREINIGUNG
+↓
+IMPLEMENTIERUNG
+↓
+VALIDIERUNG
+↓
+TEST
+↓
+ABNAHME
+↓
+FREEZE
+```
 
-Ein Modul darf keine direkte Änderung bestehender Core-Dateien benötigen.
-
-Wenn ein Modul eine Core-Änderung benötigt, wird zuerst die Architektur geprüft.
-
-—
-
-## 16. Modulunabhängigkeit
-
-Module dürfen nicht unnötig voneinander abhängig sein.
-
-Direkte Abhängigkeiten werden ausdrücklich definiert.
-
-Ein Modul darf keine privaten Implementierungsdetails eines anderen Moduls verwenden.
+Erst danach beginnt die normale modulare Erweiterung auf Basis des eingefrorenen Core.
 
 —
 
-## 17. Datenbank
+## 17. Tests
 
-Module dürfen eigene Datenstrukturen besitzen.
+Tests erfolgen in sinnvollen Zwischenstufen.
 
-Die generische Datenbankinfrastruktur enthält keine unnötige Fachlogik einzelner Module.
-
-—
-
-## 18. User und Admin
-
-User und Admin sind Module.
-
-Sie gehören nicht zur fachlichen Core-Logik.
-
-—
-
-## 19. Rollen und Berechtigungen
-
-Berechtigungen werden zentral und konsistent behandelt.
-
-Berechtigungen ergeben sich aus Rollen und/oder Paket-/Entitlement-Regeln.
-
-Nicht zugängliche Funktionen werden nicht als verfügbar dargestellt.
-
-—
-
-## 20. Keine Fake-Funktionen
-
-Nicht implementierte oder nicht getestete Funktionen werden nicht als fertig dargestellt.
-
-Eine Funktion darf nur als:
-
-- fertig
-- implementiert
-- getestet
-- abgenommen
-- stabil
-- eingefroren
-
-bezeichnet werden, wenn dies tatsächlich festgestellt wurde.
-
-—
-
-## 21. Startup
-
-CatchTrack besitzt keinen unnötigen Parallelbetrieb mehrerer konkurrierender Startup-/Runtime-Systeme.
-
-Der endgültige Startablauf muss eindeutig definiert sein.
-
-Der Core darf keine konkrete Fachmodulliste für seinen Start benötigen.
-
-—
-
-## 22. Testprinzip
-
-Entwicklung erfolgt in kurzen, überprüfbaren Abschnitten.
-
-Nach einer sinnvollen funktionsfähigen Zwischenstufe:
+Grundsatz:
 
 ```text
 IMPLEMENTIEREN
 → TESTEN
-→ ERGEBNIS BEWERTEN
-```
-
-Bei Fehler:
-
-```text
-FEHLER
-→ ANALYSIEREN
+→ BEWERTEN
 → KORRIGIEREN
 → ERNEUT TESTEN
 ```
 
-Bei Erfolg:
-
-```text
-BESTANDEN
-→ DOKUMENTIEREN
-→ NÄCHSTER SCHRITT
-```
-
-Der Benutzer soll frühzeitig testen können.
+Nicht bis zum Ende eines großen Entwicklungsblocks warten, wenn vorher bereits sinnvoll getestet werden kann.
 
 —
 
-## 23. Terminal-Arbeiten
+## 18. Dateiausgabe an den Benutzer
 
-Terminal-Prüfungen werden so durchgeführt, dass relevante vollständige Ergebnisse versionierbar bleiben.
+Wenn eine Datei ausgegeben werden muss, erfolgt dies immer in drei getrennten Copyblöcken:
 
-Für umfangreiche Prüfungen kann eine technische Arbeitsdatei im Repository-Root verwendet werden.
+1. Repository-Pfad
+2. exakter Dateiname
+3. vollständiger Quellcode
 
-Beispiel:
+Der Quellcodeblock enthält keinen zusätzlichen Dateinamen und keine Erläuterungen.
 
-```text
-{ command1; command2; command3; } > terminal.md 2>&1
-```
+Enthält der Quellcode eigene Markdown-Codeblöcke, wird für den äußeren Copyblock eine höhere Backtick-Ebene verwendet.
 
-Eine solche Arbeitsdatei ist keine Projektdokumentation.
-
-Relevante Ergebnisse werden anschließend in DEV_LOG oder Chronik dokumentiert.
+Der vollständige Dateiinhalt muss in einem einzigen Copyblock kopierbar sein.
 
 —
 
-## 24. Git und Working Copy
-
-Working Copy auf dem iPad ist die manuelle Git-Arbeitsumgebung des Benutzers.
-
-Dort werden vollständige Dateien übernommen, geprüft, committed und synchronisiert.
-
-Der Benutzer arbeitet nicht mit dem Terminal.
-
-Der bekannte fehlende direkte GitHub-Schreibzugriff wird nicht bei jedem Arbeitsschritt erneut erwähnt.
-
-—
-
-## 25. Commit-Prinzip
-
-Ein relevanter Arbeitsschritt gilt erst als abgeschlossen, wenn die betreffenden Dateien versioniert wurden.
-
-Nach Möglichkeit werden dokumentiert:
-
-- Commit-ID
-- Commit-Nachricht
-- Datum
-- Uhrzeit
-- betroffene Dateipfade
-- Arbeitsschritt
-- Ergebnis
-
-—
-
-## 26. DEV_LOG
-
-`DEV_LOG.md` dokumentiert technische Entwicklungsarbeit.
-
-Mindestens:
-
-```text
-Datum/Uhrzeit
-→ Aktion
-→ Arbeitsschritt / Befehl
-→ Ergebnis
-→ Commit
-→ betroffene Pfade
-```
-
-DEV_LOG ersetzt nicht die Projektchronik.
-
-—
-
-## 27. Projektchronik
-
-Die Projektchronik dokumentiert:
-
-- relevante Entscheidungen
-- abgeschlossene Meilensteine
-- wichtige Fehler und Lösungen
-- Statusänderungen
-- aktuellen Fortsetzungspunkt
-
-Sie wird nicht mit unnötigen technischen Details überladen.
-
-—
-
-## 28. Fortsetzungspunkt
-
-Am Ende der laufenden Chronik wird ein Fortsetzungspunkt geführt.
-
-Er enthält:
-
-- aktuellen Arbeitsstand
-- letzten abgeschlossenen Schritt
-- nächsten Arbeitsschritt
-- kurzen Fortsetzungsschlüssel
-
-Dadurch kann eine spätere Sitzung ohne unnötige Wiederholung fortgesetzt werden.
-
-—
-
-## 29. Dateiausgabe
-
-Bei der manuellen Ausgabe einer Datei gelten immer genau drei Copyblöcke.
-
-### Copyblock 1
-
-Nur der vollständige Repository-Pfad.
-
-### Copyblock 2
-
-Nur der exakte Dateiname.
-
-### Copyblock 3
-
-Der vollständige Dateiinhalt.
-
-Der Dateiname steht nicht im dritten Copyblock.
-
-Keine Patches.
-
-Keine Teilstücke.
-
-Keine Auslassungen.
-
-Keine zusätzlichen Kommentare innerhalb des Quelltext-Copyblocks.
-
-Der vollständige Dateiinhalt muss mit einer einzigen Kopieraktion übernommen werden können.
-
-Enthält der Dateiinhalt selbst Markdown-Codeblöcke, muss der äußere Copyblock entsprechend höher begrenzt werden.
-
-Der Quelltext-Copyblock darf niemals durch verschachtelte Markdown-Blöcke zerstört werden.
-
-—
-
-## 30. Abschlussregel
+## 19. Abschluss
 
 Ein Arbeitsschritt ist abgeschlossen, wenn:
 
-1. die erforderlichen Dateien vollständig erstellt oder ersetzt wurden
-2. bekannte Fehler behoben wurden
-3. der vorgesehene Test erfolgreich durchgeführt wurde
-4. Abhängigkeiten geprüft wurden
-5. relevante Dokumentation aktualisiert wurde
-6. die Änderungen versioniert wurden
+- die erforderliche Änderung vollständig umgesetzt wurde
+- die Validierung erfolgreich war
+- keine unbeabsichtigten Änderungen vorhanden sind
+- `STATE.md` den tatsächlichen Zustand wiedergibt
+- der Commit erstellt wurde
+- der vorgesehene Stand synchronisiert wurde
+
+Danach darf der Schritt nicht erneut als offen behandelt werden.
 
 —
 
-## 31. Grundprinzip
+## 20. Projektsteuerung
+
+Die Projektsteuerung besteht ausschließlich aus:
 
 ```text
-ARCHITEKTUR
-↓
-DOKUMENTATION
-↓
-REPOSITORY-INVENTUR
-↓
-CORE-INVENTUR
-↓
-CORE-BEREINIGUNG
-↓
-CORE-IMPLEMENTIERUNG
-↓
-VALIDIERUNG
-↓
-CORE-FREEZE
-↓
-MODULE
-↓
-ERWEITERUNG
+RULES.md
+WORKFLOW.md
+PROJECT.md
+STATE.md
 ```
 
-Nicht:
+Keine weitere Root-MD-Datei wird für diesen Zweck erstellt.
 
-```text
-MODUL
-→ CORE ÄNDERN
-→ NEUES MODUL
-→ CORE ERNEUT ÄNDERN
-→ NEUE CORE-DATEI
-```
+`PROJECT.md` beschreibt das Projekt.
+
+`RULES.md` beschreibt die Regeln.
+
+`WORKFLOW.md` beschreibt den Ablauf.
+
+`STATE.md` beschreibt den aktuellen Zustand.
+
+Diese Zuständigkeiten dürfen nicht vermischt werden.
 
 —
-
-## 32. Aktueller Fortsetzungsschlüssel
-
-`DOCUMENTATION-SYNC`
-
-Nach Abschluss der Dokumentationskonsolidierung:
-
-`DOCUMENTATION-FREEZE`
-
-Danach:
-
-`CORE-INVENTORY-DEEP-DIVE`
