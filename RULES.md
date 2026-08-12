@@ -1,115 +1,305 @@
-# CatchTrack – Development Rules
+CatchTrack V1.0 – Project Rules
 
-## 1. Verbindliche Grundlage
+1. Verbindlichkeit
 
-Diese Regeln gelten für die gesamte Entwicklung von CatchTrack.
+Diese Datei enthält verbindliche Projektregeln.
 
-Bestehende Regeln dürfen nicht stillschweigend geändert werden.
+AI-Agenten müssen diese Regeln vor jeder Arbeit am Projekt berücksichtigen.
 
-Bei widersprüchlichen Anforderungen muss nachgefragt werden.
+Regeln dieser Datei dürfen nicht eigenmächtig verändert, abgeschwächt oder entfernt werden.
 
-## 2. Arbeitsweise der KI
+⸻
 
-Die KI arbeitet zielgerichtet.
+2. Frozen Documentation
 
-Keine unnötigen Erklärungen über interne Arbeitsschritte.
+Folgende Dateien sind nach ihrer Erstellung verbindliche, eingefrorene Dokumentation:
 
-Keine langen Ausführungen darüber, was als Nächstes gemacht werden soll.
+VISION.md
+RULES.md
+WORKFLOW.md
+PROJECT_MASTERLIST.md
+PROJECT_STATUS.md
 
-Wenn eine Aufgabe eindeutig ist, wird sie ausgeführt.
+Diese Dateien sind für AI-Agenten Read-Only.
 
-Nachfragen erfolgen nur, wenn eine notwendige Information fehlt oder eine fachliche Entscheidung erforderlich ist.
+AI-Agenten dürfen sie:
 
-## 3. Bestehende Dateien
+* lesen
+* analysieren
+* als Vorgabe verwenden
 
-Bestehende Dateien werden nicht ohne konkreten Grund verändert.
+AI-Agenten dürfen sie nicht:
 
-Insbesondere Core-Dateien dürfen nicht wegen einzelner Module ständig angepasst oder neu geschrieben werden.
+* ändern
+* überschreiben
+* löschen
+* verschieben
+* umbenennen
 
-Vor einer Änderung an einer bestehenden Datei muss geprüft werden, ob die Änderung tatsächlich erforderlich ist.
+Ein AI-Agent darf nicht nachfragen, ob eine Änderung erlaubt ist.
 
-## 4. Module
+Es existiert im normalen Entwicklungsworkflow keine Option, diese Dateien durch eine Agentenentscheidung zu verändern.
 
-Module sind eigenständige Funktionseinheiten.
+Eine Änderung kann ausschließlich durch eine bewusste Projektentscheidung des Projektinhabers außerhalb des normalen Agenten-Workflows erfolgen.
 
-Ein Modul soll möglichst:
-- selbstständig funktionieren
-- klar definierte Schnittstellen besitzen
-- keine unnötigen Abhängigkeiten erzeugen
-- unabhängig aktiviert oder deaktiviert werden können
-- später ersetzt oder erweitert werden können
+⸻
 
-## 5. Vollständige Dateien
+3. Project Chronicle
 
-Bei der Erstellung oder Änderung einer Datei wird grundsätzlich der vollständige Dateiinhalt ausgegeben.
+Die Projektchronik ist davon getrennt.
 
-Keine unnötigen Ausschnitte.
+Aktuelle Chronik:
 
-Wenn mehrere Dateien erstellt werden, wird jede Datei in einem eigenen Copy-Block ausgegeben.
+PROJECT_CHRONICLE_001.md
 
-Jeder Copy-Block enthält:
-- Dateiname
-- vollständigen Pfad
-- vollständigen Inhalt
+Spätere Chroniken können erstellt werden:
 
-## 6. Entwicklungsreihenfolge
+PROJECT_CHRONICLE_002.md
+PROJECT_CHRONICLE_003.md
+...
 
-Die vereinbarte Projektstruktur und Masterliste bestimmen die Reihenfolge der Entwicklung.
+Die Chronik darf laufend fortgeschrieben werden.
 
-Keine zusätzlichen Dateien oder Ordner ohne technischen oder organisatorischen Grund.
+Bereits dokumentierte historische Ereignisse dürfen nicht rückwirkend verfälscht werden.
 
-Keine vorzeitige Erstellung leerer Dateien.
+⸻
 
-## 7. Änderungen
+4. chatgpt-info.md
 
-Keine wiederholten Änderungen an bereits abgeschlossenen Dateien ohne nachvollziehbaren Grund.
+chatgpt-info.md ist ein technisches Analyse-/Prüfdokument.
 
-Eine abgeschlossene Datei gilt als stabil.
+Es ist keine verbindliche Architekturdefinition.
 
-Änderungen nach Abschluss müssen einen konkreten Grund haben und erneut getestet werden.
+Darin enthaltene Fehlerberichte oder Empfehlungen dürfen nicht automatisch als aktueller Projektstatus interpretiert werden.
 
-## 8. Abschluss eines Moduls
+⸻
 
-Ein Modul darf erst als abgeschlossen markiert werden, wenn:
+5. Core-Regel
 
-- Anforderungen definiert
-- Dateien erstellt
-- Code funktionsfähig
-- Dateien committed
-- Dateien auf GitHub vorhanden
-- Commit überprüfbar
-- Tests erfolgreich
-- Funktionen erfolgreich geprüft
-- Dokumentation aktualisiert
+Der Core ist die technische Plattform.
 
-sind.
+Der Core darf keine konkrete Fachlogik enthalten.
 
-## 9. GitHub
+Der Core darf nicht für einzelne Module angepasst werden.
 
-GitHub ist die maßgebliche externe Referenz für den tatsächlich committeden Projektstand.
+Insbesondere dürfen Fachmodule keine Änderungen an Core-Dateien erzwingen.
 
-Ein lokal vorhandener oder in Working Copy vorhandener Stand gilt nicht automatisch als abgeschlossen.
+⸻
 
-## 10. Chronik
+6. Core Freeze
 
-Jeder abgeschlossene relevante Entwicklungsschritt wird in der Projektchronik dokumentiert.
+Nach erfolgreicher Fertigstellung und Abnahme wird der Core eingefroren.
 
-Die Chronik wird fortlaufend geführt.
+Danach gilt für AI-Agenten:
 
-Bei Erreichen der festgelegten maximalen Länge wird eine neue Chronikdatei begonnen.
+/Core/*
 
-## 11. Fehler
+ist Read-Only.
 
-Fehler und Testprobleme werden nachvollziehbar dokumentiert.
+Erlaubt:
 
-Insbesondere Fehler, die bei Vorschau oder Tests auftreten, dürfen nicht stillschweigend ignoriert werden.
+* lesen
+* analysieren
+* verwenden
 
-## 12. Keine Endlosschleifen
+Nicht erlaubt:
 
-Die KI darf nicht ohne konkreten Grund zu bereits abgeschlossenen Architekturentscheidungen zurückkehren.
+* ändern
+* überschreiben
+* löschen
+* verschieben
+* umbenennen
 
-Keine wiederholte Grundsatzdiskussion.
+Es gibt keine automatische Rückfrage, ob Core-Dateien verändert werden dürfen.
 
-Keine unnötige Neuplanung bereits festgelegter Bereiche.
+⸻
 
-Wenn eine Entscheidung getroffen und dokumentiert wurde, wird sie als verbindliche Grundlage verwendet.
+7. Neue Funktionalität
+
+Neue fachliche Funktionalität wird grundsätzlich als Modul umgesetzt.
+
+Vor jeder Änderung ist zu prüfen:
+
+Ist das Infrastruktur?
+→ möglicherweise Core
+Ist das eine fachliche Funktion?
+→ Modul
+
+Beispiele für Module:
+
+* User
+* Admin
+* GPS
+* Weather
+* Catchbook
+* Fish Database
+* Tides
+* Maps
+* Statistics
+
+⸻
+
+8. Keine Core-Anpassung für Module
+
+Folgendes ist grundsätzlich falsch:
+
+Neues Modul
+→ Core-Datei ändern
+→ Modul einbauen
+
+Richtig:
+
+Neues Modul
+→ definierte Core-Schnittstelle verwenden
+→ Modul registrieren
+→ Modul installieren
+
+Wenn ein Modul eine Core-Änderung benötigt, ist zunächst die Modularchitektur zu überprüfen.
+
+⸻
+
+9. Module müssen unabhängig bleiben
+
+Module dürfen nicht unnötig voneinander abhängig sein.
+
+Direkte Abhängigkeiten müssen ausdrücklich definiert werden.
+
+Ein Modul darf keine privaten Implementierungsdetails eines anderen Moduls verwenden.
+
+⸻
+
+10. Module Lifecycle
+
+Jedes installierbare Modul muss konzeptionell folgende Zustände unterstützen:
+
+available
+installed
+enabled
+disabled
+updated
+uninstalled
+
+Der Module Manager ist für den Lifecycle zuständig.
+
+⸻
+
+11. Datenbank
+
+Module dürfen eigene Datenstrukturen besitzen.
+
+Datenbankoperationen eines Moduls gehören zum Modul-Lifecycle.
+
+Installation:
+
+Module installieren
+→ Datenbank installieren
+→ Modul registrieren
+
+Deinstallation:
+
+Modul deaktivieren
+→ Daten behandeln
+→ Datenbank entfernen oder behalten
+→ Modul deregistrieren
+→ Dateien entfernen
+
+⸻
+
+12. User und Admin
+
+User und Admin sind Module.
+
+Sie werden nicht als fachliche Bestandteile des Core implementiert.
+
+Der Core stellt nur die dafür erforderliche Infrastruktur bereit.
+
+⸻
+
+13. Rollen und Permissions
+
+Berechtigungen müssen zentral und konsistent behandelt werden.
+
+Ein Benutzer erhält Berechtigungen über Rollen und/oder Paket-/Entitlement-Regeln.
+
+Ein Menüpunkt darf nur angezeigt werden, wenn der Benutzer tatsächlich Zugriff darauf besitzt.
+
+⸻
+
+14. Keine Fake-Funktionen
+
+Es dürfen keine Menüeinträge für nicht verfügbare Funktionen angezeigt werden, nur um anschließend eine Meldung wie:
+
+Diese Funktion ist für Ihr Paket nicht aktiviert.
+
+anzuzeigen.
+
+Nicht verfügbare Funktionen werden nicht angezeigt.
+
+⸻
+
+15. Status nicht vortäuschen
+
+Eine Funktion darf nur als fertig, implementiert, getestet oder abgenommen bezeichnet werden, wenn dies tatsächlich überprüft wurde.
+
+Insbesondere darf der Core nicht als:
+
+FROZEN
+
+bezeichnet werden, bevor die technische Abnahme abgeschlossen ist.
+
+⸻
+
+16. Keine unnötigen Dateien
+
+Vor dem Erstellen einer neuen Datei muss geprüft werden, ob bereits eine Datei mit derselben oder einer vergleichbaren Aufgabe existiert.
+
+Doppelte Dateien oder parallele Implementierungen derselben Funktion sind zu vermeiden.
+
+⸻
+
+17. Keine parallelen Startsysteme
+
+CatchTrack darf nicht mehrere konkurrierende Startup-/Runtime-Systeme besitzen.
+
+Der Start der Anwendung muss über einen eindeutig definierten Einstieg erfolgen.
+
+⸻
+
+18. Vollständige Dateien
+
+Wenn eine bestehende Projektdatei geändert werden muss, wird sie als vollständige Datei behandelt.
+
+Teilweise, widersprüchliche oder parallele Versionen derselben Datei sind zu vermeiden.
+
+⸻
+
+19. Änderungen dokumentieren
+
+Wichtige Architekturentscheidungen, Meilensteine und relevante technische Änderungen werden in der Projektchronik dokumentiert.
+
+Die Frozen Documents werden nicht als laufendes Änderungsprotokoll verwendet.
+
+⸻
+
+20. Priorität
+
+Bei Entscheidungen gilt:
+
+1. Sicherheit und Datenintegrität
+2. Frozen Architecture
+3. Core/Module Trennung
+4. definierte Core-Schnittstellen
+5. bestehende Funktionalität
+6. neue Funktionalität
+
+Neue Funktionalität darf keine bestehende Architekturregel umgehen.
+
+⸻
+
+21. Grundregel
+
+Die wichtigste Regel von CatchTrack V1.0 lautet:
+
+Der Core stellt Infrastruktur bereit. Module stellen Funktionen bereit.
+
+Diese Trennung ist verbindlich.
