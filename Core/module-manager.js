@@ -142,9 +142,6 @@
                 throw new Error(`Module not found: ${moduleId}`);
             }
 
-            module.status = 'enabled';
-            module.active = true;
-
             if (typeof module.enable === 'function') {
                 module.enable();
             } else if (typeof module.activate === 'function') {
@@ -170,16 +167,16 @@
                 return false;
             }
 
-            module.status = 'disabled';
-            module.active = false;
-
             if (typeof module.disable === 'function') {
                 module.disable();
             } else if (typeof module.deactivate === 'function') {
                 module.deactivate();
             }
 
-            if (window.CatchTrackCore && window.CatchTrackCore.state.activeModule === moduleId) {
+            if (
+                window.CatchTrackCore &&
+                window.CatchTrackCore.state.activeModule === moduleId
+            ) {
                 window.CatchTrackCore.state.activeModule = null;
             }
 
