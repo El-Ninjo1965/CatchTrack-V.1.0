@@ -195,9 +195,21 @@
          */
         async authenticate(userId) {
             try {
-                const user = await UserService.getUser(userId);
+                let user = null;
 
-                if (user && user.active) {
+                // Erst DB-basierte Suche versuchen
+                if (window.CatchTrackDatabaseManager) {
+                    try {
+                        user = await UserService.getUser(userId);
+                    } catch (_) {}
+                }
+
+                // Fallback: RAM-basierte Demo-User im UserModule
+                if (!user && window.CatchTrackUserModule) {
+                    user = window.CatchTrackUserModule.getUserById(userId);
+                }
+
+                if (user && (user.status === 'active' || user.active === true)) {
                     this.currentUser = user;
 
                     if (window.CatchTrackCore) {

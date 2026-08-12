@@ -55,6 +55,8 @@
 
                 request.onsuccess = () => {
                     this.db = request.result;
+                    // Store-Liste aus tatsächlich vorhandenen Stores befüllen
+                    this.stores = Array.from(this.db.objectStoreNames);
                     resolve();
                 };
 

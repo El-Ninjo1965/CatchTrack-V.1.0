@@ -58,7 +58,9 @@
                     'modules',
                     'logs',
                     'sessions',
-                    'settings'
+                    'settings',
+                    'cache',
+                    'sync'
                 ],
                 autoSync: true,
                 syncInterval: 30000

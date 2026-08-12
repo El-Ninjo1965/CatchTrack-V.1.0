@@ -150,6 +150,19 @@
             }
         },
 
+        once(eventName, callback) {
+            if (typeof callback !== 'function') {
+                throw new TypeError('Event callback must be a function.');
+            }
+
+            const wrapper = (data) => {
+                this.off(eventName, wrapper);
+                callback(data);
+            };
+
+            return this.on(eventName, wrapper);
+        },
+
         emit(eventName, data = null) {
             if (window.CatchTrackCoreEventBus) {
                 return window.CatchTrackCoreEventBus.publish(eventName, data);
