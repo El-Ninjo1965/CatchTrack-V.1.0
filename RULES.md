@@ -40,7 +40,7 @@ Eine Änderung kann ausschließlich durch eine bewusste Projektentscheidung des 
 
 GitHub main ist die maßgebliche Quelle für den aktuellen Projektstand.
 
-Vor jeder Prüfung, Analyse oder Änderung einer bestehenden Datei wird der aktuelle Stand aus GitHub gelesen.
+Vor jeder Prüfung, Analyse, Erstellung oder Änderung einer Datei wird grundsätzlich zuerst geprüft, ob diese Datei bereits auf GitHub main vorhanden ist.
 
 Lokale Arbeitskopien aus Codespace oder Working Copy dürfen nicht ungeprüft als aktuell angenommen werden.
 
@@ -50,7 +50,62 @@ Bei abgeschnittenen, unvollständigen oder widersprüchlichen Dateien wird nicht
 
 In diesem Fall wird das vorhandene Original angefordert.
 
-## 4. Autonomer Arbeitsmodus
+## 4. Verbindliche Dateivorprüfung
+
+Vor jeder Dateiausgabe muss der AI-Agent folgende Prüfung durchführen:
+
+DATEIAUFTRAG
+→ nächste erforderliche Datei bestimmen
+→ GitHub main prüfen
+→ Datei vorhanden?
+→ vorhandene Datei vollständig auslesen
+→ vorhandene Version mit dem erforderlichen Ziel vergleichen
+→ Reihenfolge des Arbeitsschrittes prüfen
+→ erst danach Datei ausgeben
+
+Wenn die Datei bereits auf GitHub vorhanden ist:
+
+* darf keine neue Version aus dem Gedächtnis erzeugt werden
+* muss die aktuelle GitHub-Version als Grundlage verwendet werden
+* muss festgestellt werden, ob überhaupt eine Änderung erforderlich ist
+
+Wenn die vorhandene GitHub-Version bereits dem erforderlichen Ziel entspricht:
+
+* darf die Datei nicht erneut ausgegeben werden
+* ist mit dem nächsten offenen Arbeitsschritt fortzufahren
+
+Wenn eine Änderung erforderlich ist:
+
+* muss die aktuelle GitHub-Version als Ausgangsbasis verwendet werden
+* darf keine ältere lokale oder erinnerte Version als Grundlage verwendet werden
+
+Wenn die Datei nicht auf GitHub vorhanden ist:
+
+* darf sie neu erstellt werden
+
+Keine Dateiausgabe ohne erfolgreich abgeschlossene GitHub-Prüfung.
+
+## 5. Reihenfolgeprüfung
+
+Bei jedem Arbeitsschritt muss zusätzlich geprüft werden:
+
+* Welche Datei wurde zuletzt tatsächlich bearbeitet?
+* Welche Datei ist als Nächstes erforderlich?
+* Wurde diese Datei bereits erstellt oder committed?
+* Gibt es einen offenen vorherigen Arbeitsschritt?
+
+Bei einem Benutzerbefehl wie „OK“ bedeutet dies:
+
+OK
+→ aktuellen Arbeitsstand bestimmen
+→ nächsten offenen Arbeitsschritt bestimmen
+→ GitHub prüfen
+→ Datei prüfen
+→ erst dann nächste Datei ausgeben
+
+„OK“ bedeutet niemals, eine bereits erledigte Datei erneut auszugeben.
+
+## 6. Autonomer Arbeitsmodus
 
 Der Benutzer definiert Ziel und gewünschtes Ergebnis.
 
@@ -71,7 +126,7 @@ Lange Erklärungen werden vermieden.
 
 Der Benutzer muss technische Entscheidungen nicht bestätigen, die sich eindeutig aus Projektziel, Architektur und Regeln ergeben.
 
-## 5. Projektchronik
+## 7. Projektchronik
 
 Die Projektchronik ist von den Frozen Documents getrennt.
 
@@ -91,7 +146,7 @@ Bereits dokumentierte historische Ereignisse dürfen nicht rückwirkend verfäls
 
 Die Chronik enthält außerdem den aktuellen Fortsetzungspunkt des Projekts.
 
-## 6. Technisches Entwicklungsprotokoll
+## 8. Technisches Entwicklungsprotokoll
 
 DEV_LOG.md dokumentiert technische Entwicklungsarbeit.
 
@@ -107,7 +162,7 @@ Dazu gehören insbesondere:
 
 DEV_LOG.md ersetzt nicht die Projektchronik.
 
-## 7. Git und Versionierung
+## 9. Git und Versionierung
 
 Relevante Entwicklungsdateien werden grundsätzlich committed.
 
@@ -123,7 +178,7 @@ Commit-Informationen müssen nachvollziehbar bleiben.
 
 Insbesondere müssen Commit-ID, Commit-Nachricht und betroffene Dateipfade ermittelbar sein.
 
-## 8. Terminal-Arbeiten
+## 10. Terminal-Arbeiten
 
 Terminal-Prüfungen werden so ausgeführt, dass die vollständige relevante Ausgabe in einer versionierbaren Datei gespeichert wird.
 
@@ -133,7 +188,7 @@ Terminal-Ausgaben dürfen nicht ausschließlich als Bildschirmtext behandelt wer
 
 Relevante Ergebnisse werden zusätzlich in DEV_LOG.md oder der Projektchronik dokumentiert.
 
-## 9. Core-Regel
+## 11. Core-Regel
 
 Der Core ist die technische Plattform.
 
@@ -143,7 +198,7 @@ Der Core darf nicht für einzelne Module angepasst werden.
 
 Insbesondere dürfen Fachmodule keine Änderungen an Core-Dateien erzwingen.
 
-## 10. Core Freeze
+## 12. Core Freeze
 
 Nach erfolgreicher Fertigstellung und Abnahme wird der Core eingefroren.
 
@@ -169,7 +224,7 @@ Nicht erlaubt:
 
 Der Core darf nach dem Freeze nicht durch Installation, Deinstallation, Aktualisierung oder Erweiterung einzelner Module verändert werden.
 
-## 11. Neue Funktionalität
+## 13. Neue Funktionalität
 
 Neue fachliche Funktionalität wird grundsätzlich als Modul umgesetzt.
 
@@ -193,7 +248,7 @@ Beispiele für Module:
 * Maps
 * Statistics
 
-## 12. Keine Core-Anpassung für Module
+## 14. Keine Core-Anpassung für Module
 
 Folgendes ist grundsätzlich falsch:
 
@@ -210,7 +265,7 @@ Neues Modul
 
 Wenn ein Modul eine Core-Änderung benötigt, ist zunächst die Modularchitektur zu überprüfen.
 
-## 13. Module müssen unabhängig bleiben
+## 15. Module müssen unabhängig bleiben
 
 Module dürfen nicht unnötig voneinander abhängig sein.
 
@@ -218,7 +273,7 @@ Direkte Abhängigkeiten müssen ausdrücklich definiert werden.
 
 Ein Modul darf keine privaten Implementierungsdetails eines anderen Moduls verwenden.
 
-## 14. Module Lifecycle
+## 16. Module Lifecycle
 
 Jedes installierbare Modul muss konzeptionell folgende Zustände unterstützen:
 
@@ -231,7 +286,7 @@ uninstalled
 
 Der Module Manager ist für den Lifecycle zuständig.
 
-## 15. Datenbank
+## 17. Datenbank
 
 Module dürfen eigene Datenstrukturen besitzen.
 
@@ -251,7 +306,7 @@ Modul deaktivieren
 → Modul deregistrieren
 → Dateien entfernen
 
-## 16. User und Admin
+## 18. User und Admin
 
 User und Admin sind Module.
 
@@ -259,7 +314,7 @@ Sie werden nicht als fachliche Bestandteile des Core implementiert.
 
 Der Core stellt nur die dafür erforderliche Infrastruktur bereit.
 
-## 17. Rollen und Permissions
+## 19. Rollen und Permissions
 
 Berechtigungen müssen zentral und konsistent behandelt werden.
 
@@ -267,7 +322,7 @@ Ein Benutzer erhält Berechtigungen über Rollen und/oder Paket-/Entitlement-Reg
 
 Ein Menüpunkt darf nur angezeigt werden, wenn der Benutzer tatsächlich Zugriff darauf besitzt.
 
-## 18. Keine Fake-Funktionen
+## 20. Keine Fake-Funktionen
 
 Es dürfen keine Menüeinträge für nicht verfügbare Funktionen angezeigt werden, nur um anschließend eine Meldung wie:
 
@@ -277,31 +332,31 @@ anzuzeigen.
 
 Nicht verfügbare Funktionen werden nicht angezeigt.
 
-## 19. Status nicht vortäuschen
+## 21. Status nicht vortäuschen
 
 Eine Funktion darf nur als fertig, implementiert, getestet oder abgenommen bezeichnet werden, wenn dies tatsächlich überprüft wurde.
 
 Insbesondere darf der Core nicht als FROZEN bezeichnet werden, bevor die technische Abnahme abgeschlossen ist.
 
-## 20. Keine unnötigen Dateien
+## 22. Keine unnötigen Dateien
 
 Vor dem Erstellen einer neuen Datei muss geprüft werden, ob bereits eine Datei mit derselben oder einer vergleichbaren Aufgabe existiert.
 
 Doppelte Dateien oder parallele Implementierungen derselben Funktion sind zu vermeiden.
 
-## 21. Keine parallelen Startsysteme
+## 23. Keine parallelen Startsysteme
 
 CatchTrack darf nicht mehrere konkurrierende Startup-/Runtime-Systeme besitzen.
 
 Der Start der Anwendung muss über einen eindeutig definierten Einstieg erfolgen.
 
-## 22. Vollständige Dateien
+## 24. Vollständige Dateien
 
 Wenn eine bestehende Projektdatei geändert werden muss, wird sie als vollständige Datei behandelt.
 
 Teilweise, widersprüchliche oder parallele Versionen derselben Datei sind zu vermeiden.
 
-## 23. Dateiausgabe
+## 25. Dateiausgabe
 
 Wenn eine Datei zur manuellen Übernahme ausgegeben wird, gelten verbindlich:
 
@@ -316,7 +371,7 @@ Wenn eine Datei zur manuellen Übernahme ausgegeben wird, gelten verbindlich:
 
 Diese Regel gilt für jede Datei, unabhängig vom Dateityp.
 
-## 24. Änderungen dokumentieren
+## 26. Änderungen dokumentieren
 
 Wichtige Architekturentscheidungen, Meilensteine und relevante technische Änderungen werden dokumentiert.
 
@@ -326,12 +381,15 @@ Projektentscheidungen und Meilensteine gehören in die Projektchronik.
 
 Frozen Documents werden nicht als laufendes Änderungsprotokoll verwendet.
 
-## 25. Arbeitsablauf
+## 27. Arbeitsablauf
 
 Der verbindliche Arbeitsablauf lautet:
 
 ZIEL
 → AKTUELLEN GITHUB-STAND PRÜFEN
+→ NÄCHSTEN OFFENEN ARBEITSSCHRITT BESTIMMEN
+→ DATEIEXISTENZ PRÜFEN
+→ AKTUELLE DATEI AUSLESEN
 → REGELN PRÜFEN
 → ENTSCHEIDEN
 → UMSETZEN
@@ -339,25 +397,27 @@ ZIEL
 → KORRIGIEREN
 → DOKUMENTIEREN
 → COMMIT
+→ COMMIT UND DATEIPFADE PRÜFEN
 
 Nach einem bestätigten Arbeitsschritt wird ohne unnötige Zwischenfragen mit dem nächsten sinnvollen Schritt fortgesetzt.
 
 Bei sinnvollen Entwicklungsabschnitten wird ein Testpunkt eingeplant.
 
-## 26. Priorität
+## 28. Priorität
 
 Bei Entscheidungen gilt:
 
 1. Sicherheit und Datenintegrität
-2. Frozen Architecture
-3. Core/Module-Trennung
-4. definierte Core-Schnittstellen
-5. bestehende Funktionalität
-6. neue Funktionalität
+2. aktuelle GitHub-Version
+3. Frozen Architecture
+4. Core/Module-Trennung
+5. definierte Core-Schnittstellen
+6. bestehende Funktionalität
+7. neue Funktionalität
 
 Neue Funktionalität darf keine bestehende Architekturregel umgehen.
 
-## 27. Grundregel
+## 29. Grundregel
 
 Die wichtigste Regel von CatchTrack V1.0 lautet:
 
@@ -365,4 +425,8 @@ Der Core stellt Infrastruktur bereit.
 
 Module stellen Funktionen bereit.
 
-Diese Trennung ist verbindlich.
+GitHub main ist die verbindliche Referenz.
+
+Keine Datei wird erneut erstellt oder ausgegeben, bevor ihr aktueller GitHub-Stand und ihre Position im Arbeitsablauf geprüft wurden.
+
+Diese Trennung und dieser Prüfprozess sind verbindlich.
