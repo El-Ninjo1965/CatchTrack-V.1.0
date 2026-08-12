@@ -279,5 +279,3 @@ sein.
 Danach werden sie gemeinsam eingefroren.
 
 Eine spätere Änderung erfolgt nur bei einer tatsächlichen Änderung der Regeln, des Workflows, der Projektarchitektur oder des Projektzustands.
-
-—
