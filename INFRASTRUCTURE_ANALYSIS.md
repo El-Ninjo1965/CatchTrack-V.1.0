@@ -411,10 +411,18 @@ CORE-FUNCTIONAL-ANALYSIS:
 COMPLETED
 
 CORE-CLEANUP:
-NOT STARTED
+COMPLETED
 
 CORE-FREEZE:
-NOT ALLOWED
+FROZEN
+
+FREEZE-TAG:
+core-v1.0.0-freeze
+
+FREEZE-COMMIT:
+51844fdb0a50f85f590a0e1870f9c97a7f739183
+
+Historischer Stand: Aussagen wie "CORE-FREEZE: NOT ALLOWED" oder "NOT STARTED" beschreiben nur den Vor-Freeze-Planungszustand und gelten nicht mehr als aktueller Status.
 
 Die weitere Arbeitssteuerung erfolgt ausschließlich über `STATE.md`.
 

@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Core implementation, cleanup and validation completed.
+Current work step: Core freeze documented and consolidated.
 
 ## Next work step
 
-Next work step: Final Core Freeze validation and explicit Core Freeze decision.
+Next work step: Module development on top of the frozen Core.
 
 ## Master file status
 
@@ -37,7 +37,7 @@ Next work step: Final Core Freeze validation and explicit Core Freeze decision.
 - Core implementation: completed
 - Core cleanup: completed
 - Core validation: completed
-- Core freeze: pending explicit decision
+- Core freeze: declared and active
 
 ## Core status
 
@@ -48,7 +48,9 @@ Next work step: Final Core Freeze validation and explicit Core Freeze decision.
 - Core validation completed
 - Core remains infrastructure-focused
 - No concrete application module is part of Core
-- Core freeze has NOT yet been declared
+- Current state: CORE FROZEN
+- Freeze tag: core-v1.0.0-freeze
+- Freeze commit: 51844fdb0a50f85f590a0e1870f9c97a7f739183
 
 ## Architecture status
 
@@ -60,6 +62,7 @@ Next work step: Final Core Freeze validation and explicit Core Freeze decision.
 - Error Handling and Logging responsibilities are separated.
 - Concrete application modules must not be hard-wired into the Core.
 - No concrete module is part of the Core architecture.
+- User, Admin and subsequent modules remain development modules on top of the frozen Core.
 
 ## Blockers
 

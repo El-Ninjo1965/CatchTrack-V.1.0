@@ -33,7 +33,9 @@ Geprüft gegen:
 - Shutdown: **IMPLEMENTED**
 - Core Cleanup: **COMPLETED**
 - Core Validation: **COMPLETED**
-- Core Freeze: **NOT YET DECLARED**
+- Core Freeze: **core-v1.0.0-freeze**
+- Status: **FROZEN**
+- Freeze commit: **51844fdb0a50f85f590a0e1870f9c97a7f739183**
 
 —
 

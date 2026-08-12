@@ -28,7 +28,13 @@ CORE-VALIDATION:
 COMPLETED
 
 CORE-FREEZE:
-NOT YET DECLARED
+FROZEN
+
+FREEZE-TAG:
+core-v1.0.0-freeze
+
+FREEZE-COMMIT:
+51844fdb0a50f85f590a0e1870f9c97a7f739183
 
 CORE-INDEX:
 REMOVED
@@ -921,7 +927,9 @@ Die fachliche Logik dieser Module verbleibt außerhalb des Core.
 - Core Validation: COMPLETED
 - Lifecycle Validation: COMPLETED
 - Restart Validation: COMPLETED
-- Core Freeze: NOT YET DECLARED
+- Core Freeze: FROZEN
+- Freeze Tag: core-v1.0.0-freeze
+- Freeze Commit: 51844fdb0a50f85f590a0e1870f9c97a7f739183
 
 ## 28.5 Aktueller Lifecycle – implementierter Ablauf
 
@@ -1034,7 +1042,7 @@ Vor einem Core Freeze wurden die folgenden Prüfungen erfolgreich durchgeführt:
 - fehlende beziehungsweise doppelte Dateien
 - unerlaubte Abhängigkeiten zu Fachmodulen
 
-Ein Core Freeze ist derzeit noch nicht erklärt.
+Historischer Stand vor dem Freeze: Ein Core Freeze war damals noch nicht erklärt. Aktueller Stand: CORE FROZEN, Freeze-Tag core-v1.0.0-freeze, Freeze-Commit 51844fdb0a50f85f590a0e1870f9c97a7f739183.
 
 —
 
@@ -1081,4 +1089,10 @@ CORE-IMPLEMENTATION:
 COMPLETED
 
 CORE-FREEZE:
-NOT YET DECLARED
+FROZEN
+
+FREEZE-TAG:
+core-v1.0.0-freeze
+
+FREEZE-COMMIT:
+51844fdb0a50f85f590a0e1870f9c97a7f739183

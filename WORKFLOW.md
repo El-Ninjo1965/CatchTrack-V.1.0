@@ -278,9 +278,21 @@ Ein Modul darf nicht einfach eine bestehende Core-Datei verändern.
 
 ## 16. Core-Entwicklung
 
-Der Core befindet sich derzeit im Entwicklungszustand.
+Der Core ist aktuell eingefroren.
 
-Die Core-Arbeit erfolgt grundsätzlich:
+Aktueller Status:
+
+```text
+CORE: FROZEN
+MODULE DEVELOPMENT: ACTIVE
+USER: DEVELOPMENT
+ADMIN: DEVELOPMENT
+OTHER MODULES: DEVELOPMENT
+```
+
+Die historische Core-Entwicklungsfolge bleibt dokumentarisch nachvollziehbar, aber der aktuelle Zustand ist kein Entwicklungslauf mehr, sondern ein eingefrorener Core mit aktiver Modulentwicklung darüber.
+
+Historischer Verlauf (nur für Nachvollziehbarkeit):
 
 ```text
 INVENTUR

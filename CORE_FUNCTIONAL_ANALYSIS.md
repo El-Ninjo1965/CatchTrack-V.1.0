@@ -33,6 +33,19 @@ Geprüfte Core-Komponenten:
 - index.js
 - app.js
 
+## Aktueller Status
+
+CURRENT STATUS:
+CORE FROZEN
+
+Freeze Tag:
+core-v1.0.0-freeze
+
+Freeze Commit:
+51844fdb0a50f85f590a0e1870f9c97a7f739183
+
+Historische Analysehinweise aus der Vor-Freeze-Phase bleiben als historische Dokumentation erhalten, aber sie gelten nicht mehr als aktueller Betriebsstatus.
+
 ## Gesamtbefund
 
 Der bestehende Core enthält grundsätzlich die benötigten technischen Bausteine.
@@ -78,6 +91,8 @@ Damit übernimmt die Datei mehrere Verantwortlichkeiten.
 ### Entscheidung
 
 C – VOLLSTÄNDIG ERSETZEN
+
+Hinweis: Dies war eine historische Analyse zur Core-Bereinigung vor dem Freeze. Der aktuelle Status ist CORE FROZEN; die spätere Modulentwicklung erfolgt außerhalb des Core.
 
 ### Ziel
 
@@ -634,10 +649,18 @@ CORE-FUNCTIONAL-ANALYSIS:
 COMPLETED
 
 CORE-CLEANUP:
-NOT STARTED
+COMPLETED
 
 CORE-FREEZE:
-NOT ALLOWED
+FROZEN
+
+FREEZE-TAG:
+core-v1.0.0-freeze
+
+FREEZE-COMMIT:
+51844fdb0a50f85f590a0e1870f9c97a7f739183
+
+Historischer Stand: Aussagen wie "CORE-FREEZE: NOT ALLOWED" oder "NOT STARTED" beschreiben den Vor-Freeze-Analysezustand und sind nicht als aktueller Status zu verstehen.
 
 Die weitere Arbeitssteuerung erfolgt ausschließlich über `STATE.md`.
 
