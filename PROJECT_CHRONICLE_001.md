@@ -1,4 +1,4 @@
-CatchTrack – Project Chronicle 001
+# CatchTrack – Project Chronicle 001
 
 Zweck:
 
@@ -8,7 +8,7 @@ Die Chronik dient dazu, den tatsächlichen Projektverlauf für spätere Entwickl
 
 Nur abgeschlossene oder eindeutig relevante Schritte werden eingetragen.
 
-Regeln
+## Regeln
 
 * Jeder Eintrag erhält eine eindeutige ID.
 * Einträge werden chronologisch ergänzt.
@@ -17,8 +17,9 @@ Regeln
 * Bei Erreichen der maximal vorgesehenen Länge wird eine neue Chronikdatei begonnen.
 * Die nächste Datei verweist auf diese Datei.
 * Diese Datei verweist am Ende auf die nächste Datei.
+* Aktuelle Arbeitsregeln und der aktuelle Fortsetzungspunkt werden zusätzlich in den dafür vorgesehenen Masterdateien geführt.
 
-Einträge
+## Einträge
 
 CT-0001
 
@@ -180,6 +181,7 @@ Erster Entwicklungsblock vollständig abgeschlossen und dokumentiert:
 ✓ Interactive UI (index.html mit Testwerkzeugen)
 
 Alle Markdown-Dateien dokumentiert:
+
 ✓ PROJECT_STATUS.md - Aktuell
 ✓ PROJECT_MASTERLIST.md - Abgeschlossen
 ✓ PROJECT_CHRONICLE_001.md - Abgeschlossen
@@ -213,6 +215,7 @@ User-Modul auf v1.1.0 erweitert – vollständige Benutzeridentität:
 * id und createdAt schreibgeschützt in updateUser()
 
 Geänderte Dateien: user-module.js, user-interface.js, README.md, index.html
+
 Commit: 6966e06
 
 CT-0016
@@ -226,170 +229,121 @@ CatchTrack App-UI vollständig implementiert:
     * Mobile-Navigation (Bottom Nav + Top Bar)
     * 7 Views: Dashboard, Fänge, Fischdatenbank, Wetter, Statistiken, Profil, Einstellungen
     * Dashboard: Welcome-Banner mit Benutzername, System-Statusleiste, Stat-Cards, Modul-Vorschaukarten
-    * Profil-View: echte Benutzerdaten aus UserModule (username, displayName, email, Rolle, Status, Timestamps)
-    * Responsive Design: Sidebar auf Desktop, Bottom-Nav auf Mobile
-    * Professionelles Design-System (CSS Custom Properties, Fishing-Farbpalette)
+    * Profil-View: echte Benutzerdaten aus UserModule
+    * Responsive Design
+    * Professionelles Design-System
     * Loading-Screen mit Spinner
-    * Nicht verfügbare Module korrekt als deaktiviert markiert (kein “Coming soon” als Funktion vorgetäuscht)
-    * Lädt denselben Core wie bisher (gleiche Script-Reihenfolge)
+    * Nicht verfügbare Module korrekt als deaktiviert markiert
+    * Lädt denselben Core wie bisher
     * UI-Controller CTApp ohne Konflikte mit CatchTrackApp aus app.js
-* dev.html: Bestehende Entwickler-/Testoberfläche (umbenannt von index.html)
-    * Alle Test-Buttons für User-Modul, Admin-Modul, Config, DB, Services, Tests weiterhin verfügbar
-    * Keine inhaltlichen Änderungen
-
-Commit: folgt
+* dev.html: bestehende Entwickler-/Testoberfläche
 
 CT-0017
 
 Status: Abgeschlossen
 
-Weather-Modul vollständig implementiert:
+Weather-Modul vollständig implementiert.
 
-Entscheidung Wetterprovider: Open-Meteo (open-meteo.com)
+Entscheidung Wetterprovider: Open-Meteo.
 
 * Kein API-Key erforderlich
-* CORS-fähig für Browser
-* Alle benötigten Datenfelder verfügbar
-* Kostenlos für nicht-kommerzielle Nutzung (CC BY 4.0)
-* Kommerzielle Nutzung erfordert kostenpflichtigen Plan → dokumentiert
-
-Dateien:
-
-* weather-provider.js: Provider-Abstraktion + Open-Meteo-Implementierung (austauschbar)
-* weather-module.js: Hauptlogik (Fetch, WMO-Codes, Normalisierung, Cache, Offline-Handling)
-* weather-interface.js: Öffentliche API für Core-Integration
-* weather-loader.js: Registrierung + Aktivierung im ModuleManager
-* README.md: Vollständige Dokumentation inkl. Lizenz, Provider-Wechsel, Datenstruktur
-
-Funktionen:
-
-* Aktuelles Wetter (Temp, Gefühlt, Wind, Böen, Druck, Feuchte, Niederschlag, Bewölkung)
+* CORS-fähig
+* Provider-Abstraktion
+* Aktuelles Wetter
 * Sonnenaufgang/Sonnenuntergang
-* 24h stündliche Vorhersage
+* 24h-Vorhersage
 * 7-Tage-Vorhersage
-* WMO-Code → deutsche Beschreibung + Emoji-Icon
-* Offline-Handling: Cache 30 Min. gültig, veralteter Cache mit Kennzeichnung
-* Provider-Abstraktion: späterer Wechsel ohne Modulumbau möglich
-
-Geänderte Dateien:
-
-* Core/app.js: Weather-Scripts in loadModuleScripts aufgenommen
-* index.html: Wetter-View aktiviert (echte UI), Nav-Buttons aktiv, Dashboard-Karte aktualisiert
-
-Commit: folgt
+* WMO-Code-Normalisierung
+* Offline-Handling
+* Cache
+* Provider-Wechsel ohne Modulumbau
 
 CT-0018
 
 Status: Abgeschlossen
 
-GPS-Modul vollständig implementiert:
+GPS-Modul vollständig implementiert.
 
-Dateien:
-
-* gps-module.js: Hauptlogik (Browser Geolocation API, Normalisierung, Stale-Detection, Simulation)
-* gps-interface.js: Öffentliche Schnittstelle – andere Module verwenden nur diese API
-* gps-loader.js: Registrierung und Aktivierung im ModuleManager
-* README.md: Vollständige Dokumentation
-
-Funktionen:
-
-* getCurrentPosition(): Einmalige asynchrone Positionsabfrage (Promise)
-* startTracking() / stopTracking(): Kontinuierliches Tracking via watchPosition
-* getLastPosition(): Letzter bekannter Positionsdatensatz
-* getStatus(): Aktueller Zustand (idle|requesting|available|stale|denied|unavailable|timeout|error)
-* hasValidPosition(): True nur wenn frische, gültige Position vorhanden
-* checkPermission(): Browser-Permission-Status abfragen
-* setSimulatedPosition(): Testposition setzen (kein Einfluss auf produktiven Datenfluss)
-* Veraltungserkennung: Position gilt nach 5 Minuten als stale
+* Browser Geolocation API
+* Einmalige Positionsabfrage
+* Kontinuierliches Tracking
+* Letzte bekannte Position
+* Statusverwaltung
+* Permission-Prüfung
+* Simulationsposition
+* Stale-Detection
 
 Normalisiertes Datenformat:
+
 { latitude, longitude, accuracy, altitude, altitudeAccuracy, speed, heading, timestamp, source, status }
-
-Eigenständigkeit: Keine Abhängigkeiten zu anderen Modulen. Datenfluss:
-Andere Module → GPS-Schnittstelle (niemals umgekehrt)
-
-Geänderte Dateien:
-
-* Core/app.js: GPS-Scripts in loadModuleScripts aufgenommen
-* index.html: GPS-View, Nav-Button, CTApp-GPS-Methoden, Weather-GPS-Integration
 
 CT-0019
 
 Status: Abgeschlossen
 
-i18n-Modul vollständig implementiert – CatchTrack ist jetzt multilingual:
+i18n-Modul vollständig implementiert.
 
-* i18n-module.js: Übersetzungen DE + EN (~100 Keys), navigator.language Auto-Erkennung, localStorage-Persistenz
-* i18n-interface.js: öffentliche API (t(), setLocale(), getLocale(), etc.)
-* i18n-loader.js: Core-Registrierung
-* Core/app.js: i18n zuerst geladen (vor Weather, GPS, anderen Modulen)
-* index.html: data-i18n Attribute auf statischen Elementen, CTApp t() Helper,
-    _applyI18n() + _renderDashboardCards(), GPS/Wetter-Methoden übersetzen Ausgaben,
-    GPS-Status-Map als Methode mit t(), Einstellungen-View mit Sprachauswahl
-    (🖥️ Auto, 🇩🇪 Deutsch, 🇬🇧 English)
-
-Sprachen: DE (Deutsch) + EN (English)
-Sprachauswahl: Gerätesprache automatisch oder manuell in Einstellungen
+* Deutsch und Englisch
+* automatische Gerätespracherkennung
+* lokale Persistenz
+* öffentliche i18n-Schnittstelle
+* Sprachauswahl in Einstellungen
 
 CT-0020
 
 Status: Abgeschlossen
 
-Wetter-Ansicht lädt jetzt automatisch mit aktueller Geräteposition, ohne vorherigen manuellen GPS-Klick:
+Wetter-Ansicht lädt automatisch mit aktueller Geräteposition.
 
-* index.html (CTApp.loadWeather) auf async umgestellt.
-* Vor dem Wetterabruf wird bei fehlender gültiger GPS-Position automatisch getCurrentPosition() ausgeführt.
-* Erfolgreiche Position wird direkt ins Weather-Modul übernommen; Ortsname wird per Reverse-Geocoding ergänzt.
-* Wenn sich die Wetter-Position ändert, wird der Abruf mit Refresh erzwungen, damit kein alter Cache-Ort angezeigt wird.
-* Bei GPS-Fehlern bleibt der Wetter-Fallback aktiv (kein harter Abbruch der Wetteransicht).
+Bei fehlender gültiger GPS-Position wird automatisch eine Positionsabfrage durchgeführt.
+
+Bei erfolgreicher Position wird das Weather-Modul aktualisiert.
+
+Bei GPS-Fehlern bleibt der Wetter-Fallback aktiv.
 
 CT-0021
 
 Status: Abgeschlossen
 
-Startup-Stabilisierung für UI-Ladevorgang umgesetzt:
+Startup-Stabilisierung für UI-Ladevorgang umgesetzt.
 
-* index.html (CTApp.init) startet jetzt, sobald der Core verfügbar ist (nicht mehr blockierend auf CatchTrackUserModule).
-* Timeout-Fall blendet die App-Shell jetzt aktiv ein, statt dauerhaft im Loader zu bleiben.
-* CTApp._onReady() nutzt fehlertolerantes User-Login (Fallback auf null statt Abbruch).
-* Neue Hilfsmethode CTApp._showAppShell() zentralisiert das Umschalten von Loading-Screen auf App-Ansicht.
+* Core-Verfügbarkeit wird abgewartet
+* Timeout blendet App-Shell ein
+* fehlertolerantes User-Login
+* zentrale _showAppShell()-Methode
 
 CT-0022
 
 Status: Abgeschlossen
 
-Startup-Fix für ältere Browser umgesetzt:
+Startup-Fix für ältere Browser umgesetzt.
 
-* Verbleibende Nullish-Coalescing-Syntax (??) wurde im Weather-Modul entfernt.
-* Dadurch kann der Modul-Script-Loader auch auf älteren Engines ohne Parse-Abbruch durchlaufen.
-* Der zuvor sichtbare Notfallmodus-Hinweis wurde auf diesen Startabbruch zurückgeführt.
+Nullish-Coalescing-Syntax im Weather-Modul wurde entfernt.
 
 CT-0023
 
 Status: Abgeschlossen
 
-UI-Startup-Race behoben (i18n/User noch nicht geladen):
+UI-Startup-Race behoben.
 
-* index.html (CTApp.init) wartet jetzt auf CatchTrackCore, CatchTrackUserModule und CatchTrackI18n.
-* Dadurch werden i18n-Keys nicht mehr als Rohtexte gerendert (nav.dashboard, mod.*, etc.).
-* Timeout-Meldung zeigt nun explizit, welche Komponenten beim Start fehlen.
+index.html wartet auf:
+
+* CatchTrackCore
+* CatchTrackUserModule
+* CatchTrackI18n
+
+Timeout-Meldung zeigt fehlende Komponenten.
 
 CT-0024
 
 Status: Abgeschlossen
 
-Weather-GPS Auto-Retry implementiert:
+Weather-GPS Auto-Retry implementiert.
 
-* index.html (CTApp) startet in der Wetteransicht automatisch ein Retry-Intervall (30s).
-* Auto-Retry versucht nur bei erteilter GPS-Berechtigung (granted) eine erneute Wetteraktualisierung.
-* Intervall stoppt automatisch bei gültiger GPS-Position oder beim Verlassen der Wetteransicht.
-* Bestehende Wetter- und GPS-Logik bleibt unverändert, nur Trigger- und Lebenszyklussteuerung ergänzt.
-
-Chronikstatus
-
-Datei: PROJECT_CHRONICLE_001.md
-Einträge: 24
-Nächste Datei: PROJECT_CHRONICLE_002.md (bei Bedarf)
+* Retry-Intervall 30 Sekunden
+* nur bei erteilter GPS-Berechtigung
+* Stop bei gültiger GPS-Position
+* Stop beim Verlassen der Wetteransicht
 
 CT-0025
 
@@ -397,24 +351,83 @@ Status: Abgeschlossen
 
 Repository-Synchronisation zwischen GitHub und Codespace überprüft und hergestellt.
 
-* Der Codespace befand sich zunächst auf Commit 417b6a1928b4d0e3f7da0737ad2781ad2cf64b82.
-* Der aktuelle Stand von GitHub main war Commit d2847084d98632897d5684ad95bbf7643743a2a9.
-* git fetch origin bestätigte, dass GitHub main zehn Commits voraus war.
-* Die zehn fehlenden Commits betrafen ausschließlich Projektdokumentation und localStorage.json.
-* Es wurden durch diese Synchronisation keine Core- oder Moduldateien verändert.
-* Der Codespace wurde anschließend mit git pull —ff-only per Fast-Forward auf den GitHub-Stand aktualisiert.
-* Es wurde kein Merge durchgeführt.
-* Es wurden keine lokalen Änderungen überschrieben.
-* Codespace und GitHub main befinden sich nun auf demselben Commit: d2847084d98632897d5684ad95bbf7643743a2a9.
-* Der aktuelle synchronisierte Stand dient als verbindlicher Ausgangspunkt für die nun folgende vollständige Repository-Inventur.
-* Vor der Inventur werden keine weiteren strukturellen oder funktionalen Änderungen am Code vorgenommen.
-* Die nächste Prüfung umfasst sämtliche vorhandenen Dateien, ihre tatsächliche Funktion, Abhängigkeiten, mögliche Duplikate, verwaiste Dateien, Core-/Modul-Grenzen sowie nicht mehr benötigte Altbestände.
-* Erst nach Abschluss dieser Prüfung wird entschieden, welche Dateien beibehalten, vollständig ersetzt, verschoben, neu erstellt oder gelöscht werden.
-* Ziel ist ein stabiler, klar abgegrenzter und anschließend einfrierbarer Core mit einem davon unabhängigen Modulsystem.
-* Der Core soll nach dem späteren Freeze nicht mehr durch die Installation, Deinstallation oder Aktualisierung einzelner Module verändert werden.
+Der Codespace wurde auf den aktuellen GitHub-main-Stand synchronisiert.
 
-Chronikstatus
+Der synchronisierte Stand wurde als verbindliche Grundlage für die vollständige Repository-Inventur festgelegt.
+
+Vor der Inventur sollten keine weiteren strukturellen oder funktionalen Änderungen am Code vorgenommen werden.
+
+CT-0026
+
+Status: Abgeschlossen
+
+Die verbindlichen Projektregeln und der Arbeitsworkflow wurden erweitert.
+
+Festgelegt wurden insbesondere:
+
+* selbstständige Prüfungen und Einlesungen ohne zusätzliche Bestätigung
+* GitHub main als verbindliche Referenz
+* Prüfung vorhandener Dateien vor jeder Erstellung oder Änderung
+* Vermeidung doppelter und unnötiger Dateien
+* Working Copy auf dem iPad als manuelle Git-Arbeitsumgebung
+* vollständige Versionierung relevanter Dateien
+* verbindliches Drei-Copyblock-Format für Dateiausgaben
+* vollständige Dateien statt Patches oder Teilstücke
+* automatischer Übergang zum nächsten Arbeitsschritt nach „OK“
+* regelmäßige Testpunkte innerhalb größerer Entwicklungsblöcke
+* Dokumentation von Commit-IDs und betroffenen Dateipfaden
+* Core und Dokumentationsdateien bleiben bis zur ausdrücklichen Abnahme nicht eingefroren
+
+CT-0027
+
+Status: Abgeschlossen
+
+Die Dokumentations- und Steuerungsdateien wurden auf einen gemeinsamen Arbeitsstand ausgerichtet.
+
+Aktueller Dokumentationsstatus:
+
+* RULES.md – offen
+* WORKFLOW.md – offen
+* PROJECT_MASTERLIST.md – offen
+* PROJECT_STATUS.md – offen
+* PROJECT_CHRONICLE_001.md – offen
+* DEV_LOG.md – offen
+* REPOSITORY_INVENTORY.md – offen
+
+Der Core bleibt ebenfalls offen.
+
+Ziel des aktuellen Blocks ist die einmalige Konsolidierung der bestehenden MD-Dateien.
+
+Nach Abschluss dieser Konsolidierung werden die relevanten Master-/Steuerungsdateien eingefroren.
+
+CT-0028
+
+Status: Abgeschlossen
+
+Die Repository-Inventur wurde als Grundlage für die weitere Core-Arbeit konsolidiert.
+
+Festgestellt wurden insbesondere:
+
+* mehrere konkurrierende Core-Einstiegs- und Loader-Strukturen
+* doppelte bzw. überlappende Modulverwaltung
+* direkte Kenntnis konkreter Fachmodule innerhalb von Core/app.js
+* noch nicht abschließend definierte Grenze zwischen Core-Infrastruktur und technischen Subsystemen
+* enge UI-Kopplung an konkrete Module
+
+Die daraus abgeleitete nächste Phase lautet:
+
+CORE-INVENTORY-DEEP-DIVE
+
+Dabei werden die vorhandenen Core-Dateien funktional gegeneinander abgegrenzt, bevor die eigentliche Core-Bereinigung beginnt.
+
+## Chronikstatus
 
 Datei: PROJECT_CHRONICLE_001.md
-Einträge: 25
-Nächste Datei: PROJECT_CHRONICLE_002.md (bei Bedarf)
+
+Status: Offen
+
+Die Datei bleibt bis zur vollständigen Dokumentationskonsolidierung offen.
+
+Nächster Fortsetzungsschlüssel:
+
+CORE-INVENTORY-DEEP-DIVE
