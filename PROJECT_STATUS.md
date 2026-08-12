@@ -1,257 +1,144 @@
-CatchTrack V1.0 – Project Status
+# CatchTrack V1.0 – Project Status
 
-1. Statusprinzip
+## Aktueller Gesamtstatus
 
-Diese Datei beschreibt den verbindlich bestätigten Projektstatus.
+**Phase:** Dokumentations- und Architekturdefinition
 
-Sie ist kein laufendes Entwicklungsprotokoll.
+**Status:** IN ARBEIT
 
-Der laufende Fortschritt wird in:
+Alle Projektdateien sind derzeit noch nicht eingefroren.
 
-PROJECT_CHRONICLE_001.md
+Das gilt ausdrücklich auch für:
 
-dokumentiert.
+- Core
+- RULES.md
+- WORKFLOW.md
+- PROJECT_MASTERLIST.md
+- PROJECT_STATUS.md
+- PROJECT_CHRONICLE_001.md
+- DEV_LOG.md
+- REPOSITORY_INVENTORY.md
 
-Diese Datei darf nicht von AI-Agenten eigenständig aktualisiert werden.
+Die Master-/Steuerungsdateien werden aktuell einmalig aufeinander abgestimmt.
 
-⸻
+Nach Abschluss dieser Abstimmung werden die relevanten Dokumentationsdateien eingefroren.
 
-2. Aktueller Gesamtstatus
+—
 
-PROJECT STATUS: RESTRUCTURING
+## Aktueller Fortsetzungspunkt
 
-CatchTrack V1.0 befindet sich in einer strukturellen Neuordnung.
+**Fortsetzungsschlüssel:**
 
-Die bisherige Implementierung wird nicht automatisch als endgültige Architektur betrachtet.
+`DOCUMENTATION-SYNC`
 
-⸻
+Aktueller Arbeitsschritt:
 
-3. Architekturstatus
+```text
+Master-/Steuerungsdateien prüfen
+→ Widersprüche beseitigen
+→ einheitlichen Stand herstellen
+→ Dokumentation einfrieren
+```
 
-Architecture Definition
-STATUS: DEFINED
+Danach:
 
-Die Zielarchitektur basiert auf:
+```text
+DOCUMENTATION-FREEZE
+→ CORE-INVENTORY-DEEP-DIVE
+```
 
-* stabilem Core
-* generischem Module System
-* User-Modul
-* Admin-Modul
-* Permissions
-* Package/Entitlements
-* dynamischer Navigation
-* installierbaren Fachmodulen
+—
 
-⸻
+## Verbindliche Referenz
 
-4. Core Status
+GitHub `main` ist die maßgebliche Referenz für den aktuellen Repository-Stand.
 
-CORE
-STATUS: NOT FROZEN
+Vor jeder Dateiänderung oder Dateierstellung wird die aktuelle GitHub-Version geprüft.
 
-Der Core ist derzeit noch nicht als endgültig abgenommen zu betrachten.
+Vorhandene Dateien werden vollständig ausgelesen und als Grundlage verwendet.
 
-Vor dem Core-Freeze müssen:
+Es werden keine Dateien aus älteren Erinnerungsständen oder Vermutungen neu erzeugt.
 
-* alle Core-Dateien inventarisiert werden
-* doppelte Dateien identifiziert werden
-* überflüssige Dateien entfernt werden
-* fachliche Funktionen aus dem Core entfernt werden
-* notwendige Core-Komponenten fertiggestellt werden
-* Module Interface und Module Manager validiert werden
-* Datenbank-Lifecycle geprüft werden
-* Permissions geprüft werden
-* Startup und Runtime geprüft werden
-* Tests durchgeführt werden
+—
 
-⸻
+## Arbeitsumgebung
 
-5. Core Freeze
+Working Copy auf dem iPad ist die manuelle Git-Arbeitsumgebung des Benutzers.
 
-Der Core wird erst nach vollständiger technischer Abnahme eingefroren.
+Der Benutzer übernimmt dort die vollständigen Dateien, prüft sie bei Bedarf und führt die Commits aus.
 
-Ziel:
+Der Benutzer arbeitet nicht mit dem Terminal.
 
-CORE V1.0
-STATUS: FROZEN
+—
 
-Dieser Status darf erst gesetzt werden, wenn die Abnahme tatsächlich erfolgt ist.
+## Dokumentationsstatus
 
-⸻
+| Datei | Status |
+|—|—|
+| RULES.md | Offen |
+| WORKFLOW.md | Offen |
+| PROJECT_MASTERLIST.md | Offen |
+| PROJECT_STATUS.md | Offen |
+| PROJECT_CHRONICLE_001.md | Offen |
+| DEV_LOG.md | Offen |
+| REPOSITORY_INVENTORY.md | Offen |
 
-6. Module System
+—
 
-STATUS: IN DEVELOPMENT
+## Core
 
-Das endgültige CMS-artige Modulsystem muss noch vollständig validiert werden.
+**Status:** NOT FROZEN
 
-Erforderliche Funktionen:
+Der Core wird erst nach vollständiger Inventur, Bereinigung, Implementierung, Validierung, Tests und Abnahme eingefroren.
 
-* Module Registry
-* Module Interface
-* Installation
-* Deinstallation
-* Aktivierung
-* Deaktivierung
-* Update
-* Dependencies
-* Permissions
-* Database Lifecycle
+Bis dahin dürfen Core-Dateien geprüft und überarbeitet werden.
 
-⸻
+—
 
-7. User Module
+## Module
 
-STATUS: RESTRUCTURING / DEVELOPMENT
+Das Modul-System wird nach Abschluss der Core-Arbeiten weitergeführt.
 
-User wird als eigenständiges Modul behandelt.
+Neue Fachfunktionen werden grundsätzlich als Module umgesetzt.
 
-Der endgültige User-Lifecycle und die Berechtigungsintegration müssen gegen die neue Architektur geprüft werden.
+Der Core stellt dafür ausschließlich generische Infrastruktur und definierte Schnittstellen bereit.
 
-⸻
+—
 
-8. Admin Module
+## Arbeitsprinzip
 
-STATUS: RESTRUCTURING / DEVELOPMENT
+Der AI-Agent arbeitet eigenständig.
 
-Admin wird als eigenständiges Modul behandelt.
+Notwendige Prüfungen und Einlesungen erfolgen ohne zusätzliche Benutzerbestätigung.
 
-Ziel ist eine CMS-artige Verwaltung von:
+`OK` bestätigt den aktuellen Schritt und vorhandene Vorschläge.
 
-* Users
-* Roles
-* Packages
-* Modules
-* System
+Nach `OK` wird automatisch der nächste offene Arbeitsschritt bestimmt.
 
-⸻
+Bereits erledigte Dateien oder Arbeitsschritte werden nicht erneut ausgegeben.
 
-9. Permissions
+—
 
-STATUS: ARCHITECTURE DEFINED
-IMPLEMENTATION: PENDING VALIDATION
+## Dateiausgabe
 
-Berechtigungen müssen zentral und konsistent funktionieren.
+Dateien werden vollständig ausgegeben.
 
-⸻
+Das verbindliche Format besteht aus drei Copy-Blöcken:
 
-10. Package System
+1. vollständiger Pfad
+2. exakter Dateiname
+3. vollständiger Dateiinhalt
 
-STATUS: ARCHITECTURE DEFINED
-IMPLEMENTATION: PLANNED
+Keine Patches.
 
-Das System wird auf spätere Packages/Entitlements vorbereitet.
+Keine Teilstücke.
 
-Konkrete Pakete werden später definiert.
+Keine zerstörten oder verschachtelten Copyblöcke.
 
-⸻
+—
 
-11. Dynamic Navigation
+## Nächster Hauptschritt
 
-STATUS: ARCHITECTURE DEFINED
-IMPLEMENTATION: PENDING
+Nach Abschluss der Dokumentationsabstimmung:
 
-Die Benutzeroberfläche soll anhand von:
-
-User
-Role
-Package
-Permissions
-Installed Modules
-
-dynamisch aufgebaut werden.
-
-⸻
-
-12. Fachmodule
-
-Geplante Fachmodule:
-
-GPS
-Weather
-Catchbook
-Fish Database
-Tides
-Maps
-Statistics
-Reverse Geocoding
-
-Diese Module werden erst nach Stabilisierung und Freeze des Core endgültig auf die neue Architektur ausgerichtet.
-
-⸻
-
-13. Verbindliche Statusregeln
-
-Ein Bestandteil darf nur dann als:
-
-COMPLETED
-ACCEPTED
-FROZEN
-
-bezeichnet werden, wenn die entsprechende technische Prüfung tatsächlich abgeschlossen wurde.
-
-Ein Commit allein bedeutet nicht:
-
-COMPLETED
-
-Eine vorhandene Datei bedeutet nicht:
-
-IMPLEMENTED
-
-Eine implementierte Funktion bedeutet nicht automatisch:
-
-TESTED
-
-⸻
-
-14. Chronik
-
-Der laufende Fortschritt wird ausschließlich in der Projektchronik dokumentiert.
-
-Aktuell:
-
-PROJECT_CHRONICLE_001.md
-
-Spätere Chroniken:
-
-PROJECT_CHRONICLE_002.md
-PROJECT_CHRONICLE_003.md
-...
-
-Die Chronik dokumentiert den tatsächlichen Entwicklungsverlauf.
-
-⸻
-
-15. Zielstatus
-
-Der endgültige Zielstatus lautet:
-
-ARCHITECTURE
-        ↓
-CORE COMPLETE
-        ↓
-CORE VALIDATED
-        ↓
-CORE ACCEPTED
-        ↓
-CORE FROZEN
-        ↓
-MODULE SYSTEM COMPLETE
-        ↓
-USER / ADMIN
-        ↓
-PERMISSIONS / PACKAGES
-        ↓
-FACHMODULE
-        ↓
-CATCHTRACK V1.0
-
-⸻
-
-16. Wichtigster Abnahmetest
-
-Der Core gilt nicht als vollständig stabil, solange nicht nachgewiesen wurde:
-
-Ein neues Fachmodul kann installiert, registriert, aktiviert und verwendet werden, ohne bestehende Core-Dateien zu verändern.
-
-Dies ist ein zentraler Architekturtest für CatchTrack V1.0.
+**CORE-INVENTORY-DEEP-DIVE**
