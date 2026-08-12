@@ -325,7 +325,7 @@ Startup-Stabilisierung für UI-Ladevorgang umgesetzt:
 
 Startup-Fix für ältere Browser umgesetzt:
 
-- Verbleibende Nullish-Coalescing-Syntax (`??`) im Weather-Modul entfernt.
+- Verbleibende Nullish-Coalescing-Syntax (`??`) wurde im Weather-Modul entfernt.
 - Dadurch kann der Modul-Script-Loader auch auf älteren Engines ohne Parse-Abbruch durchlaufen.
 - Der zuvor sichtbare Notfallmodus-Hinweis wurde auf diesen Startabbruch zurückgeführt.
 
