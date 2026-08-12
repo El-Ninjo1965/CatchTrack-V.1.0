@@ -123,7 +123,7 @@ Bereits erledigte Dateien oder Arbeitsschritte werden nicht erneut ausgegeben.
 
 Dateien werden vollständig ausgegeben.
 
-Das verbindliche Format besteht aus drei Copy-Blöcken:
+Das verbindliche Format besteht aus drei separaten Copyblöcken:
 
 1. vollständiger Pfad
 2. exakter Dateiname
@@ -134,6 +134,8 @@ Keine Patches.
 Keine Teilstücke.
 
 Keine zerstörten oder verschachtelten Copyblöcke.
+
+Der Quelltext-Copyblock enthält ausschließlich den vollständigen Dateiinhalt.
 
 —
 
