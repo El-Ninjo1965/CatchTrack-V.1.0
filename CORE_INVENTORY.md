@@ -42,7 +42,7 @@ Er darf keine konkrete Fachlogik und keine direkte Abhängigkeit zu einzelnen Fa
 
 ### Core-Einstieg und Start
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/index.js | zusätzlicher Core-Einstieg | Prüfung erforderlich |
 | Core/core-entry.js | Einstieg in die Runtime | Prüfung erforderlich |
@@ -52,7 +52,7 @@ Er darf keine konkrete Fachlogik und keine direkte Abhängigkeit zu einzelnen Fa
 
 ### Core-Laufzeit
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/core-runtime.js | Runtime | erforderlich |
 | Core/core-lifecycle.js | Lifecycle | erforderlich |
@@ -60,7 +60,7 @@ Er darf keine konkrete Fachlogik und keine direkte Abhängigkeit zu einzelnen Fa
 
 ### Core-Zustand und Kontext
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/core.js | zentrale Core-API, State, Module, Events | erforderlich |
 | Core/core-context.js | Core-Kontext | Prüfung erforderlich |
@@ -68,13 +68,13 @@ Er darf keine konkrete Fachlogik und keine direkte Abhängigkeit zu einzelnen Fa
 
 ### Events
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/core-event-bus.js | Event-System | erforderlich |
 
 ### Storage und Fehler
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/core-storage.js | Storage | erforderlich |
 | Core/error-log.js | Fehler-/Logverwaltung | Prüfung erforderlich |
@@ -82,20 +82,20 @@ Er darf keine konkrete Fachlogik und keine direkte Abhängigkeit zu einzelnen Fa
 
 ### Module
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/module-interface.js | Modul-Schnittstelle | erforderlich |
 | Core/module-manager.js | Modulverwaltung | erforderlich |
 
 ### Konfiguration
 
-| Datei | Aufgabe | Vorläufige Bewertung |
+| Datei | Aufgabe | Bewertung |
 |—|—|—|
 | Core/core-config.js | Core-Konfiguration | Prüfung erforderlich |
 
 ## Kritischer Befund: Core/app.js
 
-Die aktuelle `Core/app.js` lädt direkt konkrete Module:
+Die aktuelle Core/app.js lädt direkt konkrete Module:
 
 - i18n
 - Weather
@@ -139,7 +139,7 @@ Ein eindeutig definierter Application-/Core-Startpfad.
 
 ## Kritischer Befund: Modulverwaltung
 
-`Core/core.js` enthält bereits:
+Core/core.js enthält bereits:
 
 - registerModule()
 - unregisterModule()
@@ -148,7 +148,7 @@ Ein eindeutig definierter Application-/Core-Startpfad.
 - activateModule()
 - deactivateModule()
 
-`Core/module-manager.js` stellt dafür eine zusätzliche öffentliche Verwaltungsschicht bereit.
+Core/module-manager.js stellt dafür eine zusätzliche Verwaltungsschicht bereit.
 
 Die endgültige Verantwortung muss eindeutig definiert werden.
 
@@ -160,7 +160,7 @@ Aktuell existieren zusätzlich:
 - Database/database-manager.js
 - Services/service-manager.js
 
-Diese Komponenten sind technisch relevant, liegen aber außerhalb von `/Core`.
+Diese Komponenten sind technisch relevant, liegen aber außerhalb von /Core.
 
 Vor der Bereinigung muss entschieden werden, welche Verantwortung tatsächlich zum generischen Core gehört und welche als eigenständige Infrastruktur bestehen bleibt.
 
