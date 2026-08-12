@@ -1,390 +1,283 @@
 # CatchTrack V1.0 Rules
 
-## 1. Scope
-This repository uses a reduced project-control structure:
-- RULES.md
-- WORKFLOW.md
-- PROJECT.md
-- STATE.md
+## 1. Zweck
 
-These four files are the only root-level project-control documents.
+Diese Datei enthält die verbindlichen Regeln für die Zusammenarbeit und Entwicklung von CatchTrack V1.0.
 
-## 2. Authority
-- RULES.md defines binding collaboration and development rules.
-- WORKFLOW.md defines the required work process.
-- PROJECT.md defines the product goal and architecture.
-- STATE.md defines the actual current project state.
-- STATE.md is the only file allowed to define the current work step and next work step.
-
-## 3. Binding rules
-- Use the current repository state on origin/main as the reference baseline.
-- Do not create duplicate project-control files.
-- Do not recreate deleted historical files.
-- Do not define parallel continuation keys outside STATE.md.
-- Do not keep contradictory instructions across the four root documents.
-- Do not add project history to RULES.md, WORKFLOW.md, or PROJECT.md.
-- Do not add operational status text to RULES.md, WORKFLOW.md, or PROJECT.md.
-
-## 4. Architecture rules
-- Core functionality remains generic and infrastructure-focused.
-- Domain logic belongs in modules.
-- Modules must use stable core interfaces.
-- The core must not become module-specific.
-- New features must be implemented in the correct layer: infrastructure in Core, business logic in modules.
-
-## 5. Change rules
-- Prefer the smallest valid change.
-- Prefer existing files over creating new ones.
-- Do not modify unrelated files.
-- Do not keep stale, duplicated, or contradictory project instructions.
-- Keep the root documentation concise and explicit.
-
-## 6. Quality rules
-- Changes must be consistent with the current architecture and repository state.
-- Validation must be performed before completion.
-- Documentation must remain short, accurate, and machine-readable.
-- Final repository state must be clean and synchronized with origin/main.
-
-- betroffene Dateipfade
-- Arbeitsschritt
-- Ergebnis
-
-Die Dateipfade sind ausdrücklich Bestandteil der Commit-Dokumentation.
-
-—
-
-## 14. Projektchronik
-
-`PROJECT_CHRONICLE_001.md` dokumentiert abgeschlossene Projektfortschritte und Meilensteine.
-
-Weitere Chroniken werden bei Bedarf erstellt.
-
-Historische Einträge werden nicht unnötig verändert.
-
-Die Chronik ersetzt nicht den DEV_LOG.
-
-—
-
-## 15. DEV_LOG
-
-`DEV_LOG.md` dokumentiert technische Vorgänge.
-
-Dazu gehören insbesondere:
-
-- Prüfungen
-- technische Arbeitsschritte
-- relevante Befehle
-- relevante Ergebnisse
-- Commit-IDs
-- Commit-Nachrichten
-- betroffene Dateipfade
-- technische Entscheidungen
-
-Die Chronik dokumentiert Projektfortschritt.
-
-Der DEV_LOG dokumentiert technische Vorgänge.
-
-—
-
-## 16. Dokumentationsdateien
-
-Aktuelle Dokumentations- und Steuerungsdateien:
+Die Projektsteuerung besteht ausschließlich aus:
 
 - `RULES.md`
 - `WORKFLOW.md`
-- `VISION.md`
-- `PROJECT_MASTERLIST.md`
-- `PROJECT_STATUS.md`
-- `PROJECT_CHRONICLE_001.md`
-- `DEV_LOG.md`
-- `WORK_STATE.md`
-- `REPOSITORY_INVENTORY.md`
+- `PROJECT.md`
+- `STATE.md`
 
-Alle sind derzeit **NICHT eingefroren**.
-
-Sie werden einmalig auf Konsistenz gebracht.
-
-Danach erfolgt der gemeinsame Freeze der relevanten Master-/Steuerungsdateien.
+Keine weiteren Root-MD-Dateien werden für die Projektsteuerung benötigt.
 
 —
 
-## 17. Core
+## 2. Verbindliche Quellen
 
-Der Core ist die technische Plattform.
+Die vier Dateien haben klar getrennte Aufgaben:
+
+| Datei | Aufgabe |
+|—|—|
+| `RULES.md` | Verbindliche Regeln |
+| `WORKFLOW.md` | Verbindlicher Arbeitsablauf |
+| `PROJECT.md` | Projektziel und Architektur |
+| `STATE.md` | Einziger aktueller Arbeitsstand |
+
+Nur `STATE.md` darf einen aktuellen oder nächsten Arbeitsschritt definieren.
+
+`RULES.md`, `WORKFLOW.md` und `PROJECT.md` dürfen keinen eigenen Arbeitscursor, Fortsetzungsschlüssel oder nächsten Arbeitsschritt enthalten.
+
+—
+
+## 3. Repository als Referenz
+
+`origin/main` ist die Referenz für den aktuellen Repository-Stand.
+
+Vor jeder Änderung oder Erstellung einer Datei:
+
+1. Repository-Stand prüfen.
+2. Vorhandene Datei prüfen.
+3. Vollständigen aktuellen Inhalt lesen.
+4. Abhängigkeiten und Auswirkungen prüfen.
+5. Erst danach eine Änderung vornehmen.
+
+Eine Datei darf nicht aus einer alten Version, einer Vermutung oder aus dem Gedächtnis neu erstellt werden, wenn eine aktuelle Repository-Version vorhanden ist.
+
+—
+
+## 4. Keine unnötigen Dateien
+
+Vor jeder Neuerstellung ist zu prüfen, ob bereits eine geeignete Datei existiert.
+
+Grundsatz:
+
+```text
+VORHANDENE DATEI
+→ VERWENDEN / ANPASSEN
+
+KEINE GEEIGNETE DATEI
+→ NEUE DATEI NUR BEI ECHTER NOTWENDIGKEIT
+```
+
+Keine:
+
+- doppelten Dateien
+- parallelen Steuerungsdateien
+- unnötigen Hilfsdateien
+- Ersatzdateien mit gleicher Aufgabe
+- Wiederherstellung bewusst gelöschter Dateien
+
+—
+
+## 5. Arbeitsweise
+
+Der AI-Agent arbeitet nach den festgelegten Regeln selbstständig.
+
+Routineprüfungen, Einlesungen, Vergleiche und technische Prüfungen werden ohne zusätzliche Bestätigung durchgeführt.
+
+Der Benutzer muss nicht für jeden Prüfungsschritt ein `OK` geben.
+
+Nur bei einer echten fachlichen oder architektonischen Entscheidung mit mehreren wesentlichen Alternativen ist eine Rückfrage erforderlich.
+
+—
+
+## 6. OK-Regel
+
+`OK` bedeutet:
+
+- gelesen
+- verstanden
+- bestätigt
+- vorhandene Vorschläge bestätigt
+- aktueller Arbeitsschritt abgeschlossen
+
+Danach wird automatisch der nächste offene Arbeitsschritt aus `STATE.md` bestimmt.
+
+`OK` bedeutet ausdrücklich nicht:
+
+- dieselbe Datei erneut ausgeben
+- denselben Arbeitsschritt wiederholen
+- eine bereits getroffene Entscheidung erneut abfragen
+- den Arbeitsstand zurücksetzen
+
+—
+
+## 7. Loop-Schutz
+
+Vor jeder Fortsetzung muss der tatsächliche Zustand geprüft werden:
+
+```text
+LETZTER ABGESCHLOSSENER SCHRITT
+↓
+AKTUELLER ARBEITSSCHRITT
+↓
+NÄCHSTER ARBEITSSCHRITT
+```
+
+Ein bereits abgeschlossener Schritt darf nicht erneut als aktueller oder nächster Schritt ausgewählt werden.
+
+Es darf nur einen einzigen aktiven Arbeitscursor geben.
+
+Dieser befindet sich ausschließlich in `STATE.md`.
+
+—
+
+## 8. Änderungen
+
+Änderungen werden so klein wie möglich gehalten.
+
+Grundsätze:
+
+- nur erforderliche Dateien ändern
+- keine unnötigen Nebenänderungen
+- bestehende Strukturen bevorzugen
+- keine veralteten oder widersprüchlichen Inhalte behalten
+- keine parallelen Lösungen für dieselbe Aufgabe erstellen
+
+—
+
+## 9. Vollständige Dateien
+
+Bei einer Dateiänderung wird immer die vollständige aktuelle Datei erzeugt.
+
+Keine:
+
+- Patches
+- Teilstücke
+- Auslassungen
+- Fortsetzungsschlüssel
+- fragmentierten Dateien
+
+—
+
+## 10. Dateiausgabe
+
+Wenn eine Datei manuell an den Benutzer ausgegeben wird, erfolgt dies immer in genau drei getrennten Copyblöcken:
+
+1. vollständiger Repository-Pfad
+2. exakter Dateiname
+3. vollständiger Quellcode
+
+Der dritte Block enthält ausschließlich den Quellcode.
+
+Der Dateiname darf nicht zusätzlich in der ersten Zeile des Quellcodeblocks stehen.
+
+Wenn der Quellcode selbst Markdown-Codeblöcke enthält, muss der äußere Copyblock eine entsprechend höhere Backtick-Anzahl verwenden.
+
+Der Quellcodeblock muss vollständig kopierbar sein und darf niemals durch verschachtelte Markdown-Blöcke zerstört werden.
+
+—
+
+## 11. Core
 
 Der Core enthält ausschließlich generische Infrastruktur.
 
-Der Core darf keine konkrete Fachlogik einzelner Module enthalten.
+Fachliche Funktionen gehören in Module.
 
-Der Core darf nicht für einzelne Module angepasst werden.
+Grundsatz:
 
-Fachmodule dürfen keine Änderungen an bestehenden Core-Dateien erzwingen.
+```text
+INFRASTRUKTUR
+→ CORE
+
+FACHFUNKTION
+→ MODUL
+```
+
+Der Core darf nicht für ein einzelnes Modul angepasst werden.
+
+Ein Modul darf keine Änderung bestehender Core-Dateien voraussetzen, ohne dass zuvor die Architektur geprüft wurde.
 
 —
 
-## 18. Core Freeze
+## 12. Module
 
-Der Core ist derzeit:
+Module sind fachlich eigenständig.
 
-**NICHT EINGEFROREN**
+Sie verwenden definierte Core-Schnittstellen.
 
-Vor dem Freeze:
+Module dürfen nicht auf private Implementierungsdetails anderer Module zugreifen.
 
-1. Repository-Inventur
-2. funktionale Core-Analyse
+Neue Fachfunktionen werden grundsätzlich als Module umgesetzt.
+
+—
+
+## 13. Core-Freeze
+
+Der Core ist derzeit nicht eingefroren.
+
+Ein Freeze erfolgt erst nach:
+
+1. Inventur
+2. Analyse
 3. Bereinigung
 4. Implementierung
 5. Validierung
 6. Tests
 7. Abnahme
-8. ausdrückliche Freeze-Entscheidung
+8. ausdrücklicher Freeze-Entscheidung
 
-Nach dem Freeze:
-
-```text
-/Core/*
-```
-
-ist grundsätzlich Read-Only.
-
-Installation, Deinstallation, Aktualisierung oder Erweiterung eines Moduls darf danach keine Core-Änderung benötigen.
+Nach dem Freeze ist der Core grundsätzlich Read-Only.
 
 —
 
-## 19. Neue Funktionalität
+## 14. Keine Fake-Funktionen
 
-Vor jeder neuen Funktion:
+Nicht implementierte oder nicht geprüfte Funktionen werden nicht als fertig bezeichnet.
 
-```text
-INFRASTRUKTUR?
-→ CORE
-
-FACHFUNKTION?
-→ MODUL
-```
-
-Beispiele für Module:
-
-- User
-- Admin
-- GPS
-- Weather
-- Catchbook
-- Fish Database
-- Tides
-- Maps
-- Statistics
+Statusangaben müssen dem tatsächlichen Zustand entsprechen.
 
 —
 
-## 20. Modulprinzip
+## 15. Validierung
 
-Module verwenden ausschließlich definierte Core-Schnittstellen.
+Vor dem Abschluss eines Arbeitsschrittes müssen die relevanten Ergebnisse geprüft werden.
 
-Grundsätzlich falsch:
+Mindestens:
 
-```text
-Neues Modul
-→ Core-Datei ändern
-→ Modul integrieren
-```
-
-Richtig:
-
-```text
-Neues Modul
-→ Core-Schnittstelle verwenden
-→ registrieren
-→ installieren
-→ aktivieren
-```
-
-Benötigt ein Modul eine Core-Änderung, wird zuerst die Architektur geprüft.
+- betroffene Dateien korrekt
+- keine unbeabsichtigten Änderungen
+- Architektur eingehalten
+- Tests bzw. geeignete Validierung durchgeführt
+- Repository-Zustand nachvollziehbar
 
 —
 
-## 21. Modulunabhängigkeit
+## 16. Working Copy
 
-Module bleiben grundsätzlich unabhängig.
+Working Copy auf dem iPad ist die manuelle Git-Arbeitsumgebung des Benutzers.
 
-Direkte Abhängigkeiten müssen ausdrücklich definiert werden.
+Der Benutzer übernimmt dort die vollständigen Dateien, prüft sie, committed sie und synchronisiert sie mit GitHub.
 
-Ein Modul darf keine privaten Implementierungsdetails eines anderen Moduls verwenden.
-
-—
-
-## 22. Modul-Lifecycle
-
-Das Modul-System muss konzeptionell unterstützen:
-
-```text
-available
-installed
-enabled
-disabled
-updated
-uninstalled
-```
-
-Der Module Manager kontrolliert den Lifecycle.
+Der bekannte fehlende direkte GitHub-Schreibzugriff des AI-Agenten wird nicht bei jedem Arbeitsschritt erneut erwähnt.
 
 —
 
-## 23. Datenbank
+## 17. Git
 
-Module dürfen eigene Datenstrukturen besitzen.
+Relevante Änderungen werden nachvollziehbar committed.
 
-Die generische Datenbankinfrastruktur enthält keine unnötige Fachlogik einzelner Module.
-
-—
-
-## 24. User und Admin
-
-User und Admin sind Module.
-
-Sie sind keine Bestandteile der fachlichen Core-Logik.
-
-Der Core stellt ausschließlich benötigte Infrastruktur bereit.
+Nach einem relevanten Commit wird geprüft, ob der Repository-Stand mit `origin/main` synchronisiert ist.
 
 —
 
-## 25. Rollen und Berechtigungen
+## 18. Freeze der Projektsteuerung
 
-Berechtigungen werden zentral und konsistent behandelt.
+Nach vollständiger Konsolidierung müssen die vier Steuerungsdateien:
 
-Berechtigungen ergeben sich aus Rollen und/oder Paket-/Entitlement-Regeln.
+- widerspruchsfrei
+- vollständig
+- minimal
+- eindeutig
+- geprüft
 
-Nicht verfügbare Funktionen werden nicht als verfügbar dargestellt.
+sein.
 
-—
+Danach werden sie gemeinsam eingefroren.
 
-## 26. Keine Fake-Funktionen
-
-Nicht implementierte oder nicht getestete Funktionen werden nicht als fertig dargestellt.
-
-Eine Funktion darf nur als:
-
-- fertig
-- implementiert
-- getestet
-- abgenommen
-- stabil
-- eingefroren
-
-bezeichnet werden, wenn dies tatsächlich festgestellt wurde.
+Eine spätere Änderung erfolgt nur bei einer tatsächlichen Änderung der Regeln, des Workflows, der Projektarchitektur oder des Projektzustands.
 
 —
-
-## 27. Startup
-
-CatchTrack besitzt keinen unnötigen Parallelbetrieb mehrerer konkurrierender Startup-/Runtime-Systeme.
-
-Der endgültige Startablauf muss eindeutig definiert sein.
-
-—
-
-## 28. Teststrategie
-
-Entwicklungsblöcke werden in sinnvolle Abschnitte geteilt.
-
-Wenn eine technisch sinnvolle Zwischenstufe erreicht ist:
-
-```text
-IMPLEMENTIEREN
-→ TESTEN
-→ ERGEBNIS DOKUMENTIEREN
-→ FEHLER KORRIGIEREN
-→ ERNEUT TESTEN
-→ WEITER
-```
-
-Der Benutzer soll bereits während der Entwicklung testen können.
-
-Es wird nicht unnötig bis zum Ende eines kompletten Entwicklungsblocks gewartet.
-
-—
-
-## 29. Dokumentations- und Arbeitsablauf
-
-Der verbindliche Gesamtworkflow:
-
-```text
-RULES LESEN
-→ AKTUELLEN ARBEITSSTAND BESTIMMEN
-→ GITHUB MAIN PRÜFEN
-→ NÄCHSTEN OFFENEN ARBEITSSCHRITT BESTIMMEN
-→ DATEI SUCHEN
-→ VORHANDENE DATEI VOLLSTÄNDIG LESEN
-→ ZIEL UND ARCHITEKTUR VERGLEICHEN
-→ ENTSCHEIDEN
-→ VOLLSTÄNDIGE DATEI ERSTELLEN/ÄNDERN
-→ TESTEN
-→ KORRIGIEREN
-→ DOKUMENTIEREN
-→ COMMIT PRÜFEN
-→ NÄCHSTEN SCHRITT BESTIMMEN
-```
-
-Prüfungen und Einlesungen erfolgen selbstständig.
-
-—
-
-## 30. Keine unnötigen Wiederholungen
-
-Bereits erledigte Dateien werden nicht erneut ausgegeben.
-
-Bereits geprüfte Informationen werden nicht unnötig erneut abgefragt.
-
-Bereits beantwortete Entscheidungen werden nicht erneut zur Bestätigung vorgelegt.
-
-Bei `OK` wird immer der nächste offene Arbeitsschritt bestimmt.
-
-—
-
-## 31. Fortsetzungsschlüssel
-
-Der aktuelle Fortsetzungsschlüssel wird in den relevanten Steuerungsdateien konsistent geführt.
-
-Aktueller Schlüssel:
-
-`DOCUMENTATION-SYNC`
-
-Nach Abschluss der Dokumentations-Synchronisation:
-
-`DOCUMENTATION-FREEZE`
-
-Danach:
-
-`CORE-INVENTORY-DEEP-DIVE`
-
-—
-
-## 32. Priorität
-
-Bei Entscheidungen gilt:
-
-1. Datenintegrität und Sicherheit
-2. aktuelle GitHub-Version
-3. aktuelle Projektregeln
-4. dokumentierte Architektur
-5. bestehende Projektstruktur
-6. technische Einfachheit
-7. minimale unnötige Änderungen
-8. Geschwindigkeit
-
-Bei Konflikten hat eine höhere Priorität Vorrang.
-
-—
-
-## 33. Ziel
-
-CatchTrack soll:
-
-- einen stabilen und generischen Core besitzen
-- ein unabhängiges Modulsystem besitzen
-- klare Modulgrenzen besitzen
-- reproduzierbar weiterentwickelbar sein
-- keine unnötigen Core-Abhängigkeiten besitzen
-- keine doppelten Strukturen besitzen
-- einen nachvollziehbaren Entwicklungsstand besitzen
-- ohne unnötige Rückfragen effizient entwickelt werden können
