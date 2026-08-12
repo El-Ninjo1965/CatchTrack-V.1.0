@@ -1,97 +1,346 @@
-# CatchTrack – Development Workflow
+CatchTrack V1.0 – Development Workflow
 
-## 1. Grundablauf
+1. Zweck
 
-Die Entwicklung erfolgt Schritt für Schritt.
+Dieses Dokument definiert den verbindlichen Entwicklungsablauf für CatchTrack V1.0.
 
-Standardablauf:
+Der Workflow verhindert insbesondere:
 
-1. Anforderungen klären
-2. Modul oder Aufgabe festlegen
-3. benötigte Dateien bestimmen
-4. vollständige Dateien erstellen
-5. Dateien übernehmen
-6. committen
-7. GitHub-Stand prüfen
-8. testen
-9. Fehler beheben
-10. erneut testen
-11. Abschluss dokumentieren
-12. Chronik aktualisieren
+* unnötige Änderungen am Core
+* doppelte Dateien
+* parallele Implementierungen
+* unkontrollierte Architekturänderungen
+* Vermischung von Core und Modulen
 
-## 2. Neue Module
+⸻
 
-Wenn ein neues Modul gewünscht wird, werden zunächst nur die notwendigen Anforderungen geklärt.
+2. Dokumentationshierarchie
 
-Die KI fragt insbesondere:
+Verbindlich und Frozen
 
-- Welche Funktion soll das Modul erfüllen?
-- Welche Eingaben benötigt es?
-- Welche Ausgaben soll es liefern?
-- Welche Benutzerfunktionen werden benötigt?
-- Welche Daten werden gespeichert?
-- Welche Schnittstellen zu anderen Komponenten sind erforderlich?
+VISION.md
+RULES.md
+WORKFLOW.md
+PROJECT_MASTERLIST.md
+PROJECT_STATUS.md
 
-Weitere Fragen werden nur gestellt, wenn sie für die Umsetzung notwendig sind.
+Diese Dateien sind nach ihrer Erstellung Read-Only.
 
-## 3. Dateierstellung
+Laufende Chronik
 
-Nach Abschluss der Anforderungsdefinition erstellt die KI die vollständigen Dateien.
+PROJECT_CHRONICLE_001.md
+PROJECT_CHRONICLE_002.md
+...
 
-Jede Datei wird separat ausgegeben.
+Die Chronik dokumentiert den tatsächlichen Entwicklungsverlauf.
 
-Jede Ausgabe enthält:
+⸻
 
-- Dateiname
-- vollständigen Pfad
-- vollständigen Dateiinhalt
+3. Entwicklungsphasen
 
-## 4. Übergabe
+CatchTrack wird in klar getrennten Phasen entwickelt.
 
-Der Benutzer übernimmt die Dateien in Working Copy und führt den Commit durch.
+Phase 1
+Dokumentations- und Architekturdefinition
+Phase 2
+Core-Inventur
+Phase 3
+Core-Bereinigung
+Phase 4
+Core-Implementierung
+Phase 5
+Core-Validierung
+Phase 6
+Core-Abnahme
+Phase 7
+Core-Freeze
+Phase 8
+Modul-System
+Phase 9
+User/Admin
+Phase 10
+Fachmodule
 
-Danach kann der GitHub-Stand geprüft werden.
+⸻
 
-## 5. Prüfung
+4. Phase 1 – Dokumentation
 
-Ein Modul ist erst abgeschlossen, wenn der tatsächlich auf GitHub vorhandene Stand geprüft wurde und die Tests erfolgreich sind.
+Zuerst werden die verbindlichen Architektur- und Projektdateien erstellt.
 
-Ein bloß erstellter Quellcode gilt nicht als abgeschlossen.
+Danach gelten sie als Frozen.
 
-## 6. Fehlerbehandlung
+Die Entwicklung darf nicht laufend die grundlegende Architektur verändern.
 
-Treten beim Test Fehler auf:
+⸻
 
-1. Fehler feststellen
-2. Ursache bestimmen
-3. notwendige Datei ändern
-4. erneut committen
-5. erneut testen
+5. Phase 2 – Core-Inventur
 
-Die Chronik wird erst nach erfolgreichem Abschluss aktualisiert.
+Vor Änderungen am Core wird jede vorhandene Datei untersucht.
 
-## 7. Abschlussmeldung
+Für jede Datei wird entschieden:
 
-Nach erfolgreichem Abschluss werden mindestens dokumentiert:
+A – NEU
+B – LÖSCHEN
+C – VOLLSTÄNDIG ERSETZEN
+D – UNVERÄNDERT ÜBERNEHMEN
 
-- Modul
-- Status
-- relevante Dateien
-- GitHub-Commit
-- Testergebnis
+Es gibt keine Kategorie „nur ein bisschen ändern“.
 
-## 8. Weiterarbeit
+Wenn eine Datei geändert werden muss, wird sie vollständig ersetzt.
 
-Nach einem bestätigten Abschluss kann unmittelbar mit dem nächsten vorgesehenen Arbeitsschritt fortgefahren werden.
+⸻
 
-Es wird nicht erneut über bereits abgeschlossene Grundlagen diskutiert, sofern keine neue technische Notwendigkeit besteht.
+6. Phase 3 – Core-Bereinigung
 
-## 9. Kommunikation
+Doppelte oder überflüssige Dateien werden entfernt.
 
-Die KI gibt keine unnötigen Beschreibungen ihrer internen Arbeitsschritte aus.
+Funktionen, die fachlich in Module gehören, werden aus dem Core entfernt.
 
-Bei einem eindeutigen Auftrag wird die Aufgabe direkt ausgeführt.
+Der Core wird auf generische Infrastruktur reduziert.
 
-Nachfragen erfolgen nur bei fehlenden oder technisch notwendigen Entscheidungen.
+⸻
 
-Nach erfolgreicher Übergabe der Dateien ist keine zusätzliche Bestätigung durch den Benutzer erforderlich, sofern der vereinbarte nächste Schritt eindeutig ist.
+7. Phase 4 – Core-Implementierung
+
+Der Core wird vollständig aufgebaut.
+
+Er muss mindestens die generische Infrastruktur bereitstellen für:
+
+* Startup
+* Runtime
+* Lifecycle
+* Event System
+* State
+* Storage
+* Database
+* Error Handling
+* Module Interface
+* Module Registry
+* Module Manager
+* Permissions
+* Package/Entitlements
+
+⸻
+
+8. Phase 5 – Core-Validierung
+
+Der Core wird vollständig getestet.
+
+Dabei wird unter anderem geprüft:
+
+* startet die Anwendung zuverlässig?
+* funktionieren Core-Lifecycle und Runtime?
+* funktionieren Storage und Database?
+* funktioniert Error Handling?
+* funktioniert das Module Interface?
+* funktioniert die Module Registry?
+* funktioniert der Module Manager?
+* können Module registriert werden?
+* können Module aktiviert/deaktiviert werden?
+* funktionieren Permissions?
+* bestehen keine unerlaubten Abhängigkeiten zu Fachmodulen?
+
+⸻
+
+9. Phase 6 – Core-Abnahme
+
+Der Core gilt erst dann als fertig, wenn die technische Validierung abgeschlossen ist.
+
+Der Status muss nachvollziehbar dokumentiert werden.
+
+⸻
+
+10. Phase 7 – Core Freeze
+
+Nach Abnahme:
+
+CORE V1.0 = FROZEN
+
+Ab diesem Zeitpunkt ist:
+
+/Core/*
+
+für AI-Agenten Read-Only.
+
+Neue Funktionen dürfen den Core nicht mehr verändern.
+
+⸻
+
+11. Phase 8 – Modul-System
+
+Nach dem Core-Freeze wird das Modul-System verwendet.
+
+Der Module Manager muss Module generisch verwalten können.
+
+Grundfunktionen:
+
+install
+uninstall
+enable
+disable
+update
+status
+registry
+dependencies
+
+⸻
+
+12. Modulinstallation
+
+Der Installationsworkflow lautet:
+
+Modulpaket
+ ↓
+Manifest prüfen
+ ↓
+Abhängigkeiten prüfen
+ ↓
+Berechtigungen/Anforderungen prüfen
+ ↓
+Dateien installieren
+ ↓
+Datenbank installieren
+ ↓
+Registry aktualisieren
+ ↓
+Modul laden
+ ↓
+Modul aktivieren
+
+⸻
+
+13. Modul-Deinstallation
+
+Der Deinstallationsworkflow lautet:
+
+Modul deaktivieren
+ ↓
+Abhängigkeiten prüfen
+ ↓
+Moduldaten behandeln
+ ↓
+Datenbank entfernen oder erhalten
+ ↓
+Registry entfernen
+ ↓
+Moduldateien entfernen
+
+⸻
+
+14. User-Modul
+
+Das User-Modul wird nach Fertigstellung des generischen Core- und Module-Systems umgesetzt.
+
+Es ist ein eigenständiges Modul.
+
+⸻
+
+15. Admin-Modul
+
+Das Admin-Modul wird ebenfalls als eigenständiges Modul umgesetzt.
+
+Es erhält Zugriff auf Funktionen wie:
+
+Users
+Roles
+Packages
+Modules
+System
+
+nur über entsprechende Permissions.
+
+⸻
+
+16. Fachmodule
+
+Erst nach Stabilisierung des Core-/Module-Systems werden Fachmodule umgesetzt.
+
+Beispiele:
+
+GPS
+Weather
+Catchbook
+Fish Database
+Tides
+Maps
+Statistics
+
+Jedes Modul muss ohne direkte Änderungen am Core integriert werden können.
+
+⸻
+
+17. Neue Funktion
+
+Bei jeder neuen Anforderung wird zuerst entschieden:
+
+Infrastruktur?
+→ Core
+Fachfunktion?
+→ Modul
+
+Ist die Antwort „Modul“, darf keine Core-Datei verändert werden.
+
+⸻
+
+18. Testprinzip
+
+Jedes Modul muss unabhängig getestet werden.
+
+Tests dürfen nicht voraussetzen, dass ein anderes Fachmodul zufällig installiert ist, sofern keine explizite Abhängigkeit besteht.
+
+⸻
+
+19. Dokumentation des Fortschritts
+
+Nach relevanten Arbeitsschritten wird die Chronik aktualisiert.
+
+Die Chronik enthält:
+
+* Datum
+* Arbeitsschritt
+* betroffene Komponenten
+* Ergebnis
+* Fehler
+* Lösungen
+* wichtige Entscheidungen
+* Statusänderungen
+
+Die Frozen Documents werden dadurch nicht verändert.
+
+⸻
+
+20. Abschlussregel
+
+Ein Arbeitsschritt ist erst abgeschlossen, wenn:
+
+1. die Dateien vollständig erstellt oder ersetzt wurden
+2. keine bekannten Fehler verbleiben
+3. die Funktion getestet wurde
+4. Abhängigkeiten geprüft wurden
+5. die Chronik aktualisiert wurde
+
+⸻
+
+21. Grundsatz
+
+Der Workflow folgt immer diesem Prinzip:
+
+ARCHITEKTUR
+    ↓
+CORE
+    ↓
+VALIDIERUNG
+    ↓
+CORE FREEZE
+    ↓
+MODULE
+    ↓
+ERWEITERUNG
+
+Nicht:
+
+MODUL
+→ Core ändern
+→ neues Modul
+→ Core erneut ändern
+→ neue Core-Datei
