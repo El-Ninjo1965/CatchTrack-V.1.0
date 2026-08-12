@@ -455,27 +455,39 @@ Der Core besitzt einen eindeutigen technischen Lifecycle.
 
 Aktueller implementierter Ablauf:
 
+created
+    ↓
+initializing
+    ↓
+ready
+    ↓
+running
+    ↓
+stopped
+
+## Regel
+
+Nur definierte Zustandsübergänge sind zulässig.
+
+Beim Stop wird kein separater STOPPING-Lifecycle-State verwendet. Der Shutdown-Prozess wird intern ausgeführt und der Lifecycle anschließend auf STOPPED gesetzt.
+
+Der Implementierungsstand unterstützt zusätzlich den Restart-Pfad:
+
 START
     ↓
 READY
     ↓
 RUNNING
     ↓
-STOPPING
-    ↓
-STOPPED
-
-## Regel
-
-Nur definierte Zustandsübergänge sind zulässig.
-
-Der Implementierungsstand unterstützt zusätzlich den Restart-Pfad:
-
-START
-    ↓
 STOP
     ↓
+STOPPED
+    ↓
 START
+    ↓
+READY
+    ↓
+RUNNING
 
 Damit ist der Ablauf START → STOP → START technisch unterstützt und validiert.
 
@@ -826,6 +838,8 @@ Der Core darf keine Fachlogik dieser Module enthalten.
 
 Dieser Bereich dokumentiert die ursprüngliche Architekturplanung. Er ist historisch und bleibt bewusst erhalten.
 
+Historische Planung: STOPPING war Teil der ursprünglichen Zielplanung und ist hier als historischer Zustand gekennzeichnet, nicht als aktueller implementierter Core-Zustand.
+
 | Bestehende Komponente | Historische Zielentscheidung |
 |—|—|
 | core.js | ersetzen / Core-Fassade |
@@ -887,6 +901,8 @@ Keine Statushoheit wird im Module Manager dokumentiert. Der Manager übernimmt k
 
 ## 28.3 Architekturregeln – aktueller Stand
 
+Historische Planung: Ein STOPPING-State war in der ursprünglichen Zielplanung erwähnt, wird aber im aktuellen implementierten Stand nicht verwendet.
+
 Der Core darf nicht direkt von folgenden Fachmodulen abhängig sein:
 
 - User
@@ -909,17 +925,19 @@ Die fachliche Logik dieser Module verbleibt außerhalb des Core.
 
 ## 28.5 Aktueller Lifecycle – implementierter Ablauf
 
-START
+created
     ↓
-READY
+initializing
     ↓
-RUNNING
+ready
     ↓
-STOPPING
+running
     ↓
-STOPPED
+stopped
 
-Der Laufzeitpfad START → STOP → START wird unterstützt.
+Beim Stop wird kein separater STOPPING-State verwendet. Der Shutdown-Prozess läuft intern ab und der Lifecycle wird anschließend auf STOPPED gesetzt.
+
+Der Laufzeitpfad START → READY → RUNNING → STOP → STOPPED → START → READY → RUNNING wird unterstützt und validiert.
 
 ## 28.6 Verwendete Statusbegriffe
 
