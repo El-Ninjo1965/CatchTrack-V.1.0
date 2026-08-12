@@ -1,6 +1,6 @@
 CatchTrack – Project Chronicle 001
 
-Zweck
+Zweck:
 
 Diese Datei dokumentiert abgeschlossene Entwicklungsschritte von CatchTrack.
 
