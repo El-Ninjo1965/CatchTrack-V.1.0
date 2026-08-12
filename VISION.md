@@ -1,97 +1,308 @@
-# CatchTrack – Vision
+CatchTrack V1.0 – Vision
 
-## 1. Zweck
+1. Zweck
 
-CatchTrack ist eine professionelle, modulare Fishing-App zur digitalen Erfassung, Verwaltung und Auswertung von Angelaktivitäten und Fängen.
+CatchTrack V1.0 ist eine modulare, offlinefähige Fishing-Anwendung.
 
-Die Anwendung soll den Angler bei der Dokumentation seiner Angelaktivitäten unterstützen und aus den erfassten Daten langfristig einen nutzbaren Datenbestand für Auswertungen, Statistiken und weitere Funktionen schaffen.
+Die Anwendung besteht aus:
 
-## 2. Grundprinzip
+1. einem stabilen, generischen Core
+2. einem generischen Modul-System
+3. installierbaren Fachmodulen
+4. einem User-Modul
+5. einem Admin-Modul
+6. einem Berechtigungs- und Paket-System
 
-CatchTrack wird von Beginn an als modular aufgebautes System entwickelt.
+Der Core stellt ausschließlich die technische Plattform bereit.
 
-Der Kern bildet eine stabile technische Grundlage. Funktionen werden als eigenständige Module ergänzt.
+Fachliche Funktionen werden ausschließlich durch Module bereitgestellt.
 
-Module müssen:
-- möglichst unabhängig voneinander funktionieren
-- aktiviert und deaktiviert werden können
-- später ersetzt oder erweitert werden können
-- keine unnötigen Abhängigkeiten zum Core erzeugen
+⸻
 
-Der Core darf nicht für einzelne Module ständig umgebaut werden.
+2. Grundprinzip
 
-## 3. Technische Ausrichtung
+CatchTrack wird nach dem Prinzip eines modernen modularen CMS aufgebaut.
 
-CatchTrack wird zunächst als Offline-First-Web-App entwickelt.
+                    CATCHTRACK
+                         │
+                    ┌────┴────┐
+                    │  CORE   │
+                    └────┬────┘
+                         │
+                 MODULE SYSTEM
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+      USER             ADMIN          FACHMODULE
+                                      │
+                         ┌────────────┼────────────┐
+                         │            │            │
+                        GPS        Weather      Catchbook
 
-Grundtechnologien:
+Der Core kennt keine konkreten Fachmodule.
 
-- HTML5
-- CSS3
-- JavaScript
-- SQLite als zentrale lokale Datenbank
-- Vorbereitung auf sql.js / WebAssembly
-- modulare Services und Komponenten
+⸻
 
-Die Anwendung soll später für mobile Plattformen und eine kommerzielle Nutzung erweitert werden können.
+3. Der Core
 
-## 4. Entwicklungsprinzip
+Der Core ist die technische Basis von CatchTrack.
 
-Die Architektur wird vor der eigentlichen umfangreichen Entwicklung festgelegt.
+Der Core stellt generische Infrastruktur bereit für:
+
+* Application Startup
+* Runtime
+* Lifecycle
+* Event-System
+* State Management
+* Storage
+* Database Infrastructure
+* Error Handling
+* Logging
+* Module Management
+* Module Registry
+* Module Interface
+* Module Lifecycle
+* Permissions
+* Package/Entitlements
+* zentrale Systemkonfiguration
+
+Der Core enthält keine fachliche Fishing-Funktionalität.
+
+Insbesondere gehören GPS, Wetter, Catchbook, Fischdatenbank, Gezeiten, Statistiken, Karten und ähnliche Funktionen nicht in den Core.
+
+⸻
+
+4. Core Freeze
+
+Der Core wird nach vollständiger Implementierung, Prüfung und Abnahme eingefroren.
 
 Danach gilt:
 
-> Stabilität vor ständiger Veränderung.
+Neue Funktionalität wird ausschließlich als Modul implementiert.
 
-Bestehende, getestete Komponenten werden nicht ohne konkreten technischen Grund verändert.
+Ein neues Modul darf grundsätzlich keine Änderung an bestehenden Core-Dateien benötigen.
 
-Neue Anforderungen werden möglichst durch neue Module oder klar abgegrenzte Erweiterungen umgesetzt.
+Der eingefrorene Core ist anschließend für AI-Agenten ausschließlich lesbar.
 
-## 5. Benutzerorientierung
+AI-Agenten dürfen:
 
-CatchTrack soll auf mobilen Geräten besonders gut nutzbar sein.
+* Core-Dateien lesen
+* Core-Dateien analysieren
+* Core-APIs verwenden
 
-Die Bedienung muss:
-- klar
-- schnell
-- übersichtlich
-- möglichst selbsterklärend
+AI-Agenten dürfen nicht:
 
-sein.
+* Core-Dateien ändern
+* Core-Dateien überschreiben
+* Core-Dateien löschen
+* Core-Dateien verschieben
+* Core-Dateien umbenennen
 
-Die Anwendung soll auch ohne permanente Internetverbindung sinnvoll nutzbar bleiben.
+Es gibt keine automatische Rückfrage, ob eine Core-Datei geändert werden darf.
 
-## 6. Langfristige Entwicklung
+Eine Änderung des eingefrorenen Core ist ausschließlich eine bewusste Projektentscheidung außerhalb des normalen Modul-Entwicklungsprozesses.
 
-Die Architektur soll spätere Funktionen ermöglichen, unter anderem:
+⸻
 
-- umfangreiche Fischdatenbank
-- digitales Fangbuch
-- GPS
-- Wetterdaten
-- Gewässerverwaltung
-- Statistiken
-- Ranglisten
-- Cloud-Synchronisation
-- Community-Funktionen
-- Benutzerkonten
-- weitere Angelmodule
+5. Module
 
-Diese Funktionen werden jedoch nicht vorzeitig in den Core eingebaut.
+Jede fachliche Funktion wird als eigenständiges Modul umgesetzt.
 
-## 7. Qualitätsziel
+Beispiele:
 
-Ein Modul gilt nicht allein deshalb als fertig, weil der Quellcode erstellt wurde.
+* User
+* Admin
+* GPS
+* Weather
+* Catchbook
+* Fish Database
+* Tides
+* Maps
+* Statistics
+* Reverse Geocoding
 
-Ein Modul ist erst abgeschlossen, wenn:
+Module müssen über definierte Core-Schnittstellen mit der Anwendung kommunizieren.
 
-1. die Anforderungen definiert sind
-2. alle erforderlichen Dateien erstellt wurden
-3. der Code funktioniert
-4. die Dateien committed wurden
-5. die Dateien auf GitHub vorhanden und überprüfbar sind
-6. das Modul erfolgreich getestet wurde
-7. die vorgesehenen Funktionen funktionieren
-8. der Abschluss dokumentiert wurde
+Ein Modul darf nicht auf interne Implementierungsdetails anderer Module zugreifen.
 
-Erst danach gilt das Modul als abgeschlossen.
+Module sollen möglichst unabhängig voneinander funktionieren.
+
+⸻
+
+6. Modulinstallation
+
+Module werden über das Admin-System verwaltet.
+
+Der Benutzer soll Module nicht manuell in Core-Dateien integrieren müssen.
+
+Ein Modul muss konzeptionell installiert, aktiviert, deaktiviert, aktualisiert und deinstalliert werden können.
+
+Die Installation umfasst bei Bedarf auch die Einrichtung der zum Modul gehörenden Datenbankstrukturen.
+
+⸻
+
+7. Modul-Deinstallation
+
+Ein Modul muss vollständig entfernt werden können.
+
+Dabei gehören grundsätzlich dazu:
+
+* Modul deaktivieren
+* Modul aus der Registry entfernen
+* Modul-Datenbankstrukturen behandeln
+* Moduldateien entfernen
+* Abhängigkeiten prüfen
+
+Das System muss zwischen dem Entfernen des Moduls und dem unwiderruflichen Löschen seiner Benutzerdaten unterscheiden können.
+
+⸻
+
+8. User-Modul
+
+Benutzerfunktionen gehören in das User-Modul.
+
+Das User-Modul ist kein Bestandteil des Core.
+
+Es verwaltet unter anderem:
+
+* Benutzerkonto
+* Login
+* Logout
+* Session
+* Profil
+* Benutzerstatus
+* Rollen
+* Paketzuordnung
+* Berechtigungen
+
+⸻
+
+9. Admin-Modul
+
+Das Admin-Modul ist ebenfalls ein eigenständiges Modul.
+
+Es stellt Funktionen für Benutzer mit entsprechenden Berechtigungen bereit.
+
+Dazu gehören insbesondere:
+
+* Dashboard
+* Benutzerverwaltung
+* Rollenverwaltung
+* Paketverwaltung
+* Modulverwaltung
+* Systemverwaltung
+
+Die Modulverwaltung muss perspektivisch ermöglichen:
+
+* verfügbare Module anzeigen
+* Module installieren
+* Module aktivieren
+* Module deaktivieren
+* Module aktualisieren
+* Module deinstallieren
+
+⸻
+
+10. Rollen und Berechtigungen
+
+Der Zugriff auf Funktionen wird über Benutzer, Rollen, Berechtigungen und Pakete bestimmt.
+
+Konzeptionell:
+
+User
+ ├── Role
+ ├── Package
+ └── Permissions
+
+Ein Benutzer erhält nur die Funktionen, für die er tatsächlich berechtigt ist.
+
+Nicht freigeschaltete Funktionen werden nicht als nutzlose Menüeinträge angezeigt.
+
+⸻
+
+11. Dynamische Benutzeroberfläche
+
+Die Navigation wird dynamisch aufgebaut.
+
+Grundprinzip:
+
+Login
+ ↓
+User
+ ↓
+Role / Package
+ ↓
+Permissions
+ ↓
+installierte Module
+ ↓
+Module registrieren ihre Navigation
+ ↓
+sichtbares App-Menü
+
+Ein Benutzer sieht daher nur die Module und Funktionen, die für ihn verfügbar sind.
+
+⸻
+
+12. Paket-System
+
+CatchTrack wird auf ein späteres Paket-/Entitlement-System vorbereitet.
+
+Ein Paket kann bestimmen, welche Module und Funktionen einem Benutzer zur Verfügung stehen.
+
+Beispielhafte Pakete können später sein:
+
+* FREE
+* BASIC
+* PRO
+* DEVELOPER
+
+Diese Bezeichnungen sind keine endgültige Produktdefinition.
+
+Die Architektur muss lediglich sicherstellen, dass solche Pakete später ohne grundlegenden Umbau des Core eingeführt werden können.
+
+⸻
+
+13. Offline First
+
+CatchTrack soll grundsätzlich offlinefähig sein.
+
+Lokale Datenhaltung und Synchronisation werden über generische Core-Infrastruktur bereitgestellt.
+
+Konkrete Fachdaten gehören in die jeweiligen Module.
+
+⸻
+
+14. Erweiterbarkeit
+
+Das System muss so aufgebaut sein, dass neue Fachmodule hinzugefügt werden können, ohne bestehende Core-Dateien verändern zu müssen.
+
+Ein neues Modul soll:
+
+installieren
+→ registrieren
+→ aktivieren
+→ verwenden
+→ deaktivieren
+→ aktualisieren
+→ deinstallieren
+
+können.
+
+Dies ist ein wesentliches Architekturziel von CatchTrack V1.0.
+
+⸻
+
+15. Zielzustand
+
+Der endgültige Zielzustand lautet:
+
+Der Core läuft unabhängig von den Fachmodulen und bleibt stabil.
+
+Module können über das Admin-System installiert und entfernt werden.
+
+Benutzer sehen ausschließlich die für sie verfügbaren Funktionen.
+
+Neue Fachfunktionen erfordern keine Änderungen am eingefrorenen Core.
+
+CatchTrack kann dadurch langfristig wie ein modulares CMS erweitert werden.
