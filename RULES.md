@@ -207,20 +207,23 @@ Neue Fachfunktionen werden grundsätzlich als Module umgesetzt.
 
 ## 13. Core-Freeze
 
-Der Core ist derzeit nicht eingefroren.
+Der Core v1.0.0 ist eingefroren.
 
-Ein Freeze erfolgt erst nach:
+Der Core wird nicht für neue Funktionen verändert.
 
-1. Inventur
-2. Analyse
-3. Bereinigung
-4. Implementierung
-5. Validierung
-6. Tests
-7. Abnahme
-8. ausdrücklicher Freeze-Entscheidung
+Core-Änderungen sind nur zulässig bei:
 
-Nach dem Freeze ist der Core grundsätzlich Read-Only.
+- nachgewiesenem Fehler
+- zwingender technischer Korrektur
+- Sicherheitskorrektur
+
+Neue Funktionalität wird als Modul entwickelt.
+
+User und Admin sind eigenständige Module.
+
+Module dürfen den Core verwenden, dürfen ihn aber nicht eigenmächtig verändern.
+
+Der Core bleibt nach dem Freeze grundsätzlich Read-Only.
 
 —
 
