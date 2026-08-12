@@ -17,6 +17,14 @@
         STOPPED: 'stopped'
     });
 
+    const validTransitions = Object.freeze({
+        [phases.CREATED]: [phases.INITIALIZING],
+        [phases.INITIALIZING]: [phases.READY],
+        [phases.READY]: [phases.RUNNING],
+        [phases.RUNNING]: [phases.STOPPED],
+        [phases.STOPPED]: []
+    });
+
     let currentPhase = phases.CREATED;
 
     const CoreLifecycle = {
@@ -37,12 +45,22 @@
                 return;
             }
 
+            const allowedTransitions = validTransitions[previousPhase] || [];
+
+            if (!allowedTransitions.includes(phase)) {
+                throw new Error(
+                    `Invalid lifecycle transition: ${previousPhase} -> ${phase}`
+                );
+            }
+
             currentPhase = phase;
 
-            window.CatchTrackCore.emit('lifecycle:changed', {
-                previousPhase,
-                currentPhase: phase
-            });
+            if (window.CatchTrackCore && typeof window.CatchTrackCore.emit === 'function') {
+                window.CatchTrackCore.emit('lifecycle:changed', {
+                    previousPhase,
+                    currentPhase: phase
+                });
+            }
         },
 
         is(phase) {
