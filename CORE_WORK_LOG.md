@@ -54,6 +54,12 @@ Die folgenden Git-Aussagen wurden im Repository geprüft:
   - Modulvertrags-Status erweitert
   - Module Manager auf neuen Vertrag angepasst
   - Shutdown-Logik auf Modulstatus und Fehlerbehandlung korrigiert
+- Zusätzlicher aktueller Repository-Stand:
+  - [Core/index.js](Core/index.js) ist entfernt.
+  - [Core/module-registry.js](Core/module-registry.js) ist vorhanden.
+  - Core Cleanup ist abgeschlossen.
+  - Core Validation ist abgeschlossen.
+  - Core Freeze wurde noch nicht erklärt.
 - Wichtige Feststellung: Diese Phase ist die tatsächlich bestehende Nachfolgekorrektur zur Core-Bereinigung. Sie ist durch den Git-Commit f80b53d belegt.
 
 ## 4. Lifecycle-Status (ERFÜLLT)
@@ -106,22 +112,21 @@ Diese Funktionen sind als Kompatibilitätsfunktionen zu betrachten und nicht als
 
 Ergebnis: ERFÜLLT.
 
-## 6. Module Manager (OFFENER ARCHITEKTURPUNKT)
+## 6. Module Manager (ERFÜLLT)
 
 Die Datei [Core/module-manager.js](Core/module-manager.js) unterstützt die neuen Lifecycle-Operationen.
 
 Tatsächlicher Zustand:
 
-- Der Manager setzt `status` selbst.
-- Der Manager setzt `active` selbst.
-- Danach ruft der Manager die Moduloperation auf, z. B. `module.enable()` oder `module.disable()`.
-
-Diese doppelte Statusverantwortung zwischen Manager und Interface ist ein offener Architekturpunkt und wurde in diesem Auftrag nicht selbstständig behoben.
+- Der Manager ruft die Modul-Operation auf, z. B. `module.enable()` oder `module.disable()`.
+- Die Statushoheit liegt beim Modul Interface.
+- Das Interface setzt den Status und den `active`-Zustand, während der Manager die Lifecycle-Koordination und die Core-Emission übernimmt.
 
 Dokumentierter Status:
 
-- OFFENER ARCHITEKTURPUNKT: Statusverantwortung Module Manager / Module Interface
-- Keine Codeänderung in diesem Auftrag zur Behebung dieses Punkts
+- ERFÜLLT: Statusverantwortung liegt im Modul Interface.
+- Der Manager delegiert die konkrete fachliche Statusänderung an das Modul.
+- Der Manager verwaltet nicht mehr selbst die Statushoheit.
 
 ## 7. Shutdown (ERFÜLLT)
 
@@ -141,13 +146,14 @@ Ergebnis: ERFÜLLT.
 
 ## 8. Validierungsstatus
 
-Der bisherige Satz "Keine bekannten offenen Probleme." darf nicht unverändert bestehen bleiben.
+Die tatsächliche Verifikation des Repository-Stands zeigt:
 
-Dokumentierter offener Punkt:
-
-- OFFENER ARCHITEKTURPUNKT: Die Statusverantwortung zwischen Module Manager und Module Interface ist derzeit teilweise doppelt.
-- Der Manager setzt `status`/`active` selbst und ruft anschließend die entsprechende Moduloperation auf.
-- Dieser Punkt wurde erkannt, aber in diesem Arbeitsauftrag nicht geändert.
+- Core Cleanup: ERFÜLLT
+- Core Validation: ERFÜLLT
+- Core/index.js entfernt: ERFÜLLT
+- Module Registry vorhanden: ERFÜLLT
+- Module Manager delegiert korrekt an die Modul-Methoden: ERFÜLLT
+- Core Freeze noch nicht erklärt: ERFÜLLT
 
 ## 9. Core Freeze Status
 
@@ -157,19 +163,12 @@ CORE FREEZE STATUS:
 
 Grund:
 
-- Offener Punkt bei der Statusverantwortung des Module Managers.
-- Die endgültige Freeze-Entscheidung erfolgt erst nach unabhängiger Prüfung.
+- Der Core-Implementierungs-, Cleanup- und Validierungsstand ist abgeschlossen.
+- Die endgültige Freeze-Entscheidung bleibt offen und muss nach unabhängiger Prüfung erfolgen.
 
 ## 10. Offene Probleme
 
-Die folgenden tatsächlich belegten offenen Punkte sind dokumentiert:
-
-1. Statusverantwortung Module Manager / Module Interface
-   - Status: OFFEN
-   - Beschreibung: Der Manager setzt `status` und `active` selbst und ruft anschließend die konkrete Moduloperation auf.
-   - Änderung in diesem Arbeitsauftrag: Keine.
-
-Weitere tatsächlich belegte offene Punkte wurden in diesem Repository-Stand nicht identifiziert.
+Keine tatsächlich belegten offenen Core-Probleme wurden nach der aktuellen Repository-Prüfung identifiziert.
 
 ## 11. Nicht geänderte Bereiche
 
@@ -229,8 +228,10 @@ Bewertung der relevanten Core-Kriterien nach dem derzeitigen Stand:
 
 - Lifecycle-Übergänge: ERFÜLLT
 - Module Interface: ERFÜLLT
-- Module Manager: OFFENER ARCHITEKTURPUNKT
+- Module Manager: ERFÜLLT (delegiert an `module.enable()` / `module.disable()`; Statushoheit liegt beim Modul Interface)
 - Shutdown: ERFÜLLT
+- Core Cleanup: ERFÜLLT
+- Core Validation: ERFÜLLT
 - Core Freeze: NOCH NICHT FREIGEGEBEN
 - Endgültige Freeze-Entscheidung: OFFEN, nach unabhängiger Prüfung
 

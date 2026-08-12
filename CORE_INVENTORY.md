@@ -23,6 +23,18 @@ Geprüft gegen:
 - `CORE_TARGET_STRUCTURE.md`
 - vorhandenen Repository-Code auf `main`
 
+## 1.1 Aktueller Repository-Status
+
+- `Core/index.js`: **REMOVED**
+- `Core/module-registry.js`: **PRESENT**
+- `Core/module-manager.js`: **PRESENT**
+- `Core/module-interface.js`: **PRESENT**
+- Lifecycle: **IMPLEMENTED**
+- Shutdown: **IMPLEMENTED**
+- Core Cleanup: **COMPLETED**
+- Core Validation: **COMPLETED**
+- Core Freeze: **NOT YET DECLARED**
+
 —
 
 # 2. Ziel des Core
@@ -97,7 +109,7 @@ Core Infrastructure
 
 | Datei | Ist-Funktion | Entscheidung |
 |—|—|—|
-| `Core/index.js` | zusätzlicher Einstiegspunkt | **ENTFERNEN** |
+| `Core/index.js` | zusätzlicher Einstiegspunkt | **REMOVED** |
 | `Core/core-entry.js` | Einstieg in die Core Runtime | **BEHALTEN / VEREINFACHEN** |
 | `Core/core-runtime.js` | Runtime-Steuerung | **BEHALTEN / VEREINFACHEN** |
 | `Core/core-startup.js` | Startup-Steuerung | **BEHALTEN / VEREINFACHEN** |
@@ -284,10 +296,10 @@ gpsModule
 
 | Datei | Ist-Funktion | Entscheidung |
 |—|—|—|
-| `Core/module-interface.js` | Modulvertrag | **ERWEITERN** |
-| `Core/module-manager.js` | derzeit überwiegend Fassade | **UMBAUEN** |
-| `Core/module-registry.js` | nicht vorhanden | **NEU** |
-| `Core/core-loader.js` | derzeit keine echte Modulverwaltung | **UMBAUEN** |
+| `Core/module-interface.js` | Modulvertrag | **PRESENT / ERWEITERT** |
+| `Core/module-manager.js` | zentrale Modulverwaltung | **PRESENT** |
+| `Core/module-registry.js` | technische Modul-Registry | **PRESENT** |
+| `Core/core-loader.js` | technische Initialisierung/Prüfung | **PRESENT / UMBAUEN** |
 
 ## Zielstruktur
 
