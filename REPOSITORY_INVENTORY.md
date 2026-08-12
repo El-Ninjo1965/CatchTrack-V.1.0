@@ -354,6 +354,4 @@ Erst danach beginnt die eigentliche Core-Bereinigung.
 
 ## Fortsetzungsschlüssel
 
-```text
-CORE-INVENTORY-DEEP-DIVE
-```
+`CORE-INVENTORY-DEEP-DIVE`
