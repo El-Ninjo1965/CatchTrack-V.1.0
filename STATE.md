@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Core Target Structure completed.
+Current work step: Core implementation, cleanup and validation completed.
 
 ## Next work step
 
-Next work step: Begin Core cleanup and implementation according to CORE_TARGET_STRUCTURE.md.
+Next work step: Final Core Freeze validation and explicit Core Freeze decision.
 
 ## Master file status
 
@@ -34,17 +34,21 @@ Next work step: Begin Core cleanup and implementation according to CORE_TARGET_S
 - INFRASTRUCTURE_ANALYSIS.md: completed
 - CORE_TARGET_STRUCTURE.md: completed
 - Core target architecture: defined
-- Core implementation: not started
-- Core cleanup: not started
-- Core freeze: not allowed
+- Core implementation: completed
+- Core cleanup: completed
+- Core validation: completed
+- Core freeze: pending explicit decision
 
 ## Core status
 
-- Core baseline is available and aligned with the repository state.
-- Core target structure has been defined.
-- Core remains infrastructure-focused and module-independent.
-- No active core freeze has been declared.
-- Core implementation has not started.
+- Core baseline available
+- Core target structure defined
+- Core implementation completed
+- Core cleanup completed
+- Core validation completed
+- Core remains infrastructure-focused
+- No concrete application module is part of Core
+- Core freeze has NOT yet been declared
 
 ## Architecture status
 
