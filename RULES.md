@@ -302,4 +302,4 @@ Die wichtigste Regel von CatchTrack V1.0 lautet:
 
 Der Core stellt Infrastruktur bereit. Module stellen Funktionen bereit.
 
-Diese Trennung ist verbindlich.
+Diese Trennung ist verbindlich!
