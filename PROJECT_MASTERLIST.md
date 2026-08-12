@@ -1,393 +1,199 @@
-CatchTrack V1.0 – Project Masterlist
+# CatchTrack V1.0 – Project Masterlist
 
-1. Zweck
+## Zweck
 
-Diese Masterliste definiert die verbindliche Reihenfolge der Entwicklung.
+Verbindliche Übersicht der Entwicklungsphasen und Hauptkomponenten von CatchTrack V1.0.
 
-Sie verhindert, dass einzelne Module entwickelt werden, bevor die dafür erforderliche Plattform stabil ist.
+Diese Datei ist nach Fertigstellung Frozen.
 
-Diese Datei ist Frozen.
+## Entwicklungsphasen
 
-Sie wird nicht von AI-Agenten eigenständig verändert.
+1. Dokumentations- und Architekturdefinition
+2. Core-Inventur
+3. Core-Bereinigung
+4. Core-Implementierung
+5. Core-Validierung
+6. Core-Abnahme
+7. Core-Freeze
+8. Modul-System
+9. User/Admin
+10. Fachmodule
 
-⸻
+## Aktueller Projektstand
 
-PHASE 1 – ARCHITEKTUR
-
-1.1 Projektdokumentation
-
-* VISION.md
-* RULES.md
-* WORKFLOW.md
-* PROJECT_MASTERLIST.md
-* PROJECT_STATUS.md
+Phase 2 – Core-Inventur
 
 Status:
 
-ARCHITECTURE DEFINED
+IN ARBEIT
 
-⸻
+## Arbeitsreihenfolge
+
+ARCHITEKTUR
+↓
+REPOSITORY-INVENTUR
+↓
+CORE-INVENTUR
+↓
+CORE-BEREINIGUNG
+↓
+CORE-IMPLEMENTIERUNG
+↓
+CORE-VALIDIERUNG
+↓
+CORE-ABNAHME
+↓
+CORE-FREEZE
+↓
+MODULE-SYSTEM
+↓
+USER / ADMIN
+↓
+FACHMODULE
+
+## Core-Zielstruktur
+
+Der Core V1.0 muss generische Infrastruktur bereitstellen für:
+
+- Startup
+- Runtime
+- Lifecycle
+- Event System
+- State
+- Storage
+- Database
+- Error Handling
+- Module Interface
+- Module Registry
+- Module Manager
+- Permissions
+- Package / Entitlements
+
+Der Core darf keine direkte Abhängigkeit zu konkreten Fachmodulen besitzen.
+
+## Modul-System
+
+Das Modul-System muss mindestens unterstützen:
+
+- install
+- uninstall
+- enable
+- disable
+- update
+- status
+- registry
+- dependencies
+
+## Modulprinzip
+
+Neue Anforderungen werden zuerst klassifiziert:
+
+Infrastruktur → Core
+
+Fachfunktion → Modul
+
+Eine Fachfunktion darf nicht durch Änderung einer Core-Datei implementiert werden.
+
+## Dokumentationssystem
+
+Verbindliche Dokumente:
+
+- VISION.md
+- RULES.md
+- WORKFLOW.md
+- PROJECT_MASTERLIST.md
+- PROJECT_STATUS.md
+
+Laufende Dokumentation:
+
+- PROJECT_CHRONICLE_001.md
+- PROJECT_CHRONICLE_002.md
+- DEV_LOG.md
+- WORK_STATE.md
+- REPOSITORY_INVENTORY.md
+
+## GitHub-Arbeitsgrundlage
+
+GitHub `main` ist die maßgebliche Quelle für den aktuellen Repository-Stand.
+
+Vor jeder Änderung oder Erstellung einer Datei:
+
+1. Regeln einlesen
+2. Arbeitsstand prüfen
+3. GitHub-Version prüfen
+4. vorhandene Datei vollständig lesen
+5. Entscheidung treffen
+6. Datei vollständig ersetzen oder neu erstellen
+
+Keine Datei wird aufgrund einer Vermutung neu erstellt.
+
+## OK-Regel
+
+`OK` bedeutet:
+
+- aktueller Schritt gelesen
+- verstanden
+- bestätigt
+- Vorschlag akzeptiert
+- Arbeitsschritt abgeschlossen
+- nächsten sinnvollen Schritt selbstständig bestimmen
+- keine erneute Bestätigung einholen
+
+Ein bereits erledigter Schritt darf nicht erneut ausgeführt oder ausgegeben werden.
+
+## Dateiausgabe
+
+Bei einer zu erstellenden oder vollständig zu ersetzenden Datei werden immer drei getrennte Copyblöcke ausgegeben:
+
+1. Pfad
+2. exakter Dateiname
+3. vollständiger Quelltext
+
+Der Quelltext befindet sich vollständig in genau einem Copyblock.
+
+Keine zusätzlichen Inhalte innerhalb des Quelltextblocks.
+
+## Autonomer Arbeitsablauf
+
+Prüfungen, Einlesungen und Vergleiche werden selbstständig durchgeführt.
+
+Der Benutzer muss Prüfungen nicht einzeln bestätigen.
+
+Nach einem bestätigten Arbeitsschritt wird automatisch der nächste sinnvolle Arbeitsschritt bestimmt.
+
+Fragen werden nur gestellt, wenn eine Entscheidung fachlich nicht eindeutig getroffen werden kann.
+
+Verbesserungsvorschläge werden vor ihrer Umsetzung einmalig vorgelegt.
+
+Wird ein Vorschlag mit `OK` bestätigt, wird er ohne weitere Rückfrage umgesetzt.
+
+## Testprinzip
+
+Der Benutzer soll während der Entwicklung an sinnvollen Zwischenpunkten testen können.
+
+Daher werden nicht unnötig viele Implementierungsschritte am Stück ausgeführt.
+
+Nach technisch sinnvollen Testpunkten wird der Benutzer zur praktischen Prüfung einbezogen.
+
+## Repository- und Commit-Prinzip
+
+Alle relevanten Dateien werden versioniert und committed.
+
+Technische Prüfungen und Terminalausgaben sollen, soweit sinnvoll, automatisch dokumentiert werden.
+
+Commit-Dokumentation soll mindestens enthalten:
+
+- Commit
+- Datum / Zeit
+- betroffene Pfade
+- Arbeitsschritt
+- Ergebnis
+
+## Aktueller Fortsetzungsschlüssel
+
+CORE-INVENTORY-DEEP-DIVE
+
+## Status
 
 PHASE 2 – CORE-INVENTUR
-
-2.1 Vollständige Bestandsaufnahme
-
-Alle bestehenden Core- und unterstützenden Dateien prüfen.
-
-Jede Datei erhält genau eine Klassifizierung:
-
-A – NEU
-B – LÖSCHEN
-C – VOLLSTÄNDIG ERSETZEN
-D – UNVERÄNDERT ÜBERNEHMEN
-
-Ziel:
-
-* keine doppelten Funktionen
-* keine unnötigen Dateien
-* keine parallelen Implementierungen
-* keine versteckten Core-Abhängigkeiten
-* klare Core-Grenze
-
-⸻
-
-PHASE 3 – CORE-BEREINIGUNG
-
-Der Core wird auf generische Infrastruktur reduziert.
-
-Aus dem Core werden fachliche Funktionen entfernt, die als Module umgesetzt werden müssen.
-
-Beispiele:
-
-GPS → Modul
-Weather → Modul
-Catchbook → Modul
-Fish Database → Modul
-Tides → Modul
-Statistics → Modul
-Maps → Modul
-
-⸻
-
-PHASE 4 – CORE
-
-Der Core wird vollständig und stabil aufgebaut.
-
-Erforderliche Bereiche
-
-* Application Startup
-* Runtime
-* Lifecycle
-* Event System
-* State
-* Storage
-* Database
-* Error Handling
-* Logging
-* Module Interface
-* Module Registry
-* Module Manager
-* Permissions
-* Package/Entitlements
-* System Configuration
-
-⸻
-
-PHASE 5 – MODULE SYSTEM
-
-Module Interface
-
-Ein einheitliches Interface für installierbare Module definieren.
-
-Module Manifest
-
-Einheitliches Manifest für:
-
-* ID
-* Name
-* Version
-* Beschreibung
-* Entry Point
-* Dependencies
-* Permissions
-* Package Requirements
-* Database Information
-
-Module Registry
-
-Installierte Module eindeutig registrieren.
-
-Module Manager
-
-Unterstützen:
-
-* install
-* uninstall
-* enable
-* disable
-* update
-* status
-* dependencies
-
-⸻
-
-PHASE 6 – DATABASE LIFECYCLE
-
-Module erhalten einen definierten Datenbank-Lifecycle.
-
-Installation
-
-install module
-→ install database
-→ register module
-
-Update
-
-update module
-→ execute migration
-
-Deinstallation
-
-disable module
-→ handle data
-→ uninstall database
-→ unregister module
-→ remove module
-
-⸻
-
-PHASE 7 – PERMISSIONS
-
-Zentrales Berechtigungssystem implementieren.
-
-Grundmodell:
-
-User
- ├── Role
- ├── Package
- └── Permissions
-
-Berechtigungen müssen unabhängig von einzelnen Fachmodulen definiert werden können.
-
-⸻
-
-PHASE 8 – USER MODULE
-
-User als eigenständiges Modul implementieren.
-
-Zielbereiche:
-
-* User Account
-* Login
-* Logout
-* Session
-* Profile
-* User Status
-* Roles
-* Permissions
-* Package Assignment
-
-⸻
-
-PHASE 9 – ADMIN MODULE
-
-Admin als eigenständiges Modul implementieren.
-
-Zielbereiche:
-
-* Dashboard
-* Users
-* Roles
-* Packages
-* Modules
-* System
-
-Module Management
-
-Das Admin-Modul muss perspektivisch ermöglichen:
-
-Available
-Installed
-Install
-Enable
-Disable
-Update
-Uninstall
-
-⸻
-
-PHASE 10 – PACKAGE SYSTEM
-
-Generische Package-/Entitlement-Infrastruktur vorbereiten.
-
-Beispiel:
-
-FREE
-BASIC
-PRO
-DEVELOPER
-
-Keine endgültige Produktdefinition.
-
-Ziel:
-
-Package
- ↓
-Entitlements
- ↓
-Modules / Features
-
-⸻
-
-PHASE 11 – DYNAMIC UI
-
-Navigation darf nicht fachlich fest verdrahtet werden.
-
-Ziel:
-
-User
- ↓
-Role
- ↓
-Package
- ↓
-Permissions
- ↓
-Installed Modules
- ↓
-Module Navigation
- ↓
-Visible UI
-
-Nicht verfügbare Funktionen werden nicht angezeigt.
-
-⸻
-
-PHASE 12 – CORE VALIDATION
-
-Der vollständige Core wird getestet.
-
-Prüfen:
-
-* Startup
-* Runtime
-* Lifecycle
-* Event System
-* Storage
-* Database
-* Error Handling
-* Module Loading
-* Module Registry
-* Module Manager
-* Permissions
-* Security
-* Dependencies
-* Offline-Verhalten
-
-⸻
-
-PHASE 13 – CORE ACCEPTANCE
-
-Der Core wird technisch abgenommen.
-
-Erst danach darf der Core als stabil betrachtet werden.
-
-⸻
-
-PHASE 14 – CORE FREEZE
-
-Nach erfolgreicher Abnahme:
-
-CORE V1.0
-FROZEN
-READ ONLY FOR AI AGENTS
-
-Danach gilt:
-
-Neue Fachfunktion = neues Modul.
-
-⸻
-
-PHASE 15 – FACHMODULE
-
-Erst nach Core-Freeze werden Fachmodule endgültig umgesetzt.
-
-Geplante Module:
-
-GPS
-Weather
-Catchbook
-Fish Database
-Tides
-Maps
-Statistics
-Reverse Geocoding
-
-Weitere Module können später ergänzt werden.
-
-⸻
-
-PHASE 16 – MODULTESTS
-
-Jedes Modul wird separat getestet.
-
-Prüfen:
-
-* Installation
-* Aktivierung
-* Deaktivierung
-* Nutzung
-* Datenbank
-* Update
-* Deinstallation
-* Berechtigungen
-* Package Requirements
-* Fehlerbehandlung
-
-⸻
-
-PHASE 17 – GESAMTSYSTEM
-
-Nach Fertigstellung der Module:
-
-* Integration testen
-* Offline-Verhalten testen
-* Datenintegrität testen
-* Berechtigungen testen
-* Paketlogik testen
-* Modul-Lifecycle testen
-* UI testen
-
-⸻
-
-ENDZUSTAND
-
-CatchTrack V1.0 ist fertig, wenn:
-
-Core
-→ stabil
-→ getestet
-→ eingefroren
-Module System
-→ installierbar
-→ deinstallierbar
-→ aktualisierbar
-→ aktivierbar/deaktivierbar
-User
-→ eigenes Modul
-Admin
-→ eigenes Modul
-Permissions
-→ aktiv
-Packages
-→ vorbereitet/aktiv
-Navigation
-→ dynamisch
-Fachmodule
-→ unabhängig vom Core
-
-Der wichtigste Architekturtest lautet:
-
-Kann ein neues Fachmodul installiert werden, ohne eine bestehende Core-Datei zu verändern?
-
-Wenn nein, ist die Architektur noch nicht fertig.
+IN ARBEIT
