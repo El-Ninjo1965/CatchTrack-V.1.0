@@ -40,7 +40,7 @@
         },
 
         isRunning() {
-            return this.running;
+            return running;
         }
     };
 

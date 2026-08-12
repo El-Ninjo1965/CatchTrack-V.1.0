@@ -157,6 +157,11 @@ Das Modul benötigt kein Location-Modul und ist von keinem anderen Modul abhäng
 
 In der App-UI wird beim Öffnen der Wetteransicht automatisch versucht, eine aktuelle GPS-Position zu ermitteln. Bei Erfolg wird der Standort für das Wetter gesetzt; bei Fehlschlag bleibt der vorhandene Standort/Fallback aktiv.
 
+## Zeitzonenverhalten
+
+Die vom Provider gelieferten Zeitfelder (`current.time`, `hourly.time`, `sunrise`, `sunset`) werden als lokale Standortzeit verarbeitet.
+Die stündliche Vorhersage startet am Zeitindex von `current.time` (nicht über UTC-Clientzeit), damit Uhrzeit und Wetterzustand auch bei abweichender Gerätezeitzone korrekt bleiben.
+
 ## Events
 
 | Event | Auslöser |

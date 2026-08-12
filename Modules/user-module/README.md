@@ -34,6 +34,8 @@ Das Modul erstellt automatisch zwei Demo-Benutzer:
 | `demo-user-001` | `demo-user` | Demo User | demo@catchtrack.local | developer |
 | `demo-admin-001` | `admin` | Administrator | admin@catchtrack.local | admin |
 
+Wenn der interne User-Speicher unerwartet leer ist, stellt das Modul diese Demo-Benutzer bei der Initialisierung erneut bereit.
+
 ## Öffentliche API
 
 ### `authenticate(userId)`

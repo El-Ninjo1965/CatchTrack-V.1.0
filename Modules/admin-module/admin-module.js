@@ -33,8 +33,8 @@
 
             // Event-Listener registrieren
             if (window.CatchTrackCore) {
-                window.CatchTrackCore.on('error', (error) => {
-                    this.logError(error);
+                window.CatchTrackCore.on('error:handled', (data) => {
+                    this.logError(data && data.error ? data.error : data);
                 });
 
                 window.CatchTrackCore.on('module:registered', (data) => {

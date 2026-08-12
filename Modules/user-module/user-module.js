@@ -17,8 +17,15 @@
         users: new Map(),
 
         init() {
-            if (this.initialized) return;
-            this.createDefaultUsers();
+            if (this.initialized) {
+                if (this.users.size === 0) {
+                    this.createDefaultUsers();
+                }
+                return;
+            }
+            if (this.users.size === 0) {
+                this.createDefaultUsers();
+            }
             this.initialized = true;
             if (window.CatchTrackCore) {
                 window.CatchTrackCore.emit('user-module:initialized', {

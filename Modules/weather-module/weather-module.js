@@ -199,9 +199,14 @@
                 ? window.CatchTrackWeatherProviderRegistry.getActive()
                 : null;
 
-            // Aktuellen stündlichen Index bestimmen
-            const nowPrefix = new Date().toISOString().slice(0, 13); // 'YYYY-MM-DDTHH'
-            let hStart = hourlyTimes.findIndex(t => t.startsWith(nowPrefix));
+            // Aktuellen stündlichen Index anhand der Provider-Lokalzeit bestimmen.
+            // Open-Meteo liefert current.time und hourly.time im gleichen lokalen Zeitsystem.
+            const currentTime = (c.time || '').trim();
+            let hStart = currentTime ? hourlyTimes.findIndex(t => t === currentTime) : -1;
+            if (hStart < 0 && currentTime) {
+                const currentHourPrefix = currentTime.slice(0, 13); // 'YYYY-MM-DDTHH'
+                hStart = hourlyTimes.findIndex(t => t.startsWith(currentHourPrefix));
+            }
             if (hStart < 0) hStart = 0;
 
             // Nächste 24 Stunden

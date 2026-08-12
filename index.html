@@ -1044,6 +1044,11 @@
         <span class="nav-text" data-i18n="nav.profile">Mein Profil</span>
       </button>
 
+      <button class="nav-btn hidden" data-view="admin" data-admin-only="true" onclick="CTApp.nav('admin')">
+        <span class="nav-icon">🛠️</span>
+        <span class="nav-text">Admin</span>
+      </button>
+
       <button class="nav-btn nav-disabled" data-view="settings" onclick="CTApp.nav('settings')">
         <span class="nav-icon">⚙️</span>
         <span class="nav-text" data-i18n="nav.settings">Einstellungen</span>
@@ -1442,6 +1447,38 @@
       </div>
 
       <!-- ===== Einstellungen ===== -->
+      <div class="view" id="view-admin">
+        <div class="page-header">
+          <h2>🛠️ Admin</h2>
+          <p>Systemdiagnose und Status des CatchTrack-Setups.</p>
+        </div>
+
+        <div class="g3">
+          <div class="stat">
+            <div class="stat-icon">🧩</div>
+            <div class="stat-val" id="adm-module-count">–</div>
+            <div class="stat-lbl">Registrierte Module</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-val" id="adm-error-count">–</div>
+            <div class="stat-lbl">Fehler (Log)</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon">🫀</div>
+            <div class="stat-val" id="adm-health">–</div>
+            <div class="stat-lbl">Health Check</div>
+          </div>
+        </div>
+
+        <div class="card mt-16">
+          <div class="card-head">📋 Letzte Fehler</div>
+          <div class="card-body" id="adm-errors-panel" style="font-size:0.84rem;color:var(--c-text-muted)">
+            Keine Fehler protokolliert.
+          </div>
+        </div>
+      </div>
+
       <div class="view" id="view-settings">
         <div class="page-header">
           <h2 data-i18n="settings.page_title">⚙️ Einstellungen</h2>
@@ -1545,6 +1582,7 @@ const CTApp = {
       gps:       this.t('nav.gps'),
       stats:     this.t('nav.stats'),
       profile:   this.t('nav.profile'),
+      admin:     'Admin',
       settings:  this.t('nav.settings')
     };
   },
@@ -1575,8 +1613,12 @@ const CTApp = {
 
   _onReady() {
     this.user = window.CatchTrackUserModule ? window.CatchTrackUserModule.getCurrentUser() : null;
+    if (!this.user) {
+      this.user = this._tryAutoAuthenticate();
+    }
 
     this._renderUser();
+    this._updateAdminVisibility();
     this._renderSysBar();
     this._renderModuleCount();
 
@@ -1584,7 +1626,11 @@ const CTApp = {
     if (window.CatchTrackCore) {
       window.CatchTrackCore.on('user-module:authenticated', () => {
         this.user = window.CatchTrackUserModule.getCurrentUser();
+        if (this.user && this.user.id) {
+          try { localStorage.setItem('ct_active_user_id', this.user.id); } catch (_) {}
+        }
         this._renderUser();
+        this._updateAdminVisibility();
       });
     }
 
@@ -1618,6 +1664,10 @@ const CTApp = {
   },
 
   nav(view) {
+    if (view === 'admin' && !this._canAccessAdmin()) {
+      view = 'dashboard';
+    }
+
     this.view = view;
 
     // Views umschalten
@@ -1651,7 +1701,58 @@ const CTApp = {
     if (view === 'profile') this._renderProfile();
     if (view === 'weather') this.loadWeather();
     if (view === 'gps')     this._renderGpsView();
+    if (view === 'admin')   this._renderAdminView();
     if (view === 'settings') this._renderSettingsView();
+  },
+
+  _tryAutoAuthenticate() {
+    const um = window.CatchTrackUserModule;
+    if (!um || typeof um.getAllUsers !== 'function' || typeof um.authenticate !== 'function') {
+      return null;
+    }
+
+    let users = [];
+    try {
+      users = um.getAllUsers() || [];
+    } catch (_) {
+      users = [];
+    }
+    if (!users.length) return null;
+
+    let preferred = null;
+    let storedId = null;
+    try { storedId = localStorage.getItem('ct_active_user_id'); } catch (_) {}
+    if (storedId) {
+      preferred = users.find(u => u && u.id === storedId);
+    }
+
+    if (!preferred) {
+      preferred = users.find(u => u && u.status === 'active' && (u.role === 'admin' || u.role === 'developer'))
+        || users.find(u => u && u.status === 'active');
+    }
+
+    if (!preferred) return null;
+
+    const authUser = um.authenticate(preferred.id);
+    if (authUser && authUser.id) {
+      try { localStorage.setItem('ct_active_user_id', authUser.id); } catch (_) {}
+      return authUser;
+    }
+    return null;
+  },
+
+  _canAccessAdmin() {
+    return !!(this.user && (this.user.role === 'admin' || this.user.role === 'developer'));
+  },
+
+  _updateAdminVisibility() {
+    const showAdmin = this._canAccessAdmin();
+    document.querySelectorAll('[data-admin-only="true"]').forEach(el => {
+      el.classList.toggle('hidden', !showAdmin);
+    });
+    if (!showAdmin && this.view === 'admin') {
+      this.nav('dashboard');
+    }
   },
 
   _startWeatherGpsRetry() {
@@ -1760,7 +1861,8 @@ const CTApp = {
     const roleBadge = document.getElementById('prof-role-badge');
     if (roleBadge) {
       roleBadge.textContent = u.role || '–';
-      roleBadge.className = 'badge badge-' + (u.role === 'administrator' ? 'admin' : (u.role || 'user'));
+      const badgeRole = (u.role === 'administrator' || u.role === 'admin') ? 'admin' : (u.role || 'user');
+      roleBadge.className = 'badge badge-' + badgeRole;
     }
 
     const statusEl = document.getElementById('prof-status');
@@ -1916,6 +2018,52 @@ const CTApp = {
         ? t('settings.lang_device', { locale: device.toUpperCase() })
         : t('settings.lang_current', { locale: locale.toUpperCase() });
     }
+  },
+
+  _renderAdminView() {
+    const admin = window.CatchTrackAdminModule;
+    const modMgr = window.CatchTrackModuleManager;
+
+    if (!admin || !this._canAccessAdmin()) {
+      this._setText('adm-module-count', '–');
+      this._setText('adm-error-count', '–');
+      this._setText('adm-health', '–');
+      this._setText('adm-errors-panel', 'Admin-Modul nicht verfügbar oder kein Zugriff.');
+      return;
+    }
+
+    let moduleCount = 0;
+    try {
+      moduleCount = modMgr && typeof modMgr.getAll === 'function' ? (modMgr.getAll() || []).length : 0;
+    } catch (_) {
+      moduleCount = 0;
+    }
+
+    let stats = null;
+    let health = null;
+    try { stats = admin.getSystemStats(); } catch (_) {}
+    try { health = admin.performHealthCheck(); } catch (_) {}
+
+    const errors = stats && Array.isArray(stats.recentErrors) ? stats.recentErrors : [];
+    this._setText('adm-module-count', String(moduleCount));
+    this._setText('adm-error-count', String(stats ? stats.errorCount : 0));
+    this._setText('adm-health', health && health.healthy ? 'OK' : 'Warnung');
+
+    const panel = document.getElementById('adm-errors-panel');
+    if (!panel) return;
+    if (!errors.length) {
+      panel.textContent = 'Keine Fehler protokolliert.';
+      return;
+    }
+
+    panel.innerHTML = errors.slice(-5).reverse().map((e) => {
+      const ts = e && e.timestamp ? new Date(e.timestamp).toLocaleString('de-DE') : '–';
+      const msg = e && e.message ? e.message : 'Unbekannter Fehler';
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--c-border)">' +
+        '<strong style="color:var(--c-text)">' + ts + '</strong><br>' +
+        '<span>' + msg + '</span>' +
+      '</div>';
+    }).join('');
   },
 
   // ───── GPS ─────
@@ -2307,11 +2455,34 @@ const CTApp = {
     return 'Wetterdaten konnten nicht geladen werden: ' + (err.message || 'Unbekannter Fehler');
   },
 
+  _getUiLocale() {
+    const i18n = window.CatchTrackI18n;
+    if (i18n && typeof i18n.getLocale === 'function') {
+      return (i18n.getLocale() || 'de').replace('_', '-');
+    }
+    return (navigator.language || 'de').replace('_', '-');
+  },
+
+  _wxTimeFromProviderLocal(value) {
+    if (!value) return '–';
+    const raw = String(value);
+    const timeMatch = raw.match(/T(\d{2}:\d{2})/);
+    if (timeMatch) return timeMatch[1];
+
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toLocaleTimeString(this._getUiLocale(), { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return '–';
+  },
+
   _renderWeather(data) {
     const c  = data.current;
     const wm = window.CatchTrackWeatherModule;
-    const fmtTime = iso => iso
-      ? new Date(iso).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+    const locale = this._getUiLocale();
+    const fmtFetched = iso => iso
+      ? new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
       : '–';
     const round = v => v != null ? Math.round(v) : null;
     const fmt   = (v, unit) => v != null ? `${round(v)} ${unit}` : '–';
@@ -2335,18 +2506,16 @@ const CTApp = {
     this._setText('wx-clouds',   fmt(c.cloudCover, '%'));
 
     // Sonne
-    this._setText('wx-sunrise',    fmtTime(data.todaySunrise));
-    this._setText('wx-sunset',     fmtTime(data.todaySunset));
-    this._setText('wx-fetched-at', fmtTime(data.fetchedAt));
+    this._setText('wx-sunrise',    this._wxTimeFromProviderLocal(data.todaySunrise));
+    this._setText('wx-sunset',     this._wxTimeFromProviderLocal(data.todaySunset));
+    this._setText('wx-fetched-at', fmtFetched(data.fetchedAt));
 
     // Stündliche Vorhersage
     const hourlyEl = document.getElementById('wx-hourly');
     if (hourlyEl && data.hourly && data.hourly.length) {
       hourlyEl.innerHTML = data.hourly.slice(0, 24).map((h, i) => {
         const isNow = i === 0;
-        const time  = h.time
-          ? new Date(h.time).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-          : '–';
+        const time  = this._wxTimeFromProviderLocal(h.time);
         const temp  = h.temperature != null ? `${round(h.temperature)}°` : '–';
         const rain  = h.precipitationProbability != null && h.precipitationProbability > 0
           ? `🌧 ${round(h.precipitationProbability)}%` : '';
