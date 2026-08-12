@@ -639,18 +639,6 @@ NOT STARTED
 CORE-FREEZE:
 NOT ALLOWED
 
-## Nächster Arbeitsschritt
+Die weitere Arbeitssteuerung erfolgt ausschließlich über `STATE.md`.
 
-INFRASTRUCTURE-ANALYSIS
-
-Prüfung von:
-
-- Config
-- Database
-- Services
-
-gegen die geplante Core-Zielarchitektur.
-
-## Fortsetzungsschlüssel
-
-INFRASTRUCTURE-ANALYSIS
+Die Datei enthält keine eigene Arbeitscursor- oder Fortsetzungsdefinition.
