@@ -1,0 +1,518 @@
+# CatchTrack V1.0 – Core Functional Analysis
+
+## Zweck
+
+Diese Datei dokumentiert die funktionale Abgrenzung der bestehenden Core-Komponenten.
+
+Sie ist die Grundlage für die spätere Core-Bereinigung.
+
+## Prüfgrundlage
+
+Quelle:
+
+GitHub main
+
+Geprüfte Core-Komponenten:
+
+- core.js
+- core-context.js
+- core-state.js
+- core-event-bus.js
+- core-storage.js
+- core-error-handler.js
+- error-log.js
+- core-config.js
+- module-interface.js
+- module-manager.js
+- core-lifecycle.js
+- core-loader.js
+- core-startup.js
+- core-runtime.js
+- core-shutdown.js
+- core-entry.js
+- index.js
+- app.js
+
+## Gesamtbefund
+
+Der bestehende Core enthält grundsätzlich die benötigten technischen Bausteine.
+
+Die Hauptprobleme liegen nicht im Fehlen grundlegender Funktionen, sondern in:
+
+- mehrfach vorhandenen Start-/Entry-Schichten
+- Überschneidungen zwischen Core und Module Manager
+- direkter Kenntnis konkreter Module in app.js
+- fehlender klarer Trennung zwischen Application Bootstrap und Core Runtime
+- teilweise doppelter Event-Infrastruktur
+- unvollständig definierter Daten-/Storage-Verantwortung
+- fehlender zentraler Lifecycle-Steuerung für Module
+- fehlender Permissions-/Entitlement-Infrastruktur
+
+## 1. core.js
+
+### Aktuelle Aufgabe
+
+Zentrale Core-API.
+
+Enthält:
+
+- Core-Version
+- Core-State
+- Modulregistrierung
+- Modul-Deaktivierung
+- Modulaktivierung
+- Modulzugriff
+- Event-Weiterleitung
+
+### Problem
+
+core.js enthält gleichzeitig:
+
+- Core-State
+- Module Registry
+- Module Lifecycle
+- Event API
+
+Damit übernimmt die Datei mehrere Verantwortlichkeiten.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+core.js wird auf die zentrale Core-Fassade reduziert.
+
+Spezialisierte Aufgaben werden an dedizierte Komponenten delegiert.
+
+## 2. core-context.js
+
+### Aktuelle Aufgabe
+
+Stellt allgemeine Laufzeitinformationen bereit:
+
+- Application
+- Runtime
+- Environment
+- Online/Offline-Zustand
+
+### Bewertung
+
+Die Funktion ist generisch und gehört zum Core.
+
+### Entscheidung
+
+D – UNVERÄNDERT ÜBERNEHMEN
+
+Nach der Core-Neustrukturierung ist die API erneut zu validieren.
+
+## 3. core-state.js
+
+### Aktuelle Aufgabe
+
+Generischer Laufzeitzustand über Map.
+
+Unterstützt:
+
+- set
+- get
+- has
+- remove
+- getAll
+- clear
+
+### Bewertung
+
+Generische Core-Infrastruktur.
+
+Fachliche Modulzustände bleiben außerhalb des Core.
+
+### Entscheidung
+
+D – UNVERÄNDERT ÜBERNEHMEN
+
+## 4. core-event-bus.js
+
+### Aktuelle Aufgabe
+
+Zentrale Ereigniskommunikation:
+
+- subscribe
+- unsubscribe
+- publish
+- clear
+
+Fehler innerhalb von Event-Handlern werden an den Error Handler weitergegeben.
+
+### Bewertung
+
+Notwendige Core-Infrastruktur.
+
+### Entscheidung
+
+D – UNVERÄNDERT ÜBERNEHMEN
+
+Die API wird beim Core-Freeze verbindlich definiert.
+
+## 5. core-storage.js
+
+### Aktuelle Aufgabe
+
+Generischer localStorage-Wrapper.
+
+### Problem
+
+Die Datei beschreibt sich selbst als zentrale Datenspeicherung, während gleichzeitig eine separate Database-Komponente existiert.
+
+Damit besteht eine mögliche Überschneidung zwischen:
+
+- Storage
+- Database
+- lokaler Persistenz
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Klare Trennung:
+
+Storage
+→ einfacher Key/Value-Systemspeicher
+
+Database
+→ strukturierte persistente Daten
+
+Module
+→ fachliche Datenstrukturen
+
+## 6. error-log.js
+
+### Aktuelle Aufgabe
+
+Sammelt Fehler im Arbeitsspeicher.
+
+Erfasst:
+
+- Timestamp
+- Message
+- Stack
+- Context
+
+Überwacht zusätzlich:
+
+- window.error
+- unhandledrejection
+
+### Problem
+
+Die Speicherung ist derzeit nur temporär.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Zentrale technische Fehlererfassung mit klarer Persistenzstrategie.
+
+## 7. core-error-handler.js
+
+### Aktuelle Aufgabe
+
+Normalisiert Fehler und übergibt sie an ErrorLog.
+
+### Bewertung
+
+Sinnvolle Core-Infrastruktur.
+
+### Entscheidung
+
+D – UNVERÄNDERT ÜBERNEHMEN
+
+## 8. core-config.js
+
+### Aktuelle Aufgabe
+
+Unveränderliche Grundkonfiguration:
+
+- Application Name
+- Application Version
+- Core Version
+
+### Bewertung
+
+Generische Core-Konfiguration.
+
+### Entscheidung
+
+D – UNVERÄNDERT ÜBERNEHMEN
+
+Die Konfiguration muss strikt von modulspezifischer Konfiguration getrennt bleiben.
+
+## 9. module-interface.js
+
+### Aktuelle Aufgabe
+
+Erzeugt standardisierte Module mit:
+
+- id
+- name
+- version
+- description
+- active
+- activate()
+- deactivate()
+
+### Problem
+
+Der aktuelle Lifecycle ist zu klein für ein vollständig installierbares Modul-System.
+
+Es fehlen konzeptionell:
+
+- install
+- uninstall
+- update
+- status
+- dependencies
+- permissions
+- capabilities
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Die Datei definiert den verbindlichen Modulvertrag.
+
+## 10. module-manager.js
+
+### Aktuelle Aufgabe
+
+Wrapper um CatchTrackCore:
+
+- register
+- unregister
+- activate
+- deactivate
+- get
+- getAll
+
+### Problem
+
+Die eigentliche Modulverwaltung liegt derzeit teilweise in core.js.
+
+Damit existieren zwei Verantwortungsstellen.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Der Module Manager wird die zentrale Lifecycle-Verwaltung der Module.
+
+Der Core stellt nur die technische Infrastruktur und Schnittstellen bereit.
+
+## 11. core-lifecycle.js
+
+### Aktuelle Aufgabe
+
+Verwaltet:
+
+- created
+- initializing
+- ready
+- running
+- stopped
+
+### Bewertung
+
+Sinnvolle generische Core-Infrastruktur.
+
+### Entscheidung
+
+D – UNVERÄNDERT ÜBERNEHMEN
+
+Die zulässigen Zustandsübergänge müssen später explizit definiert werden.
+
+## 12. core-loader.js
+
+### Aktuelle Aufgabe
+
+Prüft das Vorhandensein verschiedener Core-Komponenten und erzeugt core:ready.
+
+### Problem
+
+Die Datei kennt bereits:
+
+- Module Manager
+- Module Interface
+- Error Log
+- Core Config
+
+Damit ist sie stark von der aktuellen Dateistruktur abhängig.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Der Loader soll nur technische Core-Abhängigkeiten prüfen und keine fachlichen Module kennen.
+
+## 13. core-startup.js
+
+### Aktuelle Aufgabe
+
+Startet den Core nach Prüfung erforderlicher Komponenten.
+
+Setzt:
+
+- initializing
+- runtime initialized
+- startedAt
+- ready
+
+### Bewertung
+
+Grundsätzlich sinnvoll.
+
+### Problem
+
+Die Verantwortung überschneidet sich mit:
+
+- core-loader.js
+- core-runtime.js
+- core-entry.js
+- app.js
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+## 14. core-runtime.js
+
+### Aktuelle Aufgabe
+
+Startet und stoppt die Core Runtime.
+
+### Bewertung
+
+Sinnvolle zentrale Runtime-Komponente.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+Die Runtime wird künftig den eindeutigen Runtime-Lifecycle besitzen.
+
+## 15. core-shutdown.js
+
+### Aktuelle Aufgabe
+
+Deaktiviert aktive Module und setzt den Lifecycle auf stopped.
+
+### Problem
+
+Die Runtime greift beim Shutdown direkt auf den Module Manager zu.
+
+Damit ist der Lifecycle noch nicht sauber entkoppelt.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Shutdown muss über definierte Core-/Module-Schnittstellen erfolgen.
+
+## 16. core-entry.js
+
+### Aktuelle Aufgabe
+
+Stellt start() und stop() bereit und delegiert an Core Runtime.
+
+### Bewertung
+
+Grundsätzlich sinnvoll.
+
+### Problem
+
+Zusätzliche Entry-Schicht neben index.js und app.js.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+Die endgültige Entry-Struktur wird auf einen eindeutigen Startpfad reduziert.
+
+## 17. Core/index.js
+
+### Aktuelle Aufgabe
+
+Startet CoreEntry.
+
+### Problem
+
+Damit existiert ein weiterer Einstiegspunkt.
+
+### Entscheidung
+
+B – LÖSCHEN
+
+Nach Erstellung des neuen eindeutigen Application-/Core-Einstiegs wird diese Datei nicht mehr benötigt.
+
+## 18. Core/app.js
+
+### Aktuelle Aufgabe
+
+Application Bootstrap.
+
+Lädt:
+
+- Config
+- Database
+- Services
+- i18n
+- Weather
+- GPS
+- User
+- Admin
+
+und startet anschließend den Core.
+
+### Kritischer Befund
+
+app.js kennt konkrete Fachmodule.
+
+Damit ist die Core-/Module-Trennung verletzt.
+
+### Entscheidung
+
+C – VOLLSTÄNDIG ERSETZEN
+
+### Ziel
+
+Application Bootstrap darf den Core starten.
+
+Die Auswahl und Installation konkreter Fachmodule darf nicht als fest eingebaute Liste im Core erfolgen.
+
+## 19. Startup-Zielstruktur
+
+Die bestehende Kette:
+
+```text
+app.js
+↓
+CoreEntry
+↓
+CoreRuntime
+↓
+CoreStartup
+↓
+CoreLoader
+↓
+Core
