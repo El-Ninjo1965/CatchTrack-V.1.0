@@ -6,302 +6,598 @@ Dieser Workflow definiert den verbindlichen Entwicklungsablauf für CatchTrack V
 
 Ziele:
 
-* klare Trennung von Core und Modulen
-* keine unnötigen Core-Änderungen
-* keine doppelten oder parallelen Implementierungen
-* nachvollziehbare Entwicklung
-* minimale manuelle Eingriffe des Benutzers
-* reproduzierbare und versionierte Arbeitsschritte
+- klare Trennung von Core und Modulen
+- keine unnötigen Core-Änderungen
+- keine doppelten oder parallelen Implementierungen
+- nachvollziehbare Entwicklung
+- minimale manuelle Eingriffe des Benutzers
+- reproduzierbare und versionierte Arbeitsschritte
+- möglichst autonomer Arbeitsablauf
+- keine unnötigen Wiederholungen
 
-## 2. Dokumentationshierarchie
+—
 
-### Verbindlich und Frozen
+## 2. Grundprinzip
 
-VISION.md
-RULES.md
-WORKFLOW.md
-PROJECT_MASTERLIST.md
-PROJECT_STATUS.md
+Der Benutzer definiert:
 
-Diese Dateien werden nach ihrer Freigabe nicht eigenständig durch AI-Agenten verändert.
+- Ziel
+- gewünschtes Ergebnis
+- besondere Anforderungen
 
-### Laufende Dokumentation
+Der AI-Agent bestimmt den technisch sinnvollen Weg dorthin selbstständig.
 
-PROJECT_CHRONICLE_001.md
-PROJECT_CHRONICLE_002.md
-...
+Grundablauf:
 
-Die Chronik dokumentiert relevante abgeschlossene Entwicklungsschritte, Entscheidungen und Statusänderungen.
-
-### Technisches Entwicklungsprotokoll
-
-DEV_LOG.md
-
-DEV_LOG.md dokumentiert technische Arbeitsschritte, insbesondere:
-
-* Datum und Uhrzeit
-* Aktion bzw. Terminal-Befehl
-* Ergebnis
-* Commit-ID
-* Commit-Nachricht
-* betroffene Dateipfade
-
-## 3. GitHub als verbindliche Referenz
-
-GitHub main ist die maßgebliche Quelle für den aktuellen Projektstand.
-
-Vor jeder Prüfung, Analyse oder Änderung einer bestehenden Datei wird grundsätzlich zuerst der aktuelle Stand aus GitHub gelesen.
-
-Lokale Arbeitskopien aus Codespace oder Working Copy dürfen nicht ohne Prüfung als aktuell angenommen werden.
-
-Bei Abweichungen:
-
-GitHub prüfen
-→ lokalen Stand prüfen
-→ Unterschied feststellen
-→ Entscheidung treffen
-
-Bei abgeschnittenen, unvollständigen oder widersprüchlichen Dateien wird nicht geraten oder rekonstruiert.
-
-In diesem Fall wird das vorhandene Original angefordert.
-
-## 4. Autonomer Arbeitsmodus
-
-Der Benutzer beschreibt Ziel und gewünschtes Ergebnis.
-
-Der AI-Agent:
-
-1. prüft selbstständig den aktuellen Projektstand
-2. prüft die relevanten Architektur- und Workflowregeln
-3. entscheidet technische Details selbstständig
-4. setzt eindeutige Anforderungen ohne zusätzliche Bestätigung um
-5. fragt nur bei echter Unklarheit oder einer notwendigen fachlichen Entscheidung
-6. liefert nach einem bestätigten Verbesserungsvorschlag direkt die erforderlichen Dateien
-7. arbeitet in kurzen, überprüfbaren Etappen
-8. setzt nach einem bestätigten Arbeitsschritt direkt mit dem nächsten sinnvollen Schritt fort
-
-Unnötige Erklärungen, Begründungen und Rückfragen werden vermieden.
-
-Arbeitsprinzip:
-
+```text
 ZIEL
-→ PRÜFEN
+→ RULES LESEN
+→ ARBEITSSTAND BESTIMMEN
+→ GITHUB MAIN PRÜFEN
+→ DATEI PRÜFEN
 → ENTSCHEIDEN
 → UMSETZEN
 → TESTEN
 → KORRIGIEREN
-→ ABSCHLIESSEN
 → DOKUMENTIEREN
 → COMMIT
+→ NÄCHSTEN SCHRITT BESTIMMEN
+```
 
-## 5. Änderungsprinzip
+Routineprüfungen, Einlesungen und technische Entscheidungen benötigen keine zusätzliche Benutzerbestätigung.
 
-Vor Änderungen wird festgestellt, ob eine Anforderung:
+—
 
-Infrastruktur
-→ Core
+## 3. Regeln vor jeder Arbeit
 
-oder:
+Vor jedem neuen Arbeitsschritt werden die aktuellen Projektregeln berücksichtigt.
 
-Fachfunktion
-→ Modul
+Insbesondere:
 
-ist.
+- RULES.md
+- WORKFLOW.md
+- aktueller Arbeitszustand
+- Projektchronik
+- relevante weitere Masterdateien
 
-Fachfunktionen dürfen den Core nicht verändern.
+Die Regeln werden nicht nur beim Start eines Entwicklungsblocks berücksichtigt, sondern vor jedem neuen Arbeitsschritt.
 
-Vorhandene Dateien werden bei der Core-Inventur klassifiziert:
+—
 
-A – NEU
-B – LÖSCHEN
-C – VOLLSTÄNDIG ERSETZEN
-D – UNVERÄNDERT ÜBERNEHMEN
+## 4. GitHub als Referenz
 
-Es gibt keine Kategorie „nur ein bisschen ändern“.
+GitHub `main` ist die verbindliche Referenz für den Repository-Stand.
 
-## 6. Entwicklungsphasen
+Vor jeder Änderung oder Erstellung einer Datei:
 
-CatchTrack wird in dieser Reihenfolge entwickelt:
+```text
+GITHUB MAIN PRÜFEN
+→ DATEI VORHANDEN?
+→ VORHANDENE VERSION VOLLSTÄNDIG LESEN
+→ AKTUELLEN INHALT BEWERTEN
+→ ZIEL ABGLEICHEN
+```
 
-Phase 1 – Architektur und Dokumentation
-Phase 2 – Core-Inventur
-Phase 3 – Core-Bereinigung
-Phase 4 – Core-Implementierung
-Phase 5 – Core-Validierung
-Phase 6 – Core-Abnahme
-Phase 7 – Core-Freeze
-Phase 8 – Module-System
-Phase 9 – User/Admin
-Phase 10 – Fachmodule
+Eine vorhandene Datei wird niemals aus dem Gedächtnis neu erzeugt.
 
-Die Reihenfolge darf nicht ohne begründete Architekturentscheidung umgangen werden.
+Wenn die vorhandene Datei bereits dem gewünschten Ziel entspricht:
 
-## 7. Core
+```text
+NICHT ERNEUT AUSGEBEN
+→ NÄCHSTEN OFFENEN SCHRITT BESTIMMEN
+```
+
+Wenn sie angepasst werden muss:
+
+```text
+AKTUELLE GITHUB-VERSION
+→ ÄNDERUNG
+→ VOLLSTÄNDIGE NEUAUSGABE
+```
+
+Wenn sie nicht vorhanden ist:
+
+```text
+NEUE DATEI ERSTELLEN
+```
+
+—
+
+## 5. Keine unnötigen Dateien
+
+Vor jeder Neuerstellung wird geprüft, ob bereits eine Datei mit derselben oder einer vergleichbaren Aufgabe existiert.
+
+Keine:
+
+- doppelten Dateien
+- parallelen Masterdateien
+- unnötigen Hilfsdateien
+- Ersatzdateien mit identischer Aufgabe
+
+Eine bestehende Datei wird bevorzugt angepasst oder vollständig ersetzt.
+
+—
+
+## 6. Autonomer Arbeitsmodus
+
+Der AI-Agent arbeitet nach Vorgabe des Benutzers selbstständig weiter.
+
+Der AI-Agent:
+
+1. liest relevante Regeln
+2. bestimmt den aktuellen Arbeitsstand
+3. prüft GitHub
+4. liest vorhandene Dateien
+5. prüft Abhängigkeiten
+6. prüft die Arbeitsreihenfolge
+7. trifft technische Entscheidungen
+8. setzt eindeutige Anforderungen direkt um
+9. testet an sinnvollen Zwischenpunkten
+10. dokumentiert relevante Ergebnisse
+11. bestimmt den nächsten offenen Arbeitsschritt
+
+Unnötige Zwischenfragen werden vermieden.
+
+—
+
+## 7. OK-Regel
+
+`OK` bedeutet:
+
+- gelesen
+- verstanden
+- bestätigt
+- vorhandene Vorschläge bestätigt
+- aktueller Arbeitsschritt abgeschlossen
+
+Danach:
+
+```text
+OK
+→ AKTUELLEN STATUS BESTIMMEN
+→ LETZTEN SCHRITT ALS ERLEDIGT BEHANDELN
+→ NÄCHSTEN OFFENEN SCHRITT BESTIMMEN
+→ RULES BERÜCKSICHTIGEN
+→ GITHUB PRÜFEN
+→ DATEI PRÜFEN
+→ NÄCHSTE ERFORDERLICHE DATEI AUSGEBEN
+```
+
+`OK` bedeutet ausdrücklich nicht:
+
+- dieselbe Datei erneut ausgeben
+- denselben Arbeitsschritt wiederholen
+- erneut nach einer bereits beantworteten Entscheidung fragen
+
+Nach `OK` wird unmittelbar mit dem nächsten offenen Arbeitsschritt fortgefahren.
+
+—
+
+## 8. Arbeitszustand und Loop-Schutz
+
+Vor jeder nächsten Dateiausgabe muss festgestellt werden:
+
+- letzter abgeschlossener Schritt
+- aktuell offener Schritt
+- bereits ausgegebene Datei
+- bereits bestätigte Datei
+- nächste erforderliche Datei
+
+Eine Datei, die gerade bestätigt und abgeschlossen wurde, darf nicht erneut als nächste Datei ausgegeben werden.
+
+Der Workflow darf nicht in einen Wiederholungsloop geraten.
+
+—
+
+## 9. Erklärungen
+
+Der Workflow ist auf minimale Kommunikation ausgelegt.
+
+Grundsätzlich werden nur ausgegeben:
+
+- Ergebnis
+- notwendige Hinweise
+- notwendige Entscheidungen
+- nächste Datei bzw. nächster Arbeitsschritt
+
+Keine langen technischen Erklärungen, sofern diese nicht ausdrücklich verlangt werden.
+
+—
+
+## 10. Entwicklungsphasen
+
+CatchTrack wird grundsätzlich in dieser Reihenfolge entwickelt:
+
+### Phase 1
+Architektur und Dokumentation
+
+### Phase 2
+Repository-Inventur
+
+### Phase 3
+Core-Inventur
+
+### Phase 4
+Core-Bereinigung
+
+### Phase 5
+Core-Implementierung
+
+### Phase 6
+Core-Validierung
+
+### Phase 7
+Core-Abnahme
+
+### Phase 8
+Core-Freeze
+
+### Phase 9
+Module-System
+
+### Phase 10
+User / Admin
+
+### Phase 11
+Fachmodule
+
+### Phase 12
+UI-Integration
+
+### Phase 13
+Gesamttest
+
+### Phase 14
+Release-Abnahme
+
+Die Reihenfolge darf nur bei einer begründeten Architekturentscheidung geändert werden.
+
+—
+
+## 11. Aktuelle Dokumentationsphase
+
+Derzeit werden die bestehenden MD-Dateien einmalig konsolidiert.
+
+Alle relevanten Dokumentationsdateien sind weiterhin offen.
+
+Nach Abschluss:
+
+```text
+DOCUMENTATION-SYNC
+→ DOCUMENTATION-FREEZE
+→ CORE-INVENTORY-DEEP-DIVE
+```
+
+Es werden dabei keine unnötigen neuen Dokumentationsdateien erstellt.
+
+—
+
+## 12. Core
 
 Der Core stellt ausschließlich generische Infrastruktur bereit.
 
 Mindestens:
 
-* Startup
-* Runtime
-* Lifecycle
-* Event System
-* State
-* Storage
-* Database
-* Error Handling
-* Logging
-* Module Interface
-* Module Registry
-* Module Manager
-* Permissions
-* Package/Entitlements
-* System Configuration
+- Startup
+- Runtime
+- Lifecycle
+- Event System
+- State
+- Storage
+- Database
+- Error Handling
+- Logging
+- Module Interface
+- Module Registry
+- Module Manager
+- Permissions
+- Package / Entitlements
+- System Configuration
 
 Fachliche Funktionen gehören nicht in den Core.
 
-## 8. Core-Freeze
+Der Core darf keine konkreten Fachmodule kennen oder benötigen.
 
-Nach technischer Abnahme gilt:
+—
 
-CORE V1.0 = FROZEN
+## 13. Core Freeze
 
-Danach ist:
+Der Core ist derzeit nicht eingefroren.
 
+Vor dem Freeze:
+
+```text
+REPOSITORY-INVENTUR
+→ CORE-INVENTUR
+→ BEREINIGUNG
+→ IMPLEMENTIERUNG
+→ VALIDIERUNG
+→ TESTS
+→ ABNAHME
+→ FREEZE-ENTSCHEIDUNG
+```
+
+Nach dem Freeze gilt:
+
+```text
 /Core/*
+```
 
-für AI-Agenten Read-Only.
+grundsätzlich als Read-Only.
 
-Neue Fachfunktionen werden ausschließlich über Module bereitgestellt.
+Neue Fachfunktionen dürfen danach keine Core-Änderung benötigen.
 
-## 9. Module
+—
 
-Module müssen unabhängig vom Core entwickelt und getestet werden.
+## 14. Änderungsprinzip
 
-Der Module Manager unterstützt:
+Vor jeder Änderung:
 
-* install
-* uninstall
-* enable
-* disable
-* update
-* status
-* registry
-* dependencies
+```text
+INFRASTRUKTUR?
+→ CORE
+
+FACHFUNKTION?
+→ MODUL
+```
+
+Fachfunktionen dürfen den Core nicht verändern.
+
+Vorhandene Dateien werden im Rahmen der Inventur klassifiziert:
+
+- A – NEU
+- B – LÖSCHEN
+- C – VOLLSTÄNDIG ERSETZEN
+- D – UNVERÄNDERT ÜBERNEHMEN
+
+—
+
+## 15. Module
+
+Module werden unabhängig vom Core entwickelt und getestet.
+
+Der Module Manager unterstützt konzeptionell:
+
+- install
+- uninstall
+- enable
+- disable
+- update
+- status
+- registry
+- dependencies
 
 Ein Modul darf keine direkte Änderung bestehender Core-Dateien benötigen.
 
-## 10. Testprinzip
+Wenn ein Modul eine Core-Änderung benötigt, wird zuerst die Architektur geprüft.
 
-Arbeit wird nicht unnötig bis zum Ende durchgebaut.
+—
 
-Nach sinnvollen Entwicklungsabschnitten wird ein Testpunkt erreicht.
+## 16. Modulunabhängigkeit
 
-Der Benutzer testet die verfügbare Version.
+Module dürfen nicht unnötig voneinander abhängig sein.
 
-Testergebnis:
+Direkte Abhängigkeiten werden ausdrücklich definiert.
 
-BESTANDEN
-→ nächster Arbeitsschritt
+Ein Modul darf keine privaten Implementierungsdetails eines anderen Moduls verwenden.
 
+—
+
+## 17. Datenbank
+
+Module dürfen eigene Datenstrukturen besitzen.
+
+Die generische Datenbankinfrastruktur enthält keine unnötige Fachlogik einzelner Module.
+
+—
+
+## 18. User und Admin
+
+User und Admin sind Module.
+
+Sie gehören nicht zur fachlichen Core-Logik.
+
+—
+
+## 19. Rollen und Berechtigungen
+
+Berechtigungen werden zentral und konsistent behandelt.
+
+Berechtigungen ergeben sich aus Rollen und/oder Paket-/Entitlement-Regeln.
+
+Nicht zugängliche Funktionen werden nicht als verfügbar dargestellt.
+
+—
+
+## 20. Keine Fake-Funktionen
+
+Nicht implementierte oder nicht getestete Funktionen werden nicht als fertig dargestellt.
+
+Eine Funktion darf nur als:
+
+- fertig
+- implementiert
+- getestet
+- abgenommen
+- stabil
+- eingefroren
+
+bezeichnet werden, wenn dies tatsächlich festgestellt wurde.
+
+—
+
+## 21. Startup
+
+CatchTrack besitzt keinen unnötigen Parallelbetrieb mehrerer konkurrierender Startup-/Runtime-Systeme.
+
+Der endgültige Startablauf muss eindeutig definiert sein.
+
+Der Core darf keine konkrete Fachmodulliste für seinen Start benötigen.
+
+—
+
+## 22. Testprinzip
+
+Entwicklung erfolgt in kurzen, überprüfbaren Abschnitten.
+
+Nach einer sinnvollen funktionsfähigen Zwischenstufe:
+
+```text
+IMPLEMENTIEREN
+→ TESTEN
+→ ERGEBNIS BEWERTEN
+```
+
+Bei Fehler:
+
+```text
 FEHLER
-→ Fehler analysieren
-→ korrigieren
-→ erneut testen
+→ ANALYSIEREN
+→ KORRIGIEREN
+→ ERNEUT TESTEN
+```
 
-## 11. Terminal-Arbeiten
+Bei Erfolg:
 
-Terminal-Prüfungen werden grundsätzlich so ausgeführt, dass ihre vollständige relevante Ausgabe in einer versionierbaren Datei gespeichert wird.
+```text
+BESTANDEN
+→ DOKUMENTIEREN
+→ NÄCHSTER SCHRITT
+```
 
-Für umfangreiche Prüfungen kann terminal.md im Repository-Root als Arbeitsdatei verwendet werden.
+Der Benutzer soll frühzeitig testen können.
+
+—
+
+## 23. Terminal-Arbeiten
+
+Terminal-Prüfungen werden so durchgeführt, dass relevante vollständige Ergebnisse versionierbar bleiben.
+
+Für umfangreiche Prüfungen kann eine technische Arbeitsdatei im Repository-Root verwendet werden.
 
 Beispiel:
 
+```text
 { command1; command2; command3; } > terminal.md 2>&1
+```
 
-terminal.md ist eine technische Arbeitsdatei und keine Projektdokumentation.
+Eine solche Arbeitsdatei ist keine Projektdokumentation.
 
-Wenn Terminal-Ergebnisse für die weitere Entwicklung relevant sind, werden sie in DEV_LOG.md oder der Chronik dokumentiert.
+Relevante Ergebnisse werden anschließend in DEV_LOG oder Chronik dokumentiert.
 
-## 12. Git und Versionierung
+—
 
-Relevante Entwicklungsdateien werden committed.
+## 24. Git und Working Copy
 
-Ein relevanter Arbeitsschritt gilt erst als abgeschlossen, wenn die erzeugten oder geänderten Dateien versioniert sind.
+Working Copy auf dem iPad ist die manuelle Git-Arbeitsumgebung des Benutzers.
 
-Da der AI-Agent keinen direkten GitHub-Schreibzugriff voraussetzt, erfolgt der Transfer zu GitHub über die verfügbare Entwicklungsumgebung, insbesondere Working Copy.
+Dort werden vollständige Dateien übernommen, geprüft, committed und synchronisiert.
 
-Commit-Informationen müssen nachvollziehbar bleiben.
+Der Benutzer arbeitet nicht mit dem Terminal.
 
-Dazu gehören insbesondere:
+Der bekannte fehlende direkte GitHub-Schreibzugriff wird nicht bei jedem Arbeitsschritt erneut erwähnt.
 
-* Commit-ID
-* Commit-Nachricht
-* betroffene Dateipfade
+—
 
-## 13. DEV_LOG
+## 25. Commit-Prinzip
 
-DEV_LOG.md ist die technische Chronik der Entwicklungsarbeit.
+Ein relevanter Arbeitsschritt gilt erst als abgeschlossen, wenn die betreffenden Dateien versioniert wurden.
 
-Sie wird chronologisch ergänzt und enthält die für spätere Prüfungen relevanten technischen Informationen.
+Nach Möglichkeit werden dokumentiert:
+
+- Commit-ID
+- Commit-Nachricht
+- Datum
+- Uhrzeit
+- betroffene Dateipfade
+- Arbeitsschritt
+- Ergebnis
+
+—
+
+## 26. DEV_LOG
+
+`DEV_LOG.md` dokumentiert technische Entwicklungsarbeit.
 
 Mindestens:
 
+```text
 Datum/Uhrzeit
 → Aktion
-→ Terminal-Befehl bzw. Arbeitsschritt
+→ Arbeitsschritt / Befehl
 → Ergebnis
 → Commit
 → betroffene Pfade
+```
 
 DEV_LOG ersetzt nicht die Projektchronik.
 
-## 14. Projektchronik
+—
 
-Die Projektchronik dokumentiert nur relevante Projektentscheidungen und abgeschlossene Meilensteine.
+## 27. Projektchronik
 
-Sie enthält:
+Die Projektchronik dokumentiert:
 
-* eindeutige ID
-* Status
-* Arbeitsschritt
-* Ergebnis
-* relevante Fehler und Lösungen
-* wichtige Entscheidungen
-* Statusänderungen
-* aktuellen Fortsetzungspunkt
+- relevante Entscheidungen
+- abgeschlossene Meilensteine
+- wichtige Fehler und Lösungen
+- Statusänderungen
+- aktuellen Fortsetzungspunkt
 
-Die Chronik wird nicht mit technischen Terminalausgaben überladen.
+Sie wird nicht mit unnötigen technischen Details überladen.
 
-## 15. Fortsetzungspunkt
+—
 
-Am aktuellen Ende der laufenden Chronik wird ein Fortsetzungspunkt geführt.
+## 28. Fortsetzungspunkt
+
+Am Ende der laufenden Chronik wird ein Fortsetzungspunkt geführt.
 
 Er enthält:
 
-* aktuellen Arbeitsstand
-* zuletzt abgeschlossenen Schritt
-* nächsten Arbeitsschritt
-* kurzen Fortsetzungsschlüssel
+- aktuellen Arbeitsstand
+- letzten abgeschlossenen Schritt
+- nächsten Arbeitsschritt
+- kurzen Fortsetzungsschlüssel
 
-Dadurch kann eine spätere AI-Sitzung direkt am letzten bekannten Arbeitspunkt fortsetzen.
+Dadurch kann eine spätere Sitzung ohne unnötige Wiederholung fortgesetzt werden.
 
-## 16. Dateiausgabe
+—
 
-Bei der Ausgabe einer vollständigen Datei zur manuellen Übernahme gelten verbindlich:
+## 29. Dateiausgabe
 
-1. Copy-Block 1 enthält ausschließlich den exakten Dateinamen.
-2. Copy-Block 2 enthält ausschließlich den vollständigen Dateiinhalt.
-3. Der Dateiname steht nicht im zweiten Copy-Block.
-4. Zwischen den beiden Copy-Blöcken stehen keine technischen Kommentare.
-5. Für eine Datei werden genau diese zwei Copy-Blöcke verwendet.
-6. Der zweite Copy-Block enthält keine verschachtelten Codeblöcke.
-7. Der vollständige Dateiinhalt muss mit einer einzigen Kopieraktion übernommen werden können.
-8. Der Dateiinhalt darf nicht wegen Formatierung, Kommentaren oder zusätzlicher Blöcke aufgeteilt werden.
+Bei der manuellen Ausgabe einer Datei gelten immer genau drei Copyblöcke.
 
-Diese Regel gilt für jede Datei, unabhängig vom Dateityp.
+### Copyblock 1
 
-## 17. Abschlussregel
+Nur der vollständige Repository-Pfad.
+
+### Copyblock 2
+
+Nur der exakte Dateiname.
+
+### Copyblock 3
+
+Der vollständige Dateiinhalt.
+
+Der Dateiname steht nicht im dritten Copyblock.
+
+Keine Patches.
+
+Keine Teilstücke.
+
+Keine Auslassungen.
+
+Keine zusätzlichen Kommentare innerhalb des Quelltext-Copyblocks.
+
+Der vollständige Dateiinhalt muss mit einer einzigen Kopieraktion übernommen werden können.
+
+Enthält der Dateiinhalt selbst Markdown-Codeblöcke, muss der äußere Copyblock entsprechend höher begrenzt werden.
+
+Der Quelltext-Copyblock darf niemals durch verschachtelte Markdown-Blöcke zerstört werden.
+
+—
+
+## 30. Abschlussregel
 
 Ein Arbeitsschritt ist abgeschlossen, wenn:
 
@@ -310,26 +606,54 @@ Ein Arbeitsschritt ist abgeschlossen, wenn:
 3. der vorgesehene Test erfolgreich durchgeführt wurde
 4. Abhängigkeiten geprüft wurden
 5. relevante Dokumentation aktualisiert wurde
-6. die Änderungen committed wurden
+6. die Änderungen versioniert wurden
 
-## 18. Grundprinzip
+—
 
+## 31. Grundprinzip
+
+```text
 ARCHITEKTUR
 ↓
-CORE
+DOKUMENTATION
+↓
+REPOSITORY-INVENTUR
+↓
+CORE-INVENTUR
+↓
+CORE-BEREINIGUNG
+↓
+CORE-IMPLEMENTIERUNG
 ↓
 VALIDIERUNG
 ↓
-CORE FREEZE
+CORE-FREEZE
 ↓
 MODULE
 ↓
 ERWEITERUNG
+```
 
 Nicht:
 
+```text
 MODUL
 → CORE ÄNDERN
 → NEUES MODUL
 → CORE ERNEUT ÄNDERN
 → NEUE CORE-DATEI
+```
+
+—
+
+## 32. Aktueller Fortsetzungsschlüssel
+
+`DOCUMENTATION-SYNC`
+
+Nach Abschluss der Dokumentationskonsolidierung:
+
+`DOCUMENTATION-FREEZE`
+
+Danach:
+
+`CORE-INVENTORY-DEEP-DIVE`
