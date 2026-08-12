@@ -42,6 +42,9 @@ temp/
 *.tmp
 *.temp
 
+# Terminal Working File
+terminal.md
+
 # Editor / IDE
 .vscode/*
 !.vscode/settings.json
