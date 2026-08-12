@@ -1,6 +1,6 @@
 # CatchTrack – Project Chronicle 001
 
-Zweck:
+## Zweck
 
 Diese Datei dokumentiert abgeschlossene Entwicklungsschritte von CatchTrack.
 
@@ -17,7 +17,8 @@ Nur abgeschlossene oder eindeutig relevante Schritte werden eingetragen.
 * Bei Erreichen der maximal vorgesehenen Länge wird eine neue Chronikdatei begonnen.
 * Die nächste Datei verweist auf diese Datei.
 * Diese Datei verweist am Ende auf die nächste Datei.
-* Aktuelle Arbeitsregeln und der aktuelle Fortsetzungspunkt werden zusätzlich in den dafür vorgesehenen Masterdateien geführt.
+* Aktuelle Arbeitsregeln und der aktuelle Fortsetzungspunkt werden in den dafür vorgesehenen Masterdateien geführt.
+* Die Chronik dokumentiert den tatsächlichen Projektverlauf und ersetzt keine Arbeitsanweisungen.
 
 ## Einträge
 
@@ -168,75 +169,27 @@ CT-0013
 
 Status: Abgeschlossen
 
-Erster Entwicklungsblock vollständig abgeschlossen und dokumentiert:
-
-✓ Core-Grundgerüst (18 Dateien)
-✓ Modul-System & Modulschnittstelle
-✓ User-Modul mit Testbenutzer
-✓ Admin-Modul mit Diagnostik
-✓ Config-Manager (8 Standardkonfigurationen)
-✓ Database-Manager (7 Stores, CRUD, Transaktionen)
-✓ Service-Manager (5 Services: User, Auth, Module, Logging, Cache)
-✓ Test-Suite (20+ Tests, Assertion-Library)
-✓ Interactive UI (index.html mit Testwerkzeugen)
-
-Alle Markdown-Dateien dokumentiert:
-
-✓ PROJECT_STATUS.md - Aktuell
-✓ PROJECT_MASTERLIST.md - Abgeschlossen
-✓ PROJECT_CHRONICLE_001.md - Abgeschlossen
-
-CatchTrack v1.0.0 ist nun testfähig und kann als Basis für weitere Module verwendet werden.
+Erster Entwicklungsblock vollständig abgeschlossen und dokumentiert.
 
 CT-0014
 
 Status: Abgeschlossen
 
-Fix: “Attempted to assign to readonly property” in user-module.js
+Fix: “Attempted to assign to readonly property” in user-module.js.
 
-Object.freeze() wurde entfernt, da UserModule veränderlichen Zustand hält (currentUser, initialized, users). Die Methoden authenticate(), logout() und init() funktionieren wieder korrekt.
-
-Betroffene Datei: Modules/user-module/user-module.js
+Object.freeze() wurde entfernt, da UserModule veränderlichen Zustand hält.
 
 CT-0015
 
 Status: Abgeschlossen
 
-User-Modul auf v1.1.0 erweitert – vollständige Benutzeridentität:
-
-* username: eindeutig, Pflichtfeld, Referenz in Catches/Leaderboards/Community
-* displayName: Anzeigename getrennt vom Username
-* avatar: Profilbild-Referenz (null by default)
-* status: ‚active‘ | ‚inactive‘ | ‚banned‘ ersetzt active: boolean
-* lastLoginAt: wird bei authenticate() automatisch gesetzt
-* getUserByUsername(): Suche nach eindeutigem Username
-* isUsernameAvailable(): interne Eindeutigkeitsprüfung
-* createUser() / updateUser(): Username-Validierung mit Fehler bei Duplikat
-* id und createdAt schreibgeschützt in updateUser()
-
-Geänderte Dateien: user-module.js, user-interface.js, README.md, index.html
-
-Commit: 6966e06
+User-Modul auf v1.1.0 erweitert – vollständige Benutzeridentität.
 
 CT-0016
 
 Status: Abgeschlossen
 
-CatchTrack App-UI vollständig implementiert:
-
-* index.html: Professionelle Fishing-App Benutzeroberfläche
-    * Sidebar-Navigation (Desktop) mit Gruppenstruktur
-    * Mobile-Navigation (Bottom Nav + Top Bar)
-    * 7 Views: Dashboard, Fänge, Fischdatenbank, Wetter, Statistiken, Profil, Einstellungen
-    * Dashboard: Welcome-Banner mit Benutzername, System-Statusleiste, Stat-Cards, Modul-Vorschaukarten
-    * Profil-View: echte Benutzerdaten aus UserModule
-    * Responsive Design
-    * Professionelles Design-System
-    * Loading-Screen mit Spinner
-    * Nicht verfügbare Module korrekt als deaktiviert markiert
-    * Lädt denselben Core wie bisher
-    * UI-Controller CTApp ohne Konflikte mit CatchTrackApp aus app.js
-* dev.html: bestehende Entwickler-/Testoberfläche
+CatchTrack App-UI vollständig implementiert.
 
 CT-0017
 
@@ -246,36 +199,11 @@ Weather-Modul vollständig implementiert.
 
 Entscheidung Wetterprovider: Open-Meteo.
 
-* Kein API-Key erforderlich
-* CORS-fähig
-* Provider-Abstraktion
-* Aktuelles Wetter
-* Sonnenaufgang/Sonnenuntergang
-* 24h-Vorhersage
-* 7-Tage-Vorhersage
-* WMO-Code-Normalisierung
-* Offline-Handling
-* Cache
-* Provider-Wechsel ohne Modulumbau
-
 CT-0018
 
 Status: Abgeschlossen
 
 GPS-Modul vollständig implementiert.
-
-* Browser Geolocation API
-* Einmalige Positionsabfrage
-* Kontinuierliches Tracking
-* Letzte bekannte Position
-* Statusverwaltung
-* Permission-Prüfung
-* Simulationsposition
-* Stale-Detection
-
-Normalisiertes Datenformat:
-
-{ latitude, longitude, accuracy, altitude, altitudeAccuracy, speed, heading, timestamp, source, status }
 
 CT-0019
 
@@ -283,23 +211,11 @@ Status: Abgeschlossen
 
 i18n-Modul vollständig implementiert.
 
-* Deutsch und Englisch
-* automatische Gerätespracherkennung
-* lokale Persistenz
-* öffentliche i18n-Schnittstelle
-* Sprachauswahl in Einstellungen
-
 CT-0020
 
 Status: Abgeschlossen
 
 Wetter-Ansicht lädt automatisch mit aktueller Geräteposition.
-
-Bei fehlender gültiger GPS-Position wird automatisch eine Positionsabfrage durchgeführt.
-
-Bei erfolgreicher Position wird das Weather-Modul aktualisiert.
-
-Bei GPS-Fehlern bleibt der Wetter-Fallback aktiv.
 
 CT-0021
 
@@ -307,18 +223,11 @@ Status: Abgeschlossen
 
 Startup-Stabilisierung für UI-Ladevorgang umgesetzt.
 
-* Core-Verfügbarkeit wird abgewartet
-* Timeout blendet App-Shell ein
-* fehlertolerantes User-Login
-* zentrale _showAppShell()-Methode
-
 CT-0022
 
 Status: Abgeschlossen
 
 Startup-Fix für ältere Browser umgesetzt.
-
-Nullish-Coalescing-Syntax im Weather-Modul wurde entfernt.
 
 CT-0023
 
@@ -326,24 +235,11 @@ Status: Abgeschlossen
 
 UI-Startup-Race behoben.
 
-index.html wartet auf:
-
-* CatchTrackCore
-* CatchTrackUserModule
-* CatchTrackI18n
-
-Timeout-Meldung zeigt fehlende Komponenten.
-
 CT-0024
 
 Status: Abgeschlossen
 
 Weather-GPS Auto-Retry implementiert.
-
-* Retry-Intervall 30 Sekunden
-* nur bei erteilter GPS-Berechtigung
-* Stop bei gültiger GPS-Position
-* Stop beim Verlassen der Wetteransicht
 
 CT-0025
 
@@ -351,11 +247,7 @@ Status: Abgeschlossen
 
 Repository-Synchronisation zwischen GitHub und Codespace überprüft und hergestellt.
 
-Der Codespace wurde auf den aktuellen GitHub-main-Stand synchronisiert.
-
 Der synchronisierte Stand wurde als verbindliche Grundlage für die vollständige Repository-Inventur festgelegt.
-
-Vor der Inventur sollten keine weiteren strukturellen oder funktionalen Änderungen am Code vorgenommen werden.
 
 CT-0026
 
@@ -420,6 +312,27 @@ CORE-INVENTORY-DEEP-DIVE
 
 Dabei werden die vorhandenen Core-Dateien funktional gegeneinander abgegrenzt, bevor die eigentliche Core-Bereinigung beginnt.
 
+CT-0029
+
+Status: Abgeschlossen
+
+Die Arbeitssteuerung wurde weiter präzisiert.
+
+Festgelegt wurde:
+
+* Nach jedem bestätigten Arbeitsschritt wird der nächste offene Arbeitsschritt bestimmt.
+* Bereits erledigte Dateien dürfen nicht erneut als nächste Datei ausgegeben werden.
+* Vor jeder neuen Dateiausgabe wird der aktuelle Arbeitsstatus geprüft.
+* Die Existenz und der aktuelle Inhalt der betreffenden Datei werden auf GitHub main geprüft.
+* Vorhandene Dateien werden vollständig eingelesen, bevor über Änderung, Ersetzung oder Beibehaltung entschieden wird.
+* Technische Prüfungen und Einlesungen benötigen keine zusätzliche Benutzerbestätigung.
+* Der Benutzer bestätigt mit „OK“ den aktuellen Schritt und vorhandene Vorschläge.
+* Nach „OK“ wird selbstständig mit dem nächsten offenen Schritt fortgefahren.
+* Der AI-Agent entscheidet den technisch sinnvollen Arbeitsweg selbstständig, sofern keine echte fachliche oder architektonische Entscheidung des Benutzers erforderlich ist.
+* Vollständige Dateien werden ausgegeben; Patches und Teilstücke werden nicht verwendet.
+* Jede Dateiausgabe besteht aus Pfad, Dateiname und vollständigem Quelltext in drei getrennten Copyblöcken.
+* Der Quelltext-Copyblock enthält keinen zusätzlichen Dateinamen und muss vollständig kopierbar sein.
+
 ## Chronikstatus
 
 Datei: PROJECT_CHRONICLE_001.md
@@ -430,4 +343,4 @@ Die Datei bleibt bis zur vollständigen Dokumentationskonsolidierung offen.
 
 Nächster Fortsetzungsschlüssel:
 
-CORE-INVENTORY-DEEP-DIVE
+DOCUMENTATION-SYNC
