@@ -2,7 +2,9 @@
  * CatchTrack Core Loader
  * Version: 1.0
  *
- * Koordiniert die Initialisierung der Core-Komponenten.
+ * Lädt und prüft die definierte Core-Infrastruktur.
+ * Die technische Modulverwaltung liegt im Module Manager und
+ * in der Module Registry; dieser Loader führt keine Fachmodule.
  */
 
 (() => {
@@ -16,24 +18,27 @@
                 return;
             }
 
-            if (!window.CatchTrackCore) {
-                throw new Error('CatchTrack Core is not available.');
-            }
+            const requiredComponents = [
+                'CatchTrackCore',
+                'CatchTrackModuleManager',
+                'CatchTrackModuleRegistry',
+                'CatchTrackModuleInterface',
+                'CatchTrackErrorLog',
+                'CatchTrackCoreConfig',
+                'CatchTrackCoreContext',
+                'CatchTrackCoreState',
+                'CatchTrackCoreEventBus',
+                'CatchTrackCoreLifecycle'
+            ];
 
-            if (!window.CatchTrackModuleManager) {
-                throw new Error('CatchTrack Module Manager is not available.');
-            }
+            const missingComponents = requiredComponents.filter(
+                (component) => !window[component]
+            );
 
-            if (!window.CatchTrackModuleInterface) {
-                throw new Error('CatchTrack Module Interface is not available.');
-            }
-
-            if (!window.CatchTrackErrorLog) {
-                throw new Error('CatchTrack Error Log is not available.');
-            }
-
-            if (!window.CatchTrackCoreConfig) {
-                throw new Error('CatchTrack Core Config is not available.');
+            if (missingComponents.length > 0) {
+                throw new Error(
+                    `Missing Core components: ${missingComponents.join(', ')}`
+                );
             }
 
             this.initialized = true;

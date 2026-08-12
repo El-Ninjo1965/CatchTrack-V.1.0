@@ -16,6 +16,10 @@
                 return;
             }
 
+            if (!window.CatchTrackCoreStartup) {
+                throw new Error('CatchTrack Core Startup is not available.');
+            }
+
             window.CatchTrackCoreStartup.start();
 
             window.CatchTrackCoreLifecycle.setPhase(
@@ -30,6 +34,10 @@
         stop() {
             if (!running) {
                 return;
+            }
+
+            if (!window.CatchTrackCoreShutdown) {
+                throw new Error('CatchTrack Core Shutdown is not available.');
             }
 
             window.CatchTrackCoreShutdown.stop();

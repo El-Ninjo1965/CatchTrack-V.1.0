@@ -22,7 +22,9 @@
                 'CatchTrackCoreLoader',
                 'CatchTrackCoreContext',
                 'CatchTrackCoreConfig',
-                'CatchTrackCoreLifecycle'
+                'CatchTrackCoreLifecycle',
+                'CatchTrackModuleRegistry',
+                'CatchTrackModuleManager'
             ];
 
             const missingComponents = requiredComponents.filter(

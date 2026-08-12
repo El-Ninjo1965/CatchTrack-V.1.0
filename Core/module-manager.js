@@ -2,56 +2,113 @@
  * CatchTrack Module Manager
  * Version: 1.0
  *
- * Verwaltet Registrierung, Aktivierung und Deaktivierung
- * der eigenständigen CatchTrack-Module.
+ * Zentrale Verwaltung der Module inklusive Registrierung,
+ * Aktivierung, Deaktivierung und Lifecycle-Steuerung.
  */
 
 (() => {
     'use strict';
 
     const ModuleManager = {
-        core: null,
+        registry: null,
 
         init() {
-            if (!window.CatchTrackCore) {
-                throw new Error('CatchTrack Core is not available.');
+            if (!window.CatchTrackModuleRegistry) {
+                throw new Error('CatchTrack Module Registry is not available.');
             }
 
-            this.core = window.CatchTrackCore;
+            this.registry = window.CatchTrackModuleRegistry;
         },
 
         register(module) {
             this.ensureInitialized();
-            this.core.registerModule(module);
+
+            const registeredModule = this.registry.register(module);
+
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit('module:registered', {
+                    id: registeredModule.id
+                });
+            }
+
+            return registeredModule;
         },
 
         unregister(moduleId) {
             this.ensureInitialized();
-            return this.core.unregisterModule(moduleId);
-        },
 
-        activate(moduleId) {
-            this.ensureInitialized();
-            this.core.activateModule(moduleId);
-        },
+            const removed = this.registry.unregister(moduleId);
 
-        deactivate(moduleId) {
-            this.ensureInitialized();
-            return this.core.deactivateModule(moduleId);
+            if (removed && window.CatchTrackCore) {
+                window.CatchTrackCore.emit('module:unregistered', {
+                    id: moduleId
+                });
+            }
+
+            return removed;
         },
 
         get(moduleId) {
             this.ensureInitialized();
-            return this.core.getModule(moduleId);
+            return this.registry.get(moduleId);
         },
 
         getAll() {
             this.ensureInitialized();
-            return this.core.getModules();
+            return this.registry.getAll();
+        },
+
+        activate(moduleId) {
+            this.ensureInitialized();
+
+            const module = this.get(moduleId);
+
+            if (!module) {
+                throw new Error(`Module not found: ${moduleId}`);
+            }
+
+            if (typeof module.activate === 'function') {
+                module.activate();
+            }
+
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.state.activeModule = moduleId;
+                window.CatchTrackCore.emit('module:activated', {
+                    id: moduleId
+                });
+            }
+
+            return module;
+        },
+
+        deactivate(moduleId) {
+            this.ensureInitialized();
+
+            const module = this.get(moduleId);
+
+            if (!module) {
+                return false;
+            }
+
+            if (typeof module.deactivate === 'function') {
+                module.deactivate();
+            }
+
+            if (window.CatchTrackCore && window.CatchTrackCore.state.activeModule === moduleId) {
+                window.CatchTrackCore.state.activeModule = null;
+            }
+
+            if (window.CatchTrackCore) {
+                window.CatchTrackCore.emit('module:deactivated', {
+                    id: moduleId
+                });
+            }
+
+            return true;
         },
 
         ensureInitialized() {
-            if (!this.core) {
+            if (!this.registry) {
                 throw new Error('Module Manager is not initialized.');
             }
         }

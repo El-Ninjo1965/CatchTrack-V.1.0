@@ -17,8 +17,8 @@
 
             state.set(key, value);
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('state:changed', {
+            if (window.CatchTrackCoreEventBus) {
+                window.CatchTrackCoreEventBus.publish('state:changed', {
                     key,
                     value
                 });
@@ -44,12 +44,10 @@
 
             const existed = state.delete(key);
 
-            if (existed) {
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('state:removed', {
-                        key
-                    });
-                }
+            if (existed && window.CatchTrackCoreEventBus) {
+                window.CatchTrackCoreEventBus.publish('state:removed', {
+                    key
+                });
             }
 
             return existed;
@@ -62,8 +60,8 @@
         clear() {
             state.clear();
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('state:cleared');
+            if (window.CatchTrackCoreEventBus) {
+                window.CatchTrackCoreEventBus.publish('state:cleared');
             }
         },
 
