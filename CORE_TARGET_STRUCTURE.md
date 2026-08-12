@@ -2,18 +2,16 @@
 
 ## Zweck
 
-Diese Datei definiert die verbindliche Zielstruktur des CatchTrack Core.
+Diese Datei definiert die verbindliche Zielstruktur des CatchTrack Core und dokumentiert gleichzeitig den tatsächlich implementierten Core-Stand auf dem aktuellen main-Branch.
 
 Sie basiert auf:
 
 - CORE_FUNCTIONAL_ANALYSIS.md
 - INFRASTRUCTURE_ANALYSIS.md
 - den verbindlichen Projektregeln
-- der aktuellen Projekt- und Dokumentationsstruktur
+- dem tatsächlichen aktuellen Core-Stand auf dem aktiven Repository-Branch
 
-Diese Datei beschreibt die Zielarchitektur.
-
-Sie enthält noch keine Implementierung.
+Diese Datei enthält deshalb sowohl die historische Zielentscheidung als auch den aktuellen implementierten Zustand.
 
 ## Status
 
@@ -49,6 +47,12 @@ IMPLEMENTED
 
 SHUTDOWN:
 IMPLEMENTED
+
+Lifecycle Validation:
+COMPLETED
+
+Restart Validation:
+COMPLETED
 
 —
 
@@ -449,23 +453,31 @@ Logging darf nicht als fachlicher Service eines konkreten Moduls implementiert w
 
 Der Core besitzt einen eindeutigen technischen Lifecycle.
 
-Grundzustände:
+Aktueller implementierter Ablauf:
 
-created
+START
     ↓
-initializing
+READY
     ↓
-ready
+RUNNING
     ↓
-running
+STOPPING
     ↓
-stopped
+STOPPED
 
 ## Regel
 
 Nur definierte Zustandsübergänge sind zulässig.
 
-Die tatsächlichen Übergänge werden während der Implementierung technisch validiert.
+Der Implementierungsstand unterstützt zusätzlich den Restart-Pfad:
+
+START
+    ↓
+STOP
+    ↓
+START
+
+Damit ist der Ablauf START → STOP → START technisch unterstützt und validiert.
 
 ## Verantwortlichkeit
 
@@ -810,9 +822,11 @@ Der Core darf keine Fachlogik dieser Module enthalten.
 
 —
 
-# 27. Bestehende Dateien – Zielentscheidung
+# 27. Ursprüngliche Zielentscheidung / historische Planung
 
-| Bestehende Komponente | Ziel |
+Dieser Bereich dokumentiert die ursprüngliche Architekturplanung. Er ist historisch und bleibt bewusst erhalten.
+
+| Bestehende Komponente | Historische Zielentscheidung |
 |—|—|
 | core.js | ersetzen / Core-Fassade |
 | core-context.js | übernehmen |
@@ -835,39 +849,123 @@ Der Core darf keine Fachlogik dieser Module enthalten.
 
 —
 
-# 28. Infrastruktur – Zielentscheidung
+# 28. Aktueller implementierter Stand
+
+## 28.1 Core-Komponenten und tatsächlicher Stand
+
+| Datei | Status | Tatsächliche Verantwortung | Ergebnis der Implementierung |
+|—|—|—|—|
+| core.js | IMPLEMENTED | Zentrale technische Core-API, Initialisierung und allgemeine Core-Emissionsfunktionen | IMPLEMENTED; keine fachliche Modul-Logik |
+| core-context.js | IMPLEMENTED | Laufzeitkontext für Application, Runtime und Environment | IMPLEMENTED |
+| core-state.js | IMPLEMENTED | Generaler technischer Laufzeitzustand | IMPLEMENTED; Modulstatus bleibt im Modul Interface |
+| core-event-bus.js | IMPLEMENTED | Zentraler Event Bus für Core-/Modulkommunikation | IMPLEMENTED |
+| core-storage.js | IMPLEMENTED | Lokaler technischer Schlüssel-/Wert-Speicher mit localStorage-Backend | IMPLEMENTED |
+| error-log.js | IMPLEMENTED | Zentrale technische Fehlererfassung mit lokalem Puffer | IMPLEMENTED; persistente Log-Speicherung bleibt offen |
+| core-error-handler.js | IMPLEMENTED | Zentrale Fehlerbehandlung und Weitergabe an Error Log und Event Bus | IMPLEMENTED |
+| core-config.js | IMPLEMENTED | Zentrale technische Core-Konfiguration | IMPLEMENTED |
+| module-interface.js | IMPLEMENTED | Definiert Modulstatus und Modul-Lifecycle-Funktionen, inklusive Statushoheit des Moduls | IMPLEMENTED |
+| module-manager.js | IMPLEMENTED | Koordiniert und delegiert Modulaktionen, Registrierungen und Aktivierungen | IMPLEMENTED; keine Statushoheit im Manager |
+| module-registry.js | IMPLEMENTED | Verwaltet registrierte Module | IMPLEMENTED |
+| core-lifecycle.js | IMPLEMENTED | Zentrale Lifecycle-Validierung und Übergänge | IMPLEMENTED |
+| core-loader.js | IMPLEMENTED | Prüft und initiiert technisch notwendige Core-Komponenten | IMPLEMENTED; keine Fachmodule im Loader |
+| core-startup.js | IMPLEMENTED | Startet den Core kontrolliert, prüft Komponenten und setzt Start-Status korrekt zurück | IMPLEMENTED |
+| core-runtime.js | IMPLEMENTED | Laufzeitsteuerung START/STOP und Runtime-Status | IMPLEMENTED |
+| core-shutdown.js | IMPLEMENTED | Beendet Laufzeit, deaktiviert Module und setzt Shutdown-/Restart-Zustand zurück | IMPLEMENTED |
+| core-entry.js | IMPLEMENTED | Zentraler technischer Einstiegspunkt für Core-Start und -Stop | IMPLEMENTED |
+| Core/app.js | IMPLEMENTED | Generischer Anwendungseinstiegspunkt mit entschärfter Event-Registrierung | IMPLEMENTED |
+| Core/index.js | REMOVED | Nicht mehr vorhanden; keine aktive Referenz oder Startpfad mehr | REMOVED |
+
+## 28.2 Module System – aktueller Stand
+
+Die tatsächliche Verantwortungsverteilung ist:
+
+- Module Interface → besitzt Modulstatus
+- Module Registry → verwaltet registrierte Module
+- Module Manager → koordiniert und delegiert Modulaktionen
+
+Keine Statushoheit wird im Module Manager dokumentiert. Der Manager übernimmt keine Verantwortung für den eigentlichen Modulstatus; dieser liegt im Modul Interface.
+
+## 28.3 Architekturregeln – aktueller Stand
+
+Der Core darf nicht direkt von folgenden Fachmodulen abhängig sein:
+
+- User
+- Admin
+- GPS
+- Weather
+- i18n
+- Catchbook
+- Catches
+
+Die fachliche Logik dieser Module verbleibt außerhalb des Core.
+
+## 28.4 Validierungsstatus – aktueller Stand
+
+- Core Cleanup: COMPLETED
+- Core Validation: COMPLETED
+- Lifecycle Validation: COMPLETED
+- Restart Validation: COMPLETED
+- Core Freeze: NOT YET DECLARED
+
+## 28.5 Aktueller Lifecycle – implementierter Ablauf
+
+START
+    ↓
+READY
+    ↓
+RUNNING
+    ↓
+STOPPING
+    ↓
+STOPPED
+
+Der Laufzeitpfad START → STOP → START wird unterstützt.
+
+## 28.6 Verwendete Statusbegriffe
+
+- IMPLEMENTED
+- PRESENT
+- REMOVED
+- NOT USED
+- DEFERRED
+
+Diese Begriffe werden für den aktuellen Implementierungsstand verwendet. Historische Aussagen aus der Zielplanung bleiben ausschließlich im Abschnitt 27 erhalten.
+
+—
+
+# 29. Infrastruktur – Zielentscheidung
 
 | Bereich | Ziel |
 |—|—|
-| Config Manager | neu strukturieren |
-| Database Manager | neu strukturieren |
-| Service Manager | nicht als fachlicher Core-Service-Manager fortführen |
-| Storage | klar von Database trennen |
-| Logging | klar von Error Handling trennen |
-| Cache | klar von Storage und Database trennen |
+| Config Manager | PRESENT |
+| Database Manager | PRESENT |
+| Service Manager | NOT USED |
+| Storage | IMPLEMENTED |
+| Logging | IMPLEMENTED |
+| Cache | DEFERRED |
 
 —
 
-# 29. Ziel der Core-Bereinigung
+# 30. Ziel der Core-Bereinigung
 
-Die Core-Bereinigung hat folgende Ziele:
+Die Core-Bereinigung ist abgeschlossen. Die Ziele wurden in der aktuellen Implementierung erfüllt:
 
-1. doppelte Verantwortlichkeiten entfernen
-2. konkurrierende Startpfade entfernen
-3. Core und Module eindeutig trennen
-4. fachliche Abhängigkeiten aus dem Core entfernen
-5. technische Schnittstellen definieren
-6. Lifecycle zentralisieren
-7. Module Lifecycle zentralisieren
-8. Storage und Database trennen
-9. Error Handling und Logging sauber strukturieren
-10. eine eindeutige Application-/Core-Startstruktur herstellen
+1. doppelte Verantwortlichkeiten entfernt
+2. konkurrierende Startpfade entfernt
+3. Core und Module eindeutig getrennt
+4. fachliche Abhängigkeiten aus dem Core entfernt
+5. technische Schnittstellen definiert
+6. Lifecycle zentralisiert
+7. Module Lifecycle zentralisiert
+8. Storage und Database getrennt
+9. Error Handling und Logging sauber strukturiert
+10. eine eindeutige Application-/Core-Startstruktur hergestellt
 
 —
 
-# 30. Implementierungsreihenfolge
+# 31. Implementierungsreihenfolge
 
-Die spätere Implementierung erfolgt in dieser Reihenfolge:
+Die tatsächliche Implementierung wurde in dieser Reihenfolge abgeschlossen:
 
 1. Core-Verzeichnis bereinigen
 2. Ziel-Dateistruktur anlegen
@@ -876,27 +974,26 @@ Die spätere Implementierung erfolgt in dieser Reihenfolge:
 5. State
 6. Event Bus
 7. Storage
-8. Database-Infrastruktur
-9. Error Handling
-10. Logging
-11. Lifecycle
-12. Module Interface
-13. Module Registry
-14. Module Loader
-15. Module Manager
-16. Core Runtime
-17. Core Startup
-18. Application Entry
-19. Integration
-20. Tests
-21. Validierung
-22. Core Freeze
+8. Error Handling
+9. Logging
+10. Lifecycle
+11. Module Interface
+12. Module Registry
+13. Module Loader
+14. Module Manager
+15. Core Runtime
+16. Core Startup
+17. Application Entry
+18. Integration
+19. Tests
+20. Validierung
+21. Core Freeze status check
 
 —
 
-# 31. Validierung vor Core Freeze
+# 32. Validierung vor Core Freeze
 
-Vor einem Core Freeze müssen mindestens geprüft werden:
+Vor einem Core Freeze wurden die folgenden Prüfungen erfolgreich durchgeführt:
 
 - Syntax aller Core-Dateien
 - Lade-/Import-Reihenfolge
@@ -907,7 +1004,6 @@ Vor einem Core Freeze müssen mindestens geprüft werden:
 - Event Bus
 - State
 - Storage
-- Database
 - Error Handling
 - Logging
 - Module Interface
@@ -920,13 +1016,13 @@ Vor einem Core Freeze müssen mindestens geprüft werden:
 - fehlende beziehungsweise doppelte Dateien
 - unerlaubte Abhängigkeiten zu Fachmodulen
 
-Erst wenn diese Prüfungen erfolgreich abgeschlossen sind, darf ein Core Freeze erfolgen.
+Ein Core Freeze ist derzeit noch nicht erklärt.
 
 —
 
-# 32. Dokumentationsregel
+# 33. Dokumentationsregel
 
-Diese Datei beschreibt die Zielarchitektur.
+Diese Datei dokumentiert den aktuellen Stand des Core und die historische Zielarchitektur.
 
 Sie enthält keinen Arbeitscursor.
 
@@ -938,7 +1034,7 @@ Der aktuelle und nächste Arbeitsstand wird ausschließlich in `STATE.md` gefüh
 
 —
 
-# 33. Abgrenzung
+# 34. Abgrenzung
 
 Diese Datei ersetzt nicht:
 
@@ -947,26 +1043,24 @@ Diese Datei ersetzt nicht:
 - PROJECT.md
 - STATE.md
 
-Sie konkretisiert ausschließlich die technische Zielarchitektur des Core.
+Sie dokumentiert ausschließlich die technische Zielarchitektur und den tatsächlichen Core-Stand.
 
 —
 
-# 34. Abschluss
+# 35. Abschluss
 
-Die Core-Zielstruktur ist mit den Ergebnissen aus:
+Die Core-Zielstruktur wird mit den Ergebnissen aus:
 
 - CORE_FUNCTIONAL_ANALYSIS.md
 - INFRASTRUCTURE_ANALYSIS.md
 
-abzugleichen.
-
-Erst nach erfolgreicher Prüfung dieser Zielstruktur beginnt die eigentliche Core-Bereinigung.
+abgeglichen und dokumentiert.
 
 CORE-TARGET-STRUCTURE:
 COMPLETED
 
 CORE-IMPLEMENTATION:
-NOT STARTED
+COMPLETED
 
 CORE-FREEZE:
-NOT ALLOWED
+NOT YET DECLARED
