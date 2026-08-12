@@ -375,5 +375,3 @@ Keine weitere Root-MD-Datei wird für diesen Zweck erstellt.
 `STATE.md` beschreibt den aktuellen Zustand.
 
 Diese Zuständigkeiten dürfen nicht vermischt werden.
-
-—
