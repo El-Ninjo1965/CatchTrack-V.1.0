@@ -301,3 +301,78 @@ Bewertung der relevanten Core-Kriterien nach dem derzeitigen Stand:
 ## 16. Abschluss
 
 Dieses Protokoll dokumentiert den tatsächlichen Zustand des Repositories nach den bisherigen Core-Arbeiten. Es enthält keine Arbeitscursor-Angaben, keine zukünftigen Schritte und keine Freeze-Entscheidung.
+
+## 17. Laufzeittests des aktuellen Core (diese Ausführung)
+
+### Testumgebung und Ausführung
+
+Die Laufzeittests wurden ausschließlich im vorhandenen JavaScript-/Node-Setup ohne Codeänderungen ausgeführt. Es wurde ein Browser-ähnlicher VM-Harness verwendet, der die Core-Dateien in einer globalen `window`-Umgebung lädt und die relevanten Sequenzen prüft:
+
+- START
+- START → START
+- START → STOP
+- START → STOP → START
+- START → STOP → START → STOP
+- App.start() mehrfach
+
+Es wurden geprüft:
+
+- keine Exceptions
+- korrekte Lifecycle-Phasen
+- keine doppelten Event-Listener
+- keine Endlosschleifen
+- keine Syntaxfehler
+
+### Ergebnis pro Test
+
+1. START – PASS
+   - Erwartung: READY → RUNNING
+   - Ergebnis: Lifecycle-Phase `running`
+   - Fehlermeldung: keine
+
+2. START → START – PASS
+   - Erwartung: kein Fehler; keine doppelte Core-Initialisierung
+   - Ergebnis: Phase bleibt `running`
+   - Fehlermeldung: keine
+
+3. START → STOP – PASS
+   - Erwartung: RUNNING → STOPPED
+   - Ergebnis: Lifecycle-Phase `stopped`
+   - Fehlermeldung: keine
+
+4. START → STOP → START – PASS
+   - Erwartung: RUNNING → STOPPED → READY → RUNNING
+   - Ergebnis: Lifecycle-Phase `running`
+   - Fehlermeldung: keine
+
+5. START → STOP → START → STOP – PASS
+   - Erwartung: RUNNING → STOPPED → RUNNING → STOPPED
+   - Ergebnis: Lifecycle-Phase `stopped`
+   - Fehlermeldung: keine
+
+6. App.start() mehrfach – PASS
+   - Erwartung: keine unkontrollierte Vervielfachung der `module:registered`, `module:activated`, `module:deactivated` Listener
+   - Ergebnis: `module:registered=1`, `module:activated=1`, `module:deactivated=1`
+   - Fehlermeldung: keine
+
+### Syntax-/Laufzeitprüfung
+
+- Syntaxprüfung der betroffenen Core-Dateien: PASS
+- Laufzeittests ohne Exceptions: PASS
+- Keine Endlosschleifen festgestellt: PASS
+- Keine fehlerhaften Lifecycle-Übergänge in den geprüften Pfaden: PASS
+
+### Konkrete Fehlermeldungen
+
+Es wurden keine Fehlermeldungen in den durchgeführten Laufzeittests erzeugt.
+
+### Abschlussbewertung
+
+- START: PASS
+- START → START: PASS
+- START → STOP: PASS
+- START → STOP → START: PASS
+- START → STOP → START → STOP: PASS
+- App.start() mehrfach: PASS
+- Syntaxprüfung: PASS
+- Gesamtstatus: PASS
