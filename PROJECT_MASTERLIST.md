@@ -2,33 +2,66 @@
 
 ## Zweck
 
-Verbindliche Übersicht der Entwicklungsphasen und Hauptkomponenten von CatchTrack V1.0.
+Diese Datei definiert die Entwicklungsphasen, Hauptkomponenten und den aktuellen Gesamtstand von CatchTrack V1.0.
 
-Diese Datei ist nach Fertigstellung Frozen.
+Alle Projektdateien befinden sich derzeit noch im Aufbau.
+
+Diese Datei ist derzeit NICHT eingefroren.
+
+Der Freeze der Master-/Regeldokumentation erfolgt erst nach der einmaligen Abstimmung aller relevanten MD-Dateien.
+
+—
 
 ## Entwicklungsphasen
 
 1. Dokumentations- und Architekturdefinition
-2. Core-Inventur
-3. Core-Bereinigung
-4. Core-Implementierung
-5. Core-Validierung
-6. Core-Abnahme
-7. Core-Freeze
-8. Modul-System
-9. User/Admin
-10. Fachmodule
+2. Repository-Inventur
+3. Core-Inventur
+4. Core-Bereinigung
+5. Core-Implementierung
+6. Core-Validierung
+7. Core-Abnahme
+8. Core-Freeze
+9. Module-System
+10. User/Admin
+11. Fachmodule
+12. UI-Integration
+13. Gesamttest
+14. Release-Abnahme
+
+—
 
 ## Aktueller Projektstand
 
-Phase 2 – Core-Inventur
+### Phase 1 – Dokumentations- und Architekturdefinition
 
-Status:
+**STATUS: IN ARBEIT**
 
-IN ARBEIT
+Die bestehenden Master- und Steuerungsdateien werden aktuell einmalig auf einen einheitlichen Stand gebracht.
 
-## Arbeitsreihenfolge
+Dabei werden insbesondere:
 
+- Regeln
+- Workflow
+- Vision
+- Masterlist
+- Status
+- Repository-Inventur
+- Chronik
+- Devlog
+- Arbeitszustand
+
+aufeinander abgestimmt.
+
+Nach Abschluss dieser Abstimmung werden die relevanten Masterdateien eingefroren.
+
+—
+
+## Verbindliche Arbeitsreihenfolge
+
+```text
+DOKUMENTATION
+↓
 ARCHITEKTUR
 ↓
 REPOSITORY-INVENTUR
@@ -50,26 +83,44 @@ MODULE-SYSTEM
 USER / ADMIN
 ↓
 FACHMODULE
+↓
+UI-INTEGRATION
+↓
+GESAMTTEST
+↓
+RELEASE-ABNAHME
+```
+
+Diese Reihenfolge darf nicht ohne begründete Architekturentscheidung umgangen werden.
+
+—
 
 ## Core-Zielstruktur
 
-Der Core V1.0 muss generische Infrastruktur bereitstellen für:
+Der Core V1.0 stellt ausschließlich generische Infrastruktur bereit.
+
+Dazu gehören insbesondere:
 
 - Startup
 - Runtime
 - Lifecycle
 - Event System
-- State
+- State Management
 - Storage
-- Database
+- Database Infrastructure
 - Error Handling
+- Logging
 - Module Interface
 - Module Registry
 - Module Manager
+- Module Lifecycle
 - Permissions
 - Package / Entitlements
+- System Configuration
 
-Der Core darf keine direkte Abhängigkeit zu konkreten Fachmodulen besitzen.
+Der Core darf keine konkrete Fachlogik enthalten.
+
+—
 
 ## Modul-System
 
@@ -84,19 +135,53 @@ Das Modul-System muss mindestens unterstützen:
 - registry
 - dependencies
 
+Ein Modul muss über definierte Core-Schnittstellen funktionieren.
+
+Ein Modul darf grundsätzlich keine Änderung bestehender Core-Dateien benötigen.
+
+—
+
 ## Modulprinzip
 
 Neue Anforderungen werden zuerst klassifiziert:
 
-Infrastruktur → Core
+```text
+Infrastruktur
+→ Core
 
-Fachfunktion → Modul
+Fachfunktion
+→ Modul
+```
 
-Eine Fachfunktion darf nicht durch Änderung einer Core-Datei implementiert werden.
+Eine Fachfunktion darf nicht durch eine Änderung des Core implementiert werden.
+
+—
+
+## Core Freeze
+
+Der Core ist derzeit:
+
+**NOT FROZEN**
+
+Der Core Freeze erfolgt erst nach:
+
+1. vollständiger Core-Inventur
+2. Bereinigung redundanter Komponenten
+3. Definition der endgültigen Core-Grenze
+4. Implementierung
+5. technischer Validierung
+6. Tests
+7. Abnahme
+
+Nach dem Freeze gilt der Core als Read-Only.
+
+Neue Fachfunktionen werden anschließend ausschließlich als Module umgesetzt.
+
+—
 
 ## Dokumentationssystem
 
-Verbindliche Dokumente:
+### Master-/Steuerungsdateien
 
 - VISION.md
 - RULES.md
@@ -104,96 +189,141 @@ Verbindliche Dokumente:
 - PROJECT_MASTERLIST.md
 - PROJECT_STATUS.md
 
-Laufende Dokumentation:
+Diese Dateien werden nach der aktuellen einmaligen Abstimmung gemeinsam eingefroren.
+
+### Laufende Dokumentation
 
 - PROJECT_CHRONICLE_001.md
 - PROJECT_CHRONICLE_002.md
+- ...
 - DEV_LOG.md
 - WORK_STATE.md
 - REPOSITORY_INVENTORY.md
 
-## GitHub-Arbeitsgrundlage
+Diese Dateien werden entsprechend ihrer jeweiligen Aufgabe fortgeführt.
 
-GitHub `main` ist die maßgebliche Quelle für den aktuellen Repository-Stand.
+—
+
+## GitHub und Working Copy
+
+GitHub `main` ist die verbindliche Referenz für den Repository-Stand.
+
+Der Benutzer verwendet Working Copy auf dem iPad als manuelle Git-Arbeitsumgebung.
+
+Relevante Dateien werden vollständig versioniert und committed.
+
+Commit-Dokumentation soll nachvollziehbar enthalten:
+
+- Commit-ID
+- Commit-Nachricht
+- Datum / Zeit
+- betroffene Dateipfade
+- Arbeitsschritt
+- Ergebnis
+
+—
+
+## Dateiprüfung
 
 Vor jeder Änderung oder Erstellung einer Datei:
 
-1. Regeln einlesen
-2. Arbeitsstand prüfen
-3. GitHub-Version prüfen
-4. vorhandene Datei vollständig lesen
-5. Entscheidung treffen
-6. Datei vollständig ersetzen oder neu erstellen
+```text
+REGELN LESEN
+↓
+GITHUB MAIN PRÜFEN
+↓
+DATEI VORHANDEN?
+↓
+VORHANDENE VERSION VOLLSTÄNDIG AUSLESEN
+↓
+ZIEL VERGLEICHEN
+↓
+ARBEITSREIHENFOLGE PRÜFEN
+↓
+ENTSCHEIDEN
+↓
+DATEI VOLLSTÄNDIG ERSTELLEN ODER ERSETZEN
+```
 
-Keine Datei wird aufgrund einer Vermutung neu erstellt.
+Eine vorhandene Datei wird nicht ohne Prüfung neu erstellt.
 
-## OK-Regel
+Eine neue Datei wird nur erstellt, wenn keine bestehende Datei die Aufgabe sinnvoll übernehmen kann.
 
-`OK` bedeutet:
-
-- aktueller Schritt gelesen
-- verstanden
-- bestätigt
-- Vorschlag akzeptiert
-- Arbeitsschritt abgeschlossen
-- nächsten sinnvollen Schritt selbstständig bestimmen
-- keine erneute Bestätigung einholen
-
-Ein bereits erledigter Schritt darf nicht erneut ausgeführt oder ausgegeben werden.
-
-## Dateiausgabe
-
-Bei einer zu erstellenden oder vollständig zu ersetzenden Datei werden immer drei getrennte Copyblöcke ausgegeben:
-
-1. Pfad
-2. exakter Dateiname
-3. vollständiger Quelltext
-
-Der Quelltext befindet sich vollständig in genau einem Copyblock.
-
-Keine zusätzlichen Inhalte innerhalb des Quelltextblocks.
+—
 
 ## Autonomer Arbeitsablauf
 
 Prüfungen, Einlesungen und Vergleiche werden selbstständig durchgeführt.
 
-Der Benutzer muss Prüfungen nicht einzeln bestätigen.
+Der Benutzer muss diese Arbeitsschritte nicht einzeln bestätigen.
 
-Nach einem bestätigten Arbeitsschritt wird automatisch der nächste sinnvolle Arbeitsschritt bestimmt.
+`OK` bedeutet:
 
-Fragen werden nur gestellt, wenn eine Entscheidung fachlich nicht eindeutig getroffen werden kann.
+- gelesen
+- verstanden
+- bestätigt
+- vorhandene Vorschläge bestätigt
+- aktuellen Arbeitsschritt abgeschlossen
 
-Verbesserungsvorschläge werden vor ihrer Umsetzung einmalig vorgelegt.
+Danach wird automatisch der nächste offene Arbeitsschritt bestimmt.
 
-Wird ein Vorschlag mit `OK` bestätigt, wird er ohne weitere Rückfrage umgesetzt.
+Ein bereits erledigter Arbeitsschritt wird nicht erneut ausgeführt oder ausgegeben.
+
+—
 
 ## Testprinzip
 
-Der Benutzer soll während der Entwicklung an sinnvollen Zwischenpunkten testen können.
+Die Entwicklung wird in sinnvollen Abschnitten durchgeführt.
 
-Daher werden nicht unnötig viele Implementierungsschritte am Stück ausgeführt.
+Nach technisch sinnvollen Zwischenständen wird ein Testpunkt eingeplant.
 
-Nach technisch sinnvollen Testpunkten wird der Benutzer zur praktischen Prüfung einbezogen.
+```text
+IMPLEMENTIEREN
+↓
+TESTEN
+↓
+BESTANDEN
+→ nächster Schritt
 
-## Repository- und Commit-Prinzip
+FEHLER
+→ analysieren
+→ korrigieren
+→ erneut testen
+```
 
-Alle relevanten Dateien werden versioniert und committed.
+Dadurch werden Fehler möglichst früh erkannt.
 
-Technische Prüfungen und Terminalausgaben sollen, soweit sinnvoll, automatisch dokumentiert werden.
-
-Commit-Dokumentation soll mindestens enthalten:
-
-- Commit
-- Datum / Zeit
-- betroffene Pfade
-- Arbeitsschritt
-- Ergebnis
+—
 
 ## Aktueller Fortsetzungsschlüssel
 
-CORE-INVENTORY-DEEP-DIVE
+```text
+DOCUMENTATION-SYNC
+```
+
+Bedeutung:
+
+Die Master-/Steuerungsdateien werden aktuell einmalig aufeinander abgestimmt.
+
+Nach Abschluss dieses Blocks:
+
+```text
+DOCUMENTATION-FREEZE
+→ CORE-INVENTORY-DEEP-DIVE
+```
+
+—
 
 ## Status
 
-PHASE 2 – CORE-INVENTUR
-IN ARBEIT
+**DOCUMENTATION:** IN ARBEIT
+
+**REPOSITORY INVENTORY:** VORHANDEN / ZU AKTUALISIEREN
+
+**CORE:** NOT FROZEN
+
+**MODULE SYSTEM:** RESTRUCTURING REQUIRED
+
+**MASTER DOCUMENTS:** NOT FROZEN
+
+**NEXT MAJOR PHASE:** CORE-INVENTUR
