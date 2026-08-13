@@ -7,15 +7,19 @@ Dieses Dokument ist das chronologische Arbeitsprotokoll zum Core-Stand und zu de
 Es trennt bewusst zwischen:
 
 - historischer Vor-Freeze-Phase
-- gültigem aktuellem Freeze-Status
+- gültigem aktuellen Freeze-Status
 - gültigem implementierten Core-Lifecycle
 - finaler Master-Dokumentationskonsolidierung
 
 Es enthält keine parallelen Arbeitscursor, keinen nächsten Arbeitsschritt und keine Forschungs-/Planungs-Weiterführung. Der aktuelle Cursor bleibt in [STATE.md](STATE.md).
 
-## 2. Historische Chronologie
+---
 
-### Phase 1: Core-Bereinigung
+## 2. HISTORICAL CHECKPOINT: Core-Bereinigung
+
+Historischer Arbeitsstand, unverändert als Nachvollziehbarkeit des technischen und dokumentarischen Entwicklungsverlaufs.
+
+### 2.1 Ziel und Ergebnis
 
 - Ziel: technische Verantwortung im Core klar trennen
 - Ergebnis: Core-Architektur auf zentrale Infrastruktur und Modul-Schnittstellen konsolidiert
@@ -31,7 +35,15 @@ Es enthält keine parallelen Arbeitscursor, keinen nächsten Arbeitsschritt und 
   - [Core/module-registry.js](Core/module-registry.js)
   - [Core/app.js](Core/app.js)
 
-### Phase 2: Lifecycle- und Modulvertrag-Korrektur
+### 2.2 Historische Dokumentationsnotiz
+
+Diese Phase ist Teil der technischen Core-Validierung und dokumentiert den Stand vor der finalen Master-Dokumentationskonsolidierung. Sie ersetzt nicht den aktuellen Freeze-Status.
+
+---
+
+## 3. HISTORICAL CHECKPOINT: Lifecycle- und Modulvertrag-Korrektur
+
+Historischer Prüf- und Korrekturstufe, erhalten als gültiger Ablauf der technischen Verifikation.
 
 - Ziel: gültige Laufzeit- und Statusübergänge im Core sicherstellen
 - Ergebnis: Start-/Restart-Pfad und Modulstatus verifiziert
@@ -45,12 +57,14 @@ Es enthält keine parallelen Arbeitscursor, keinen nächsten Arbeitsschritt und 
 Historische Einordnung:
 
 - Diese Phase ist Teil der technischen Core-Validierung.
-- Sie beschreibt den bisherigen technischen Stand vor der finalen Dokumentationskonsolidierung.
+- Sie beschreibt den historischen technischen Stand vor der finalen Dokumentationskonsolidierung.
 - Sie ersetzt nicht den aktuellen Freeze-Status.
 
-## 3. Aktueller implementierter Stand
+---
 
-### Core Lifecycle
+## 4. HISTORICAL CHECKPOINT: implementierter Stand und Audit-Ergebnisse
+
+### 4.1 Core Lifecycle
 
 Tatsächlich im Code implementiert:
 
@@ -70,7 +84,7 @@ Gültige Übergänge:
 
 Ein eigener STOPPING-State ist im aktuellen Implementierungsstand nicht vorhanden und darf in der aktuellen Dokumentation nicht als aktiver Status dargestellt werden.
 
-### Module contract
+### 4.2 Modulvertrag
 
 Der tatsächliche Modulvertrag in [Core/module-interface.js](Core/module-interface.js) erlaubt folgende Statuswerte:
 
@@ -90,7 +104,7 @@ Die tatsächliche Übergangssprache des Codes lautet:
 
 Das ist der reale implementierte Vertrag, und die Dokumentation muss diesem Vertrag entsprechen.
 
-## 4. Freeze-Status der aktuellen Repository-Version
+### 4.3 Freeze-Status der aktuellen Repository-Version
 
 Aktueller Stand:
 
@@ -106,7 +120,9 @@ Verifikation:
 - Core-Code unverändert seit Freeze: JA
 - keine offenen Core-Probleme: JA
 
-## 5. Dokumentationskorrekturen
+---
+
+## 5. HISTORICAL AGENT CHECKPOINT: Dokumentationskorrekturen
 
 Im Rahmen der Master-Dokumentationskonsolidierung wurden die folgenden Widersprüche bereinigt:
 
@@ -115,9 +131,11 @@ Im Rahmen der Master-Dokumentationskonsolidierung wurden die folgenden Widerspr�
 - STOPPING wurde nicht als aktueller Lifecycle-State dargestellt
 - Freeze-Tag und Freeze-Commit wurden mit dem tatsächlichen Repository-Stand abgeglichen
 - Modul-Lifecycle und Modulstatus wurden auf den tatsächlichen Code in [Core/module-interface.js](Core/module-interface.js) abgestimmt
-- dokumentarische Hinweise auf "NOT YET" oder ähnliches wurden nur noch als historische Vor-Freeze-Aussagen betrachtet
+- dokumentarische Hinweise auf "NOT YET" oder ähnliche Vor-Freeze-Aussagen wurden nur noch als historische Einordnung betrachtet
 
-## 6. Validierung
+---
+
+## 6. HISTORICAL AGENT CHECKPOINT: Validierung
 
 Durchgeführte Prüfungen:
 
@@ -136,7 +154,9 @@ Ergebnis:
 - Core-Freeze aktiv: JA
 - keine bekannten sachlichen Widersprüche mehr: JA
 
-## 7. MASTER DOCUMENTATION CONSOLIDATION
+---
+
+## 7. HISTORICAL CHECKPOINT: MASTER DOCUMENTATION CONSOLIDATION
 
 Geprüfte Masterdateien:
 
@@ -151,10 +171,10 @@ Geprüfte Masterdateien:
 - [CORE_FINAL_AUDIT.md](CORE_FINAL_AUDIT.md)
 - [CORE_WORK_LOG.md](CORE_WORK_LOG.md)
 
-Gefundene Widersprüche:
+Gefundene historische Widersprüche:
 
 - einige historische Dokumente stellten STOPPING als aktuellen Lifecycle dar
-- einige Abschnitte beschrieben Vor-Freeze-Status als aktuellem Status
+- einige Abschnitte beschrieben Vor-Freeze-Status als aktuellen Status
 - Freeze-Tag/Freeze-Commit war in einzelnen Dokumenten nicht sauber gegen den tatsächlichen Git-Stand abgeglichen
 - Modul-Lifecycle-Dokumentation war teilweise strenger als der tatsächliche Code
 
@@ -167,23 +187,20 @@ Vorgenommene Dokumentationskorrekturen:
 - Modul-Status und Übergänge auf den tatsächlichen Code in [Core/module-interface.js](Core/module-interface.js) abgestimmt
 - keine Änderung an Core-JavaScript-Dateien
 
-Keine Core-Code-Änderung:
+Historische Commit-/Audit-Blöcke, die erhalten bleiben:
 
-- JA
+- `cbfa411d8cee16499c06129d81360e0d4dc1f49f`
+- `ff6898e` / `32491fd` / `16e3afe`
+- `51844fdb0a50f85f590a0e1870f9c97a7f739183`
+- `0d19b1356a0b3272e9ad1d8eab01f4ab17b39777`
 
-Core weiterhin eingefroren:
+Diese Einträge bleiben nur als historische Prüf- und Abschlussstände erhalten. Sie sind kein Hinweis auf mehrere gleichzeitig gültige aktuelle Zustände.
 
-- JA
+---
 
-Freeze Tag:
+## 8. HISTORICAL AGENT CHECKPOINT: Abschlussstatus vor der Bereinigung des Work-Logs
 
-- core-v1.0.0-freeze
-
-Freeze Commit:
-
-- 51844fdb0a50f85f590a0e1870f9c97a7f739183
-
-Durchgeführte Validierungen:
+Durchgeführte Abschlusschecks:
 
 - Git-Status geprüft
 - git diff --check geprüft
@@ -193,11 +210,16 @@ Durchgeführte Validierungen:
 - Freeze-Tag und Freeze-Commit geprüft
 - Abschluss ohne bekannte sachliche Widersprüche
 
-Aktueller Status, aktuelle Dokumentation und aktueller Core-Code:
+Technische Zusammenfassung:
 
-- keine bekannten sachlichen Widersprüche mehr
+- Core-Dateien seit Freeze verändert: NEIN
+- Diff Check: PASS
+- Core-Code unverändert: JA
+- Dokumentationsstand konsistent: JA
 
-## Abschluss
+---
+
+## CURRENT MASTER DOCUMENTATION STATUS
 
 MASTER DOCUMENTATION: FINALIZED
 
@@ -206,58 +228,42 @@ CORE: FROZEN
 DOCUMENTATION: CONSOLIDATED
 
 NEXT PHASE: MODULE DEVELOPMENT
-- Core-Dateien seit Freeze verändert: NEIN
-- Diff Check: PASS
 
-## FINAL CORE FREEZE VERIFICATION
+Aktueller Repository-Stand:
 
-Final Documentation Commit:
-cbfa411d8cee16499c06129d81360e0d4dc1f49f
-
-CORE v1.0.0
-CORE FROZEN
+- Branch: main
+- HEAD: 81952d8a596380cead073f78e41d484575cca7cf
+- origin/main: 81952d8a596380cead073f78e41d484575cca7cf
+- HEAD == origin/main: JA
 
 Freeze Tag:
-core-v1.0.0-freeze
 
-Freeze Tag Commit:
-51844fdb0a50f85f590a0e1870f9c97a7f739183
+- core-v1.0.0-freeze
 
-Core-Audit abgeschlossen:
-JA
+Freeze Commit:
 
-Audit-Ergebnis:
-READY FOR CORE FREEZE
+- 51844fdb0a50f85f590a0e1870f9c97a7f739183
 
-Freeze technisch durchgeführt:
-JA
+Wichtiger Hinweis:
 
-Core nach Freeze nicht verändert:
-JA
+- Diese Bereinigung betrifft ausschließlich [CORE_WORK_LOG.md](CORE_WORK_LOG.md).
+- Es wurden keine Core-Code-Dateien durch diese Dokumentationsbereinigung verändert.
+- Es bestehen keine bekannten sachlichen Widersprüche zwischen der aktuellen Dokumentation und dem aktuellen Core-Code.
+- Der aktuelle Core-Status bleibt dokumentiert als: created → initializing → ready → running → stopped.
 
-User und Admin bleiben Module:
-JA
+Abschluss:
 
-weitere Module bleiben Entwicklung:
-JA
+MASTER DOCUMENTATION: FINALIZED
 
-HEAD:
-cbfa411d8cee16499c06129d81360e0d4dc1f49f
+CORE: FROZEN
 
-origin/main:
-cbfa411d8cee16499c06129d81360e0d4dc1f49f
+DOCUMENTATION: CONSOLIDATED
 
-HEAD == origin/main:
-JA
+NEXT PHASE: MODULE DEVELOPMENT
 
-Working Tree:
-CLEAN
+Danach keine weiteren Änderungen an [CORE_WORK_LOG.md](CORE_WORK_LOG.md), solange kein echter neuer Widerspruch oder keine neue Projektentscheidung entsteht.
 
-Core Changes After Freeze:
-NONE
-
-Documentation:
-COMMITTED
+NEXT PHASE: MODULE DEVELOPMENT
 
 Push:
 CONFIRMED
