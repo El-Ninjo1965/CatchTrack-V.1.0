@@ -1,6 +1,6 @@
 # CatchTrack V1.0 – AI Agent Index
 
-## Zweck:
+## Zweck
 
 Diese Datei ist der zentrale Einstiegspunkt für AI-Agenten, die am CatchTrack-Projekt arbeiten.
 
@@ -14,6 +14,7 @@ Sie definiert:
 - wie mit dem vorhandenen Quellcode umzugehen ist
 - wie ChatGPT, Terminal, Working Copy und AI-Agent im Projektworkflow eingesetzt werden
 - wie Dateien und Quellcode von ChatGPT ausgegeben werden
+- wie Freigaben des Benutzers innerhalb eines laufenden Arbeitsprozesses zu interpretieren sind
 
 Diese Datei enthält selbst keine Projektregeln, keinen Arbeitscursor und keine eigenständigen Architekturentscheidungen.
 
@@ -308,7 +309,7 @@ Module dürfen nicht:
 
 Bei größeren Änderungen gilt:
 
-```text
+```
 Analyse
     ↓
 Zieldefinition
@@ -372,7 +373,7 @@ Er muss den Widerspruch eindeutig benennen.
 
 Beispiel:
 
-```text
+```
 Dokumentation:
 X ist vorgesehen.
 
@@ -525,7 +526,7 @@ wenn dies nicht Bestandteil des aktuellen Arbeitsschrittes ist.
 
 Bei einem Konflikt gilt:
 
-```text
+```
 RULES.md
     ↓
 WORKFLOW.md
@@ -561,7 +562,7 @@ Der Agent muss `STATE.md` lesen, bevor er entscheidet, welcher Arbeitsschritt al
 
 Vor jeder Änderung gilt:
 
-```text
+```
 READ
     ↓
 UNDERSTAND
@@ -638,7 +639,7 @@ Der Copilot-/AI-Agenten-Verbrauch soll auf notwendige Aufgaben beschränkt werde
 
 Nach Änderungen und Push nach `origin/main` wird der Codespace bei Bedarf synchronisiert mit:
 
-```bash
+```
 git fetch origin
 git pull —ff-only origin main
 ```
@@ -663,7 +664,7 @@ Beispiel:
 
 Dateipfad: `src/example.js`
 
-```text
+```
 example.js
 ```
 
@@ -759,6 +760,70 @@ keine zusätzlichen Dateien erstellt werden, wenn eine vorhandene Dokumentations
 —
 
 # 32. Ende des Index
+
+`AI_AGENT_INDEX.md` ist ausschließlich ein Navigations-, Prioritäts- und Arbeitsworkflow-Dokument.
+
+Die verbindlichen Projektregeln befinden sich in `RULES.md`.
+
+Der verbindliche Workflow befindet sich in `WORKFLOW.md`.
+
+Die Projektdefinition befindet sich in `PROJECT.md`.
+
+Der aktuelle Projektstatus befindet sich ausschließlich in `STATE.md`.
+
+Die technische Core-Zielarchitektur befindet sich in `CORE_TARGET_STRUCTURE.md`.
+
+—
+
+# 33. Bedeutung von „Okay“ als Arbeitsfreigabe
+
+Wenn der Benutzer im laufenden Projektworkflow lediglich „Okay“ sagt oder schreibt, ist dies als **Freigabe zum nächsten sinnvollen Arbeitsschritt** zu verstehen.
+
+„Okay“ ist kein Gesprächsabschluss und kein Anlass, den vorherigen Schritt erneut zusammenzufassen oder erneut zu bestätigen.
+
+Je nach Kontext bedeutet „Okay“:
+
+- **A – Erledigungsbestätigung:** Der Benutzer hat die zuvor von ihm erwartete Arbeit erledigt. Der AI-Agent soll unmittelbar mit dem nächsten erforderlichen Arbeitsschritt fortfahren.
+- **B – Vorschlagsfreigabe:** Der Benutzer akzeptiert einen vorgeschlagenen nächsten Schritt. Der AI-Agent soll diesen Schritt unmittelbar ausführen.
+- **C – Arbeitsfreigabe:** Der Benutzer bestätigt, dass eine vom AI-Agenten vorgeschlagene oder bereits vorbereitete Arbeit durchgeführt werden soll. Der AI-Agent soll unmittelbar damit beginnen.
+
+Nach einem „Okay“ gilt daher:
+
+- bereits erledigte Schritte nicht wiederholen
+- keine erneute Freigabe für denselben Schritt verlangen
+- keine unnötige Zusammenfassung des vorherigen Schrittes ausgeben
+- automatisch mit dem nächsten sinnvollen Schritt fortfahren
+- bei mehreren nacheinander zu bearbeitenden Dateien nach jedem erforderlichen Benutzer-„Okay“ automatisch die nächste Datei im vereinbarten Ausgabeformat liefern
+- erst nach der tatsächlich letzten Datei beziehungsweise dem letzten Arbeitsschritt feststellen, dass die Arbeitseinheit abgeschlossen ist
+
+Eine Rückfrage ist nur erforderlich, wenn eine **neue fachliche, architektonische, sicherheitsrelevante oder koordinative Entscheidung** getroffen werden muss.
+
+Routineprüfungen, Dateivergleiche, Syntaxprüfungen, Konsistenzprüfungen und andere bereits definierte Arbeitsschritte sind selbstständig durchzuführen.
+
+—
+
+# 34. Keine redundanten Hinweise zum Zugriffsstatus
+
+Der bekannte Zugriffs- und Arbeitsstatus von ChatGPT im Projekt ist als bereits geklärt zu behandeln.
+
+Insbesondere darf der AI-Agent bzw. ChatGPT nicht bei jedem Arbeitsschritt erneut darauf hinweisen, dass:
+
+- keine direkten Repository-Schreibrechte vorhanden sind
+- Änderungen nicht direkt durch ChatGPT geschrieben werden können
+- ein Schreibversuch mit `403` abgelehnt werden könnte
+- der Benutzer Änderungen über Working Copy oder Terminal durchführen muss
+
+Diese Information ist Bestandteil des vereinbarten Projektworkflows und muss nicht wiederholt werden.
+
+Wenn eine Datei geändert werden muss, ist unmittelbar die vereinbarte vollständige Datei im festgelegten Ausgabeformat bereitzustellen.
+
+Wenn eine Prüfung, Diagnose oder Analyse ohne Repository-Änderung möglich ist, soll sie ohne weitere Hinweise zum Zugriffsstatus selbstständig durchgeführt werden.
+
+Der Benutzer erwartet bei bekannten und bereits geklärten Rahmenbedingungen keine wiederholten Status- oder Berechtigungserklärungen.
+
+—
+
+# Ende des Index
 
 `AI_AGENT_INDEX.md` ist ausschließlich ein Navigations-, Prioritäts- und Arbeitsworkflow-Dokument.
 
