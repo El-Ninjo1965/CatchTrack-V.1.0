@@ -12,8 +12,28 @@ Sie definiert:
 - welche Dokumente verbindliche Regeln enthalten
 - welche Dokumente Architektur und Planung beschreiben
 - wie mit dem vorhandenen Quellcode umzugehen ist
+- wie ChatGPT, Terminal, Working Copy und AI-Agent im Projektworkflow eingesetzt werden
+- wie Dateien und Quellcode von ChatGPT ausgegeben werden
 
 Diese Datei enthält selbst keine Projektregeln, keinen Arbeitscursor und keine eigenständigen Architekturentscheidungen.
+
+—
+
+# 0. ChatGPT Superpowers – Projektarbeitsregel
+
+Bei jeder Arbeit am CatchTrack-Projekt in ChatGPT sollen die verfügbaren Superpowers-Skills nach ihrer jeweiligen Anwendbarkeit verwendet werden.
+
+Insbesondere sind bei passenden Aufgaben zu berücksichtigen:
+
+- `systematic-debugging` für Fehleranalyse und systematische Ursachenfindung
+- `verification-before-completion` vor einer Aussage, dass eine Arbeit abgeschlossen, korrekt oder validiert ist
+- `writing-plans` für mehrstufige Implementierungs- oder Änderungsaufgaben
+- `test-driven-development` bei neuen Funktionen oder Bugfixes, soweit technisch sinnvoll
+- `requesting-code-review` bei größeren Änderungen oder vor einem relevanten Abschluss
+
+Diese Regel aktiviert oder installiert Superpowers nicht in einem Codespace- oder Copilot-Agenten. Sie ist eine verbindliche Projektarbeitsregel für die Zusammenarbeit mit ChatGPT, sofern die entsprechenden Skills in der jeweiligen ChatGPT-Umgebung verfügbar sind.
+
+Für AI-Agenten im Codespace gilt weiterhin deren tatsächlich verfügbare Skill-, Plugin- und Agenten-Infrastruktur.
 
 —
 
@@ -99,7 +119,7 @@ Definiert:
 - grundlegende Architektur
 - langfristige Ausrichtung
 
-PROJECT.md ist keine Arbeitsstatusdatei.
+`PROJECT.md` ist keine Arbeitsstatusdatei.
 
 —
 
@@ -288,6 +308,7 @@ Module dürfen nicht:
 
 Bei größeren Änderungen gilt:
 
+```text
 Analyse
     ↓
 Zieldefinition
@@ -301,6 +322,7 @@ Implementierung
 Tests
     ↓
 Validierung
+```
 
 Der AI-Agent darf nicht direkt vom Problem zur Implementierung springen, wenn dadurch Architektur- oder Abhängigkeitsfragen ungeprüft bleiben.
 
@@ -350,17 +372,19 @@ Er muss den Widerspruch eindeutig benennen.
 
 Beispiel:
 
-    Dokumentation:
-    X ist vorgesehen.
+```text
+Dokumentation:
+X ist vorgesehen.
 
-    Tatsächlicher Code:
-    Y wird verwendet.
+Tatsächlicher Code:
+Y wird verwendet.
 
-    Bewertung:
-    X und Y sind nicht kompatibel.
+Bewertung:
+X und Y sind nicht kompatibel.
 
-    Folge:
-    Architekturentscheidung erforderlich.
+Folge:
+Architekturentscheidung erforderlich.
+```
 
 —
 
@@ -501,6 +525,7 @@ wenn dies nicht Bestandteil des aktuellen Arbeitsschrittes ist.
 
 Bei einem Konflikt gilt:
 
+```text
 RULES.md
     ↓
 WORKFLOW.md
@@ -516,6 +541,7 @@ Analyse-Dokumente
 sonstige Dokumentation
     ↓
 Quellcode als Ist-Zustand
+```
 
 Der Agent darf keinen Konflikt durch stillschweigende Interpretation beseitigen.
 
@@ -535,6 +561,7 @@ Der Agent muss `STATE.md` lesen, bevor er entscheidet, welcher Arbeitsschritt al
 
 Vor jeder Änderung gilt:
 
+```text
 READ
     ↓
 UNDERSTAND
@@ -548,6 +575,7 @@ IMPLEMENT
 TEST
     ↓
 VALIDATE
+```
 
 Keine Änderung ohne vorherige Prüfung.
 
@@ -561,9 +589,178 @@ Keine eigenmächtige Änderung verbindlicher Regeln.
 
 —
 
-# 26. Ende des Index
+# 26. Arbeitsworkflow für ChatGPT, Terminal, Working Copy und AI-Agent
 
-`AI_AGENT_INDEX.md` ist ausschließlich ein Navigations- und Prioritätsdokument.
+Für Änderungen am Repository gilt folgende Priorität:
+
+## Priorität 1 – Terminal
+
+Alles, was ohne unnötige Agentennutzung über das Codespace-Terminal erledigt werden kann, soll bevorzugt dort durchgeführt werden.
+
+Dazu gehören insbesondere:
+
+- `git status`
+- `git diff`
+- `git log`
+- `git tag`
+- `git fetch`
+- `git pull —ff-only`
+- Syntaxprüfungen
+- vorhandene Tests
+- Build-Prüfungen
+- weitere reine Prüf-, Diagnose- und Git-Operationen
+
+Das Terminal hat Priorität 1, weil es für diese Aufgaben ressourcenschonend und direkt ist.
+
+—
+
+## Priorität 2 – Working Copy + Benutzer
+
+Wenn eine Datei erstellt, ersetzt, bearbeitet oder vollständig geändert werden muss und dies nicht sinnvoll über das Terminal erfolgen soll, erfolgt die Änderung bevorzugt über Working Copy durch den Benutzer.
+
+ChatGPT liefert dafür die vollständige Datei.
+
+Der Benutzer übernimmt die Datei in Working Copy und führt anschließend den Commit und Push nach dem vereinbarten Workflow durch.
+
+—
+
+## Priorität 3 – AI-Agent
+
+Der AI-Agent im Codespace soll eingesetzt werden, wenn eine Aufgabe über Terminal und Working Copy wesentlich aufwendiger wäre und der Agent sie deutlich schneller oder einfacher erledigen kann.
+
+Der AI-Agent soll nicht aus Bequemlichkeit eingesetzt werden, wenn die Aufgabe mit Terminal oder Working Copy einfach erledigt werden kann.
+
+Der Copilot-/AI-Agenten-Verbrauch soll auf notwendige Aufgaben beschränkt werden.
+
+—
+
+## Nach einem Push
+
+Nach Änderungen und Push nach `origin/main` wird der Codespace bei Bedarf synchronisiert mit:
+
+```bash
+git fetch origin
+git pull —ff-only origin main
+```
+
+Vor dem Pull muss geprüft werden, ob lokale Änderungen vorhanden sind.
+
+Lokale Änderungen dürfen nicht ungeprüft überschrieben werden.
+
+—
+
+# 27. Verbindliche Datei- und Code-Ausgabe von ChatGPT
+
+Diese Regel gilt für alle Projekte, nicht nur für CatchTrack.
+
+Bei der Ausgabe von Quellcode oder beim Erstellen bzw. vollständigen Ändern einer Datei verwendet ChatGPT immer folgende Struktur:
+
+1. Dateipfad als normalen Text
+2. ein Copyblock, der ausschließlich den Dateinamen enthält
+3. ein weiterer Copyblock, der ausschließlich den vollständigen Dateiinhalt bzw. Quellcode enthält
+
+Beispiel:
+
+Dateipfad: `src/example.js`
+
+```text
+example.js
+```
+
+```javascript
+// vollständiger Dateiinhalt
+```
+
+## Verbindliche Regeln
+
+- Keine Patches.
+- Keine Diff-Ausgaben als Ersatz für die vollständige Datei.
+- Keine Ausschnitte, wenn eine vollständige Datei benötigt wird.
+- Keine Mischung aus Änderungsanweisung und Dateiinhalt innerhalb desselben Codeblocks.
+- Der Dateiname-Copyblock enthält ausschließlich den Dateinamen.
+- Der Quellcode-Copyblock enthält ausschließlich den vollständigen Dateiinhalt.
+- Der Copyblock darf nicht durch zusätzliche Erklärungen, weitere Codeblöcke oder eingeschobenen Text unterbrochen werden.
+- Bei mehreren Dateien wird dieses Schema für jede Datei einzeln wiederholt.
+- Der vollständige Dateiinhalt muss so ausgegeben werden, dass er direkt in Working Copy übernommen werden kann.
+
+—
+
+# 28. Schutz der Copyblöcke
+
+Bei vollständigen Datei-Ausgaben muss verhindert werden, dass die Markdown- oder Quellcodesyntax innerhalb der Datei den äußeren Copyblock vorzeitig beendet.
+
+Insbesondere gilt für Markdown-Dateien:
+
+- Enthält die vollständige Datei selbst dreifache Backticks, muss der äußere Copyblock mindestens vier Backticks verwenden.
+- Enthält die Datei vier oder mehr aufeinanderfolgende Backticks, muss der äußere Copyblock entsprechend länger gewählt werden.
+- Der äußere Copyblock muss immer länger sein als jede innerhalb der Datei enthaltene Backtick-Sequenz.
+- Der Dateiinhalt darf innerhalb des äußeren Copyblocks nicht verändert werden, nur um den Copyblock technisch funktionsfähig zu machen.
+- Die in der Datei enthaltenen Markdown-Codeblöcke müssen exakt erhalten bleiben.
+- Diese Schutzregel gilt für alle Markdown-Dateien und generell für jede Datei, deren Inhalt selbst eine Blocksyntax enthält.
+
+Ziel:
+
+Die vollständige Datei muss als ein einziger zusammenhängender Copyblock kopierbar sein.
+
+—
+
+# 29. Dateiänderungen durch ChatGPT
+
+ChatGPT soll Repository-Dateien nicht eigenständig verändern, wenn der Projektworkflow die Änderung über Terminal oder Working Copy vorsieht.
+
+Bei einer notwendigen Dateiänderung:
+
+1. Datei lesen
+2. Änderung analysieren
+3. vollständige aktualisierte Datei erzeugen
+4. Dateipfad als normalen Text ausgeben
+5. Dateiname in eigenem Copyblock ausgeben
+6. vollständige Datei in eigenem, gegen Syntaxkonflikte geschütztem Copyblock ausgeben
+7. Benutzer übernimmt die Datei über Working Copy
+8. Benutzer commitet und pusht
+9. Repository-Zustand wird anschließend geprüft
+
+Keine Patch-Übergabe.
+
+—
+
+# 30. Übergabe von Audit- und Agentenergebnissen
+
+Wenn der AI-Agent im Codespace eine Analyse oder Prüfung durchführt und die Chat-Ausgabe nicht zuverlässig übernommen werden kann, muss das vollständige Ergebnis in einer dafür vorgesehenen bestehenden Dokumentationsdatei gespeichert werden.
+
+Für Core-Audits ist grundsätzlich `CORE_WORK_LOG.md` zu verwenden.
+
+Dabei soll:
+
+- kein unnötiges neues Übergabedokument erstellt werden
+- der vollständige Bericht gespeichert werden
+- ein eindeutiger Abschnittstitel verwendet werden
+- Git-Status und Commit-ID dokumentiert werden
+- nach dem Push eine Remote-Verifikation erfolgen
+
+Der vollständige Bericht muss dadurch anschließend über GitHub auslesbar sein.
+
+—
+
+# 31. Keine unnötigen Dateien
+
+Vor jeder neuen Datei ist zu prüfen, ob eine bestehende Datei die Aufgabe übernehmen kann.
+
+Insbesondere sollen für:
+
+- Prompts
+- Agentenaufträge
+- Auditberichte
+- Übergabeinformationen
+- Arbeitsprotokolle
+
+keine zusätzlichen Dateien erstellt werden, wenn eine vorhandene Dokumentationsdatei dafür geeignet ist.
+
+—
+
+# 32. Ende des Index
+
+`AI_AGENT_INDEX.md` ist ausschließlich ein Navigations-, Prioritäts- und Arbeitsworkflow-Dokument.
 
 Die verbindlichen Projektregeln befinden sich in `RULES.md`.
 
