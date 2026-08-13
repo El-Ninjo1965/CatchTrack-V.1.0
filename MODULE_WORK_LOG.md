@@ -700,4 +700,76 @@ Nächster sinnvoller Schritt:
 
 ---
 
+# 9. P0 Hybrid-Zielarchitektur finalisiert
+
+Abgeschlossen am: 2026-08-13
+
+Auftrag:
+
+- die bisherige Policy-first-Variante gegen den tatsächlichen Repository-Zustand prüfen
+- die sinnvollen Elemente der modularen/deklarativen Variante C in eine konsistente Hybrid-Zielarchitektur integrieren
+- Package und Permission strikt trennen
+- User-Kontext als abgeleiteten Laufzeitzustand definieren
+- zentrale Policy Engine, deklarative Module und UI-/Menüvertrag klar formulieren
+- keine produktive Implementierung, keine Core-Änderung und keine Fachmoduländerung
+
+Geprüfte Dokumente:
+
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [PROJECT.md](PROJECT.md)
+- [STATE.md](STATE.md)
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
+- [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md)
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+- [PERMISSION_PACKAGE_UI_ARCHITECTURE.md](PERMISSION_PACKAGE_UI_ARCHITECTURE.md)
+- [Core/module-interface.js](Core/module-interface.js)
+- [Core/module-manager.js](Core/module-manager.js)
+- [Modules/user-module/user-module.js](Modules/user-module/user-module.js)
+- [Modules/admin-module/admin-module.js](Modules/admin-module/admin-module.js)
+- [index.html](index.html)
+
+Hybridentscheidung:
+
+- Policy-first bleibt die echte Autorisierungsschicht.
+- deklarative Module, Feature- und Menüdefinitionen werden als Plattform-Contract verwendet.
+- UI Visibility bleibt ein Render-/Sichtbarkeitsfilter und keine Entscheidungsquelle.
+- der User-Kontext ist ein abgeleiteter Snapshot bzw. Cache und nicht autoritativ.
+- Package und Permission sind strikt getrennt.
+
+Wichtige Architekturentscheidungen:
+
+- Package beschreibt vertraglich enthaltene Leistungen und Entitlements.
+- Permission beschreibt die tatsächlich erlaubten Zustände und Handlungen.
+- Effective Authorization wird aus Package + Permission + Module State + Feature State abgeleitet.
+- UI Visibility ist ein Filter nach Effective Authorization und nicht die Berechtigung selbst.
+- Modul- und Feature-Definitionen werden deklarativ beschrieben.
+- der Module Lifecycle bleibt als Laufzeit-/Plattformzustand modelliert.
+- Deinstallation löscht keine fachliche Berechtigung, sofern Package oder Permission sie weiterhin gewähren.
+
+Offene Punkte:
+
+- konkrete Package-/Tier-Matrix
+- klares Ownership-Modell der Policy Engine
+- Override-Regeln für User-/Role-Specials
+- saubere Prüfung von Package-Upgrade, Downgrade und Deinstallation
+
+Verweise:
+
+- [PERMISSION_PACKAGE_UI_ARCHITECTURE.md](PERMISSION_PACKAGE_UI_ARCHITECTURE.md)
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+
+Code verändert: NEIN
+Core verändert: NEIN
+Fachmodule verändert: NEIN
+
+Ergebnis:
+
+- Die Hybrid-Zielarchitektur wurde finalisiert und in der Architekturdatei dokumentiert.
+- Die Trennung von Package, Permission, Authorization und UI Visibility ist konsistent und eindeutig.
+- Die Architektur bleibt ausdrücklich Proposed – No Implementation.
+
+Nächster sinnvoller Schritt:
+
+- Entwicklerentscheidung zur finalen Hybridarchitektur und anschließender erst möglicher Implementierungsauftrag.
+
 # Ende des Module Work Log

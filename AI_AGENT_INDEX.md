@@ -94,6 +94,8 @@ Die Architektur darf eine spätere Wiederverwendung für andere Apps nicht aussc
 
 Nicht-triviale technische oder architektonische Aufträge werden nicht blind ausgeführt.
 
+Die P0-Hybridarchitektur für Package, Permission, Module Access, Feature Access und UI Visibility ist als Proposed-Design definiert und darf nicht als implementiert betrachtet werden. Sie bleibt ein review- und entscheidungsbasierter Zielvertrag für eine spätere Umsetzung.
+
 Der Agent muss zunächst prüfen:
 
 1. den tatsächlichen Repository-Zustand,
