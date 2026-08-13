@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Generic platform contracts and agent workflow protocol documented and aligned with the frozen Core.
+Current work step: Platform contract gap analysis completed and documented against the frozen Core.
 
 ## Next work step
 
-Next work step: Module development on top of the frozen Core using the neutral framework/application separation and the documented platform contracts as the governing architectural principle.
+Next work step: Use the documented gap matrix to prioritize the next neutral platform implementation task without modifying the frozen Core.
 
 ## Master file status
 
@@ -31,6 +31,8 @@ Next work step: Module development on top of the frozen Core using the neutral f
 - Framework vs. application boundary: documented and authoritative for subsequent module work
 - Generic platform contracts and module lifecycle: documented for future module work
 - Agent protocol requirement: added to the authoritative project documentation
+- Platform contract gap analysis: completed against the actual repository implementation
+- Implementation gaps are documented and prioritized without altering the frozen Core
 
 ## Analysis status
 
