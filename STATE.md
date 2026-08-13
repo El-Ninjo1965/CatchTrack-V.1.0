@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Neutral platform architecture decision documented and aligned with the frozen Core.
+Current work step: Generic platform contracts and agent workflow protocol documented and aligned with the frozen Core.
 
 ## Next work step
 
-Next work step: Module development on top of the frozen Core using the neutral framework/application separation as the governing architectural principle.
+Next work step: Module development on top of the frozen Core using the neutral framework/application separation and the documented platform contracts as the governing architectural principle.
 
 ## Master file status
 
@@ -29,6 +29,8 @@ Next work step: Module development on top of the frozen Core using the neutral f
 - Any change to a frozen file requires an explicit unfreeze decision before modification.
 - Neutral reusable platform architecture: documented and aligned with the frozen Core
 - Framework vs. application boundary: documented and authoritative for subsequent module work
+- Generic platform contracts and module lifecycle: documented for future module work
+- Agent protocol requirement: added to the authoritative project documentation
 
 ## Analysis status
 

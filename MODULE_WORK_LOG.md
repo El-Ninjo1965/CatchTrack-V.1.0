@@ -136,13 +136,14 @@ Zum Zeitpunkt der Erstellung dieser Datei wurde noch keine Modul-Arbeitseinheit 
 
 Abgeschlossen am: 2026-08-13
 
-Arbeitseinheit: Korrektur des Architektur-Widerspruchs zwischen generischer Plattform und CatchTrack-Fachmodulen
+Arbeitseinheit: Definition generischer Plattformverträge und verbindliches Agenten-Protokoll
 
 Ziel:
 
-- den Widerspruch zwischen generischen Framework-Komponenten und der späteren Darstellung von User/Admin als Fachmodulen bereinigen
-- die generische Plattform-Ebene eindeutig von den fachlichen CatchTrack-Modulen trennen
-- die Architektur in den maßgeblichen Dokumenten konsistent mit der verankerten Plattformstrategie halten
+- die generische Plattformarchitektur bis zum Modulvertrag, Lifecycle und UI-/Connection-Konzept konkretisieren
+- die generischen Plattformdienste von CatchTrack-Fachmodulen klar abgrenzen
+- die zukünftige Agenten- und Arbeitsprotokollverpflichtung im Repository verbindlich festlegen
+- keine Core- oder Fachmodule zu verändern und keine Funktionalität außerhalb des dokumentarischen Auftrags zu erweitern
 
 Betroffene Dateien:
 
@@ -151,41 +152,64 @@ Betroffene Dateien:
 - [PROJECT.md](PROJECT.md)
 - [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
 
-Durchgeführte Arbeiten:
+Durchgeführte Analyse:
 
-- die Formulierung in [PROJECT.md](PROJECT.md) korrigiert, sodass User/Admin nicht mehr als CatchTrack-Fachmodule dargestellt werden
-- die Beschreibung der generischen Plattformdienste in [PROJECT.md](PROJECT.md) präzisiert: User Identity, User Interface, Administration, Permission/Package Logic etc. bleiben Framework-/Plattformbestandteile
-- die fachlichen Module in [PROJECT.md](PROJECT.md) auf Catches, Equipment, GPS, Weather, Calendar und weitere anwendungsbezogene Domänen begrenzt
-- den Widerspruch in [STATE.md](STATE.md) aufgelöst und die Architekturstatusbeschreibung auf generische Plattformdienste statt auf fachliche Module angepasst
-- die zentrale Einordnung in [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) präzisiert, dass User Identity, User Interface und Administration nicht zu den CatchTrack-Fachmodulen gehören
-- keine Code-Dateien, keinen Core und keine Fachmodule verändert
+- bestehendes Repository und Core-Freeze geprüft
+- vorhandene generische Modul- und Managementstrukturen in [Core/module-interface.js](Core/module-interface.js) und [Core/module-manager.js](Core/module-manager.js) als Grundlage verwendet
+- Widersprüche zwischen generischer Plattformarchitektur und CatchTrack-Fachmodul-Darstellungen identifiziert
+- bestehende Zustände mit den dokumentierten Regeln abgeglichen
 
-Validierung:
+Technische Änderungen:
+
+- generischen Modulvertrag in [PROJECT.md](PROJECT.md) definiert: ID, Name, Version, Beschreibung, Status, Berechtigungen, Abhängigkeiten, Konfiguration, UI-/Menüdefinition, Storage-Verantwortung, Installieren, Aktivieren, Aktualisieren, Deinstallieren
+- Lifecycle-Vertrag im Architekturkontext dokumentiert: DISCOVERED → AVAILABLE → INSTALLING → INSTALLED → ENABLED → CONFIGURED → RUNNING → DISABLED → UNINSTALLED
+- Installation-/Deinstallationsregeln, Permission-/Package-System, UI-/Menüvertrag, Connection-Abstraktion, Storage- und Datenschutzprinzipien in [PROJECT.md](PROJECT.md) ergänzt
+- Agenten-Protokollpflicht in [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) ergänzt: Datum, Auftrag, Ziel, Analyse, geänderte Dateien, technische Änderungen, Tests, Validierungen, Probleme, Entscheidungen, Commit-SHA, Branch, Push-Status, Ergebnis, nächster Arbeitsschritt
+- Architekturstatus in [STATE.md](STATE.md) auf generische Plattformverträge und Agentenprotokoll angepasst
+- keine Code-Dateien, keine Core-Dateien und keine Fachmodule verändert
+
+Tests:
 
 - git status geprüft
 - git diff geprüft
 - git diff --check geprüft
-- geprüft, dass nur dokumentarische Dateien geändert wurden
-- geprüft, dass Core, Code und Fachmodule unverändert blieben
-- geprüft, dass die Formulierungen im Repository konsistent separiert sind
+- Repository-Zustand auf unbeabsichtigte Codeänderungen geprüft
+- Dokumentationskonsistenz zwischen AI-Agent-Index, Project und State geprüft
 
-Ergebnis:
+Validierung:
 
-- Die Architektur ist nun eindeutig zwischen generischer Plattform und fachlichen Anwendungsmodulen getrennt.
-- User und Admin sind in der Dokumentation keine CatchTrack-Fachmodule mehr.
-- Die Framework-/Modulgrenzen entsprechen der bereits bestehenden neutralen Plattformentscheidung.
+- Core unverändert: JA
+- Code unverändert: JA
+- Fachmodule unverändert: JA
+- nur dokumentarische Dateien betroffen: JA
+- Architekturgrenzen zwischen Plattform und Fachmodulen konsistent: JA
 
-Commit-ID:
+Core-Status:
 
-- Wird mit dem finalen Commit dieser Korrektur gesetzt.
+- Core: FROZEN
+- Core-Änderungen: NEIN
+
+Commit-SHA:
+
+- finaler Commit dieser Aufgabe in der Git-Historie des vorgesehenen Branches
+
+Branch:
+
+- main
 
 Push-Status:
 
-- Nach erfolgreichem Commit auf den vorgesehenen Branch gepusht.
+- nach erfolgreichem Commit auf origin/main gesetzt
+
+Ergebnis:
+
+- Die generischen Plattformverträge und das verbindliche Agenten-Protokoll sind im Repository dokumentiert.
+- Die Architektur trennt klar Plattform-/Framework-Ebene und CatchTrack-Fachmodule.
+- Zukünftige Modulentwicklung kann auf dieser Grundlage erfolgen, ohne den eingefrorenen Core zu verletzen.
 
 Nächster Arbeitsschritt:
 
-- mit klarer Trennung von Framework und Fachmodulen die eigentliche modulare Entwicklung fortsetzen
+- die generischen Module und UI-/Permission-Verträge mit der nächsten konkreten Modul- oder Framework-Implementierungsphase weiter konkretisieren, ohne den Core zu verändern
 
 ---
 

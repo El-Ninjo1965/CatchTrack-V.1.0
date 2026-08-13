@@ -74,7 +74,141 @@ The framework must support multiple access levels such as Free, Standard, Advanc
 ## 9. Future reusability and store perspective
 The architecture must not prevent packaging as a standalone store app and must keep the neutral framework reusable for second and third applications. CatchTrack-specific terms should remain in application or module logic, while the framework remains generic and neutral.
 
-## 10. Long-term target state
+## 10. Generic platform contracts
+The platform layer shall provide explicit, reusable contracts for application-level extension without coupling the core to any domain logic.
+
+### 10.1 Generic module contract
+A future module shall be able to declare:
+- unique module ID
+- module name
+- version
+- description
+- status
+- required permissions
+- dependencies
+- configuration
+- UI/menu definition
+- storage responsibility
+- installation lifecycle
+- activation and deactivation
+- update flow
+- uninstallation behavior
+
+The current repository already exposes a neutral module contract in the Core layer and the Module Manager pattern. Future module definitions should remain compatible with that structure and extend it where required, without modifying the frozen Core contracts.
+
+### 10.2 Proposed lifecycle contract
+The generic lifecycle shall be documented as:
+- DISCOVERED
+- AVAILABLE
+- INSTALLING
+- INSTALLED
+- ENABLED
+- CONFIGURED
+- RUNNING
+- DISABLED
+- UNINSTALLED
+
+This lifecycle is a platform architecture contract for future module implementations. It does not require immediate full runtime enforcement in every module, but it defines the agreed direction for safe module governance.
+
+### 10.3 Installation and deinstallation contract
+A module is responsible for its own resources, including:
+- module-specific tables or stores
+- module-specific configuration defaults
+- UI registration entries
+- permission declarations
+- module data ownership
+
+Deinstallation must remove only module-owned resources and must never delete data belonging to other modules or unrelated framework components.
+
+If a future implementation cannot yet fully support this contract without a Core change, it must be documented as a future implementation task rather than forcing a Core modification.
+
+### 10.4 Permission and package contract
+The platform shall define generic access layering as:
+- USER
+- PACKAGE
+- PERMISSIONS
+- MODULE ACCESS
+- FEATURE ACCESS
+
+A module may be installed and enabled but still restricted for a specific user or package. This must be evaluated by the platform layer and not hard-coded into domain modules.
+
+The UI must distinguish between:
+- not installed
+- installed but disabled
+- installed but not authorized
+- installed and authorized
+
+Package names must remain generic and not be embedded into concrete CatchTrack domain logic.
+
+### 10.5 User interface and menu contract
+A module must be able to declare:
+- menu label
+- icon
+- placement
+- priority
+- visibility
+- required permission
+- target screen or route
+- submenus
+
+The user should be able to later:
+- show or hide modules
+- reorder modules
+- set priorities
+- save personal UI preferences
+- adjust font size and presentation settings
+
+Hiding a module is not the same as uninstalling it.
+
+### 10.6 Restricted module contract
+A user without entitlement may optionally see a module in preview mode. The preview can include:
+- description
+- feature teaser
+- blocked input fields
+- upgrade hint
+- access requirement explanation
+
+No protected function may be executed without the required authorization.
+
+### 10.7 Connection contract
+The platform shall provide a neutral connection abstraction with at least the following conceptual layers:
+- Local / Device
+- Own Server
+- Optional Cloud
+
+No framework element may depend on a specific hosting provider. The connection layer must remain abstract and replaceable.
+
+GPS data should stay local by default unless an explicit future module requires another architecture and documents the reason.
+
+### 10.8 Storage and data abstraction contract
+The intended data flow is:
+- UI
+- Module
+- Platform Services
+- Storage/Data Abstraction
+- Local / Server / Cloud
+
+Modules should not be tightly coupled to a concrete storage location unless a specific module contract requires it. Existing database abstractions must be reused before creating a new storage architecture.
+
+### 10.9 Privacy and data minimization contract
+The architecture must keep data minimization as a rule:
+- no unnecessary personal data
+- pseudonymous user identity preferred
+- GPS kept local whenever possible
+- only necessary server-side data
+- clear data ownership per module
+- no unnecessary central collection of personal data
+
+### 10.10 Reuse and store perspective
+The platform must support packaging as a neutral, reusable foundation for future apps.
+
+This means:
+- neutral platform layer
+- CatchTrack as first application
+- later other applications on the same base
+- generic component naming rather than CatchTrack-specific naming in the framework layer
+
+## 11. Long-term target state
 The repository should converge on a clean, modular structure where the core remains stable and extensible, while modules add the domain functionality required by the application. The neutral framework is intended for reuse beyond the fishing domain and beyond the CatchTrack brand, while CatchTrack remains the first concrete app on that foundation.
 
 This project-control structure is intentionally minimal and does not contain operational status or continuation logic.

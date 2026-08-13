@@ -58,6 +58,40 @@ Die Architektur schützt zugleich:
 - Datenschutzprinzip mit lokaler Speicherung von GPS-Daten soweit möglich
 - responsive und dynamische UI mit Benutzerpräferenzen, Menü- und Reihenfolge-Definitionen sowie Upgrade-Hinweisen
 
+## Verbindliche Agenten-Protokoll-Regel
+
+Jeder zukünftige Coding-Agent-Auftrag muss nachvollziehbar protokolliert werden.
+
+Das Protokoll muss mindestens enthalten:
+
+- Datum
+- Auftrag / Arbeitseinheit
+- Ziel
+- Analyse
+- geänderte Dateien
+- relevante technische Änderungen
+- Tests
+- Validierungen
+- erkannte Probleme
+- Entscheidungen
+- Commit-SHA
+- Branch
+- Push-Status
+- gegebenenfalls Pull-Request-Nummer
+- Ergebnis
+- nächster sinnvoller Arbeitsschritt
+
+Eine Arbeit darf erst als abgeschlossen protokolliert werden, wenn:
+
+1. die Änderungen tatsächlich durchgeführt wurden,
+2. die Validierung erfolgreich war,
+3. ein Commit erstellt wurde,
+4. der Commit erfolgreich gepusht wurde.
+
+Wenn ein Auftrag nicht erfolgreich abgeschlossen werden konnte, muss der aktuelle Repository-Zustand dokumentiert werden, inklusive Fehler, offenem Punkt und eindeutigem Commit-/Push-Status.
+
+Diese Regel gilt ab sofort für alle zukünftigen Agentenaufträge.
+
 —
 
 # 0. ChatGPT Superpowers – Projektarbeitsregel
