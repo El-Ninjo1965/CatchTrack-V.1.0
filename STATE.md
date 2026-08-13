@@ -56,7 +56,7 @@ Next work step: Module development on top of the frozen Core.
 
 - Core and application responsibilities are defined.
 - Core and module responsibilities are defined.
-- Module lifecycle responsibility is assigned to the Module Manager.
+- Module lifecycle is coordinated by the Module Manager; actual module status ownership remains in the Module Interface.
 - Core lifecycle responsibility is assigned to the Core Runtime.
 - Storage and Database responsibilities are separated.
 - Error Handling and Logging responsibilities are separated.

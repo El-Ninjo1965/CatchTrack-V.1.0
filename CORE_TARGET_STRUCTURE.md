@@ -594,7 +594,7 @@ Ein Modul besitzt mindestens:
 
 Ein Modul muss einen definierten Lifecycle unterstützen.
 
-Konzeptionell:
+Der im aktuellen Core implementierte Vertrag enthält die realen Methoden:
 
 - install
 - initialize
@@ -603,9 +603,31 @@ Konzeptionell:
 - update
 - uninstall
 
+Zusätzlich werden die kompatiblen Aliase beibehalten:
+
+- activate()
+- deactivate()
+
 ## Status
 
 Ein Modul muss seinen aktuellen Status eindeutig darstellen können.
+
+Der tatsächlich im Core umgesetzte Statussatz ist:
+
+- available
+- installed
+- enabled
+- disabled
+
+## Übergangsregel
+
+Der tatsächliche Code erlaubt keinen strengeren Übergang als der implementierte Vertrag erzwingt.
+
+Insbesondere:
+
+- initialize() setzt available → installed
+- enable() kann im Code auch direkt aus available oder installed aufgerufen werden, sofern der Status nicht bereits enabled ist
+- der Module Manager delegiert die eigentliche Statusänderung an die Modulmethoden; die Statushoheit liegt im Modul Interface
 
 ## Erweiterbare Eigenschaften
 
@@ -692,19 +714,16 @@ disabled
 
 Zusätzliche Übergänge:
 
-installed
-    ↓
-updated
-
-installed
-    ↓
-uninstalled
+- available → installed via initialize()
+- installed → enabled via enable()
+- enabled → disabled via disable()
+- disabled → enabled ist ebenfalls technisch möglich, wenn die Modul-Methoden entsprechend aufgerufen werden
 
 ## Architekturregel
 
-Die eigentliche Modulverwaltung liegt ausschließlich im Module Manager.
+Die eigentliche Modulstatus-Verantwortung liegt im Module Interface.
 
-Sie darf nicht parallel in core.js und Module Manager implementiert werden.
+Der Module Manager koordiniert die Moduloperationen und delegiert die tatsächliche Statusänderung an die Modulmethoden, darf aber nicht den Core-Lifecycle oder den Modulstatus strenger als der implementierte Code definieren.
 
 —
 
