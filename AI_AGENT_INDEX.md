@@ -22,6 +22,8 @@ Zentrale Dokumente und ihre Rolle:
 - [PROJECT.md](PROJECT.md): langfristige Projekt- und Architekturvision
 - [WORKFLOW.md](WORKFLOW.md): Arbeitsabläufe und Vorgehensregeln
 - [RULES.md](RULES.md): verbindliche Projektregeln
+- [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md): dauerhafte AI-lesbare Gap-Analyse der tatsächlichen Implementierung gegen dokumentierte Plattformverträge
+- [AGENT_REVIEW.md](AGENT_REVIEW.md): temporäre AI-Arbeits- und Review-Datei für alternative technische Vorschläge vor einer Entscheidung
 
 Keine Datei darf dabei widersprüchliche oder konkurrierende Zustandsaussagen erzeugen.
 
@@ -108,6 +110,81 @@ Bei ausdrücklich freigegebenen Umsetzungsaufträgen gilt: Analyse zuerst, danac
 Die Entwicklerentscheidung bleibt maßgeblich.
 
 Der Agent darf jedoch eine offensichtlich technisch bessere, sicherere oder kompatiblere Lösung empfehlen, sofern sie mit den Projektregeln vereinbar ist.
+
+## Entwickler-Vorschlag kritisch prüfen
+
+Der vom Entwickler formulierte Lösungsweg ist zunächst als Vorschlag zu behandeln.
+
+Vor der Umsetzung muss der Agent prüfen, ob er aufgrund des tatsächlichen Repository-Zustands eine:
+
+- technisch bessere
+- einfachere
+- sicherere
+- wartbarere
+- zukunftsfähigere
+
+Lösung erkennt.
+
+Wenn keine bessere Alternative erkennbar ist, wird der Auftrag gemäß den bestehenden Regeln ausgeführt.
+
+Wenn eine bessere Alternative erkannt wird:
+
+- nicht stillschweigend den Auftrag verändern,
+- Alternative dokumentieren,
+- noch nicht implementieren,
+- auf die anschließende Entscheidung warten.
+
+Ausnahmen gelten für ausdrücklich freigegebene autonome Routinearbeiten.
+
+## Verbindlicher Workflow für zukünftige nicht-triviale Aufträge
+
+Entwicklerziel
+
+      ↓
+
+AI-/Architekturvorschlag
+
+      ↓
+
+Agent prüft tatsächlichen Repository-Zustand
+
+      ↓
+
+Agent bewertet Vorschlag kritisch
+
+      ↓
+
+AGENT_REVIEW.md
+
+      ↓
+
+Entscheidung des Entwicklers
+
+      ↓
+
+Implementierungsauftrag
+
+      ↓
+
+Umsetzung
+
+      ↓
+
+Tests / Validierung
+
+      ↓
+
+Commit
+
+      ↓
+
+Push
+
+      ↓
+
+MODULE_WORK_LOG.md
+
+Der Agent darf bei einem Review-Auftrag nicht vor der Entscheidung implementieren.
 
 ## Entscheidungsgrundlagen und Priorität
 

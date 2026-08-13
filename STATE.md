@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Project context and review-first workflow consolidated for future AI and agent work.
+Current work step: Platform gap analysis and review-first workflow extended and documented; no productive implementation performed.
 
 ## Next work step
 
-Next work step: Continue platform work under the documented review-first and project-responsibility rules without modifying the frozen Core.
+Next work step: Continue platform-contract analysis and decision documentation only after developer review; no Core changes and no productive implementation.
 
 ## Master file status
 

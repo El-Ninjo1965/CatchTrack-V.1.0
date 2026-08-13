@@ -443,4 +443,85 @@ Nächster sinnvoller Schritt:
 
 ---
 
+# 11. Review-First, AGENT_REVIEW und Ist-/Gap-Analyse
+
+Abgeschlossen am: 2026-08-13
+
+Analyseauftrag:
+
+- Review-First-Regel für zukünftige nicht-triviale Aufträge in [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) konsolidieren
+- temporäre Entscheidungsdatei [AGENT_REVIEW.md](AGENT_REVIEW.md) anlegen
+- dauerhafte Ist-/Gap-Analyse in [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md) erstellen
+- vorhandenen Repository-Zustand gegen die dokumentierten Plattformverträge prüfen
+- besondere P0-Lücke im generischen Permission-/Package- und UI-/Menüvertrag dokumentieren
+- keine produktive Implementierung durchführen
+
+Geprüfte Bereiche:
+
+- Permission-Strukturen
+- Package-/Paketmodell
+- User-/Identity-Zuordnung
+- Rollen und Berechtigungen
+- Modulzugriff
+- Featurezugriff
+- Modul-Lifecycle
+- Module Manager
+- installierte Module
+- aktivierte/deaktivierte Module
+- UI-/Menüstruktur
+- dynamische Menüerzeugung
+- User Preferences
+- Restricted UI
+- Sichtbarkeit gegenüber echter Autorisierung
+- serverseitige Sicherheitsprüfung
+- CatchTrack-spezifische Kopplungen
+- vorhandene generische Plattformkomponenten
+- Wiederverwendbarkeit für spätere Apps
+
+Wichtigste Ergebnisse:
+
+- Die dokumentierte Architektur beschreibt die generische Plattform deutlich klarer als die vorhandene Implementierung.
+- Die P0-Lücke liegt insbesondere im generischen Permission-/Package- und UI-/Menüvertrag sowie in der fehlenden neutralen Plattform-Identity-/Admin-Abstraktion.
+- Der Core bleibt korrekt eingefroren; die dokumentierten Risiken liegen in der fehlenden vollständigen generischen Implementierung, nicht in der Core-Architektur selbst.
+- Keine bessere Alternative gegenüber dem vorgegebenen Lösungsweg wurde erkannt; die bevorzugte Vorgehensweise ist weiterhin die dokumentierte Ist-/Gap-Analyse mit anschließender Entwicklerentscheidung.
+
+Verweise:
+
+- [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md)
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+
+Validierung:
+
+- git status geprüft
+- git diff geprüft
+- git diff --check geprüft
+- keine produktiven Codeänderungen
+- Core unverändert
+- Fachmodule unverändert
+- Analyse und Dokumentation abgeschlossen
+
+Commit-SHA:
+
+- wird nach erfolgreichem Commit gesetzt
+
+Branch:
+
+- main
+
+Push-Status:
+
+- nach erfolgreichem Push aktualisiert
+
+Ergebnis:
+
+- Review-First-Regel und Workflow für zukünftige nicht-triviale Aufträge wurden im Repository konsolidiert.
+- Die temporäre Review-Datei und die dauerhafte Gap-Analyse wurden als reine Dokumentations- und Entscheidungsgrundlagen ergänzt.
+- Es wurde keine produktive Implementierung durchgeführt.
+
+Nächster sinnvoller Schritt:
+
+- Entscheidung des Entwicklers zur weiteren Plattform-Umsetzung nach der dokumentierten Ist-/Gap-Analyse, ohne Core-Änderung und ohne produktive Implementierung vor der Entscheidung.
+
+---
+
 # Ende des Module Work Log
