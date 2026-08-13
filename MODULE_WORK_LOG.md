@@ -314,4 +314,127 @@ Nächster Arbeitsschritt:
 
 ---
 
+# 9. Projektkontext und Review-First-Regel dauerhaft verankert
+
+Abgeschlossen am: 2026-08-13
+
+Arbeitseinheit: dauerhafte Verankerung von Projektverantwortung, AI-Agenten-Kontext und Review-First-Regel
+
+Ziel:
+
+- den zentralen AI-/Agent-Kontext des Projekts klar festhalten
+- die verantwortliche Projektrolle der einzelnen Person dokumentieren
+- Review-First als verbindliche Arbeitsregel verankern
+- zur weiteren Entwicklung eine konsistente Entscheidungsbasis sichern, ohne Code oder Core zu verändern
+
+Analyse:
+
+- zentrale Projektdateien geprüft: [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md), [PROJECT.md](PROJECT.md), [STATE.md](STATE.md), [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md), [CORE_WORK_LOG.md](CORE_WORK_LOG.md)
+- Projekt- und Architekturregeln gegen den aktuellen Repository-Zustand abgeglichen
+- bestehende Konsolidierung der neutralen Plattformarchitektur beibehalten
+- Widersprüche durch die Erweiterung des zentralen AI-Agent-Kontexts und der Entscheidungspriorität bereinigt
+
+Entscheidungen:
+
+- Projektverantwortung bleibt beim einzelnen Entwickler und Entscheidungsberechtigten
+- AI-Systeme dienen als Support-Werkzeuge und dürfen keine endgültigen Projektentscheidungen treffen
+- Review-First ist verbindliche Agentenregel für nicht triviale technische und architektonische Aufträge
+- Core-Freeze bleibt vollständig gültig und unberührt
+- Relevante Abweichungen werden im Worklog dokumentiert und nicht als Abschluss markiert, wenn Commit oder Push nicht erfolgreich sind
+
+Geänderte Dateien:
+
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [PROJECT.md](PROJECT.md)
+- [STATE.md](STATE.md)
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
+
+Validierung:
+
+- git status geprüft
+- git diff geprüft
+- git diff --check geprüft
+- keine Code-, Core- oder Fachmoduländerungen erkannt
+- Dokumentationskonsistenz zwischen AI-Agent-Index, Project und State überprüft
+- Review-First-Regel und Projektverantwortung in der zentralen Kontextdatei verankert
+
+Core-Status:
+
+- Core: FROZEN
+- Core-Änderungen: NEIN
+
+Commit-SHA:
+
+- finaler Commit dieser Aufgabe in der Git-Historie des vorgesehenen Branches
+
+Branch:
+
+- main
+
+Push-Status:
+
+- nach erfolgreichem Commit auf origin/main gesetzt
+
+Ergebnis:
+
+- Der zentrale Projektkontext, die Projektverantwortung und die Review-First-Regel sind dauerhaft dokumentiert.
+- Künftige AI- und Agentenaufträge starten nun mit einer klaren Entscheidungsbasis, ohne den Core-Freeze oder die fachlichen Module zu verletzen.
+
+Nächster Arbeitsschritt:
+
+- den nächsten technischen Plattformschritt mit Review-First und der dokumentierten Entscheidungspriorität konkret vorbereiten, ohne den Core zu verändern
+
+---
+
+# 10. Dokumentationswiderspruch im AI_AGENT_INDEX korrigiert
+
+Abgeschlossen am: 2026-08-13
+
+Auftrag: Korrektur des dokumentarischen Widerspruchs in [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) ohne Änderung von Architektur, Code, Core oder Fachmodulen.
+
+Ursache: Die Datei behauptete sinngemäß, sie enthalte selbst keine Projektregeln, obwohl sie zugleich verbindliche Projekt-, Architektur- und Agentenregeln enthielt. Dadurch war der zentrale AI-/Agenten-Kontext nicht eindeutig definiert.
+
+Vorgenommene Korrektur: Der Abschnitt „Zweck“ wurde so gestaltet, dass [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) nun eindeutig als zentraler AI-/Agenten-Kontext und Regelindex des Projekts definiert ist. Die Dokumentenrolle von [STATE.md](STATE.md), [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md), [PROJECT.md](PROJECT.md) und der Projektverantwortung wurde klarer beschrieben. Es wurden keine neuen Regeln eingeführt und keine anderen Architekturentscheidungen verändert.
+
+Geänderte Dateien:
+
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
+
+Validierung:
+
+- git status geprüft
+- git diff geprüft
+- git diff --check geprüft
+- nur die vorgesehene Dokumentation wurde geändert
+- ursprünglicher Widerspruch in [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) beseitigt
+- [STATE.md](STATE.md), [PROJECT.md](PROJECT.md) und [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md) nicht widersprochen
+- kein Code verändert
+- Core unverändert
+- Fachmodule unverändert
+
+Commit-SHA:
+
+- wird nach erfolgreichem Commit gesetzt
+
+Branch:
+
+- main
+
+Push-Status:
+
+- nach erfolgreichem Push aktualisiert
+
+Ergebnis:
+
+- Der Widerspruch im zentralen AI-/Agenten-Kontext wurde vollständig behoben.
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) ist nun eindeutig als zentraler Kontext und Regelindex erkennbar.
+- Der Repository-Zustand bleibt auf das dokumentarische Korrekturgerüst begrenzt.
+
+Nächster sinnvoller Schritt:
+
+- den vereinbarten Commit erstellen und auf origin/main pushen
+
+---
+
 # Ende des Module Work Log

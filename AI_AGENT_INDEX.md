@@ -2,21 +2,28 @@
 
 ## Zweck
 
-Diese Datei ist der zentrale Einstiegspunkt für AI-Agenten, die am CatchTrack-Projekt arbeiten.
+Diese Datei ist der zentrale AI-/Agenten-Kontext und Regelindex für das CatchTrack-Projekt.
 
-Sie definiert:
+Sie dient:
 
-- welche Dokumente gelesen werden müssen
-- in welcher Reihenfolge sie gelesen werden
-- welche Priorität die Dokumente besitzen
-- welche Dokumente verbindliche Regeln enthalten
-- welche Dokumente Architektur und Planung beschreiben
-- wie mit dem vorhandenen Quellcode umzugehen ist
-- wie ChatGPT, Terminal, Working Copy und AI-Agent im Projektworkflow eingesetzt werden
-- wie Dateien und Quellcode von ChatGPT ausgegeben werden
-- wie Freigaben des Benutzers innerhalb eines laufenden Arbeitsprozesses zu interpretieren sind
+- zukünftigen Coding-Agenten als zentraler Einstiegspunkt
+- der AI-Unterstützung bei der Orientierung im Projekt
+- der eindeutigen Zuordnung von verbindlichen Regeln, Zuständen und Verantwortlichkeiten
+- der klaren Definition der relevanten Projekt- und Arbeitsdokumente
+- der Verknüpfung zwischen Projektvision, aktuellem Zustand und Arbeitsprotokoll
 
-Diese Datei enthält selbst keine Projektregeln, keinen Arbeitscursor und keine eigenständigen Architekturentscheidungen.
+Sie enthält verbindliche Projekt- und Arbeitsregeln sowie Referenzen auf den aktuellen technischen Zustand und die langfristige Architektur.
+
+Zentrale Dokumente und ihre Rolle:
+
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md): zentraler AI-/Agenten-Kontext und Regelindex des Projekts
+- [STATE.md](STATE.md): autoritativer aktueller technischer Zustand
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md): dokumentiert tatsächliche Arbeiten und Änderungen
+- [PROJECT.md](PROJECT.md): langfristige Projekt- und Architekturvision
+- [WORKFLOW.md](WORKFLOW.md): Arbeitsabläufe und Vorgehensregeln
+- [RULES.md](RULES.md): verbindliche Projektregeln
+
+Keine Datei darf dabei widersprüchliche oder konkurrierende Zustandsaussagen erzeugen.
 
 ## Strategische Architekturentscheidung
 
@@ -57,6 +64,118 @@ Die Architektur schützt zugleich:
 - modulare Rechte-/Tariflogik
 - Datenschutzprinzip mit lokaler Speicherung von GPS-Daten soweit möglich
 - responsive und dynamische UI mit Benutzerpräferenzen, Menü- und Reihenfolge-Definitionen sowie Upgrade-Hinweisen
+
+## Projektverantwortung
+
+Das Projekt wird von einer einzigen Person entwickelt und verantwortet.
+
+Diese Person ist alleiniger Entwickler, Entscheider und Projektverantwortlicher.
+
+AI-Systeme und Coding-Agenten sind digitale Werkzeuge zur Unterstützung. Sie treffen keine endgültigen Projektentscheidungen.
+
+Technische Vorschläge von AI-Systemen sind kritisch zu prüfen. Die endgültige Entscheidung über Architektur, Umsetzung und Priorisierung liegt beim Entwickler.
+
+Keine privaten finanziellen oder persönlichen Informationen werden in der Projektarchitektur oder den Dokumenten festgehalten.
+
+## Projektkontext
+
+Das Projekt ist langfristig modular aufgebaut.
+
+CatchTrack wird zunächst als konkrete Anwendung verwendet, verfolgt aber eine neutrale und wiederverwendbare Plattformbasis.
+
+Die Plattformbasis soll später als Grundlage für weitere Anwendungen dienen können, inklusive einer späteren Store-/App-Perspektive.
+
+Die Architektur darf eine spätere Wiederverwendung für andere Apps nicht ausschließen.
+
+## Review-First / Analyse vor Umsetzung
+
+Nicht-triviale technische oder architektonische Aufträge werden nicht blind ausgeführt.
+
+Der Agent muss zunächst prüfen:
+
+1. den tatsächlichen Repository-Zustand,
+2. vorhandene Implementierungen und Abhängigkeiten,
+3. den vorgeschlagenen Lösungsweg kritisch zu bewerten,
+4. bestehende Alternativen zu suchen,
+5. Risiken und Widersprüche zu identifizieren,
+6. unnötige Änderungen zu vermeiden,
+7. gegebenenfalls eine bessere technische Lösung zu empfehlen.
+
+Bei einem Auftrag, der ausdrücklich eine Analyse oder einen Review verlangt, darf keine Implementierung vor dem Review erfolgen.
+
+Bei ausdrücklich freigegebenen Umsetzungsaufträgen gilt: Analyse zuerst, danach autonome Umsetzung.
+
+Die Entwicklerentscheidung bleibt maßgeblich.
+
+Der Agent darf jedoch eine offensichtlich technisch bessere, sicherere oder kompatiblere Lösung empfehlen, sofern sie mit den Projektregeln vereinbar ist.
+
+## Entscheidungsgrundlagen und Priorität
+
+Tatsächlicher Repository-Zustand
+
+        ↓
+
+Verbindliche Projektregeln
+
+        ↓
+
+Core-Freeze
+
+        ↓
+
+Dokumentierte Architektur
+
+        ↓
+
+Technische Analyse
+
+        ↓
+
+Entwicklervorgabe
+
+        ↓
+
+Implementierung
+
+Bei Konflikten muss der Agent den Konflikt erkennen, dokumentieren und gemäß dieser Reihenfolge entscheiden.
+
+Der Core-Freeze darf durch keine Agentenentscheidung aufgehoben werden.
+
+## Autonomie des Agenten
+
+Der Agent arbeitet innerhalb der verbindlichen Regeln möglichst autonom.
+
+Bei eindeutigen Routinearbeiten darf er direkt handeln.
+
+Bei Architektur-, Sicherheits-, Datenbank- oder größeren Änderungsentscheidungen gilt Review-First.
+
+Wenn eine Entscheidung zwingend vom Entwickler abhängt, darf der Agent nur dann nachfragen, wenn sie nicht innerhalb der dokumentierten Regeln eindeutig entschieden werden kann.
+
+## Abweichungen vom Auftrag
+
+Wenn die Analyse ergibt, dass ein anderer Lösungsweg besser ist, muss der Agent:
+
+- den ursprünglichen Vorschlag erkennen,
+- das Problem feststellen,
+- eine bessere Alternative bestimmen,
+- die Abweichung dokumentieren.
+
+Bei ausdrücklich autonom freigegebenen Umsetzungsaufträgen darf der Agent die bessere Alternative direkt umsetzen, sofern sie mit den Projektregeln vereinbar ist.
+
+Jede relevante Abweichung muss in [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md) dokumentiert werden.
+
+## Qualitätsprinzip
+
+So wenig Änderung wie möglich, so viel technische Wirkung wie nötig.
+
+Prioritäten:
+
+- vorhandene Lösungen wiederverwenden
+- kompatibel erweitern
+- unnötige Komplexität vermeiden
+- keine redundanten Systeme schaffen
+- keine Architektur nur aus ästhetischen Gründen umbauen
+- funktionierende Komponenten nicht ohne zwingenden Grund ersetzen
 
 ## Verbindliche Agenten-Protokoll-Regel
 

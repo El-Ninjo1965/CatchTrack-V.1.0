@@ -10,6 +10,15 @@ Strategically, CatchTrack V1.0 is the first application built on a longer-term n
 - Application: CatchTrack as the first concrete product built on this shared platform.
 - Fachmodule: domain-specific units such as catches, equipment, GPS, weather, calendar, and future fishing modules.
 
+## 2.1 Project responsibility and decision authority
+The project is developed and governed by a single person who acts as the sole developer, decision maker, and project owner.
+
+AI systems and coding agents are support tools. They do not make final project decisions.
+
+Technical proposals from AI systems must be reviewed critically. The final decision about architecture, priority, and implementation remains with the developer.
+
+The project architecture remains aligned with the long-term goal of a reusable neutral platform that can later support additional applications beyond CatchTrack.
+
 ## 3. Target architecture
 - Core: generic runtime, configuration, lifecycle, state, storage, module registry, and system services.
 - User Identity / User Interface: generic user identity, user profile context, UI shell, preferences, visibility, module ordering, and presentation rules.

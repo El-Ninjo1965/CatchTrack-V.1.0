@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Platform contract gap analysis completed and documented against the frozen Core.
+Current work step: Project context and review-first workflow consolidated for future AI and agent work.
 
 ## Next work step
 
-Next work step: Use the documented gap matrix to prioritize the next neutral platform implementation task without modifying the frozen Core.
+Next work step: Continue platform work under the documented review-first and project-responsibility rules without modifying the frozen Core.
 
 ## Master file status
 
@@ -33,6 +33,8 @@ Next work step: Use the documented gap matrix to prioritize the next neutral pla
 - Agent protocol requirement: added to the authoritative project documentation
 - Platform contract gap analysis: completed against the actual repository implementation
 - Implementation gaps are documented and prioritized without altering the frozen Core
+- Project context and review-first workflow: consolidated as a permanent AI/agent decision framework
+- Project responsibility and decision authority: documented as single-developer governance
 
 ## Analysis status
 
