@@ -458,7 +458,29 @@ Er muss:
 Eine neue Architekturentscheidung darf nicht aus einer Vermutung entstehen.
 
 —
+# 19. CORE_WORK_LOG Freeze
 
+`CORE_WORK_LOG.md` ist nach Abschluss der Core-Phase eingefroren.
+
+Status:
+
+`FROZEN / READ-ONLY`
+
+Die Datei darf von AI-Agenten und ChatGPT weiterhin gelesen und zur historischen Verifikation verwendet werden.
+
+Sie darf jedoch im normalen Projektworkflow nicht verändert werden.
+
+Die laufende Dokumentation der Modulphase erfolgt ausschließlich über:
+
+`MODULE_WORK_LOG.md`
+
+Der aktuelle Arbeitscursor bleibt ausschließlich in:
+
+`STATE.md`
+
+Der Core-Worklog darf nicht als aktives Arbeitsprotokoll der Modulphase verwendet werden.
+
+—
 # 19. Änderungsprinzip
 
 Der AI-Agent soll die kleinste sinnvolle Änderung durchführen, die den definierten Zweck erfüllt.

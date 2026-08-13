@@ -316,7 +316,42 @@ Erst danach beginnt die normale modulare Erweiterung auf Basis des eingefrorenen
 
 —
 
-## 17. Tests
+## 17. Eingefrorene historische Worklogs
+
+Nach Abschluss einer Projektphase kann deren Worklog eingefroren werden.
+
+Ein eingefrorenes Worklog ist:
+
+- lesbar
+- historisch verbindlich
+- nicht Teil des laufenden Arbeitsprozesses
+- nicht zu verändern
+- nicht zu ergänzen
+- nicht umzustrukturieren
+
+Für die abgeschlossene Core-Phase gilt:
+
+`CORE_WORK_LOG.md = FROZEN / READ-ONLY`
+
+Für die Modulphase gilt:
+
+`MODULE_WORK_LOG.md = ACTIVE`
+
+Die detaillierte technische Änderungshistorie bleibt Aufgabe von Git.
+
+Das aktive Worklog dokumentiert abgeschlossene Arbeitseinheiten auf zusammengefasster Ebene.
+
+Kleine Einzeländerungen müssen nicht einzeln protokolliert werden.
+
+Eine Arbeitseinheit wird erst nach erfolgreicher:
+
+`IMPLEMENTIERUNG → TEST → VALIDIERUNG → COMMIT → PUSH`
+
+als abgeschlossen in das aktive Worklog aufgenommen.
+
+---
+
+## 18. Tests
 
 Tests erfolgen in sinnvollen Zwischenstufen.
 
