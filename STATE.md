@@ -64,7 +64,8 @@ Next work step: Module development on top of the frozen Core using the neutral f
 - Error Handling and Logging responsibilities are separated.
 - Concrete application modules must not be hard-wired into the Core.
 - No concrete module is part of the Core architecture.
-- User, Admin and subsequent modules remain development modules on top of the frozen Core.
+- User Identity, User Interface, Administration, and Permission/Package logic remain generic platform services rather than CatchTrack domain modules.
+- CatchTrack-specific domain modules remain separate from the platform layer and are developed as application modules on top of the frozen Core.
 
 ## Blockers
 

@@ -12,10 +12,10 @@ Strategically, CatchTrack V1.0 is the first application built on a longer-term n
 
 ## 3. Target architecture
 - Core: generic runtime, configuration, lifecycle, state, storage, module registry, and system services.
-- Identity / User Interface: generic user identity, admin identity, permissions, package logic, preferences, visibility, module ordering, and UI presentation rules.
+- User Identity / User Interface: generic user identity, user profile context, UI shell, preferences, visibility, module ordering, and presentation rules.
 - Administration: generic administration, module lifecycle, availability, configuration, access control, and feature governance.
 - Module Manager: generic management for installation, activation, configuration, update, status, and deinstallation of modules.
-- Modules: feature-specific domain implementations such as user, admin, GPS, weather, and related services.
+- Modules: feature-specific domain implementations such as catches, equipment, GPS, weather, calendar, and other application-specific domain functionality.
 - Data model: structured, explicit, and modular; avoid hidden coupling between modules and core.
 - Interfaces: stable contracts between core, framework services, and modules.
 
@@ -33,12 +33,22 @@ The core does not contain domain-specific behavior or module-specific logic.
 ## 5. Module responsibilities
 Modules provide specific business or user-facing features. They must use the core interfaces and remain independent from each other unless a clear dependency is required.
 
-Generic module boundaries include:
-- Identity / user and admin capabilities
+Generic platform services are not CatchTrack domain modules. They include:
+- User Identity and user profile context
+- User Interface shell and navigation logic
+- Administration and system governance
 - Permission and package logic
 - Module manager and lifecycle governance
-- UI configuration and module visibility
-- Connection concepts for local server, optional cloud, and future hosting models
+- Connection abstraction for local server, optional cloud, and future hosting models
+- UI configuration, module visibility, and presentation preferences
+
+Application-specific domain modules include:
+- Catches / Catchbook
+- Equipment
+- GPS
+- Weather
+- Calendar
+- future fishing-domain modules
 
 ## 6. Data model principles
 - Keep domain data explicit and structured.

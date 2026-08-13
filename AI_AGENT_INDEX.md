@@ -47,7 +47,7 @@ Die Fachmodule bilden eigenständige Einheiten und bleiben auf das fachliche The
 - Kalender
 - zukünftige Angelmodule
 
-Der Core bleibt eingefroren und technisch klein. Module werden als eigenständige Einheiten installiert, aktiviert, deaktiviert, konfiguriert und ggf. deinstalliert. Die Module kommunizieren über definierte Schnittstellen, gemeinsame Dienste und gemeinsame Konfigurations-/Rollenstrukturen, nicht durch direkte Core-Änderungen.
+User Identity, User Interface, Administration sowie Berechtigungs-/Paketlogik gehören nicht zu den CatchTrack-Fachmodulen, sondern zur generischen Plattform-/Framework-Ebene. Der Core bleibt eingefroren und technisch klein. Module werden als eigenständige Einheiten installiert, aktiviert, deaktiviert, konfiguriert und ggf. deinstalliert. Die Module kommunizieren über definierte Schnittstellen, gemeinsame Dienste und gemeinsame Konfigurations-/Rollenstrukturen, nicht durch direkte Core-Änderungen.
 
 Die Architektur schützt zugleich:
 

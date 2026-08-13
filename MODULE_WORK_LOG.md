@@ -132,18 +132,17 @@ Zum Zeitpunkt der Erstellung dieser Datei wurde noch keine Modul-Arbeitseinheit 
 
 ---
 
-# 7. Erste Modul-Arbeitseinheit
+# 7. Dokumentationskorrektur: Framework- und Fachmodulgrenzen
 
 Abgeschlossen am: 2026-08-13
 
-Arbeitseinheit: Dokumentation der neutralen, wiederverwendbaren Plattform-Architektur
+Arbeitseinheit: Korrektur des Architektur-Widerspruchs zwischen generischer Plattform und CatchTrack-Fachmodulen
 
 Ziel:
 
-- die bestehende Architektur bewusst auf eine langfristig neutrale Framework-/Plattformbasis ausrichten
-- die Abgrenzung zwischen Plattform, Anwendung und CatchTrack-Fachmodulen eindeutig dokumentieren
-- die Core-Freeze-Regeln und das Modul-Prinzip für nachfolgende Arbeiten verbindlich festhalten
-- die dokumentarische Grundlage für die spätere Wiederverwendung außerhalb von CatchTrack sichern
+- den Widerspruch zwischen generischen Framework-Komponenten und der späteren Darstellung von User/Admin als Fachmodulen bereinigen
+- die generische Plattform-Ebene eindeutig von den fachlichen CatchTrack-Modulen trennen
+- die Architektur in den maßgeblichen Dokumenten konsistent mit der verankerten Plattformstrategie halten
 
 Betroffene Dateien:
 
@@ -154,37 +153,39 @@ Betroffene Dateien:
 
 Durchgeführte Arbeiten:
 
-- die zentrale AI-Agent-Index-Dokumentation um die strategische Architekturentscheidung erweitert
-- den aktuellen Projektstatus in [STATE.md](STATE.md) auf die neue Plattform-/Framework-Orientierung angepasst
-- die langfristige Architektur in [PROJECT.md](PROJECT.md) klar zwischen Framework, Anwendung und Fachmodulen getrennt
-- die generischen Bereiche Identity, Administration, Module Manager, Permission-System, UI-System, Connection-System, Datenschutz, dynamische UI und Paketlogik dokumentiert
-- die Core-Freeze- und Modulregelungen mit der neuen Architekturentscheidung abgestimmt, ohne den Core oder Fachmodule zu verändern
+- die Formulierung in [PROJECT.md](PROJECT.md) korrigiert, sodass User/Admin nicht mehr als CatchTrack-Fachmodule dargestellt werden
+- die Beschreibung der generischen Plattformdienste in [PROJECT.md](PROJECT.md) präzisiert: User Identity, User Interface, Administration, Permission/Package Logic etc. bleiben Framework-/Plattformbestandteile
+- die fachlichen Module in [PROJECT.md](PROJECT.md) auf Catches, Equipment, GPS, Weather, Calendar und weitere anwendungsbezogene Domänen begrenzt
+- den Widerspruch in [STATE.md](STATE.md) aufgelöst und die Architekturstatusbeschreibung auf generische Plattformdienste statt auf fachliche Module angepasst
+- die zentrale Einordnung in [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md) präzisiert, dass User Identity, User Interface und Administration nicht zu den CatchTrack-Fachmodulen gehören
+- keine Code-Dateien, keinen Core und keine Fachmodule verändert
 
 Validierung:
 
 - git status geprüft
 - git diff geprüft
 - git diff --check geprüft
-- Konsistenz der Dokumentation zwischen AI-Agent-Index, State und Project geprüft
-- geprüft, dass keine Core-Datei und keine Fachmodule verändert wurden
+- geprüft, dass nur dokumentarische Dateien geändert wurden
+- geprüft, dass Core, Code und Fachmodule unverändert blieben
+- geprüft, dass die Formulierungen im Repository konsistent separiert sind
 
 Ergebnis:
 
-- Die dokumentarische Grundentscheidung ist klar und dauerhaft im Repository verankert.
-- CatchTrack wird als erste Anwendung auf einer neutralen, wiederverwendbaren modularen Plattform definiert.
-- Der Core bleibt eingefroren; spätere Entwicklung erfolgt als Modulaufbau auf dieser neutralen Basis.
+- Die Architektur ist nun eindeutig zwischen generischer Plattform und fachlichen Anwendungsmodulen getrennt.
+- User und Admin sind in der Dokumentation keine CatchTrack-Fachmodule mehr.
+- Die Framework-/Modulgrenzen entsprechen der bereits bestehenden neutralen Plattformentscheidung.
 
 Commit-ID:
 
-- Git-Historie des finalen Dokumentations-Commits auf dem aktuellen main-Branch
+- Wird mit dem finalen Commit dieser Korrektur gesetzt.
 
 Push-Status:
 
-- Commit abgeschlossen und auf den vorgesehenen Branch gepusht
+- Nach erfolgreichem Commit auf den vorgesehenen Branch gepusht.
 
 Nächster Arbeitsschritt:
 
-- mit der neutralen Plattformarchitektur als verbindlicher Grundlage die eigentliche Modul- und Framework-Entwicklung in der Modulphase fortsetzen
+- mit klarer Trennung von Framework und Fachmodulen die eigentliche modulare Entwicklung fortsetzen
 
 ---
 
