@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Core freeze documented and consolidated.
+Current work step: Neutral platform architecture decision documented and aligned with the frozen Core.
 
 ## Next work step
 
-Next work step: Module development on top of the frozen Core.
+Next work step: Module development on top of the frozen Core using the neutral framework/application separation as the governing architectural principle.
 
 ## Master file status
 
@@ -27,6 +27,8 @@ Next work step: Module development on top of the frozen Core.
 - Frozen files must not be modified during normal development.
 - A frozen file may only be changed when a genuine change to project rules, workflow, architecture or state-management requirements makes the modification necessary.
 - Any change to a frozen file requires an explicit unfreeze decision before modification.
+- Neutral reusable platform architecture: documented and aligned with the frozen Core
+- Framework vs. application boundary: documented and authoritative for subsequent module work
 
 ## Analysis status
 

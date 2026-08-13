@@ -18,6 +18,46 @@ Sie definiert:
 
 Diese Datei enthält selbst keine Projektregeln, keinen Arbeitscursor und keine eigenständigen Architekturentscheidungen.
 
+## Strategische Architekturentscheidung
+
+CatchTrack V1.0 ist die erste Anwendung auf einer langfristig neutralen, wiederverwendbaren modularen Plattform.
+
+Die Plattform-/Framework-Ebene umfasst generische Komponenten für:
+
+- Core
+- User Identity / User Interface
+- Administration
+- Module Manager / Modulverwaltung
+- Modul- und Plugin-Schnittstellen
+- Berechtigungs- und Paketlogik
+- dynamische Benutzeroberfläche
+- Konfigurations- und Einstellungsmechanismen
+- Connection-/Server- und Cloud-Konzept
+- spätere Wiederverwendung für andere Apps
+
+Die Anwendungsebene umfasst nur CatchTrack selbst als erste konkrete Anwendung.
+
+Die Fachmodule bilden eigenständige Einheiten und bleiben auf das fachliche Thema CatchTrack begrenzt, z. B.:
+
+- Angeln
+- Fangbuch / Catches
+- Equipment
+- GPS
+- Wetter
+- Kalender
+- zukünftige Angelmodule
+
+Der Core bleibt eingefroren und technisch klein. Module werden als eigenständige Einheiten installiert, aktiviert, deaktiviert, konfiguriert und ggf. deinstalliert. Die Module kommunizieren über definierte Schnittstellen, gemeinsame Dienste und gemeinsame Konfigurations-/Rollenstrukturen, nicht durch direkte Core-Änderungen.
+
+Die Architektur schützt zugleich:
+
+- spätere Store-/App-Verpackbarkeit
+- Wiederverwendung des Grundgerüsts für weitere Anwendungen
+- generische Benutzer- und Admin-Identität
+- modulare Rechte-/Tariflogik
+- Datenschutzprinzip mit lokaler Speicherung von GPS-Daten soweit möglich
+- responsive und dynamische UI mit Benutzerpräferenzen, Menü- und Reihenfolge-Definitionen sowie Upgrade-Hinweisen
+
 —
 
 # 0. ChatGPT Superpowers – Projektarbeitsregel
