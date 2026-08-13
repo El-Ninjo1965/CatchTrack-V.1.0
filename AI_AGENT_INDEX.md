@@ -20,6 +20,7 @@ Zentrale Dokumente und ihre Rolle:
 - [STATE.md](STATE.md): autoritativer aktueller technischer Zustand
 - [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md): dokumentiert tatsächliche Arbeiten und Änderungen
 - [PROJECT.md](PROJECT.md): langfristige Projekt- und Architekturvision
+- [CatchTrack-V1.0-BACKUP](../CatchTrack-V1.0-BACKUP): unabhängiges Backup-Repository für einen vollständigen 1:1-Snapshot des Projektstandes zur späteren Wiederherstellung über Working Copy auf dem iPad
 - [WORKFLOW.md](WORKFLOW.md): Arbeitsabläufe und Vorgehensregeln
 - [RULES.md](RULES.md): verbindliche Projektregeln
 - [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md): dauerhafte AI-lesbare Gap-Analyse der tatsächlichen Implementierung gegen dokumentierte Plattformverträge
