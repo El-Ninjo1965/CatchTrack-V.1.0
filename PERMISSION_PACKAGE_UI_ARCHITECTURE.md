@@ -1,20 +1,32 @@
 # PERMISSION_PACKAGE_UI_ARCHITECTURE
 
+## Status
+Proposed / noch nicht implementiert
+
 ## Analyse-Datum
 2026-08-13
 
 ## Zweck
 Diese Datei dokumentiert die neutrale Zielarchitektur für die identifizierte P0-Lücke im generischen Permission-/Package-/Module-Access-/Feature-Access-/UI-Menü-Vertrag.
 
-Dieser Auftrag ist Architektur- und Review-Dokumentation, nicht Implementierung. Der Core bleibt eingefroren.
+Dieser Auftrag ist Architektur- und Review-Dokumentation, kein Implementierungsauftrag. Der Core bleibt eingefroren.
 
-## Verankerung im Projektkontext
-Der langfristige Zielzustand des Projekts ist eine neutrale, wiederverwendbare Plattform. CatchTrack bleibt die erste konkrete Anwendung auf dieser Plattform. Die Architektur darf keine CatchTrack-spezifische Einbindung in generische Plattformschichten erzwingen.
+## Relevanter Ist-Zustand im Repository
+Aktuell ist der tatsächliche Zustand im Repository entsprechend dem dokumentierten Ziel und dem bisherigen Review:
+
+- Core bleibt stabil und eingefroren.
+- Die generische Plattformarchitektur ist dokumentiert, aber noch nicht vollständig in eine neutrale Implementierungsstruktur überführt.
+- [Core/module-interface.js](Core/module-interface.js) definiert Muster für Module, Statuswerte und Aktivierung.
+- [Core/module-manager.js](Core/module-manager.js) verwaltet Module, Status und Lifecycle in einer noch nicht vollständig neutralen Form.
+- [Modules/user-module/user-module.js](Modules/user-module/user-module.js) enthält konkrete Benutzer- und Rollenlogik, aber noch keine generische Plattform-Identity-/Permission-Schicht.
+- [Modules/admin-module/admin-module.js](Modules/admin-module/admin-module.js) enthält konkrete Administration und Module-Status, aber noch keine generische Plattform-Admin-/Governance-Schicht.
+- [index.html](index.html) zeigt bereits ein UI-/Navigationsmodell, aber noch keine vollständig generische, permission-lenkende Menüarchitektur.
+- Die bisherige Architektur-Dokumentation bestätigt den allgemeinen Soll-Zustand, aber die konkrete P0-Entscheidung ist noch offen.
 
 ## Grundsatz
 Permission ≠ UI Visibility.
 
-Die UI darf nur zeigen, was der Nutzer sehen soll. Die echte Autorisierung erfolgt unabhängig davon auf Service-/Server-/Policy-Ebene.
+Die UI darf nur anzeigen, was der Nutzer sehen soll. Die echte Autorisierung erfolgt unabhängig davon auf Service-/Server-/Policy-Ebene.
 
 ## Zielmodell
 
@@ -44,21 +56,23 @@ Feature Access
 
 UI / Menu Visibility
 
+Diese Reihenfolge ist für die effektive Zugriffspipeline sinnvoll. Die UI ist dabei der letzte Filter, nicht die Quelle der Berechtigung.
+
 ## Ebene 1: Identity
 ### Zweck
 Identifiziert den Nutzer eindeutig und neutral.
 
 ### Verantwortlichkeit
 - eindeutige Identität des Nutzers
-- Zuordnung zu einem oder mehreren Konten/Profilen
-- sichere und neutrale Bereitstellung der Identitätsdaten
-- keine App-spezifische Business-Logik
+- Zuordnung zu Profilen und Session-Kontexten
+- AuthN-/Identity-Informationen ohne App-Spezifik
 
 ### Datenmodell
+- identityId
 - userId
+- authenticationProvider
+- authState
 - tenantId (optional)
-- profileId
-- authenticationState
 - createdAt
 - updatedAt
 
@@ -69,10 +83,10 @@ Identifiziert den Nutzer eindeutig und neutral.
 
 ### Abhängigkeiten
 - keine CatchTrack-spezifischen Annahmen
-- nur für AuthN/AuthZ- oder Profilkontext relevant
+- nur Identitäts- und Session-Services
 
 ### Zugriffskontrolle
-- nur AuthN- und Profil-Services dürfen sie lesen oder weitergeben
+- nur AuthN-, Session- und Policy-Services dürfen sie lesen
 
 ### Erweiterbarkeit
 - für spätere Apps und Store-Szenarien geeignet
@@ -82,17 +96,19 @@ Identifiziert den Nutzer eindeutig und neutral.
 
 ## Ebene 2: User
 ### Zweck
-Repräsentiert den tatsächlichen Nutzerkontext in der Anwendung.
+Repräsentiert den aktuellen Nutzerkontext in der Anwendung.
 
 ### Verantwortlichkeit
-- Identitätskontext für die aktuelle Sitzung
-- Zusammenführung aus Identity, Package, Permission und Modul-Status
+- aktuelle Sitzung und Personalisierung
+- Zusammenführung aus Identity, Package, Permission und Modulstatus
+- App-übergreifende Session- und Kontextsynthese
 
 ### Datenmodell
 - userId
+- identityId
 - packageId
-- packageState
-- roleSet
+- activeRoleSet
+- activePermissions
 - moduleAccessSet
 - featureAccessSet
 - uiPreferenceSet
@@ -100,52 +116,52 @@ Repräsentiert den tatsächlichen Nutzerkontext in der Anwendung.
 ### Beziehungen
 - n:1 zu Identity
 - n:1 zu Package / Plan
-- 1:n zu Permission Assignment
-- 1:n zu UI Preferences
+- 1:n zu PermissionAssignment
+- 1:n zu UI Preference
 
 ### Abhängigkeiten
-- auf Policy-/Permission-Services angewiesen
-- nicht in Domain-Modulen verankert
+- Policy-Service, Package-Service, Module Access Policy
 
 ### Zugriffskontrolle
-- Restriktionen auf Service-/Policy-Ebene, nicht nur im UI
+- Restriktionen auf Service-/Policy-Ebene, nicht im UI allein
 
 ### Erweiterbarkeit
 - User-Profile und App-Scope bleiben erweiterbar
 
 ### Wiederverwendbarkeit
-- generischer Service, keine CatchTrack-spezifische Logik
+- generischer Service
 
 ## Ebene 3: Package / Plan
 ### Zweck
-Definiert den verfügbaren Vertrags-/Leistungsumfang für einen Nutzer.
+Definiert den Vertrags- und Leistungsumfang eines Nutzers.
 
 ### Verantwortlichkeit
 - Plan-/Paketdefinition
-- Definition der enthaltenen Module und Features
-- Bereitstellung der Default-Werte für Entitlements
-- Down-/Upgrade- und Upgrade-Änderungskontekste
+- Definition von Module- und Feature-Entitlements
+- Standard-Entitlements und Upgrade-/Downgrade-Regeln
+- generische Vertragsschicht ohne CatchTrack-Hardcoding
 
 ### Datenmodell
 - packageId
 - packageName
 - packageType
 - status
-- entitlements
-- moduleAllowList
 - featureAllowList
+- moduleAllowList
+- visibilityDefaults
 - upgradeRules
 - downgradeRules
-- visibilityRules
+- previewRules
 
 ### Beispiele
 - Free
 - Basic
 - Standard
 - Premium
+- EarlyAccess
 - Beta
 - Preview
-- enterprise-like future package
+- future app package
 
 ### Beziehungen
 - 1:n zu User
@@ -154,11 +170,10 @@ Definiert den verfügbaren Vertrags-/Leistungsumfang für einen Nutzer.
 - 1:n zu FeatureAccessPolicy
 
 ### Abhängigkeiten
-- keine Direktabhängigkeit zu CatchTrack-Fachmodulen
-- packageDefinition bleibt generisch
+- keine direkte Abhängigkeit zu CatchTrack-Fachmodulen
 
 ### Zugriffskontrolle
-- package muss als Vertragsrahmen, nicht als UI-Entscheidung dienen
+- Paket ist Vertragsrahmen, keine UI-Entscheidung
 
 ### Erweiterbarkeit
 - neue Pakete ohne Core-Umbau möglich
@@ -168,12 +183,12 @@ Definiert den verfügbaren Vertrags-/Leistungsumfang für einen Nutzer.
 
 ## Ebene 4: Permissions
 ### Zweck
-Definiert die allgemeinen Berechtigungen und Entitlements.
+Definiert die effektiven Berechtigungen und Entitlements.
 
 ### Verantwortlichkeit
 - Rechte- und Entitlement-Logik
-- Kombination aus Package-, User- und Modul-Policies
-- sichere, zentrale Berechnung des effektiven Zugriffs
+- Zusammenführung aus Package-, User- und Modulfaktoren
+- zentrale Berechnung des Effektivstatus
 
 ### Datenmodell
 - permissionId
@@ -182,10 +197,12 @@ Definiert die allgemeinen Berechtigungen und Entitlements.
 - targetType
 - targetId
 - grantSource
+- grantedBy
 - isActive
 - expiresAt (optional)
 
 ### Beispieltypen
+- packageAccess
 - moduleAccess
 - featureAccess
 - adminAccess
@@ -200,10 +217,10 @@ Definiert die allgemeinen Berechtigungen und Entitlements.
 - n:1 zu Feature
 
 ### Abhängigkeiten
-- Policy-Engine, nicht UI-Logik
+- Policy-Engine und Module Access Policy
 
 ### Zugriffskontrolle
-- nur Service-/Server-/Policy-Schicht darf die effektive Berechtigung auswerten
+- nur Service-, Policy- und Server-Schicht darf die Berechtigung auswerten
 
 ### Erweiterbarkeit
 - neue Permission-Typen ohne Core-Umbau
@@ -213,13 +230,12 @@ Definiert die allgemeinen Berechtigungen und Entitlements.
 
 ## Ebene 5: Module Access
 ### Zweck
-Bestimmt, ob ein Modul für einen User oder ein Paket technisch zugänglich ist.
+Bestimmt, ob ein Modul für einen Nutzer oder ein Paket logisch zugänglich ist.
 
 ### Verantwortlichkeit
-- Modul-Entitlement
-- Modul-Installationszustand
-- Modul-Status als Plattformkontext
-- Security-Gateway für Modul-Funktionen
+- Entitlement eines Moduls
+- Installations-, Aktivierungs- und Deaktivierungszustand
+- Security-Gateway für modulare Funktionen
 
 ### Datenmodell
 - moduleId
@@ -246,23 +262,23 @@ Bestimmt, ob ein Modul für einen User oder ein Paket technisch zugänglich ist.
 - Feature Policy
 
 ### Zugriffskontrolle
-- Auf Service-/Policy-Ebene prüfen
-- Das UI zeigt nur Sichtbarkeit, nicht Autorisierung
+- Service-/Policy-Ebene entscheidet
+- UI zeigt nur Sichtbarkeit
 
 ### Erweiterbarkeit
-- neue Module und neue modulare Feature-Sets möglich
+- neue Module und neue Modul-Features ohne Core-Umbau möglich
 
 ### Wiederverwendbarkeit
 - Plattform-/Framework-Ebene
 
 ## Ebene 6: Feature Access
 ### Zweck
-Bestimmt, ob einzelne Funktionen eines Moduls für einen User zugänglich sind.
+Bestimmt den Zugriff auf einzelne Funktionen, Actions und Screens.
 
 ### Verantwortlichkeit
-- granularer Zugriff auf Features und Actions
-- Schutz von sensiblen Aktionen und Screens
-- Trennung zwischen Sichtbarkeit und tatsächlicher Ausführung
+- granularer Feature- und Action-Zugriff
+- Schutz sensibler Funktionen
+- Trennung von UI-Sichtbarkeit und tatsächlicher Ausführung
 
 ### Datenmodell
 - featureId
@@ -279,41 +295,41 @@ Bestimmt, ob einzelne Funktionen eines Moduls für einen User zugänglich sind.
 ### Beziehungen
 - n:1 zu Module Access
 - n:1 zu Permission
-- n:1 zu UI-Routing oder Menüeintrag
+- n:1 zu UI Menu Item
 
 ### Abhängigkeiten
-- Module, Permission, UI Menu Policy
+- Permission Court, UI Policy, Module Policy
 
 ### Zugriffskontrolle
-- Service-/API- und Feature-Policy-Ebene
+- Service-/API- und Feature-Policy-Schicht
 
 ### Erweiterbarkeit
 - neue Features ohne Core-Umbau möglich
 
 ### Wiederverwendbarkeit
-- generischer Service und generisches UI-Metadatenmodell
+- generisches Service-/Feature-Modell
 
 ## Ebene 7: UI / Menu Visibility
 ### Zweck
-Definiert, was der Nutzer in der Oberfläche sehen darf.
+Definiert, was der Benutzer in der Oberfläche sehen darf.
 
 ### Verantwortlichkeit
 - Menüeinträge, Buttons, Tabs, Vorschau, Ausblenden, Priorisierung
-- Laufzeit-Filterung basierend auf aktuellen Berechtigungen und Modulzuständen
+- Laufzeitfilterung nach Permissions, Paket, Module State
 
 ### Datenmodell
 - menuId
-- menuLabel
 - parentMenuId
+- label
+- route
 - moduleId
 - featureId
-- visibilityRule
 - packageScope
 - permissionScope
+- visibilityRule
 - isDisabled
 - isPreview
 - priority
-- route
 
 ### Beziehungen
 - n:1 zu Module Access
@@ -323,8 +339,8 @@ Definiert, was der Nutzer in der Oberfläche sehen darf.
 
 ### Abhängigkeiten
 - UI Policy Manager
-- User Preference Service
 - Permission Engine
+- User Preference Service
 
 ### Zugriffskontrolle
 - UI darf nur anzeigen, was sichtbar sein darf
@@ -334,58 +350,49 @@ Definiert, was der Nutzer in der Oberfläche sehen darf.
 - dynamische Menüs für andere Apps möglich
 
 ### Wiederverwendbarkeit
-- generisches UI-Framework mit App-übergreifender Datenstruktur
-
-## Kritische Bewertung der Reihenfolge
-Die Reihenfolge Identity → User → Package / Plan → Permissions → Module Access → Feature Access → UI / Menu Visibility ist technisch sinnvoll, sofern sie als Berechnungspipeline verstanden wird und nicht als UI-Entscheidung mit übergeordneter Sichtbarkeit.
-
-Die zentrale Korrektur ist: UI Visibility ist nicht die Quelle der Autorisierung; sie ist der letzte Filter. Der tatsächliche Berechtigungsentscheid liegt bei Permission, Module Access und Feature Access. Die UI entscheidet nur noch, was einem Nutzer angezeigt werden darf.
+- generisches UI-Framework
 
 ## Package-System
 ### Zweck
-Package / Plan ist der Vertragsrahmen für eine Benutzerklasse oder Leistungsstufe.
+Das Package-/Plan-Modell ist der Vertragsrahmen für einen Nutzertyp oder Leistungsumfang.
 
 ### Was gehört zum Package?
-- Plan-Name und Typ
-- Module- und Feature-Entitlements
-- Standard-Berechtigungen
-- Preview-, Beta- und Upgrade-Regeln
+- Plan-/Paketname und -typ
+- Module-Entitlements
+- Feature-Entitlements
+- Standard-Permissions
+- Preview-/Beta-Regeln
+- Upgrade-/Downgrade-Regeln
 - visibilityDefaults
-- downgradeRules
 
 ### Was gehört zur Permission?
-- konkrete Berechtigungen eines Benutzers oder einer Session
+- konkrete Berechtigungen
 - temporäre Freigaben
 - modul- und feature-spezifische Zusätze
 - Abweichungen vom Paket
 
 ### Was gehört zum Modul?
-- Modul-ID, Metadaten, Lebenszyklus, Abhängigkeiten, Konfiguration, Features
-- keine direkte App- oder Paket-Logik
+- Modul-ID, Metadaten, Abhängigkeiten, Lifecycle, Konfiguration, Feature-Modelle
+- keine direkte Paket- oder App-Logik
 
 ### Was gehört zur Anwendung?
-- CatchTrack-specific UI, App-Branding, Bootstrapping, konkrete Module und App-Logik
+- CatchTrack-spezifische UI, App-Branding, konkrete Module und App-Logik
 
-### Paketwechsel
-- Beim Wechsel muss der neue effektive Status sofort berechnet werden.
-- Berechtigungen aus dem alten Paket dürfen nur nach den Regeln der neuen Lage wirksam sein.
-- Nutzer muss keine Modul-Installation verlieren, wenn die Berechtigung für das Modul an das Paket gebunden war.
-
-### Downgrade
-- Features und Module, die im neuen Paket nicht erlaubt sind, werden deaktiviert oder als Preview/blocked gemeldet.
-- bisherige Installationen müssen nicht automatisch gelöscht werden, sofern das Modul weiterhin auf der Plattform vorhanden ist.
-- das UI zeigt nur die aktuellen gültigen Zustände an
+### Paketwechsel / Downgrade
+- Beim Wechsel muss der neue effektive Status sofort neu berechnet werden.
+- Altzustände dürfen nicht weiter als gültige Berechtigung dienen.
+- Deinstallierte oder nicht installierte Module bleiben weiterhin im Paket-/Entitlement-Model sichtbar, sofern das Paket oder die Permission sie noch zulassen.
 
 ### Deaktivierte Module
-- Ein deaktiviertes Modul darf nicht aktiv in der UI verwendet werden.
-- Es kann als nicht aktiv, optional verfügbar oder preview-visible erscheinen.
+- Ein deaktiviertes Modul darf nicht aktiv genutzt werden.
+- Es kann als deaktiviert, preview-visible oder verfügbar erscheinen, aber nicht als aktiv zugelassen.
 
 ### Nicht installierte Module
-- Nicht installierte Module sind nicht aktiv, aber als installierbar oder verfügbar einsehbar.
-- Das Paket und die Permissions entscheiden, ob sie für den Nutzer angezeigt oder installierbar sind.
+- Nicht installierte Module sind nicht aktiv, aber als installierbar bzw. verfügbar einsehbar.
+- Paket und Permissions entscheiden darüber, ob sie für den Nutzer relevant und sichtbar sind.
 
 ## Module Lifecycle
-Die logisch saubere Reihenfolge ist:
+Die in der Dokumentation bereits genannte Reihenfolge ist technisch grundsätzlich passend:
 
 available
 
@@ -409,39 +416,35 @@ disabled
 
 uninstalled
 
-Die Reihenfolge ist grundsätzlich sinnvoll, aber die Zustände sollten als Plattformzustand und nicht als reine UI-Statusbeschreibung behandelt werden.
+Die Zustände sollten als Plattformzustände modelliert werden und nicht als UI-Status allein. Wichtig ist:
 
-Wichtiger Punkt:
-Ein Benutzer darf ein nicht benötigtes Modul deinstallieren, ohne dass seine Berechtigung für dieses Modul verloren geht.
-
-Nach der Deinstallation muss das Modul als verfügbar/installierbar erscheinen können, wenn der Nutzer bzw. das Paket das Modul wieder aktiviert oder erneut installiert.
-
-Das bedeutet:
-- Deinstallation entfernt die Installations-/Runtime-Instanz, nicht die Berechtigung an sich.
-- Berechtigungen bleiben als Entitlement oder Package-Seat erhalten, sofern das Paket oder die Permission sie noch gewährt.
-- Das Materialisieren der endgültigen Sichtbarkeit erfolgt durch das Permission-/Module-Access-System, nicht nur über den UI-Menükontext.
+- Deinstallation entfernt die Runtime-/Installationsinstanz, nicht die Berechtigung an sich.
+- Berechtigungen bleiben als Paket-/Entitlement- oder Permission-Status erhalten, sofern das Paket bzw. die Permission sie noch gewährt.
+- Das UI zeigt nur den aktuellen sichtbaren State an, nicht den effektiven Berechtigungsstatus.
 
 ## Permission vs. UI Visibility
 ### Definition
-Permission ist die effektive Autorisierung. UI Visibility ist nur der Präsentationsfilter.
+Permission = echte Autorisierung.
+UI Visibility = Präsentationsfilter.
 
-### UI-Menü
-UI-Menü entscheidet nur, was angezeigt wird.
+### Wer entscheidet was?
+- Permission: Policy-/Service-/Server-Ebene
+- Module Access: Policy-/Module-Management-Ebene
+- Feature Access: Feature-Policy-Ebene
+- UI: Sichtbarkeitsfilterung
 
-### Buttons
-Für einzelne Buttons gilt: UI kann den Button verbergen, aber die tatsächliche Execution wird immer auf Service-/API-Ebene autorisiert.
+### Welche Prüfungen müssen server-/service-seitig erfolgen?
+- API-Zugriffe
+- Action-Ausführung
+- Feature- und Modul-Access
+- Paket- und Permission-Entitlements
+- Änderungen beim Downgrade oder beim Package-Wechsel
 
-### Aktionen
-Aktionen müssen auf Service-/Server-Ebene geprüft werden.
-
-### Module
-Module-Level-Zugriff erfolgt über Module Access Policy.
-
-### Features
-Feature-Level-Zugriff erfolgt über Feature Access Policy.
-
-### API-/Service-Zugriff
-API- und Service-Zugriffe müssen immer serverseitig und policybasiert geprüft werden.
+### Welche Prüfung dient nur der UI?
+- Menü- und Button-Sichtbarkeit
+- Vorschauanzeige
+- Upgrade-Hinweise
+- deaktivierte UI-Elemente als nicht aktiv
 
 ## UI-/Menüvertrag
 ### Anforderungen
@@ -451,13 +454,13 @@ API- und Service-Zugriffe müssen immer serverseitig und policybasiert geprüft 
 - package-aware menu entries
 - install-state-aware menu entries
 - Preview-/Upgrade-Anzeigen für gesperrte Features
-- CatchTrack-Anwendung kann eigene Menüpunkte ergänzen
-- andere Apps können eigene Menüdefinitionen ergänzen
+- CatchTrack-Anwendung kann eigene Menüpunkte definieren
+- andere Apps dürfen andere Menüs definieren
 
 ### Allgemeiner Vertrag
-- Module liefern Menü-Definitionen als Metadaten
-- UI rendert nur auf Basis des aktuellen Policy-States
-- Visibility-Policy entscheidet, was sichtbar ist
+- Module liefern Menü-Metadaten
+- UI rendert nur basierend auf dem aktuellen Policy-State
+- Visibility-Policy entscheidet über Sichtbarkeit
 - echte Autorisierung bleibt außerhalb des UI-Metadatenmodells
 
 ## Sicherheit
@@ -465,25 +468,25 @@ API- und Service-Zugriffe müssen immer serverseitig und policybasiert geprüft 
 Niemals ausreichend.
 
 ### Serverseitige Autorisierung
-Muss immer erfolgen.
+Muss immer existieren.
 
 ### Direkte API-Aufrufe
 Müssen policybasiert geprüft werden.
 
 ### Manipulierte Requests
-Dürfen niemals als gültige Authorization gelten.
+Dürfen niemals als gültige Berechtigung gelten.
 
 ### Fehlende Module
-Ein fehlendes Modul darf nicht als aktiv oder autorisiert betrachtet werden.
+Ein fehlendes Modul darf nicht automatisch als aktiv oder autorisiert gelten.
 
 ### Deaktivierte Module
-Ein deaktiviertes Modul bleibt technisch nicht als aktiviert gültig.
+Ein deaktiviertes Modul bleibt nicht aktiv und ist nicht autorisiert.
 
 ### Paket-Downgrade
-Ein Downgrade muss zu einem neuen gültigen Zugriffszustand führen, ohne die App in einen inkonsistenten Zustand zu bringen.
+Ein Downgrade muss in einen konsistenten neuen Zugriffszustand führen.
 
 ### Berechtigungsänderungen
-Änderungen müssen sofort zur nächsten Auswertung der Policy führen; UI und Service müssen sich konsistent neu evaluieren.
+Änderungen müssen sofort in die nächste Policy-Auswertung einfließen.
 
 ## Neutralität
 ### Framework / Plattform
@@ -503,81 +506,110 @@ Ein Downgrade muss zu einem neuen gültigen Zugriffszustand führen, ohne die Ap
 
 ### Generisches UI
 - Menü-Renderer
-- route/visibility filter
-- preview/upgrade states
+- Route-/Visibility-Filter
+- Preview-/Upgrade-State
 
 ### Module Manager
-- Modulstatus- und Installationsverwaltung
+- Modulstatus und Installation
 
 ### CatchTrack-Anwendung
-- konkrete App-Init, Branding, Domain-Module, App-Flow
+- App-Init, Branding, konkrete App-Logik und CatchTrack-Module
 
 ### CatchTrack-Fachmodul
-- CatchTrack-domain features like catches, equipment, GPS, weather, calendar
+- CatchTrack-spezifische Features wie Fänge, GPS, Wetter, Equipment, Kalender
 
 ## Architekturvarianten
 
 ### Variante A: Policy-first service model
 #### Beschreibung
-Echte Autorisierung und Entitlement bleiben in einer Policy-/Permission-Service-Schicht. UI Visibility ist ein separater Filter auf Basis des effektiven Zustands.
+Echte Autorisierung und Entitlement liegen in einer Policy-Service-Schicht. Das UI verwendet nur einen separaten Sichtbarkeitsfilter.
+
+#### Datenmodell
+- Identity
+- User
+- Package
+- Permission
+- ModuleAccess
+- FeatureAccess
+- UIVisibilityRule
+
+#### Beziehungen
+User → Package → Permission → ModuleAccess → FeatureAccess → UI Menu Item
+
+#### Autorisierung
+- Berechtigung wird im Policy-Service entschieden
+- Package-/Permission-/Module-/Feature-Level werden dort ausgewertet
+- UI dient nur der Sichtbarkeitsfilterung
+
+#### UI
+- Menü und Button nur anhand der effektiven Policy berechnet
+- Preview/Upgrade sichtbar, aber echte Ausführung bleibt policybasiert gesperrt
 
 #### Vorteile
 - höchste Sicherheit
-- beste Trennung von Permission und UI
-- gut für spätere Wiederverwendung
-- gut für Store-/App-Strategie
-- klarer Lifecycle bei Paketwechseln und Downgrades
+- klare Trennung von Permission und UI
+- gut für spätere Wiederverwendung und Store-/App-Perspektive
+- gut für Paketwechsel, Downgrade und Moduldynamik
 
 #### Nachteile
-- etwas mehr Infrastruktur und Policy-Schichten
-- die erste Struktur ist komplexer als ein UI-only Ansatz
+- mehr Infrastruktur und klarere Policy-Schichten
+- initial aufwendiger als UI-first
 
 #### Sicherheitsauswirkungen
-- stark positiv
+- sehr gut
 
 #### Wartbarkeit
 - gut
 
-#### Komplexität
-- mittel bis hoch
-
 #### Erweiterbarkeit
-- hoch
-
-#### Wiederverwendbarkeit
-- hoch
-
-#### Auswirkungen auf Store-/App-Perspektive
 - sehr gut
 
-#### Auswirkungen auf bestehende Module
-- erfordert saubere Entitlement- und UI-Abstraktionen
+#### Wiederverwendbarkeit
+- sehr gut
 
-#### Auswirkungen auf Core
-- keine direkte Core-Änderung nötig
+#### Core-Abhängigkeit
+- gering
+
+#### Migrationsrisiko
+- mittel, aber kontrolliert
 
 ### Variante B: UI-first visibility model
 #### Beschreibung
-Das UI entscheidet anhand von Menü- und Feature-Attributen, ob etwas sichtbar ist. Echte Autorisierung bleibt teilweise im UI oder in einzelnen Modulen.
+Das UI versucht, Sichtbarkeit auf Basis von Paket-, Modul- und Menü-Attributen zu filtern. Echte Autorisierung bleibt teilweise in UI oder Modulen liegen.
+
+#### Datenmodell
+- User
+- Package
+- ModuleState
+- MenuItem
+- FeatureFlag
+- PermissionHint
+
+#### Beziehungen
+User → Package → ModuleState → MenuItem → FeatureFlag
+
+#### Autorisierung
+- UI sieht zunächst aus wie zentrale Autorisierung
+- echte Prüfung bleibt an vielen Stellen verteilt und ist fehleranfällig
+
+#### UI
+- dynamische Menüs und Vorschauen, aber keine harte Trennung von Sichtbarkeit und Autorisierung
 
 #### Vorteile
-- schneller umzusetzen
-- einfacher in der ersten Perspektive
+- einfacher in der ersten Umsetzung
+- geringere Initial-Kosten
 
 #### Nachteile
-- unsicherer als Policy-first
-- UI-Sichtbarkeit und echte Berechtigung werden vermischt
-- schlechter für spätere Wiederverwendung und Store-/App-Strategie
-- höheres Risiko bei manipulierten Requests
+- schwächere Security
+- UI und echte Berechtigung werden vermischt
+- schlechter für spätere Apps, Store und spätere Wiederverwendung
+- höheres Migrationsrisiko bei Paketwechseln und Berechtigungsänderungen
 
 #### Sicherheitsauswirkungen
 - schwach bis mittel
 
 #### Wartbarkeit
-- geringer
-
-#### Komplexität
-- niedrig upfront, aber später höher
+- gering
 
 #### Erweiterbarkeit
 - mittel
@@ -585,31 +617,200 @@ Das UI entscheidet anhand von Menü- und Feature-Attributen, ob etwas sichtbar i
 #### Wiederverwendbarkeit
 - gering
 
-#### Auswirkungen auf Store-/App-Perspektive
-- schwach
+#### Core-Abhängigkeit
+- gering
 
-#### Auswirkungen auf bestehende Module
-- höheres Risiko, dass Module auf UI-Status statt Policy-Status reagieren
+#### Migrationsrisiko
+- hoch
 
-#### Auswirkungen auf Core
-- keine Änderung im Core nötig, aber schlechte Architektur-Verfestigung in Modulen
+### Variante C: Hybrid-Model
+#### Beschreibung
+Eine Kombination aus Policy-first für effektive Autorisierung und UI-first für UI-Rendering-Helfer. Das UI bekommt zusätzliche Meta-Informationen, aber die eigentliche Berechtigung bleibt in der Policy-Service-Schicht.
 
-## Empfehlung
-Die bevorzugte Architektur ist Variante A: Policy-first service model.
+#### Datenmodell
+- User
+- Package
+- Permission
+- ModuleAccess
+- FeatureAccess
+- UIVisibilityMetadata
 
-Grund:
-- klare Trennung von Berechtigung und UI-Sichtbarkeit
-- besser für Sicherheit, Wartbarkeit und spätere Wiederverwendung
-- kompatibel mit neutraler Plattformarchitektur
-- gut geeignet für spätere Store- oder App-Verpackung
-- schützt den Core-Freeze und lässt CatchTrack als erste Anwendung auf der Plattform
+#### Beziehungen
+User → Package → Permission → ModuleAccess → FeatureAccess → UIVisibilityMetadata → MenuItem
+
+#### Autorisierung
+- Policy-Service entscheidet.
+- UI nutzt die Ergebnisse nur zur Darstellung.
+- UI-Meta-Informationen sind Hinweise, keine Autorisierung.
+
+#### UI
+- flexibler für dynamische Menüs, aber ohne Autoritäts- und Audit-Fehler.
+
+#### Vorteile
+- gute Balance zwischen Dynamik und Sicherheit
+- flexible Umsetzung für App-spezifische Menüs
+- sehr gut für die neutrale Plattformarchitektur
+
+#### Nachteile
+- höherer Modellierungsaufwand als reine Variante A
+- erfordert klare Verantwortungsgrenzen zwischen Policy und UI
+
+#### Sicherheitsauswirkungen
+- gut
+
+#### Wartbarkeit
+- gut
+
+#### Erweiterbarkeit
+- gut
+
+#### Wiederverwendbarkeit
+- gut
+
+#### Core-Abhängigkeit
+- gering
+
+#### Migrationsrisiko
+- mittel
+
+## Variantenvergleich
+
+| Kriterium | Variante A | Variante B | Variante C |
+|---|---|---|---|
+| Sicherheit | Sehr hoch | Niedrig bis mittel | Hoch |
+| Einfachheit | Mittel | Hoch initial | Mittel |
+| Wartbarkeit | Sehr gut | Schwach | Gut |
+| Erweiterbarkeit | Sehr gut | Mittel | Gut |
+| Performance | Gut | Gut initial | Gut |
+| Core-Abhängigkeit | Gering | Gering | Gering |
+| Modulabhängigkeit | Mittel | Hoch | Mittel |
+| UI-Flexibilität | Gut | Sehr gut | Sehr gut |
+| Package-System | Sehr gut | Mittel | Sehr gut |
+| Permission-System | Sehr gut | Schwach | Sehr gut |
+| Wiederverwendbarkeit | Sehr gut | Schwach | Gut |
+| Store-Perspektive | Sehr gut | Schwach | Gut |
+| Migrationsrisiko | Mittel | Hoch | Mittel |
+
+## Empfohlene Variante
+Empfohlen wird Variante A mit gezielten Elementen aus Variante C.
+
+### Warum Variante A?
+- Die Trennung von Permission und UI Visibility ist technisch am saubersten.
+- Die Access-Pipeline bleibt nachvollziehbar und neutral.
+- Die Architektur bleibt für zukünftige Apps und Store-Modelle wiederverwendbar.
+- Sie respektiert den Core-Freeze, weil der Core nicht geändert werden muss.
+- Sie funktioniert für CatchTrack als erste Anwendung, ohne die Plattform an CatchTrack zu binden.
+
+### Warum nicht Variante B?
+- Sie vermischt Sichtbarkeit und echte Autorisierung.
+- Das ist für Sicherheit, Review, Audit und spätere Wiederverwendung problematisch.
+- Sie stellt das UI in den Mittelpunkt und erhöht das Risiko, dass spätere App-Entscheidungen in die generische Plattform eingearbeitet werden.
+
+### Warum C als Ergänzung?
+- C ist eine gute technische Ergänzung als UI-Hilfsmodell, aber nicht als alleinige Autorisierungsschicht.
+- Die Autorisierung bleibt in Variante A.
+- C dient als Informations- und Rendering-Adapter zwischen Policy und UI.
+
+## Konkreter Zielvertrag
+### 1. Package-Vertrag
+Ein Package definiert:
+- packageId
+- packageName
+- packageType
+- moduleAllowList
+- featureAllowList
+- visibilityDefaults
+- previewRules
+- downgradeRules
+- upgradeRules
+- status
+
+Ein Package entscheidet nicht direkt über die UI-Anzeige, sondern liefert Entitlements und Standardregeln.
+
+### 2. Permission-Vertrag
+Ein Permission-Objekt definiert:
+- permissionId
+- permissionType
+- scope
+- targetType
+- targetId
+- grantSource
+- isActive
+- expiresAt
+
+Permissionen werden zentral ausgewertet und sind die Grundlage für echte Autorisierung.
+
+### 3. Module-Access-Vertrag
+Ein Module-Access-Objekt definiert:
+- moduleId
+- moduleName
+- moduleVersion
+- lifecycleState
+- isInstalled
+- isEnabled
+- isAvailable
+- isPreview
+- effectiveAccessState
+
+Die Module-Access-Entscheidung erfolgt in der Policy-/Service-Schicht, nicht im UI.
+
+### 4. Feature-Access-Vertrag
+Ein Feature-Access-Objekt definiert:
+- featureId
+- moduleId
+- featureType
+- requiredPermission
+- isVisible
+- isEnabled
+- isPreview
+- dependencyRules
+
+Feature-Zugriffe werden granular in der Service-/Policy-Schicht geprüft.
+
+### 5. UI-/Menüvertrag
+Ein Menü- oder UI-Item definiert:
+- menuId
+- label
+- parentMenuId
+- route
+- moduleId
+- featureId
+- visibilityRule
+- priority
+- isDisabled
+- isPreview
+
+Das UI zeigt nur, was auf Basis der berechneten Policy sichtbar ist. Es validiert nicht die echte Autorisierung.
+
+### 6. Module-Lifecycle-Vertrag
+Zustände:
+- available
+- installable
+- installed
+- enabled
+- disabled
+- uninstalled
+
+Diese Zustände sind Plattformzustände, keine UI-Entscheidung. Ein Modul darf deinstalliert werden, ohne dass die Berechtigung an sich verschwindet. Die Berechtigung bleibt im Policy-Kontext erhalten, sofern das Paket oder die Permission sie weiterhin gewährt.
+
+### 7. Autorisierungsvertrag
+Die Autorisierung folgt dieser Reihenfolge:
+
+Identity → User → Package → Permission → ModuleAccess → FeatureAccess → UI Visibility
+
+Der UI-Status ist jeweils ein Render- und Sichtbarkeitsfilter, keine Entscheidungsquelle.
+
+### 8. Trennung Framework / Anwendung / Fachmodul
+- Framework / Plattform: Identity, User, Package, Permission, Module Access, Feature Access, UI Menu Policy
+- generische Services: Policy Engine, Permission Service, UI Visibility Service, Module Manager
+- CatchTrack-Anwendung: App-Boot, Branding, konkrete Anwendungskonfiguration, App-Flow
+- CatchTrack-Fachmodul: Catches, Equipment, GPS, Wetter, Kalender usw.
 
 ## Offene Entscheidungen
-- Welche Entitlements sind Paket-spezifisch, welche user-spezifisch?
-- Wie werden Modul-Entitlements beim Deinstallieren und erneuten Installieren verwaltet?
-- Welche UI- und Menüattribute müssen generisch und welche app-spezifisch sein?
-- Welche Service-Ebene ist die autoritative Entscheidung für Permission, Module Access und Feature Access?
-- Welche App-übergreifende Struktur unterstützt spätere Anwendungen ohne CatchTrack-Entscheidungen zu verfestigen?
+- Welche Entitlements sind Paket-spezifisch und welche sind Benutzer-spezifisch?
+- Wie werden Paketswechsel, Downgrades und Deinstallationen bei bereits vorhandenen Modul- und Feature-Entitlements behandelt?
+- Welche Attribute sind universell generisch und welche vollständig app-spezifisch?
+- Wo liegt die autoritative Policy-Engine für die spätere Implementierung?
 
 ## Abschlussklarstellung
-Diese Datei ist eine dauerhafte Architektur-Dokumentation. Sie dokumentiert die Zielarchitektur ohne produktive Implementierung. Das Projekt bleibt im Design-/Review-Status für diese P0-Lücke.
+Dieser Dokumentationsauftrag ist nicht als beschlossen oder implementiert zu verstehen. Er ist ein Proposed-Design für eine spätere Entwicklerentscheidung und Implementierung. Die Architektur wird erst nach der Entscheidung des Entwicklers verbindlich.

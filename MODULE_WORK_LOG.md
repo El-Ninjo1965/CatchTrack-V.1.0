@@ -608,4 +608,96 @@ Nächster sinnvoller Schritt:
 
 ---
 
+# 13. P0-Architekturvarianten konkret ausarbeitet
+
+Abgeschlossen am: 2026-08-13
+
+Auftrag:
+
+- tatsächlichen Repository-Zustand gegen die bestehende P0-Lücke validieren
+- mindestens zwei technisch realistische Architekturvarianten für Permission / Package / Module Access / Feature Access / UI-Menü entwickeln
+- Varianten vergleichen und eine klare Empfehlung formulieren
+- Zielvertrag und offener Entscheidungsbedarf dokumentieren
+- keine Codeänderungen, keine Core-Änderung, keine Fachmoduländerung
+
+Geprüfte Dokumente:
+
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [PROJECT.md](PROJECT.md)
+- [STATE.md](STATE.md)
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
+- [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md)
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+- [PERMISSION_PACKAGE_UI_ARCHITECTURE.md](PERMISSION_PACKAGE_UI_ARCHITECTURE.md)
+- [Core/module-interface.js](Core/module-interface.js)
+- [Core/module-manager.js](Core/module-manager.js)
+- [Modules/user-module/user-module.js](Modules/user-module/user-module.js)
+- [Modules/admin-module/admin-module.js](Modules/admin-module/admin-module.js)
+- [index.html](index.html)
+
+Geprüfte Bereiche:
+
+- Identity
+- User
+- Package / Plan
+- Permission
+- Module Access
+- Feature Access
+- UI / Menu Visibility
+- Module Lifecycle
+- Package- und Downgrade-Regeln
+- Speicher-/Status-/UI-Zustände
+- Wiederverwendbarkeit und Store-Perspektive
+
+Architekturvarianten:
+
+- Variante A: Policy-first service model
+- Variante B: UI-first visibility model
+- Variante C: Hybrid-Model
+
+Empfehlung:
+
+- Variante A mit gezielten Elementen aus Variante C wird als bestgeeignete Lösung empfohlen.
+- Die klare Trennung von Permission und UI Visibility ist technisch der robusteste und neutralste Ansatz für CatchTrack und spätere Apps.
+- Die Architektur bleibt Proposed / noch nicht implementiert.
+
+Offene Entwicklerentscheidung:
+
+- Welche Entitlements sind package-spezifisch und welche user-spezifisch?
+- Wie werden Paketwechsel, Downgrades und Deinstallationen mit der Berechtigung behandelt?
+- Welche Policy-Engine wird die autoritative Berechnung übernehmen?
+
+Verweise:
+
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+- [PERMISSION_PACKAGE_UI_ARCHITECTURE.md](PERMISSION_PACKAGE_UI_ARCHITECTURE.md)
+
+Code verändert: NEIN
+Core verändert: NEIN
+Fachmodule verändert: NEIN
+
+Commit-SHA:
+
+- wird nach erfolgreichem Commit gesetzt
+
+Branch:
+
+- main
+
+Push-Status:
+
+- nach erfolgreichem Push aktualisiert
+
+Ergebnis:
+
+- Die P0-Lücke wurde konkret in drei realistischen Varianten untersucht.
+- Die empfohlene Architektur ist ein Policy-first-Modell mit klarer Trennung von Permission und UI Visibility.
+- Eine produktive Implementierung wurde nicht begonnen.
+
+Nächster sinnvoller Schritt:
+
+- Entwicklerentscheidung zur finalen P0-Architektur vor einer späteren Implementierung.
+
+---
+
 # Ende des Module Work Log

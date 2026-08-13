@@ -81,7 +81,27 @@ Die empfohlene Variante ist: Review-First und dokumentierte Entwicklerentscheidu
 - Wie soll die spätere Wiederverwendbarkeit für andere Apps mit der current CatchTrack-Perspektive zusammenwirken?
 - Welche generische Lösung ist für die P0-Lücke die beste Balance zwischen Einfachheit, Sicherheit und Wartbarkeit?
 
-## Entscheidung
-Keine bessere Alternative gegenüber dem vorgegebenen Lösungsweg erkannt.
+## Entscheidungsbasis
+Der bisherige Review-/Architekturansatz ist grundsätzlich sinnvoll. Es wurde keine bessere Alternative zum grundsätzlichen Review-/Architekturvorgehen erkannt.
 
-Die Datei ist als temporärer Entscheidungs- und Review-Kontext formuliert und kein dauerhafter Architektur- oder Projektauftrag.
+## Aktualisierte Variante
+Die konkrete P0-Architektur wurde in drei technisch realistischen Varianten bewertet:
+- Variante A: Policy-first service model
+- Variante B: UI-first visibility model
+- Variante C: Hybrid-Model
+
+## Variantenvergleich
+- Variante A ist aus Sicherheits-, Wartungs- und Wiederverwendbarkeitsgründen die geeignetste Grundlage.
+- Variante B ist technisch leichter, aber deutlich weniger sicher und weniger neutral für spätere andere Apps.
+- Variante C ist als Ergänzung sinnvoll, aber nicht als alleinige Autorisierungsschicht.
+
+## Risiken und offene Punkte
+- Paketwechsel und Downgrade-Regeln müssen klar definiert werden.
+- Module und Features müssen als Entitlements separat von UI-Sichtbarkeit modelliert werden.
+- Die endgültige Policy-Engine und der genaue Service-Owner bleiben offen.
+- Die konkrete Implementierung bleibt ausdrücklich noch nicht freigegeben.
+
+## Entscheidung
+Keine bessere Alternative zum grundsätzlichen Review-/Architekturvorgehen erkannt.
+
+Die Datei bleibt ein temporärer Entscheidungs- und Review-Kontext, nicht eine dauerhafte Architekturquelle.
