@@ -24,6 +24,7 @@ Zentrale Dokumente und ihre Rolle:
 - [RULES.md](RULES.md): verbindliche Projektregeln
 - [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md): dauerhafte AI-lesbare Gap-Analyse der tatsächlichen Implementierung gegen dokumentierte Plattformverträge
 - [AGENT_REVIEW.md](AGENT_REVIEW.md): temporäre AI-Arbeits- und Review-Datei für alternative technische Vorschläge vor einer Entscheidung
+- [PERMISSION_PACKAGE_UI_ARCHITECTURE.md](PERMISSION_PACKAGE_UI_ARCHITECTURE.md): dauerhafte Zielarchitektur für das generische Permission-/Package-/UI-Menümodell
 
 Keine Datei darf dabei widersprüchliche oder konkurrierende Zustandsaussagen erzeugen.
 

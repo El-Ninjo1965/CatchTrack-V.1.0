@@ -2,11 +2,11 @@
 
 ## Current work step
 
-Current work step: Platform gap analysis and review-first workflow extended and documented; no productive implementation performed.
+Current work step: P0 target architecture for permission, package, module access, feature access and UI visibility defined as a design-only architecture document; no productive implementation performed.
 
 ## Next work step
 
-Next work step: Continue platform-contract analysis and decision documentation only after developer review; no Core changes and no productive implementation.
+Next work step: Architecture review and developer decision before any implementation of the permission/package/UI structure; no Core changes and no productive implementation.
 
 ## Master file status
 

@@ -524,4 +524,88 @@ Nächster sinnvoller Schritt:
 
 ---
 
+# 12. P0-Zielarchitektur für Permission / Package / UI-Menü
+
+Abgeschlossen am: 2026-08-13
+
+Auftrag:
+
+- Review-First für die P0-Zielarchitektur für Permission / Package / Module Access / Feature Access / UI-Menü prüfen
+- alternative Architekturvarianten dokumentieren
+- geeignete generische Zielarchitektur ohne produktive Implementierung definieren
+- Architektur nur als Dokumentations- und Entscheidungsgrundlage festhalten
+
+Geprüfte Dokumente:
+
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [PROJECT.md](PROJECT.md)
+- [STATE.md](STATE.md)
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
+- [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md)
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+
+Ist-Zustand:
+
+- Die P0-Lücke ist nach der dokumentierten Gap-Analyse bestätigt.
+- Permission-/Package- und UI-/Menü-Verträge sind nicht vollständig als generische Plattformarchitektur abgesichert.
+- Core und Fachmodule bleiben unverändert; es gibt keine produktive Implementierung in diesem Auftrag.
+
+Architekturvarianten:
+
+- Variante A: Policy-first service model mit klarer Aufgabentrennung zwischen Identity, User, Package, Permission, Module Access, Feature Access und UI Visibility.
+- Variante B: UI-first visibility model mit Menü-/Feature-Attributen, aber ohne vollständige Service- und Policy-Entkopplung.
+
+Empfehlung:
+
+- Variante A ist im Rahmen der bestehenden Projektregeln als generischere, sicherere und wartbarere Lösung zu bevorzugen.
+- Sie trennt echte Autorisierung von UI-Sichtbarkeit und schützt die spätere Wiederverwendbarkeit besser als Variante B.
+
+Offene Entscheidungen:
+
+- genaue Attribute und Entitlements im Paketmodell
+- Präzisierung der User- und Identity-Zuordnung bei Paketwechseln und Downgrades
+- Definition der UI-/Menü-Entscheidungslogik unter Verwendung der Policy- und Permission-Services
+
+Geänderte Dateien:
+
+- [AGENT_REVIEW.md](AGENT_REVIEW.md)
+- [PERMISSION_PACKAGE_UI_ARCHITECTURE.md](PERMISSION_PACKAGE_UI_ARCHITECTURE.md)
+- [AI_AGENT_INDEX.md](AI_AGENT_INDEX.md)
+- [STATE.md](STATE.md)
+- [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md)
+
+Validierung:
+
+- git status geprüft
+- git diff geprüft
+- git diff --check geprüft
+- keine produktiven Codeänderungen
+- Core unverändert
+- Fachmodule unverändert
+- Architektur vollständig dokumentiert
+
+Commit-SHA:
+
+- wird nach erfolgreichem Commit gesetzt
+
+Branch:
+
+- main
+
+Push-Status:
+
+- nach erfolgreichem Push aktualisiert
+
+Ergebnis:
+
+- Eine neutrale, generische Zielarchitektur für Permission, Package, Module Access, Feature Access und UI-Menü wurde als Dokumentation definiert.
+- Die Empfehlung liegt auf einer Policy-first-Architektur mit klarer Trennung von Permission und UI Visibility.
+- Es wurde keine produktive Implementierung begonnen.
+
+Nächster sinnvoller Schritt:
+
+- Architekturprüfung und Entwicklerentscheidung vor einer späteren Implementierung des P0-Modells.
+
+---
+
 # Ende des Module Work Log
