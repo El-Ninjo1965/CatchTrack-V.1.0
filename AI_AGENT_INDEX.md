@@ -1,6 +1,6 @@
 # CatchTrack V1.0 – AI Agent Index
 
-## Zweck
+## Zweck:
 
 Diese Datei ist der zentrale Einstiegspunkt für AI-Agenten, die am CatchTrack-Projekt arbeiten.
 
