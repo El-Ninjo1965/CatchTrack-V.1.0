@@ -20,7 +20,8 @@ Zentrale Dokumente und ihre Rolle:
 - [STATE.md](STATE.md): autoritativer aktueller technischer Zustand
 - [MODULE_WORK_LOG.md](MODULE_WORK_LOG.md): dokumentiert tatsächliche Arbeiten und Änderungen
 - [PROJECT.md](PROJECT.md): langfristige Projekt- und Architekturvision
-- [CatchTrack-V1.0-BACKUP](../CatchTrack-V1.0-BACKUP): unabhängiges Backup-Repository für einen vollständigen 1:1-Snapshot des Projektstandes zur späteren Wiederherstellung über Working Copy auf dem iPad
+- [CatchTrack-Direct-Backup](https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git): aktuelles GitHub-Backup-Repository für den vollständigen 1:1-Snapshot des Projektstandes; lokales Backup unter /workspaces/CatchTrack-V1.0-BACKUP bleibt unverändert, bis der GitHub-Stand verifiziert wurde
+- Historischer lokaler Backup-Name: CatchTrack-V1.0-BACKUP (nur noch als veraltete Bezeichnung dokumentiert, nicht als aktives Backup-Repository)
 - [WORKFLOW.md](WORKFLOW.md): Arbeitsabläufe und Vorgehensregeln
 - [RULES.md](RULES.md): verbindliche Projektregeln
 - [PLATFORM_GAP_ANALYSIS.md](PLATFORM_GAP_ANALYSIS.md): dauerhafte AI-lesbare Gap-Analyse der tatsächlichen Implementierung gegen dokumentierte Plattformverträge

@@ -587,8 +587,39 @@ Ergebnis:
 - Wiederherstellung über Working Copy nach GitHub-Veröffentlichung grundsätzlich möglich: JA
 
 Nächster sinnvoller Schritt:
-- ein GitHub-Repository mit gültigen Berechtigungen erstellen und den lokalisierte Backup-Stand dort pushen, damit das Backup als normales Working-Copy-Repository klonbar wird
+- ein GitHub-Repository mit gültigen Berechtigungen erstellen und den lokal geprüften Backup-Stand dort pushen, damit das Backup als normales Working-Copy-Repository klonbar wird
 - keine Core-, Modul- oder Produktimplementierung vornehmen
+
+## Backup-Transfer-Status (aktuell)
+
+Abgeschlossen am: 2026-08-13
+
+Arbeitseinheit:
+- verifizierter lokaler Backup-Stand und GitHub-Transfer-Status für CatchTrack-Direct-Backup
+
+Ziel:
+- den geprüften lokalen Backup-Stand in das manuell angelegte GitHub-Repository unter CatchTrack-Direct-Backup zu übertragen
+- keine Veränderung am Hauptprojekt, keine Änderung am lokalen Backup, keine Löschung vor Verifikation
+
+Durchgeführte Prüfung:
+- lokaler Backuppfad /workspaces/CatchTrack-V1.0-BACKUP geprüft
+- Backup-Commit `865c92e` existiert und ist HEAD
+- Backup enthält einen vollständigen eigenen Git-Verlauf und ein eigenes `.git`
+- GitHub-Repository `CatchTrack-Direct-Backup` wurde als erreichbar und lesbar bestätigt
+- GitHub-Schreibrechte in der aktuellen Umgebung wurden verifiziert als nicht vorhanden bzw. nicht gültig
+- HTTPS- und SSH-Transferwege wurden getestet; beide endeten mit GitHub-403/Permission denied
+
+Ergebnis:
+- lokaler Backup vollständig: JA
+- GitHub-Push erfolgreich: NEIN
+- GitHub-Backup verifiziert: NEIN
+- altes lokales Backup gelöscht: NEIN
+- Hauptprojekt unverändert: JA
+- dokumentierte Backup-Referenz: CatchTrack-Direct-Backup
+
+Hinweis:
+- Der bisherige lokale Name CatchTrack-V1.0-BACKUP bleibt nur als historisch dokumentiert; die aktuelle Referenz ist CatchTrack-Direct-Backup.
+- Der Transfer wird erst fortgesetzt, wenn die GitHub-Schreibberechtigung in der aktiven Umgebung wiederhergestellt ist.
 
 Nächster sinnvoller Schritt:
 
