@@ -9,7 +9,7 @@
     'use strict';
 
     const CoreEntry = {
-        start() {
+        async start() {
             if (!window.CoreRuntime) {
                 throw new Error(
                     'Core Runtime is not available.'
@@ -17,10 +17,10 @@
             }
 
             if (window.CoreRuntime.isRunning()) {
-                return;
+                return true;
             }
 
-            window.CoreRuntime.start();
+            return await window.CoreRuntime.start();
         },
 
         stop() {

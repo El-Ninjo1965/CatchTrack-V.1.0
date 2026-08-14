@@ -11,24 +11,38 @@
     let running = false;
 
     const CoreRuntime = {
-        start() {
+        async start() {
             if (running) {
-                return;
+                return true;
             }
 
             if (!window.CoreStartup) {
                 throw new Error('Core Startup is not available.');
             }
 
-            window.CoreStartup.start();
+            const started = await window.CoreStartup.start();
 
-            window.CoreLifecycle.setPhase(
-                window.CoreLifecycle.phases.RUNNING
-            );
+            if (!started) {
+                return false;
+            }
+
+            const lifecycle = window.CoreLifecycle;
+            if (lifecycle) {
+                const phase = lifecycle.getPhase();
+
+                if (phase === lifecycle.phases.INITIALIZING) {
+                    lifecycle.setPhase(lifecycle.phases.READY);
+                }
+
+                if (lifecycle.getPhase() === lifecycle.phases.READY) {
+                    lifecycle.setPhase(lifecycle.phases.RUNNING);
+                }
+            }
 
             running = true;
 
             window.Core.emit('runtime:started');
+            return true;
         },
 
         stop() {

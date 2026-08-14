@@ -132,14 +132,31 @@
             registry.clear();
         },
 
-        discover() {
+        async discover() {
             const catalog = Array.isArray(window.FrameworkModuleCatalog)
                 ? window.FrameworkModuleCatalog
                 : [];
 
             const discovered = [];
 
-            catalog.forEach((entry) => {
+            const discoveredExternal = window.CoreLoader && typeof window.CoreLoader.discoverExternalModules === 'function'
+                ? await window.CoreLoader.discoverExternalModules('Modules')
+                : [];
+
+            const combinedCatalog = [...catalog, ...discoveredExternal.map((module) => ({
+                id: module.id,
+                name: module.name,
+                version: module.version,
+                description: module.description || '',
+                dependencies: Array.isArray(module.dependencies) ? module.dependencies : [],
+                permissions: Array.isArray(module.permissions) ? module.permissions : [],
+                capabilities: Array.isArray(module.capabilities) ? module.capabilities : [],
+                source: module.source || module.modulePath,
+                entry: module.source || module.modulePath,
+                globalName: module.globalName || module.name || module.id
+            }))];
+
+            combinedCatalog.forEach((entry) => {
                 if (!entry || typeof entry !== 'object') {
                     return;
                 }

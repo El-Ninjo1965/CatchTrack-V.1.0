@@ -56,6 +56,10 @@
                     : [],
                 source: typeof manifest.source === 'string' ? manifest.source : null,
                 entry: typeof manifest.entry === 'string' ? manifest.entry : null,
+                main: typeof manifest.main === 'string' ? manifest.main : null,
+                modulePath: typeof manifest.modulePath === 'string' ? manifest.modulePath : null,
+                manifestPath: typeof manifest.manifestPath === 'string' ? manifest.manifestPath : null,
+                autoload: manifest.autoload !== false,
                 lifecycle: manifest.lifecycle && typeof manifest.lifecycle === 'object'
                     ? manifest.lifecycle
                     : {}

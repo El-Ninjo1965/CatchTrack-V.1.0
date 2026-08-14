@@ -10,105 +10,117 @@
     'use strict';
 
     let started = false;
+    let startPromise = null;
 
     const CoreStartup = {
-        start() {
+        async start() {
+            if (startPromise) {
+                return await startPromise;
+            }
+
             if (started) {
-                return;
+                return true;
             }
 
-            if (window.CoreShutdown && typeof window.CoreShutdown.reset === 'function') {
-                window.CoreShutdown.reset();
-            }
+            startPromise = (async () => {
+                if (window.CoreShutdown && typeof window.CoreShutdown.reset === 'function') {
+                    window.CoreShutdown.reset();
+                }
 
-            started = true;
+                try {
+                    const requiredComponents = [
+                        'Core',
+                        'CoreLoader',
+                        'CoreContext',
+                        'CoreConfig',
+                        'CoreLifecycle',
+                        'ModuleRegistry',
+                        'ModuleManager'
+                    ];
 
-            try {
-                const requiredComponents = [
-                    'Core',
-                    'CoreLoader',
-                    'CoreContext',
-                    'CoreConfig',
-                    'CoreLifecycle',
-                    'ModuleRegistry',
-                    'ModuleManager'
-                ];
-
-                const missingComponents = requiredComponents.filter(
-                    (component) => !window[component]
-                );
-
-                if (missingComponents.length > 0) {
-                    throw new Error(
-                        `Missing Core components: ${missingComponents.join(', ')}`
+                    const missingComponents = requiredComponents.filter(
+                        (component) => !window[component]
                     );
-                }
 
-                window.CoreLifecycle.setPhase(
-                    window.CoreLifecycle.phases.INITIALIZING
-                );
+                    if (missingComponents.length > 0) {
+                        throw new Error(
+                            `Missing Core components: ${missingComponents.join(', ')}`
+                        );
+                    }
 
-                window.CoreLoader.init();
+                    window.CoreLifecycle.setPhase(
+                        window.CoreLifecycle.phases.INITIALIZING
+                    );
 
-                if (window.ConfigManager && typeof window.ConfigManager.init === 'function') {
-                    window.ConfigManager.init();
-                }
+                    if (!window.CoreLoader.init()) {
+                        throw new Error('Core Loader initialization failed.');
+                    }
 
-                if (window.ServiceManager && typeof window.ServiceManager.init === 'function') {
-                    window.ServiceManager.init();
-                }
+                    if (window.ConfigManager && typeof window.ConfigManager.init === 'function') {
+                        window.ConfigManager.init();
+                    }
 
-                if (window.DatabaseManager && typeof window.DatabaseManager.init === 'function') {
-                    window.DatabaseManager.init().catch((error) => {
-                        if (window.CoreErrorHandler) {
-                            window.CoreErrorHandler.handle(error, {
-                                type: 'database-init'
-                            });
-                        }
+                    if (window.DatabaseManager && typeof window.DatabaseManager.init === 'function') {
+                        await window.DatabaseManager.init();
+                    }
+
+                    if (window.ServiceManager && typeof window.ServiceManager.init === 'function') {
+                        window.ServiceManager.init();
+                    }
+
+                    if (window.UserModule && typeof window.UserModule.init === 'function') {
+                        window.UserModule.init();
+                    }
+
+                    if (window.AdminModule && typeof window.AdminModule.init === 'function') {
+                        window.AdminModule.init();
+                    }
+
+                    if (window.I18nModule && typeof window.I18nModule.init === 'function') {
+                        window.I18nModule.init();
+                    }
+
+                    if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') {
+                        await window.ModuleManager.discoverModules();
+                    }
+
+                    window.CoreContext.setRuntimeValue(
+                        'initialized',
+                        true
+                    );
+
+                    window.CoreContext.setRuntimeValue(
+                        'startedAt',
+                        new Date().toISOString()
+                    );
+
+                    if (window.CoreLifecycle.getPhase() !== window.CoreLifecycle.phases.RUNNING) {
+                        window.CoreLifecycle.setPhase(
+                            window.CoreLifecycle.phases.READY
+                        );
+                    }
+
+                    started = true;
+
+                    window.Core.emit('core:started', {
+                        version: window.CoreConfig.core.version
                     });
+
+                    return true;
+                } catch (error) {
+                    started = false;
+                    throw error;
+                } finally {
+                    startPromise = null;
                 }
+            })();
 
-                if (window.UserModule && typeof window.UserModule.init === 'function') {
-                    window.UserModule.init();
-                }
-
-                if (window.AdminModule && typeof window.AdminModule.init === 'function') {
-                    window.AdminModule.init();
-                }
-
-                if (window.I18nModule && typeof window.I18nModule.init === 'function') {
-                    window.I18nModule.init();
-                }
-
-                if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') {
-                    window.ModuleManager.discoverModules();
-                }
-
-                window.CoreContext.setRuntimeValue(
-                    'initialized',
-                    true
-                );
-
-                window.CoreContext.setRuntimeValue(
-                    'startedAt',
-                    new Date().toISOString()
-                );
-
-                window.CoreLifecycle.setPhase(
-                    window.CoreLifecycle.phases.READY
-                );
-
-                window.Core.emit('core:started', {
-                    version: window.CoreConfig.core.version
-                });
-            } catch (error) {
-                started = false;
-                throw error;
-            }
+            return await startPromise;
         },
 
         reset() {
             started = false;
+            startPromise = null;
         }
     };
 

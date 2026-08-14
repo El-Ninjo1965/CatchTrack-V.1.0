@@ -14,7 +14,7 @@
     const App = {
         version: '1.0.0',
 
-        start() {
+        async start() {
             if (!window.Core) {
                 throw new Error('Core is not available.');
             }
@@ -24,10 +24,11 @@
             }
 
             this.registerSystemEvents();
-            window.CoreEntry.start();
+            await window.CoreEntry.start();
             window.Core.emit('app:started', {
                 version: this.version
             });
+            return true;
         },
 
         registerSystemEvents() {

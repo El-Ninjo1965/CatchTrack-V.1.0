@@ -104,7 +104,7 @@
             return module;
         },
 
-        discoverModules() {
+        async discoverModules() {
             this.ensureInitialized();
 
             if (!window.ModuleRegistry || typeof window.ModuleRegistry.discover !== 'function') {
@@ -117,9 +117,27 @@
 
             const discovered = [];
 
-            catalog.forEach((entry) => {
+            const externalModules = window.CoreLoader && typeof window.CoreLoader.discoverExternalModules === 'function'
+                ? await window.CoreLoader.discoverExternalModules('Modules')
+                : [];
+
+            const combinedCatalog = [...catalog, ...externalModules.map((module) => ({
+                id: module.id,
+                name: module.name,
+                version: module.version,
+                description: module.description || '',
+                dependencies: Array.isArray(module.dependencies) ? module.dependencies : [],
+                permissions: Array.isArray(module.permissions) ? module.permissions : [],
+                capabilities: Array.isArray(module.capabilities) ? module.capabilities : [],
+                source: module.source || module.modulePath,
+                entry: module.source || module.modulePath,
+                globalName: module.globalName || module.name || module.id,
+                instance: module
+            }))];
+
+            for (const entry of combinedCatalog) {
                 if (!entry || typeof entry !== 'object') {
-                    return;
+                    continue;
                 }
 
                 const manifest = window.ModuleInterface && typeof window.ModuleInterface.validateManifest === 'function'
@@ -127,19 +145,19 @@
                     : null;
 
                 if (!manifest) {
-                    return;
+                    continue;
                 }
 
                 const globalName = resolveGlobalName(manifest, entry);
-                const candidate = window[globalName] || entry.instance || null;
+                const candidate = entry.instance || window[globalName] || null;
                 if (!candidate) {
-                    return;
+                    continue;
                 }
 
                 const moduleId = candidate.id || manifest.id;
                 if (this.registry.has(moduleId)) {
                     discovered.push(this.get(moduleId));
-                    return;
+                    continue;
                 }
 
                 const normalized = this.normalizeModule({
@@ -175,7 +193,7 @@
                         });
                     }
                 }
-            });
+            }
 
             return discovered;
         },
