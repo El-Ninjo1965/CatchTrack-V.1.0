@@ -537,7 +537,7 @@ Dieser Arbeitsstand gilt als abgeschlossener neutraler Framework-Freeze für die
 
 ### Export
 
-- Archiv: `Neutral-Framework-v1.0.0-Freeze.zip`
+- Archiv: `Archiv/Neutral-Framework-v1.0.0-Freeze.zip`
 - Export-Regel: Ausschluss von `Modules/gps-module/` und `Modules/weather-module/`
 - ".git"-Daten und temporäre Arbeitsdateien bleiben außerhalb des Freeze-ZIPs
 
