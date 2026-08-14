@@ -333,6 +333,6 @@
     };
 
     if (!window.ConfigManager) {
-        window.ConfigManager = Object.freeze(ConfigManager);
+        window.ConfigManager = ConfigManager;
     }
 })();

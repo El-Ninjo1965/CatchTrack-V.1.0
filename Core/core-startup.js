@@ -50,6 +50,36 @@
 
                 window.CoreLoader.init();
 
+                if (window.ConfigManager && typeof window.ConfigManager.init === 'function') {
+                    window.ConfigManager.init();
+                }
+
+                if (window.ServiceManager && typeof window.ServiceManager.init === 'function') {
+                    window.ServiceManager.init();
+                }
+
+                if (window.DatabaseManager && typeof window.DatabaseManager.init === 'function') {
+                    window.DatabaseManager.init().catch((error) => {
+                        if (window.CoreErrorHandler) {
+                            window.CoreErrorHandler.handle(error, {
+                                type: 'database-init'
+                            });
+                        }
+                    });
+                }
+
+                if (window.UserModule && typeof window.UserModule.init === 'function') {
+                    window.UserModule.init();
+                }
+
+                if (window.AdminModule && typeof window.AdminModule.init === 'function') {
+                    window.AdminModule.init();
+                }
+
+                if (window.I18nModule && typeof window.I18nModule.init === 'function') {
+                    window.I18nModule.init();
+                }
+
                 if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') {
                     window.ModuleManager.discoverModules();
                 }

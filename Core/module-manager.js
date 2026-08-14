@@ -9,6 +9,37 @@
 (() => {
     'use strict';
 
+    const resolveGlobalName = (manifest, entry) => {
+        if (entry && typeof entry.globalName === 'string' && entry.globalName.trim()) {
+            return entry.globalName.trim();
+        }
+
+        if (manifest && typeof manifest.globalName === 'string' && manifest.globalName.trim()) {
+            return manifest.globalName.trim();
+        }
+
+        const primaryName = (manifest && manifest.name) || (entry && entry.name) || (manifest && manifest.id) || '';
+        const nameCandidates = [
+            primaryName,
+            (manifest && manifest.id) || '',
+            (entry && entry.id) || ''
+        ].filter(Boolean);
+
+        const normalized = nameCandidates
+            .map((name) => name
+                .replace(/[^A-Za-z0-9]+/g, ' ')
+                .trim()
+                .split(/\s+/)
+                .filter(Boolean))
+            .flat()
+            .map((part, index) => index === 0
+                ? part.charAt(0).toUpperCase() + part.slice(1)
+                : part.charAt(0).toUpperCase() + part.slice(1))
+            .join('');
+
+        return normalized || 'Module';
+    };
+
     const ModuleManager = {
         registry: null,
 
@@ -99,7 +130,8 @@
                     return;
                 }
 
-                const candidate = window[entry.globalName] || entry.instance || null;
+                const globalName = resolveGlobalName(manifest, entry);
+                const candidate = window[globalName] || entry.instance || null;
                 if (!candidate) {
                     return;
                 }

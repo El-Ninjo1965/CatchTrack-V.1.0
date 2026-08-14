@@ -64,6 +64,10 @@
                     const db = event.target.result;
                     this.createStores(db);
                 };
+
+                request.onerror = () => {
+                    reject(new Error(`Failed to open database: ${request.error}`));
+                };
             });
         },
 
@@ -86,7 +90,7 @@
                 if (!db.objectStoreNames.contains(config.name)) {
                     const store = db.createObjectStore(config.name, { keyPath: config.keyPath });
 
-                    if (config.indexes) {
+                    if (config.indexes && typeof store.createIndex === 'function') {
                         config.indexes.forEach(indexName => {
                             store.createIndex(indexName, indexName, { unique: false });
                         });
