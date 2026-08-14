@@ -724,3 +724,150 @@ Keine weitere Root-MD-Datei wird für diesen Zweck erstellt.
 `STATE.md` beschreibt den aktuellen Zustand.
 
 Diese Zuständigkeiten dürfen nicht vermischt werden.
+
+---
+
+## AKTUELLER FRAMEWORK-IST-ZUSTAND
+
+### Prüfdatum und Prüfstand
+
+- Prüfdatum: 2026-08-14
+- Repository: `El-Ninjo1965/CatchTrack-V.1.0`
+- Branch: `main`
+- geprüfter Commit: `63fc20ae865c2bf53da16387f9302bfcd2d4f37f`
+- Remote-Abgleich vor der Dokumentation: `origin/main` zeigte denselben Commit.
+- Während der Prüfung wurden keine Framework-Dateien verändert. Archive wurden nicht entpackt oder als Implementierungsnachweis verwendet.
+
+### Tatsächliche Struktur
+
+Der aktuelle Bestand besteht aus:
+
+- `Core/`: Core, Runtime-Einstieg, Startup/Shutdown, Lifecycle, Context, Config, State, Storage, Event Bus, Error Handling, Logging sowie Module Interface, Registry und Manager.
+- `Config/`: `config-manager.js` und README.
+- `Database/`: `database-manager.js` und README.
+- `Services/`: `service-manager.js` und README.
+- `Modules/`: User-, Admin-, i18n-, GPS- und Weather-Modul; jeweils mit Interface, Loader und Implementierung, beim Weather-Modul zusätzlich Provider-Registry.
+- Root-HTML: `index.html`, `dev.html`, `preview.html`; `index.html` enthält zusätzlich den UI-/Anwendungs-Orchestrator als Inline-Code.
+- Root-Dokumentation und Arbeitsdateien: mehrere Reviews, Analysen, Architektur-/Zieldokumente, `STATE.md`, `PROJECT.md`, `RULES.md`, `WORKFLOW.md`.
+- Archive: drei eingecheckte ZIP-Dateien beziehungsweise ZIP-Pfade; sie wurden nicht geprüft und sind kein Beweis für den aktuellen Code.
+
+Core, User, Admin und i18n sind als getrennte Verzeichnisse beziehungsweise Module organisiert. Die Organisation ist nachvollziehbar, aber die Module sind nicht automatisch Bestandteil des tatsächlichen HTML-Bootpfads.
+
+### Tatsächlich implementierte Komponenten
+
+- Core Runtime: `CoreEntry`, `CoreRuntime`, `CoreStartup`, `CoreShutdown` und `CoreLifecycle` sind als ausführbarer Code vorhanden.
+- Core-Basis: `Core`, `CoreContext`, `CoreConfig`, `CoreState`, `CoreStorage`, `CoreEventBus`, `CoreErrorHandler` und `ErrorLog` sind vorhanden.
+- Modulbasis: `ModuleInterface`, `ModuleRegistry` und `ModuleManager` implementieren Registrierung sowie manuelle Lifecycle-Operationen.
+- Configuration: `ConfigManager` enthält In-Memory-Konfiguration, Watcher, Merge sowie localStorage-Persistenz.
+- Storage: `CoreStorage` kapselt localStorage.
+- Database: `DatabaseManager` enthält eine IndexedDB-Abstraktion mit Stores, Indizes und CRUD-/Transaktionsmethoden.
+- Services: `ServiceManager` enthält User-, Auth-, Module-, Logging- und Cache-Services.
+- Events: Subscribe/Unsubscribe/Publish/Once sowie Fehlerbehandlung für Event-Callbacks sind implementiert.
+- State: In-Memory-State mit Änderungs-/Löschereignissen ist implementiert.
+- Logging/Error Handling: ErrorLog und global registrierte Fehler-/Unhandled-Rejection-Behandlung sind vorhanden; der Logging-Service schreibt optional in IndexedDB oder auf die Konsole.
+- User: User-Verwaltung, Rollen-/Berechtigungsprüfung, Authentifizierung und Demo-Benutzer sind implementiert.
+- Admin: Diagnose-/Statistikfunktionen und Eventbeobachtung sind implementiert.
+- i18n: Sprachumschaltung und Übersetzung für Deutsch/Englisch sind implementiert.
+- GPS: Browser-Geolocation, Tracking, Status, Reverse-Geocoding und Standortinformationen sind implementiert.
+- Weather: Provider-Registry, Open-Meteo-Abruf, Normalisierung, Cache und WMO-Auswertung sind implementiert.
+
+„Implementiert“ bedeutet hier, dass ausführbarer Code vorhanden ist. Für die meisten Komponenten liegt kein produktiver Laufzeitnachweis vor.
+
+### Nachweislich funktionierende Pfade
+
+1. Alle 37 vorhandenen JavaScript-Dateien unter `Core/`, `Config/`, `Database/`, `Services/` und `Modules/` bestanden am Prüfdatum `node --check` ohne Syntaxfehler.
+2. Ein isolierter Smoke-Test mit einer kleinen Browser-Umgebung lud den Core in der HTML-Reihenfolge, startete `CoreEntry`, erreichte die Lifecycle-Phase `running` und registrierte, installierte und aktivierte ein Testmodul. Ergebnis: `running`, Modulstatus `enabled`, Modul aktiv.
+3. Der Git-Remote-Abgleich vor der Dokumentation war identisch: lokaler HEAD und `origin/main` waren `63fc20a...`.
+
+Diese Nachweise belegen nicht, dass die HTML-Anwendung, IndexedDB, Geolocation, externe HTTP-Aufrufe oder die UI im Browser funktionieren.
+
+### Teilweise implementiert oder nicht nachgewiesen
+
+- Die fünf Modul-Loader sind vorhanden, aber `index.html`, `dev.html` und `preview.html` binden ausschließlich Core-Dateien ein. Es gibt keinen nachgewiesenen automatischen Module-Discovery- oder Dynamic-Loader-Pfad. User, Admin, i18n, GPS und Weather werden deshalb im normalen HTML-Boot nicht geladen.
+- `ModuleInterface`/`ModuleManager` besitzen Installieren, Initialisieren, Aktivieren, Deaktivieren, Deinstallieren und Update als Methoden. Dependency-Prüfung, Manifest-Verarbeitung, Discovery, Installation aus einem Paket, Persistenz, Versionsprüfung und ein realer Update-Mechanismus sind nicht implementiert. Abhängigkeiten werden nur als Arrays geführt.
+- `ConfigManager`, `DatabaseManager` und `ServiceManager` sind vorhanden, werden aber in der HTML-Scriptsequenz nicht eingebunden und vom Core-Startup nicht initialisiert. Die Datenbankinitialisierung ist asynchron und wird im Core-Startup nicht abgewartet.
+- Die Datenbank-CRUD-Methoden sind vorhanden, aber mangels Browser-/IndexedDB-Test nicht als funktionierend nachgewiesen.
+- Die externe GPS-Reverse-Geocoding- und Weather-Kommunikation hängt von Browserberechtigungen, Netzwerk, CORS und Open-Meteo ab und wurde nicht ausgeführt.
+- Der UI-Code in `index.html` referenziert die Modul-Globals und kann ohne deren Einbindung nicht vollständig funktionieren. Die genaue Browserdarstellung und Interaktion wurden mangels Browser-Binary im Prüfcontainer nicht ausgeführt.
+- `CoreLifecycle` und der manuelle Modul-Lifecycle sind implementiert; Ressourcenfreigabe über einen separaten Destroy/Unload-Hook ist nicht vorhanden.
+
+### Nicht funktionierend beziehungsweise aktuell nicht verfügbar
+
+- Ein vollständiger normaler HTML-Start mit allen erwarteten Modulen ist im geprüften Bestand nicht nachgewiesen und wegen der fehlenden Modul-Script-Tags nicht vollständig verdrahtet.
+- Automatische Modulentdeckung und automatisches Laden anhand der Konfiguration (`autoLoad`, `loadPath`, `moduleTimeout`) existieren im ausführbaren Core-Code nicht.
+- Ein vollständiger Installations-, Aktivierungs-, Deaktivierungs-, Deinstallations- und Update-Workflow über Manifest/Paket ist nicht vorhanden; nur direkte Methoden auf bereits registrierten JavaScript-Objekten existieren.
+- Tests im Repository existieren nicht: keine Testdateien, keine `package.json`, keine Testkonfiguration und keine Testautomation wurden gefunden.
+- Security ist kein fertiges Sicherheitsmodul. Es gibt Konfigurationswerte und Rollen-/Berechtigungslogik, aber keine nachgewiesene Verschlüsselung, Passwort-/Token-Verarbeitung, CSRF-Durchsetzung, Sessionverwaltung oder Autorisierungsschicht für Datenbank-/Serviceoperationen. Die Konfiguration setzt Verschlüsselung zudem auf `false`.
+
+### Fachliche Bindung und Architekturabweichungen
+
+Der Core selbst verwendet überwiegend generische Namen und enthält keine erkannte CatchTrack-Fachlogik. Der aktuelle Gesamtbestand ist jedoch nicht fachlich neutral:
+
+- GPS und Weather sind konkrete CatchTrack-Module mit `CatchTrack*`-Globals, Open-Meteo-Endpunkten, WMO-Wetterauswertung und anwendungsbezogenen Ereignissen.
+- Die Root-Anwendung ist eine konkrete CatchTrack-Oberfläche mit Dashboard-, Fang-, Fischdatenbank-, Wetter-, GPS-, Statistik-, Profil-, Admin- und Einstellungsbereichen.
+- Es existieren parallele globale Namensräume: der Core verwendet `window.Core`, Module verwenden zusätzlich `window.CatchTrackCore` und `window.CatchTrack*`. Das ist ein widersprüchlicher Integrationsvertrag.
+- Der generische `AuthService` fällt auf `window.UserModule` und damit auf eine konkrete Modul-Implementierung zurück.
+- Konfiguration, Database-Manager und Services bilden eine zweite, umfangreiche Infrastruktur neben dem tatsächlich eingebundenen Core-Boot und sind nicht in diesen Bootpfad integriert.
+
+### Offensichtliche Altlasten beziehungsweise Bereinigungskandidaten
+
+Ohne Löschung zu empfehlen, sind mindestens folgende Kandidaten dokumentiert:
+
+- Nicht eingebundene Moduldateien und Loader im Verhältnis zu den HTML-Bootdateien.
+- `ConfigManager`, `DatabaseManager`, `ServiceManager` und zugehörige README-Dateien, soweit sie im aktuellen Bootpfad unbenutzt bleiben.
+- `Neutral-Framework-v1.0.0-Freeze.zip` sowie ZIP-Dateien unter `Archiv/`; sie duplizieren beziehungsweise konservieren Stände außerhalb des ausführbaren Pfads.
+- Mehrere Root-Reviews, Analysen und Ziel-/Arbeitsdokumente, deren Aussagen nicht automatisch den Codezustand belegen.
+- Die in `ConfigManager` vorhandenen `autoLoad`-/`loadPath`-/Timeout-Einstellungen ohne ausführbare Discovery-/Loader-Implementierung.
+- Die behauptete Neutralität beziehungsweise Freeze-Reife in vorhandenen Architektur-/Workflow-Dokumenten passt nicht vollständig zum Code: konkrete GPS-/Weather-/CatchTrack-Logik ist vorhanden und die Module sind im HTML-Boot nicht verdrahtet.
+
+Diese Punkte wurden nicht gelöscht, verschoben oder verändert.
+
+### Vorhandene Dokumentation
+
+Vorhanden sind README-Dateien für Config, Database, Services und mehrere Module sowie die Root-Dateien `PROJECT.md`, `RULES.md`, `STATE.md`, mehrere CORE-/MODULE-/PLATFORM-/SYSTEM-Analysen und Reviews, `AGENT_REVIEW.md` und diese `WORKFLOW.md`. Ihre Aussagen wurden für die technische Bewertung nicht als Implementierungsnachweis verwendet. Besonders Freeze-/Neutralitätsaussagen stehen teilweise im Widerspruch zu den oben belegten fehlenden Boot- und Discovery-Pfaden sowie zur vorhandenen Fachlogik.
+
+### Tests und Ergebnisse
+
+- Repository-Tests: keine gefunden.
+- Automatisierte Testkonfiguration: keine gefunden.
+- Ausgeführt: JavaScript-Syntaxcheck für 37 Dateien, erfolgreich.
+- Ausgeführt: isolierter Core-/Module-Lifecycle-Smoke-Test, erfolgreich.
+- Nicht ausgeführt: Browserintegration, UI, IndexedDB, Geolocation, externe APIs, Modul-HTML-Boot, Security- und Persistenztests.
+- Browser-Binary und `node_modules` waren im Prüfcontainer nicht vorhanden.
+
+### Git-Zustand
+
+- Branch: `main`.
+- Vor Prüfungsdokumentation: Arbeitsbaum sauber, keine lokalen Änderungen, keine Löschungen, keine neuen untracked Dateien.
+- Lokaler Commit und `origin/main`: identisch bei `63fc20ae865c2bf53da16387f9302bfcd2d4f37f`.
+- Nach dieser Dokumentation darf ausschließlich diese Änderung an `WORKFLOW.md` im Arbeitsbaum entstehen; `AGENT_REVIEW.md` bleibt unverändert.
+
+### FRAMEWORK-STATUS: TEILWEISE FERTIG
+
+**A) Was ist tatsächlich fertig?**
+
+Der technische Core-Grundpfad, die grundlegende Lifecycle-State-Machine, Event-/State-/Storage-Bausteine und die manuelle Modulverwaltung sind als Code vorhanden. Syntax und ein isolierter Core-Smoke-Test sind erfolgreich.
+
+**B) Was funktioniert tatsächlich?**
+
+Nachweisbar funktionieren im isolierten Test Core-Start, Lifecycle-Übergang sowie Registrierung, Installation und Aktivierung eines Moduls. Die JavaScript-Dateien sind syntaktisch gültig.
+
+**C) Was funktioniert noch nicht?**
+
+Ein vollständiger, realer HTML-Anwendungsstart mit den Modulen und allen Infrastrukturkomponenten ist nicht verdrahtet beziehungsweise nicht nachgewiesen. Discovery, paketbasierte Installation, echtes Update, Browserintegration, Datenbankbetrieb, externe API-Aufrufe und Security-Durchsetzung sind nicht nachgewiesen oder fehlen.
+
+**D) Was fehlt zwingend?**
+
+Vor einem Freeze müssen mindestens ein klarer und getesteter Bootpfad, die bewusste Einbindung oder Entfernung der Module, eine Entscheidung zur fachlichen Trennung von Core und CatchTrack-Anwendung, ein realer Dependency-/Manifest-/Loader-Vertrag, die Initialisierung der Infrastruktur sowie automatisierte Tests vorhanden sein.
+
+**E) Was ist nur Entwurf?**
+
+Module-Discovery, Auto-Load-Konfiguration, Manifest-/Paketverwaltung, Security-Konfiguration als durchgesetzte Sicherheitsfunktion und Teile der Service-/Database-Infrastruktur sind im aktuellen Code nicht als vollständiger End-to-End-Mechanismus umgesetzt.
+
+**F) Was ist offensichtlich unnötig oder veraltet?**
+
+Nicht eingebundene Infrastruktur-/Loaderpfade, eingecheckte Freeze-ZIP-Kopien und Dokumente mit nicht mehr zutreffenden Freeze-/Neutralitätsaussagen sind Bereinigungskandidaten. Eine Löschung war nicht Bestandteil dieser Prüfung.
+
+**G) Was muss vor dem möglichen Freeze noch getan werden?**
+
+Der tatsächliche Zielumfang muss festgelegt werden: generisches Framework oder CatchTrack-Anwendung. Danach müssen Boot, Module, Abhängigkeiten, Services, Datenbank, Security und UI entweder vollständig integriert und getestet oder aus dem Frameworkbestand entfernt werden. Anschließend sind automatisierte Tests, Browser-/Persistenztests, ein vollständiger Git-Diff und ein neuer unabhängiger Audit erforderlich.
