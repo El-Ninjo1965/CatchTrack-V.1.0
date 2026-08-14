@@ -50,6 +50,10 @@
 
                 window.CoreLoader.init();
 
+                if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') {
+                    window.ModuleManager.discoverModules();
+                }
+
                 window.CoreContext.setRuntimeValue(
                     'initialized',
                     true

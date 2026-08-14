@@ -293,7 +293,31 @@
         }
     };
 
+    const moduleManifest = Object.freeze({
+        id: 'user-module',
+        name: 'User Module',
+        version: '1.0.0',
+        type: 'framework',
+        description: 'Framework identity, session and permission layer.',
+        dependencies: [],
+        permissions: ['framework:read'],
+        capabilities: ['identity', 'session'],
+        source: 'Modules/user-module/user-module.js'
+    });
+
+    if (!Array.isArray(window.FrameworkModuleCatalog)) {
+        window.FrameworkModuleCatalog = [];
+    }
+
+    if (!window.FrameworkModuleCatalog.some((entry) => entry && entry.id === moduleManifest.id)) {
+        window.FrameworkModuleCatalog.push(moduleManifest);
+    }
+
     if (!window.UserModule) {
         window.UserModule = UserModule;
+    }
+
+    if (!window.CatchTrackUserModule) {
+        window.CatchTrackUserModule = window.UserModule;
     }
 })();

@@ -26,7 +26,15 @@
             }
 
             if (!module.id || typeof module.id !== 'string') {
-                throw new Error('Module ID is required.');
+                if (typeof module.name === 'string' && module.name.trim()) {
+                    module.id = module.name.trim();
+                } else {
+                    throw new Error('Module ID is required.');
+                }
+            }
+
+            if (!module.name || typeof module.name !== 'string') {
+                module.name = module.id;
             }
 
             if (typeof module.status === 'undefined') {
@@ -49,7 +57,115 @@
                 module.capabilities = [];
             }
 
+            if (!module.manifest) {
+                module.manifest = {
+                    id: module.id,
+                    name: module.name,
+                    version: module.version || '1.0.0',
+                    type: 'framework',
+                    description: module.description || '',
+                    dependencies: [...module.dependencies],
+                    permissions: [...module.permissions],
+                    capabilities: [...module.capabilities]
+                };
+            }
+
             return module;
+        },
+
+        discoverModules() {
+            this.ensureInitialized();
+
+            if (!window.ModuleRegistry || typeof window.ModuleRegistry.discover !== 'function') {
+                return [];
+            }
+
+            const catalog = Array.isArray(window.FrameworkModuleCatalog)
+                ? window.FrameworkModuleCatalog
+                : [];
+
+            const discovered = [];
+
+            catalog.forEach((entry) => {
+                if (!entry || typeof entry !== 'object') {
+                    return;
+                }
+
+                const manifest = window.ModuleInterface && typeof window.ModuleInterface.validateManifest === 'function'
+                    ? window.ModuleInterface.validateManifest(entry)
+                    : null;
+
+                if (!manifest) {
+                    return;
+                }
+
+                const candidate = window[entry.globalName] || entry.instance || null;
+                if (!candidate) {
+                    return;
+                }
+
+                const moduleId = candidate.id || manifest.id;
+                if (this.registry.has(moduleId)) {
+                    discovered.push(this.get(moduleId));
+                    return;
+                }
+
+                const normalized = this.normalizeModule({
+                    ...candidate,
+                    id: moduleId,
+                    name: candidate.name || manifest.name,
+                    version: candidate.version || manifest.version,
+                    description: candidate.description || manifest.description,
+                    dependencies: Array.isArray(candidate.dependencies)
+                        ? candidate.dependencies
+                        : [...(manifest.dependencies || [])],
+                    permissions: Array.isArray(candidate.permissions)
+                        ? candidate.permissions
+                        : [...(manifest.permissions || [])],
+                    capabilities: Array.isArray(candidate.capabilities)
+                        ? candidate.capabilities
+                        : [...(manifest.capabilities || [])],
+                    manifest
+                });
+
+                const registered = this.register(normalized);
+                discovered.push(registered);
+
+                try {
+                    this.install(registered.id);
+                    this.initialize(registered.id);
+                    this.enable(registered.id);
+                } catch (error) {
+                    if (window.CoreErrorHandler) {
+                        window.CoreErrorHandler.handle(error, {
+                            type: 'module-discovery-activate',
+                            moduleId: registered.id
+                        });
+                    }
+                }
+            });
+
+            return discovered;
+        },
+
+        validateDependencies(moduleId) {
+            this.ensureInitialized();
+
+            const module = this.get(moduleId);
+
+            if (!module) {
+                throw new Error(`Module not found: ${moduleId}`);
+            }
+
+            const missingDependencies = (module.dependencies || []).filter(
+                (dependency) => !this.registry.has(dependency)
+            );
+
+            if (missingDependencies.length > 0) {
+                throw new Error(`Missing module dependencies for "${module.id}": ${missingDependencies.join(', ')}`);
+            }
+
+            return true;
         },
 
         register(module) {
@@ -60,7 +176,9 @@
 
             if (window.Core) {
                 window.Core.emit('module:registered', {
-                    id: registeredModule.id
+                    id: registeredModule.id,
+                    name: registeredModule.name,
+                    version: registeredModule.version
                 });
             }
 
@@ -110,6 +228,8 @@
                 throw new Error(`Module not found: ${moduleId}`);
             }
 
+            this.validateDependencies(moduleId);
+
             if (typeof module.install === 'function') {
                 module.install();
             }
@@ -125,6 +245,8 @@
             if (!module) {
                 throw new Error(`Module not found: ${moduleId}`);
             }
+
+            this.validateDependencies(moduleId);
 
             if (typeof module.initialize === 'function') {
                 module.initialize();
@@ -142,6 +264,8 @@
                 throw new Error(`Module not found: ${moduleId}`);
             }
 
+            this.validateDependencies(moduleId);
+
             if (typeof module.enable === 'function') {
                 module.enable();
             } else if (typeof module.activate === 'function') {
@@ -151,7 +275,9 @@
             if (window.Core) {
                 window.Core.state.activeModule = moduleId;
                 window.Core.emit('module:activated', {
-                    id: moduleId
+                    id: moduleId,
+                    name: module.name,
+                    version: module.version
                 });
             }
 

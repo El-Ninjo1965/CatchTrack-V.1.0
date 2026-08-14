@@ -20,31 +20,66 @@
     const ModuleInterface = {
         statuses: moduleStatuses,
 
+        validateManifest(manifest) {
+            if (!manifest || typeof manifest !== 'object') {
+                return null;
+            }
+
+            const id = typeof manifest.id === 'string' && manifest.id.trim()
+                ? manifest.id.trim()
+                : null;
+
+            if (!id) {
+                return null;
+            }
+
+            return {
+                id,
+                name: typeof manifest.name === 'string' && manifest.name.trim()
+                    ? manifest.name.trim()
+                    : id,
+                version: typeof manifest.version === 'string' && manifest.version.trim()
+                    ? manifest.version.trim()
+                    : '1.0.0',
+                type: manifest.type || 'framework',
+                description: typeof manifest.description === 'string'
+                    ? manifest.description
+                    : '',
+                dependencies: Array.isArray(manifest.dependencies)
+                    ? manifest.dependencies.filter(Boolean).map(String)
+                    : [],
+                permissions: Array.isArray(manifest.permissions)
+                    ? manifest.permissions.filter(Boolean).map(String)
+                    : [],
+                capabilities: Array.isArray(manifest.capabilities)
+                    ? manifest.capabilities.filter(Boolean).map(String)
+                    : [],
+                source: typeof manifest.source === 'string' ? manifest.source : null,
+                entry: typeof manifest.entry === 'string' ? manifest.entry : null,
+                lifecycle: manifest.lifecycle && typeof manifest.lifecycle === 'object'
+                    ? manifest.lifecycle
+                    : {}
+            };
+        },
+
         create(definition = {}) {
-            if (!definition.id || typeof definition.id !== 'string') {
+            const manifest = this.validateManifest(definition.manifest || definition);
+
+            if (!manifest) {
                 throw new Error('Module ID is required.');
             }
 
-            if (!definition.name || typeof definition.name !== 'string') {
-                throw new Error('Module name is required.');
-            }
-
             const module = {
-                id: definition.id,
-                name: definition.name,
-                version: definition.version || '1.0.0',
-                description: definition.description || '',
+                id: manifest.id,
+                name: manifest.name,
+                version: manifest.version,
+                description: manifest.description,
                 status: moduleStatuses.AVAILABLE,
                 active: false,
-                dependencies: Array.isArray(definition.dependencies)
-                    ? [...definition.dependencies]
-                    : [],
-                permissions: Array.isArray(definition.permissions)
-                    ? [...definition.permissions]
-                    : [],
-                capabilities: Array.isArray(definition.capabilities)
-                    ? [...definition.capabilities]
-                    : [],
+                dependencies: [...manifest.dependencies],
+                permissions: [...manifest.permissions],
+                capabilities: [...manifest.capabilities],
+                manifest,
 
                 install() {
                     if (this.status === moduleStatuses.INSTALLED) {

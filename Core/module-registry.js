@@ -20,15 +20,47 @@
             }
 
             if (!module.id || typeof module.id !== 'string') {
-                throw new Error('Module ID is required.');
+                if (typeof module.name === 'string' && module.name.trim()) {
+                    module.id = module.name.trim();
+                } else {
+                    throw new Error('Module ID is required.');
+                }
             }
 
             if (registry.has(module.id)) {
                 throw new Error(`Module already registered: ${module.id}`);
             }
 
-            registry.set(module.id, module);
+            if (!module.name || typeof module.name !== 'string') {
+                module.name = module.id;
+            }
 
+            if (!Array.isArray(module.dependencies)) {
+                module.dependencies = [];
+            }
+
+            if (!Array.isArray(module.permissions)) {
+                module.permissions = [];
+            }
+
+            if (!Array.isArray(module.capabilities)) {
+                module.capabilities = [];
+            }
+
+            if (!module.manifest) {
+                module.manifest = {
+                    id: module.id,
+                    name: module.name,
+                    version: module.version || '1.0.0',
+                    type: 'framework',
+                    description: module.description || '',
+                    dependencies: [...module.dependencies],
+                    permissions: [...module.permissions],
+                    capabilities: [...module.capabilities]
+                };
+            }
+
+            registry.set(module.id, module);
             return module;
         },
 
@@ -67,6 +99,65 @@
 
         clear() {
             registry.clear();
+        },
+
+        discover() {
+            const catalog = Array.isArray(window.FrameworkModuleCatalog)
+                ? window.FrameworkModuleCatalog
+                : [];
+
+            const discovered = [];
+
+            catalog.forEach((entry) => {
+                if (!entry || typeof entry !== 'object') {
+                    return;
+                }
+
+                const manifest = window.ModuleInterface && typeof window.ModuleInterface.validateManifest === 'function'
+                    ? window.ModuleInterface.validateManifest(entry)
+                    : null;
+
+                if (!manifest || registry.has(manifest.id)) {
+                    return;
+                }
+
+                const globalName = entry.globalName || manifest.name
+                    .split(/[^A-Za-z0-9]+/)
+                    .filter(Boolean)
+                    .map((part, index) => index === 0 ? part.charAt(0).toUpperCase() + part.slice(1) : part.charAt(0).toUpperCase() + part.slice(1))
+                    .join('');
+
+                const implementation = typeof window[globalName] === 'object'
+                    ? window[globalName]
+                    : null;
+
+                if (!implementation) {
+                    return;
+                }
+
+                const module = {
+                    ...implementation,
+                    id: implementation.id || manifest.id,
+                    name: implementation.name || manifest.name,
+                    version: implementation.version || manifest.version,
+                    description: implementation.description || manifest.description,
+                    manifest,
+                    dependencies: Array.isArray(implementation.dependencies)
+                        ? [...implementation.dependencies]
+                        : [...manifest.dependencies],
+                    permissions: Array.isArray(implementation.permissions)
+                        ? [...implementation.permissions]
+                        : [...manifest.permissions],
+                    capabilities: Array.isArray(implementation.capabilities)
+                        ? [...implementation.capabilities]
+                        : [...manifest.capabilities]
+                };
+
+                registry.set(module.id, module);
+                discovered.push(module);
+            });
+
+            return discovered;
         }
     };
 

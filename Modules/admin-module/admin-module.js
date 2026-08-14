@@ -190,7 +190,31 @@
         }
     };
 
+    const moduleManifest = Object.freeze({
+        id: 'admin-module',
+        name: 'Admin Module',
+        version: '1.0.0',
+        type: 'framework',
+        description: 'Framework administration and health diagnostics.',
+        dependencies: [],
+        permissions: ['framework:read', 'system:view'],
+        capabilities: ['diagnostics', 'health-check'],
+        source: 'Modules/admin-module/admin-module.js'
+    });
+
+    if (!Array.isArray(window.FrameworkModuleCatalog)) {
+        window.FrameworkModuleCatalog = [];
+    }
+
+    if (!window.FrameworkModuleCatalog.some((entry) => entry && entry.id === moduleManifest.id)) {
+        window.FrameworkModuleCatalog.push(moduleManifest);
+    }
+
     if (!window.AdminModule) {
         window.AdminModule = AdminModule;
+    }
+
+    if (!window.CatchTrackAdminModule) {
+        window.CatchTrackAdminModule = window.AdminModule;
     }
 })();

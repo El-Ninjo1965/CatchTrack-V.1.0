@@ -129,7 +129,31 @@
         }
     };
 
+    const moduleManifest = Object.freeze({
+        id: 'i18n-module',
+        name: 'i18n Module',
+        version: '1.0.0',
+        type: 'framework',
+        description: 'Framework localization and locale management.',
+        dependencies: [],
+        permissions: ['framework:read'],
+        capabilities: ['localization'],
+        source: 'Modules/i18n-module/i18n-module.js'
+    });
+
+    if (!Array.isArray(window.FrameworkModuleCatalog)) {
+        window.FrameworkModuleCatalog = [];
+    }
+
+    if (!window.FrameworkModuleCatalog.some((entry) => entry && entry.id === moduleManifest.id)) {
+        window.FrameworkModuleCatalog.push(moduleManifest);
+    }
+
     if (!window.I18nModule) {
         window.I18nModule = I18nModule;
+    }
+
+    if (!window.CatchTrackI18n) {
+        window.CatchTrackI18n = window.I18nModule;
     }
 })();
