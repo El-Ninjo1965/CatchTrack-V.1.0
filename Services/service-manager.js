@@ -446,6 +446,6 @@
     };
 
     if (!window.ServiceManager) {
-        window.ServiceManager = Object.freeze(ServiceManager);
+        window.ServiceManager = ServiceManager;
     }
 })();

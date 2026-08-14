@@ -152,8 +152,4 @@
     if (!window.I18nModule) {
         window.I18nModule = I18nModule;
     }
-
-    if (!window.CatchTrackI18n) {
-        window.CatchTrackI18n = window.I18nModule;
-    }
 })();

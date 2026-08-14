@@ -316,8 +316,4 @@
     if (!window.UserModule) {
         window.UserModule = UserModule;
     }
-
-    if (!window.CatchTrackUserModule) {
-        window.CatchTrackUserModule = window.UserModule;
-    }
 })();

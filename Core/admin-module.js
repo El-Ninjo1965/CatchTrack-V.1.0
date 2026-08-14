@@ -213,8 +213,4 @@
     if (!window.AdminModule) {
         window.AdminModule = AdminModule;
     }
-
-    if (!window.CatchTrackAdminModule) {
-        window.CatchTrackAdminModule = window.AdminModule;
-    }
 })();

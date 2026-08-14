@@ -84,9 +84,6 @@
     };
 
     window.Core = Core;
-    if (!window.CatchTrackCore) {
-        window.CatchTrackCore = window.Core;
-    }
 
     Core.init();
 })();

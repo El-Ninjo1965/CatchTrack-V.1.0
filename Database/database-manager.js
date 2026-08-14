@@ -286,6 +286,6 @@
     };
 
     if (!window.DatabaseManager) {
-        window.DatabaseManager = Object.freeze(DatabaseManager);
+        window.DatabaseManager = DatabaseManager;
     }
 })();

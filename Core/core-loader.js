@@ -21,7 +21,7 @@
             permissions: ['framework:read'],
             capabilities: ['identity', 'session'],
             globalName: 'UserModule',
-            source: 'Modules/user-module/user-module.js'
+            source: 'Core/user-module.js'
         },
         {
             id: 'admin-module',
@@ -33,7 +33,7 @@
             permissions: ['framework:read', 'system:view'],
             capabilities: ['diagnostics', 'health-check'],
             globalName: 'AdminModule',
-            source: 'Modules/admin-module/admin-module.js'
+            source: 'Core/admin-module.js'
         },
         {
             id: 'i18n-module',
@@ -45,7 +45,7 @@
             permissions: ['framework:read'],
             capabilities: ['localization'],
             globalName: 'I18nModule',
-            source: 'Modules/i18n-module/i18n-module.js'
+            source: 'Core/i18n-module.js'
         }
     ]);
 
