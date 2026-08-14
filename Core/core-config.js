@@ -20,7 +20,7 @@
         })
     });
 
-    if (!window.CatchTrackCoreConfig) {
-        window.CatchTrackCoreConfig = CoreConfig;
+    if (!window.CoreConfig) {
+        window.CoreConfig = CoreConfig;
     }
 })();

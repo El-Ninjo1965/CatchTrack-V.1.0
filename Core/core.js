@@ -9,7 +9,7 @@
 (() => {
     'use strict';
 
-    const CatchTrackCore = {
+    const Core = {
         version: '1.0.0',
 
         state: {
@@ -30,35 +30,35 @@
         },
 
         getModuleRegistry() {
-            return window.CatchTrackModuleRegistry || null;
+            return window.ModuleRegistry || null;
         },
 
         getModuleManager() {
-            return window.CatchTrackModuleManager || null;
+            return window.ModuleManager || null;
         },
 
         getModules() {
-            if (!window.CatchTrackModuleRegistry) {
+            if (!window.ModuleRegistry) {
                 return [];
             }
 
-            return window.CatchTrackModuleRegistry.getAll();
+            return window.ModuleRegistry.getAll();
         },
 
         on(eventName, callback) {
-            if (!window.CatchTrackCoreEventBus) {
-                throw new Error('CatchTrack Core Event Bus is not available.');
+            if (!window.CoreEventBus) {
+                throw new Error('Core Event Bus is not available.');
             }
 
-            return window.CatchTrackCoreEventBus.subscribe(eventName, callback);
+            return window.CoreEventBus.subscribe(eventName, callback);
         },
 
         off(eventName, callback) {
-            if (!window.CatchTrackCoreEventBus) {
+            if (!window.CoreEventBus) {
                 return;
             }
 
-            return window.CatchTrackCoreEventBus.unsubscribe(eventName, callback);
+            return window.CoreEventBus.unsubscribe(eventName, callback);
         },
 
         once(eventName, callback) {
@@ -75,15 +75,15 @@
         },
 
         emit(eventName, data = null) {
-            if (!window.CatchTrackCoreEventBus) {
+            if (!window.CoreEventBus) {
                 return;
             }
 
-            return window.CatchTrackCoreEventBus.publish(eventName, data);
+            return window.CoreEventBus.publish(eventName, data);
         }
     };
 
-    window.CatchTrackCore = CatchTrackCore;
+    window.Core = Core;
 
-    CatchTrackCore.init();
+    Core.init();
 })();

@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Lifecycle
+ * Core Lifecycle
  * Version: 1.0
  *
  * Zentrale Verwaltung der grundlegenden Lebenszyklusphasen
@@ -55,8 +55,8 @@
 
             currentPhase = phase;
 
-            if (window.CatchTrackCore && typeof window.CatchTrackCore.emit === 'function') {
-                window.CatchTrackCore.emit('lifecycle:changed', {
+            if (window.Core && typeof window.Core.emit === 'function') {
+                window.Core.emit('lifecycle:changed', {
                     previousPhase,
                     currentPhase: phase
                 });
@@ -68,6 +68,6 @@
         }
     };
 
-    window.CatchTrackCoreLifecycle =
+    window.CoreLifecycle =
         Object.freeze(CoreLifecycle);
 })();

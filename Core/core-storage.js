@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Storage
+ * Core Storage
  * Version: 1.0
  *
  * Zentrale Schnittstelle für lokale Datenspeicherung.
@@ -37,8 +37,8 @@
             try {
                 return JSON.parse(storedValue);
             } catch (error) {
-                if (window.CatchTrackErrorLog) {
-                    window.CatchTrackErrorLog.record(error, {
+                if (window.ErrorLog) {
+                    window.ErrorLog.record(error, {
                         type: 'storage-read',
                         key
                     });
@@ -87,7 +87,7 @@
         }
     };
 
-    if (!window.CatchTrackCoreStorage) {
-        window.CatchTrackCoreStorage = Object.freeze(CoreStorage);
+    if (!window.CoreStorage) {
+        window.CoreStorage = Object.freeze(CoreStorage);
     }
 })();

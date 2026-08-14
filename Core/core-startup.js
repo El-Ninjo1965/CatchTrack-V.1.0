@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Startup
+ * Core Startup
  * Version: 1.0
  *
  * Kontrollierter Start des Core nach dem Laden aller
@@ -17,21 +17,21 @@
                 return;
             }
 
-            if (window.CatchTrackCoreShutdown && typeof window.CatchTrackCoreShutdown.reset === 'function') {
-                window.CatchTrackCoreShutdown.reset();
+            if (window.CoreShutdown && typeof window.CoreShutdown.reset === 'function') {
+                window.CoreShutdown.reset();
             }
 
             started = true;
 
             try {
                 const requiredComponents = [
-                    'CatchTrackCore',
-                    'CatchTrackCoreLoader',
-                    'CatchTrackCoreContext',
-                    'CatchTrackCoreConfig',
-                    'CatchTrackCoreLifecycle',
-                    'CatchTrackModuleRegistry',
-                    'CatchTrackModuleManager'
+                    'Core',
+                    'CoreLoader',
+                    'CoreContext',
+                    'CoreConfig',
+                    'CoreLifecycle',
+                    'ModuleRegistry',
+                    'ModuleManager'
                 ];
 
                 const missingComponents = requiredComponents.filter(
@@ -44,28 +44,28 @@
                     );
                 }
 
-                window.CatchTrackCoreLifecycle.setPhase(
-                    window.CatchTrackCoreLifecycle.phases.INITIALIZING
+                window.CoreLifecycle.setPhase(
+                    window.CoreLifecycle.phases.INITIALIZING
                 );
 
-                window.CatchTrackCoreLoader.init();
+                window.CoreLoader.init();
 
-                window.CatchTrackCoreContext.setRuntimeValue(
+                window.CoreContext.setRuntimeValue(
                     'initialized',
                     true
                 );
 
-                window.CatchTrackCoreContext.setRuntimeValue(
+                window.CoreContext.setRuntimeValue(
                     'startedAt',
                     new Date().toISOString()
                 );
 
-                window.CatchTrackCoreLifecycle.setPhase(
-                    window.CatchTrackCoreLifecycle.phases.READY
+                window.CoreLifecycle.setPhase(
+                    window.CoreLifecycle.phases.READY
                 );
 
-                window.CatchTrackCore.emit('core:started', {
-                    version: window.CatchTrackCoreConfig.core.version
+                window.Core.emit('core:started', {
+                    version: window.CoreConfig.core.version
                 });
             } catch (error) {
                 started = false;
@@ -78,8 +78,8 @@
         }
     };
 
-    if (!window.CatchTrackCoreStartup) {
-        window.CatchTrackCoreStartup =
+    if (!window.CoreStartup) {
+        window.CoreStartup =
             Object.freeze(CoreStartup);
     }
 })();

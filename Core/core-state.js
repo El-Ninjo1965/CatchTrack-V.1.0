@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core State
+ * Core State
  * Version: 1.0
  *
  * Zentraler Laufzeitzustand des Systems.
@@ -17,8 +17,8 @@
 
             state.set(key, value);
 
-            if (window.CatchTrackCoreEventBus) {
-                window.CatchTrackCoreEventBus.publish('state:changed', {
+            if (window.CoreEventBus) {
+                window.CoreEventBus.publish('state:changed', {
                     key,
                     value
                 });
@@ -44,8 +44,8 @@
 
             const existed = state.delete(key);
 
-            if (existed && window.CatchTrackCoreEventBus) {
-                window.CatchTrackCoreEventBus.publish('state:removed', {
+            if (existed && window.CoreEventBus) {
+                window.CoreEventBus.publish('state:removed', {
                     key
                 });
             }
@@ -60,8 +60,8 @@
         clear() {
             state.clear();
 
-            if (window.CatchTrackCoreEventBus) {
-                window.CatchTrackCoreEventBus.publish('state:cleared');
+            if (window.CoreEventBus) {
+                window.CoreEventBus.publish('state:cleared');
             }
         },
 
@@ -72,7 +72,7 @@
         }
     };
 
-    if (!window.CatchTrackCoreState) {
-        window.CatchTrackCoreState = Object.freeze(CoreState);
+    if (!window.CoreState) {
+        window.CoreState = Object.freeze(CoreState);
     }
 })();

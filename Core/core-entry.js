@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Entry
+ * Core Entry
  * Version: 1.0
  *
  * Zentraler Einstiegspunkt für den technischen Core-Start.
@@ -10,30 +10,30 @@
 
     const CoreEntry = {
         start() {
-            if (!window.CatchTrackCoreRuntime) {
+            if (!window.CoreRuntime) {
                 throw new Error(
-                    'CatchTrack Core Runtime is not available.'
+                    'Core Runtime is not available.'
                 );
             }
 
-            if (window.CatchTrackCoreRuntime.isRunning()) {
+            if (window.CoreRuntime.isRunning()) {
                 return;
             }
 
-            window.CatchTrackCoreRuntime.start();
+            window.CoreRuntime.start();
         },
 
         stop() {
-            if (!window.CatchTrackCoreRuntime) {
+            if (!window.CoreRuntime) {
                 throw new Error(
-                    'CatchTrack Core Runtime is not available.'
+                    'Core Runtime is not available.'
                 );
             }
 
-            window.CatchTrackCoreRuntime.stop();
+            window.CoreRuntime.stop();
         }
     };
 
-    window.CatchTrackCoreEntry =
+    window.CoreEntry =
         Object.freeze(CoreEntry);
 })();

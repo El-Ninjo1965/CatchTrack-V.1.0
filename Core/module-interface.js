@@ -1,8 +1,8 @@
 /*
- * CatchTrack Module Interface
+ * Module Interface
  * Version: 1.0
  *
- * Einheitliche Grundstruktur für alle CatchTrack-Module.
+ * Einheitliche Grundstruktur für alle Module.
  * Die eigentliche Funktionalität wird ausschließlich
  * innerhalb des jeweiligen Moduls implementiert.
  */
@@ -143,7 +143,7 @@
         }
     };
 
-    if (!window.CatchTrackModuleInterface) {
-        window.CatchTrackModuleInterface = ModuleInterface;
+    if (!window.ModuleInterface) {
+        window.ModuleInterface = ModuleInterface;
     }
 })();

@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Shutdown
+ * Core Shutdown
  * Version: 1.0
  *
  * Kontrolliertes Beenden der Core-Laufzeit.
@@ -20,13 +20,13 @@
                 return;
             }
 
-            if (!window.CatchTrackCoreLifecycle) {
-                throw new Error('CatchTrack Core Lifecycle is not available.');
+            if (!window.CoreLifecycle) {
+                throw new Error('Core Lifecycle is not available.');
             }
 
             const modulesToDisable =
-                window.CatchTrackCore
-                    ? window.CatchTrackCore.getModules()
+                window.Core
+                    ? window.Core.getModules()
                     : [];
 
             modulesToDisable.forEach((module) => {
@@ -40,12 +40,12 @@
                 }
 
                 try {
-                    if (window.CatchTrackModuleManager) {
-                        window.CatchTrackModuleManager.disable(module.id);
+                    if (window.ModuleManager) {
+                        window.ModuleManager.disable(module.id);
                     }
                 } catch (error) {
-                    if (window.CatchTrackCoreErrorHandler) {
-                        window.CatchTrackCoreErrorHandler.handle(
+                    if (window.CoreErrorHandler) {
+                        window.CoreErrorHandler.handle(
                             error,
                             {
                                 type: 'module-shutdown',
@@ -56,24 +56,24 @@
                 }
             });
 
-            if (window.CatchTrackCoreLifecycle.getPhase() !== window.CatchTrackCoreLifecycle.phases.STOPPED) {
-                window.CatchTrackCoreLifecycle.setPhase(
-                    window.CatchTrackCoreLifecycle.phases.STOPPED
+            if (window.CoreLifecycle.getPhase() !== window.CoreLifecycle.phases.STOPPED) {
+                window.CoreLifecycle.setPhase(
+                    window.CoreLifecycle.phases.STOPPED
                 );
             }
 
-            if (window.CatchTrackCoreStartup && typeof window.CatchTrackCoreStartup.reset === 'function') {
-                window.CatchTrackCoreStartup.reset();
+            if (window.CoreStartup && typeof window.CoreStartup.reset === 'function') {
+                window.CoreStartup.reset();
             }
 
-            if (window.CatchTrackCore && typeof window.CatchTrackCore.emit === 'function') {
-                window.CatchTrackCore.emit('core:stopped');
+            if (window.Core && typeof window.Core.emit === 'function') {
+                window.Core.emit('core:stopped');
             }
 
             stopped = true;
         }
     };
 
-    window.CatchTrackCoreShutdown =
+    window.CoreShutdown =
         Object.freeze(CoreShutdown);
 })();

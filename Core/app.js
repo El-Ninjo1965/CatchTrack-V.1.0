@@ -15,43 +15,43 @@
         version: '1.0.0',
 
         start() {
-            if (!window.CatchTrackCore) {
+            if (!window.Core) {
                 throw new Error('Core is not available.');
             }
 
-            if (!window.CatchTrackCoreEntry) {
+            if (!window.CoreEntry) {
                 throw new Error('Core entry is not available.');
             }
 
             this.registerSystemEvents();
-            window.CatchTrackCoreEntry.start();
-            window.CatchTrackCore.emit('app:started', {
+            window.CoreEntry.start();
+            window.Core.emit('app:started', {
                 version: this.version
             });
         },
 
         registerSystemEvents() {
-            if (systemEventsRegistered || !window.CatchTrackCore) {
+            if (systemEventsRegistered || !window.Core) {
                 return;
             }
 
             systemEventsRegistered = true;
 
-            window.CatchTrackCore.on('module:registered', (event) => {
+            window.Core.on('module:registered', (event) => {
                 console.info(`[Core] Module registered: ${event.id}`);
             });
 
-            window.CatchTrackCore.on('module:activated', (event) => {
+            window.Core.on('module:activated', (event) => {
                 console.info(`[Core] Module activated: ${event.id}`);
             });
 
-            window.CatchTrackCore.on('module:deactivated', (event) => {
+            window.Core.on('module:deactivated', (event) => {
                 console.info(`[Core] Module deactivated: ${event.id}`);
             });
         }
     };
 
-    window.CatchTrackApp = App;
+    window.App = App;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {

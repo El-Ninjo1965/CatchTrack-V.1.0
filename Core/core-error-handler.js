@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Error Handler
+ * Core Error Handler
  * Version: 1.0
  *
  * Zentrale Behandlung von Laufzeitfehlern.
@@ -16,15 +16,15 @@
                     ? error
                     : new Error(String(error));
 
-            const entry = window.CatchTrackErrorLog
-                ? window.CatchTrackErrorLog.record(
+            const entry = window.ErrorLog
+                ? window.ErrorLog.record(
                     normalizedError,
                     context
                 )
                 : null;
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit(
+            if (window.Core) {
+                window.Core.emit(
                     'error:handled',
                     {
                         error: normalizedError,
@@ -38,6 +38,6 @@
         }
     };
 
-    window.CatchTrackCoreErrorHandler =
+    window.CoreErrorHandler =
         Object.freeze(CoreErrorHandler);
 })();

@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Runtime
+ * Core Runtime
  * Version: 1.0
  *
  * Zentrale Laufzeitsteuerung des Core.
@@ -16,19 +16,19 @@
                 return;
             }
 
-            if (!window.CatchTrackCoreStartup) {
-                throw new Error('CatchTrack Core Startup is not available.');
+            if (!window.CoreStartup) {
+                throw new Error('Core Startup is not available.');
             }
 
-            window.CatchTrackCoreStartup.start();
+            window.CoreStartup.start();
 
-            window.CatchTrackCoreLifecycle.setPhase(
-                window.CatchTrackCoreLifecycle.phases.RUNNING
+            window.CoreLifecycle.setPhase(
+                window.CoreLifecycle.phases.RUNNING
             );
 
             running = true;
 
-            window.CatchTrackCore.emit('runtime:started');
+            window.Core.emit('runtime:started');
         },
 
         stop() {
@@ -36,15 +36,15 @@
                 return;
             }
 
-            if (!window.CatchTrackCoreShutdown) {
-                throw new Error('CatchTrack Core Shutdown is not available.');
+            if (!window.CoreShutdown) {
+                throw new Error('Core Shutdown is not available.');
             }
 
-            window.CatchTrackCoreShutdown.stop();
+            window.CoreShutdown.stop();
 
             running = false;
 
-            window.CatchTrackCore.emit('runtime:stopped');
+            window.Core.emit('runtime:stopped');
         },
 
         isRunning() {
@@ -52,6 +52,6 @@
         }
     };
 
-    window.CatchTrackCoreRuntime =
+    window.CoreRuntime =
         Object.freeze(CoreRuntime);
 })();

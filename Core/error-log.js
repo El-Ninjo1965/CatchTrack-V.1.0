@@ -1,5 +1,5 @@
 /*
- * CatchTrack Error Log
+ * Error Log
  * Version: 1.0
  *
  * Zentrale Fehlererfassung des Core.
@@ -39,8 +39,8 @@
         }
     };
 
-    if (!window.CatchTrackErrorLog) {
-        window.CatchTrackErrorLog = ErrorLog;
+    if (!window.ErrorLog) {
+        window.ErrorLog = ErrorLog;
     }
 
     window.addEventListener('error', (event) => {

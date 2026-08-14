@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Context
+ * Core Context
  * Version: 1.0
  *
  * Gemeinsamer Laufzeitkontext für Core und Module.
@@ -53,7 +53,7 @@
         CoreContext.updateOnlineState();
     });
 
-    if (!window.CatchTrackCoreContext) {
-        window.CatchTrackCoreContext = Object.freeze(CoreContext);
+    if (!window.CoreContext) {
+        window.CoreContext = Object.freeze(CoreContext);
     }
 })();

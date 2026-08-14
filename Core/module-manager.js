@@ -1,5 +1,5 @@
 /*
- * CatchTrack Module Manager
+ * Module Manager
  * Version: 1.0
  *
  * Zentrale Verwaltung der Module inklusive Registrierung,
@@ -13,11 +13,11 @@
         registry: null,
 
         init() {
-            if (!window.CatchTrackModuleRegistry) {
-                throw new Error('CatchTrack Module Registry is not available.');
+            if (!window.ModuleRegistry) {
+                throw new Error('Module Registry is not available.');
             }
 
-            this.registry = window.CatchTrackModuleRegistry;
+            this.registry = window.ModuleRegistry;
         },
 
         normalizeModule(module) {
@@ -58,8 +58,8 @@
             const normalizedModule = this.normalizeModule(module);
             const registeredModule = this.registry.register(normalizedModule);
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('module:registered', {
+            if (window.Core) {
+                window.Core.emit('module:registered', {
                     id: registeredModule.id
                 });
             }
@@ -72,8 +72,8 @@
 
             const removed = this.registry.unregister(moduleId);
 
-            if (removed && window.CatchTrackCore) {
-                window.CatchTrackCore.emit('module:unregistered', {
+            if (removed && window.Core) {
+                window.Core.emit('module:unregistered', {
                     id: moduleId
                 });
             }
@@ -148,9 +148,9 @@
                 module.activate();
             }
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.state.activeModule = moduleId;
-                window.CatchTrackCore.emit('module:activated', {
+            if (window.Core) {
+                window.Core.state.activeModule = moduleId;
+                window.Core.emit('module:activated', {
                     id: moduleId
                 });
             }
@@ -174,14 +174,14 @@
             }
 
             if (
-                window.CatchTrackCore &&
-                window.CatchTrackCore.state.activeModule === moduleId
+                window.Core &&
+                window.Core.state.activeModule === moduleId
             ) {
-                window.CatchTrackCore.state.activeModule = null;
+                window.Core.state.activeModule = null;
             }
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('module:deactivated', {
+            if (window.Core) {
+                window.Core.emit('module:deactivated', {
                     id: moduleId
                 });
             }
@@ -238,5 +238,5 @@
 
     ModuleManager.init();
 
-    window.CatchTrackModuleManager = ModuleManager;
+    window.ModuleManager = ModuleManager;
 })();

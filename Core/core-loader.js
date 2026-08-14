@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Loader
+ * Core Loader
  * Version: 1.0
  *
  * Lädt und prüft die definierte Core-Infrastruktur.
@@ -19,16 +19,16 @@
             }
 
             const requiredComponents = [
-                'CatchTrackCore',
-                'CatchTrackModuleManager',
-                'CatchTrackModuleRegistry',
-                'CatchTrackModuleInterface',
-                'CatchTrackErrorLog',
-                'CatchTrackCoreConfig',
-                'CatchTrackCoreContext',
-                'CatchTrackCoreState',
-                'CatchTrackCoreEventBus',
-                'CatchTrackCoreLifecycle'
+                'Core',
+                'ModuleManager',
+                'ModuleRegistry',
+                'ModuleInterface',
+                'ErrorLog',
+                'CoreConfig',
+                'CoreContext',
+                'CoreState',
+                'CoreEventBus',
+                'CoreLifecycle'
             ];
 
             const missingComponents = requiredComponents.filter(
@@ -43,13 +43,13 @@
 
             this.initialized = true;
 
-            window.CatchTrackCore.emit('core:ready', {
-                version: window.CatchTrackCoreConfig.core.version
+            window.Core.emit('core:ready', {
+                version: window.CoreConfig.core.version
             });
         }
     };
 
-    window.CatchTrackCoreLoader = CoreLoader;
+    window.CoreLoader = CoreLoader;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {

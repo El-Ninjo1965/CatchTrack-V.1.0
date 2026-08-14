@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Event Bus
+ * Core Event Bus
  * Version: 1.0
  *
  * Zentrale Kommunikationsschnittstelle zwischen Core und Modulen.
@@ -58,8 +58,8 @@
                 try {
                     callback(data);
                 } catch (error) {
-                    if (window.CatchTrackCoreErrorHandler) {
-                        window.CatchTrackCoreErrorHandler.handle(
+                    if (window.CoreErrorHandler) {
+                        window.CoreErrorHandler.handle(
                             error,
                             {
                                 type: 'event-handler',
@@ -81,6 +81,6 @@
         }
     };
 
-    window.CatchTrackCoreEventBus =
+    window.CoreEventBus =
         Object.freeze(EventBus);
 })();

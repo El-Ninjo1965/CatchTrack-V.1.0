@@ -331,13 +331,30 @@ Ein Modul darf nicht einfach eine bestehende Core-Datei verändern.
 
 ## 16. Core-Entwicklung
 
-Der Core ist aktuell eingefroren.
+Der Core ist aktuell neutralisiert und als generischer, wiederverwendbarer Runtime-Stand definiert.
 
 Aktueller Status:
 
 ```text
-CORE: FROZEN
+CORE: NEUTRALIZED
 MODULE DEVELOPMENT: ACTIVE
+```
+
+### Core-Neutralisierung (nur Core/)
+
+Im Rahmen des Auftrags wurde ausschließlich der Ordner [Core](Core) geprüft und neutralisiert.
+
+Ziel war die vollständige Entfernung technischer Product-Strings aus dem generischen Core, ohne dessen Architektur, Funktionalität oder Schnittstellen zu verändern. Dabei wurden nur Bezeichnungen wie CatchTrackCore, CatchTrackModuleRegistry, CatchTrackModuleManager und verwandte technische Präfixe durch neutrale Namen ersetzt.
+
+Die Fachmodule wurden nicht verändert. Sie behalten ihre bestehende fachliche Logik und ihre vorhandenen Zusatzbezeichnungen unverändert bei.
+
+### Validierung
+
+Nach der Anpassung wurden die Core-Dateien erneut syntaktisch geprüft und nach verbliebenen CatchTrack-Verweisen durchsucht. In [Core](Core) wurden keine technischen CatchTrack-Namen mehr gefunden.
+
+### Abschluss
+
+Der Core ist damit als neutraler, wiederverwendbarer Basisbestand dokumentiert und technisch konsistent. Die fachliche Modulentwicklung bleibt davon unverändert und bleibt nicht Teil dieser Neutralisierung.
 USER: DEVELOPMENT
 ADMIN: DEVELOPMENT
 OTHER MODULES: DEVELOPMENT

@@ -1,5 +1,5 @@
 /*
- * CatchTrack Module Registry
+ * Module Registry
  * Version: 1.0
  *
  * Zentrale Verwaltung der registrierten Core-Module.
@@ -70,5 +70,5 @@
         }
     };
 
-    window.CatchTrackModuleRegistry = Object.freeze(ModuleRegistry);
+    window.ModuleRegistry = Object.freeze(ModuleRegistry);
 })();
