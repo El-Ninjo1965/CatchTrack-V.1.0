@@ -1,5 +1,5 @@
 /*
- * CatchTrack Database Layer
+ * Core Database Layer
  * Version: 1.0
  *
  * Datenbankzugriff und -verwaltung mit IndexedDB als Standard.
@@ -44,7 +44,7 @@
                     return;
                 }
 
-                const dbName = 'CatchTrackDB';
+                const dbName = 'CoreDB';
                 const dbVersion = 1;
 
                 const request = indexedDB.open(dbName, dbVersion);

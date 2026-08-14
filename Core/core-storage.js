@@ -9,7 +9,7 @@
 (() => {
     'use strict';
 
-    const STORAGE_PREFIX = 'catchtrack:';
+    const STORAGE_PREFIX = 'core:';
 
     const CoreStorage = {
         set(key, value) {

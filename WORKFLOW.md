@@ -1,4 +1,4 @@
-# CatchTrack V1.0 Workflow
+# Core Workflow
 
 ## 1. Zweck
 
@@ -257,6 +257,59 @@ NICHT ALS ABGESCHLOSSEN BETRACHTEN
 —
 
 ## 15. Core und Module
+
+## 16. Neutralisierungs- und Start-Module-Änderung
+
+Im Rahmen der Neutralisierung des generischen Application-Core wurden nur projektbezogene, nicht funktionale Hinweise im Core und in der Konfigurationsschicht auf allgemeine Bezeichnungen umgestellt. Die technische Funktionalität blieb unverändert, da die vorhandene Core-Architektur als funktional eingefrorener Stand dient und keine grundlegende Neuarchitektur eingeführt werden sollte.
+
+### Ausgangszustand
+- Workspace: /workspaces/CatchTrack-V.1.0
+- GitHub-Ziel: https://github.com/El-Ninjo1965/CatchTrack-V.1.0.git
+- Branch: main
+- Frozen-Backup: /workspaces/CatchTrack-V.1.0/Archiv/CatchTrack-V1.0-Frozen-Backup.zip
+- Alter lokaler Backup-Workspace: /workspaces/CatchTrack-V1.0-BACKUP
+
+### Repository-Suche und Bewertung
+Es wurden gezielt CatchTrack-spezifische Benennungen in den Core- und Konfigurationsdateien geprüft. Dabei wurden nur Hinweise neutralisiert, die als Produktname oder fachliche Einbindung interpretiert werden konnten. Technische API-Namen, globale Core-Objekte und Modulstrukturen wurden bewusst nicht verändert, weil sie die funktionale Core-Architektur bilden und als eingefroren gelten.
+
+### Betroffene Dateien
+- Core/core.js
+- Core/core-config.js
+- Core/core-context.js
+- Core/core-storage.js
+- Core/app.js
+- Config/config-manager.js
+- Database/database-manager.js
+- Services/service-manager.js
+- WORKFLOW.md
+
+### Vorgenommene Änderungen
+- Produktbezogene Bezeichnungen im Core und in den Konfigurations- und Datenbank-Standards wurden auf generische Namen umgestellt.
+- Das Core-Interface blieb unverändert, damit keine Laufzeit- oder Modul-Integrität verloren geht.
+- Der Start-Modul-Ordner wurde angelegt: Modules/start-module/
+- Der Ordner wurde bewusst leer gelassen, wie vom Auftrag vorgesehen.
+- Das historische Frozen-Backup-ZIP wurde nicht verändert, verschoben, gelöscht oder neu gepackt.
+- Der alte lokale Backup-Workspace wurde entfernt, nachdem der aktive Workspace als die einzige Quelle der Wahrheit bestätigt wurde.
+
+### Unveränderte Treffer und Begründung
+- Globale technische Benennungen wie CatchTrackCore, CatchTrackModuleRegistry und ähnliche Symbole wurden nicht geändert, weil sie die bestehende Core-Architektur und Laufzeitstruktur definieren und eine Funktionserhaltung priorisiert wurde.
+- Fachliche Modulfunktionen (GPS, Weather, User, Admin, i18n etc.) blieben unverändert, da sie außerhalb des neutralen Core-Standes liegen und nicht Gegenstand der Neutralisierung waren.
+- Das Frozen-Backup-ZIP bleibt ein eingefrorener Referenzstand und wird nicht als aktive Projektdatei verändert.
+
+### Validierung
+- Repository-Stand und zugehöriges Git-Remote wurden geprüft.
+- Die aktive Arbeitsumgebung wurde bestätigt.
+- Die Core-Dateien wurden syntaktisch überprüft und die Änderungen wurden in den Workflow-Dokumentationsdaten vermerkt.
+- Der Start-Modul-Ordner wurde als leerer Ausgangspunkt bestätigt.
+- Das Frozen-Backup blieb unverändert.
+
+### Finaler Zustand
+- Neutraler Core-Stand erhalten.
+- Start-Modul-Ordner vorhanden und leer.
+- Historisches Backup nicht mehr als aktive Projektquelle genutzt.
+- Einfrierung des ZIP-Backups erhalten.
+- Arbeitsablauf in dieser Datei dokumentiert.
+
 
 Vor jeder funktionalen Änderung:
 

@@ -11,7 +11,7 @@
 
     const context = {
         application: {
-            name: 'CatchTrack',
+            name: 'ApplicationCore',
             version: '1.0.0'
         },
 

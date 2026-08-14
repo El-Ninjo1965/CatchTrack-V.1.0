@@ -1,5 +1,5 @@
 /*
- * CatchTrack Core Configuration
+ * Core Configuration
  * Version: 1.0
  *
  * Zentrale, unveränderliche Grundeinstellungen des Core.
@@ -11,7 +11,7 @@
 
     const CoreConfig = Object.freeze({
         application: Object.freeze({
-            name: 'CatchTrack',
+            name: 'ApplicationCore',
             version: '1.0.0'
         }),
 

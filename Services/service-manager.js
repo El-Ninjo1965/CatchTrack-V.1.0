@@ -1,8 +1,8 @@
 /*
- * CatchTrack Services Layer
+ * Core Services Layer
  * Version: 1.0
  *
- * Service-Manager für geschäftslogische Operationen.
+ * Service-Manager für generische Operationen.
  * Verwaltet und koordiniert verschiedene Service-Module.
  */
 

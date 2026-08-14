@@ -1,5 +1,5 @@
 /*
- * CatchTrack Application Bootstrap
+ * Generic Application Bootstrap
  * Version: 1.0
  *
  * Generischer Anwendungseinstiegspunkt.
@@ -16,11 +16,11 @@
 
         start() {
             if (!window.CatchTrackCore) {
-                throw new Error('CatchTrack Core is not available.');
+                throw new Error('Core is not available.');
             }
 
             if (!window.CatchTrackCoreEntry) {
-                throw new Error('CatchTrack Core Entry is not available.');
+                throw new Error('Core entry is not available.');
             }
 
             this.registerSystemEvents();
@@ -38,15 +38,15 @@
             systemEventsRegistered = true;
 
             window.CatchTrackCore.on('module:registered', (event) => {
-                console.info(`[CatchTrack] Module registered: ${event.id}`);
+                console.info(`[Core] Module registered: ${event.id}`);
             });
 
             window.CatchTrackCore.on('module:activated', (event) => {
-                console.info(`[CatchTrack] Module activated: ${event.id}`);
+                console.info(`[Core] Module activated: ${event.id}`);
             });
 
             window.CatchTrackCore.on('module:deactivated', (event) => {
-                console.info(`[CatchTrack] Module deactivated: ${event.id}`);
+                console.info(`[Core] Module deactivated: ${event.id}`);
             });
         }
     };

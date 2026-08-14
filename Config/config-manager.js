@@ -1,8 +1,8 @@
 /*
- * CatchTrack Configuration Management
+ * Core Configuration Management
  * Version: 1.0
  *
- * Zentrale Konfigurationsverwaltung für die CatchTrack-Anwendung.
+ * Zentrale Konfigurationsverwaltung für die generische Anwendung.
  * Verwaltet Anwendungseinstellungen, Datenbank-, API- und Service-Konfigurationen.
  */
 
@@ -38,7 +38,7 @@
         loadDefaultConfigs() {
             // Application Config
             this.set('app', {
-                name: 'CatchTrack',
+                name: 'ApplicationCore',
                 version: '1.0.0',
                 environment: 'development',
                 debug: true,
@@ -51,7 +51,7 @@
             // Database Config
             this.set('database', {
                 type: 'indexeddb',
-                name: 'CatchTrackDB',
+                name: 'CoreDB',
                 version: 1,
                 stores: [
                     'users',

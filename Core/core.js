@@ -1,8 +1,8 @@
 /*
- * CatchTrack Core
+ * Core
  * Version: 1.0
  *
- * Zentrale technische Grundlage der Anwendung.
+ * Zentrale technische Grundlage für generische Anwendungen.
  * Fachliche Funktionen werden nicht im Core implementiert.
  */
 
