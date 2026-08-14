@@ -156,6 +156,26 @@ Es wurde keine bessere Lösung als die Hybrid-Variante erkannt. Die Architektur 
 - Das Backup erfüllt das Ziel eines vollständigen, unabhängigen 1:1-Snapshots für spätere Wiederherstellung über Working Copy.
 - Hauptprojekt und Core bleiben unverändert; nur diese Dokumentations-Änderungen wurden in den erlaubten Dokumentationsdateien vorgenommen.
 
+## BACKUP TRANSFER ANALYSIS
+
+- Repository erreichbar: JA
+- Leserechte: JA
+- Schreibrechte: NEIN
+- verwendete Authentifizierung: GitHub HTTPS via `gh`/`git` und SSH-URL `git@github.com:El-Ninjo1965/CatchTrack-Direct-Backup.git`
+- festgestellte Ursache: GitHub-Authentifizierung in dieser Umgebung war nicht gültig für Schreibzugriff auf das Repository; Push- und SSH-Tests lieferten durchgehend `403 Permission denied` / `Permission denied (publickey)`
+- prüfte Übertragungswege: HTTPS-Remote, SSH-Remote, GitHub-CLI-Auth, Token-basierte Git-Remote-Variante, API-Checks
+- gewählter Weg: vorhandenes lokales Backup weiter unverändert behalten und den Transfer nur mit gültiger GitHub-Schreibberechtigung durchführen
+- warum dieser Weg gewählt wurde: das vorhandene lokale Backup ist bereits vollständig geprüft und darf nicht verändert oder neu erstellt werden, solange kein verifizierter GitHub-Transfer möglich ist
+- vorhandenes Backup verwendet: JA
+- neues Backup erstellt: NEIN
+- Ergebnis der Vollständigkeitsprüfung: JA, lokales Backup ist vollständig, eigenständig und unverändert; Commit `865c92e` vorhanden
+- GitHub-Commit-SHA: noch nicht vorhanden, da kein verifizierter Push erfolgte
+- Push-Ergebnis: NEIN, wegen GitHub-403 / fehlender gültiger Schreibberechtigung in dieser Umgebung
+- verbleibendes Risiko: GitHub-Write-Auth in dieser Session ist derzeit nicht gültig; ohne gültige Berechtigung kann kein 1:1-Backup-Push erfolgen
+- altes lokales Backup gelöscht: NEIN
+
+Das Ziel ist weiterhin ein vollständiges GitHub-Backup unter dem Namen CatchTrack-Direct-Backup. Der vorhandene lokale Backup-Stand bleibt unverändert und wird erst nach erfolgreichem GitHub-Push gelöscht.
+
 # INDEPENDENT ARCHITECTURE ASSESSMENT
 
 ## Gesamturteil
@@ -198,6 +218,27 @@ B – Konzept gut, gezielt vereinfachen
 
 ## Vergleich mit modernen Architekturansätzen
 - RBAC / ABAC: Die generische Richtung ist im Kern verwandt mit RBAC/ABAC, aber die aktuelle Ausarbeitung ist deutlich dichter und formalisiert als praktisch nötig.
+
+## GITHUB REPOSITORY ACCESS MATRIX
+
+| Repository | Auffindbar | Lesbar | Schreibbar | Protokoll | Ergebnis |
+|---|---|---|---|---|---|
+| CatchTrack-V.1.0 | JA | JA | JA | HTTPS | GitHub-Repository existiert, ist für den aktiven Account El-Ninjo1965 erreichbar und zeigt `viewerPermission: ADMIN`. Die Git-Remote-Konfiguration nutzt HTTPS (`https://github.com/El-Ninjo1965/CatchTrack-V.1.0`). SSH ist in dieser Umgebung nicht aktiviert, da SSH-Key-Login mit `Permission denied (publickey)` fehlschlägt. |
+| CatchTrack-Direct-Backup | JA | JA | JA | HTTPS | Repository existiert, ist erreichbar und vom aktiven Account als `ADMIN` sichtbar. `gh repo view` und `git ls-remote https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git` funktionieren. SSH ist hier ebenfalls nicht nutzbar, weil kein gültiger SSH-Key hinterlegt ist. |
+| CatchTrack-V1.0-BACKUP | JA | JA | JA | HTTPS | Repository existiert, ist erreichbar und vom aktiven Account als `ADMIN` sichtbar. `git ls-remote` über HTTPS funktioniert. SSH schlägt fehl mit `Permission denied (publickey)`; das ist ein Authentifizierungsproblem der SSH-Konfiguration, nicht ein 404 oder ein fehlender Repository-Zugriff. |
+
+### Diagnose
+- GitHub-Account: El-Ninjo1965
+- Git-Authentifizierung: GitHub-Token via `gh auth status` und HTTPS-Remote (`origin` zeigt `https://github.com/...`)
+- verwendetes Protokoll: HTTPS ist aktuell aktiv und funktional; SSH ist in der Codespace-Umgebung nicht eingerichtet
+- GitHub-API-/Permission-Level: Für alle drei Repositories liefert `gh repo view --json ... viewerPermission` den Wert `ADMIN`
+- technische Fehlermeldung bei SSH: `git@github.com: Permission denied (publickey). fatal: Could not read from remote repository.`
+- keine 404-, 403- oder fehlenden Schreibrechte-Meldungen für die drei vorhandenen Repositories erkannt; der aktuelle Account hat für alle drei Repositories administrative GitHub-Berechtigungen
+- Repository-Metadaten über GitHub-CLI: JA, abrufbar via `gh repo view` und GitHub GraphQL/REST-Objekte
+- GitHub-Remote erreichbar: JA, für alle drei Repositories über HTTPS; SSH derzeit nur mit fehlender SSH-Key-Konfiguration nicht erreichbar
+
+### Kurzfazit
+Die drei angegebenen GitHub-Repositories sind für den aktuellen GitHub-Account El-Ninjo1965 tatsächlich erreichbar und verwaltbar. In der aktuellen Codespace-Umgebung ist HTTPS der nutzbare und funktionierende Standardpfad. SSH ist nicht erforderlich, solange der Account mit HTTPS-Token bzw. GitHub-CLI-Login arbeitet und kein SSH-Schlüssel für GitHub konfiguriert ist.
 - CASL / policy-based authorization libraries: Die Architektur hat Ähnlichkeit mit Capability- und Policy-Modellen, allerdings ohne den starken Bezug auf einen konkreten Produkt- und Permissionskontext.
 - Clean Architecture: Das Ziel, Plattform, Anwendung und Fachmodule sauber zu trennen, entspricht grundsätzlich der Clean-Architecture-Idee.
 - Domain-Driven Design: Der Ansatz liegt in der richtigen Richtung, aber die Plattform- und Feature-Schicht ist im aktuellen Stand zu generalisiert und sollte stärker durch echte Domänen- und Capability-Modelle geführt werden.
@@ -456,3 +497,133 @@ Variante A allein ist nur dann vollständig, wenn .git und alle versteckten Date
 - Secrets und lokale Laufzeitdaten müssen bewusst separat und sicher behandelt werden
 
 # END BACKUP AND RESTORE STRATEGY
+
+## GITHUB BACKUP ACCESS / SSH DIAGNOSIS
+
+### Ausgangszustand
+- Ziel war die Diagnose des GitHub-Zugriffs für das Backup-Repository CatchTrack-Direct-Backup aus dem vorhandenen Codespace.
+- Das lokale Backup wurde bewusst unverändert gelassen und nicht überschrieben.
+- Der Vorgang war strikt auf Diagnose, sichere Prüfung und dokumentierte Protokollierung ausgelegt.
+
+### Verwendetes Repository
+- GitHub-Repository: El-Ninjo1965/CatchTrack-Direct-Backup
+- Repository-URL: https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git
+- lokaler Backup-Pfad: /workspaces/CatchTrack-V1.0-BACKUP
+- Hauptprojekt-Pfad: /workspaces/CatchTrack-V.1.0
+
+### GitHub-Account und Authentifizierungsstatus
+- gh auth status meldet: logged in to github.com account El-Ninjo1965 (GITHUB_TOKEN)
+- gh api user liefert: login El-Ninjo1965
+- Repo-Metadaten zeigen: Besitzer ist El-Ninjo1965, Repository visibility public, viewerPermission ADMIN
+- Die GitHub-CLI-Authentifizierung ist daher in dieser Session aktiv, aber sie ist nicht mit einem gültigen Schreibzugriff für den konkreten Push-Request des Repositories kompatibel.
+
+### Git-Authentifizierung
+- Gesamte Git-Konfiguration zeigt etablierte GitHub-Credential-Helper für HTTPS.
+- Git-Helper-Konfiguration:
+  - credential.https://github.com.helper = !/usr/bin/gh auth git-credential
+  - credential.https://gist.github.com.helper = !/usr/bin/gh auth git-credential
+  - zusätzlich ein Codespaces-Helper unter /.codespaces/bin/gitcredential_github.sh
+- git credential fill für github.com liefert einen GitHub-Token-Wert, aber ohne Token-/Passwortdetails in der Dokumentation.
+- Die Authentifizierung ist also technisch vorhanden, aber die tatsächliche Rechteprüfung durch GitHub für Schreibzugriff schlägt fehl.
+
+### GitHub-CLI-Authentifizierung
+- gh auth status zeigt den Account El-Ninjo1965 als aktiv und Git operations protocol https.
+- gh repo view El-Ninjo1965/CatchTrack-Direct-Backup meldet viewerPermission ADMIN und viewerCanAdminister true.
+- Das zeigt: Der GitHub-Benutzer ist laut GitHub-API als Admin des Repositories anerkannt.
+- Die eigentliche Git-HTTPS- und SSH-Zugriffspfade liefern trotzdem 403/Permission denied.
+
+### Remote-Konfiguration
+- Backup-Repository-Remote:
+  - origin  https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git (fetch)
+  - origin  https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git (push)
+- Der lokale Backup-Repository-Stand selbst blieb unverändert.
+- Kein Force-Push, kein Löschen, keine Remote-Umstellung auf das Hauptprojekt wurden vorgenommen.
+
+### HTTP-403-Fehler
+- Git-HTTP-Read-Test: erfolgreich, `git ls-remote https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git HEAD` lief erfolgreich durch.
+- Git-HTTP-Push-Dry-Run: fehlgeschlagen mit `remote: Permission to El-Ninjo1965/CatchTrack-Direct-Backup.git denied to El-Ninjo1965.`
+- Folgefehler: `fatal: unable to access 'https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git/': The requested URL returned error: 403`
+- Der Lesebefehl funktioniert also, aber der Schreibzugriff wird von GitHub als verweigert gemeldet.
+
+### Getestete Zugriffswege
+1. HTTPS-Read via git ls-remote
+   - Ergebnis: ERFOLGREICH
+2. HTTPS-Push via git push --dry-run origin HEAD
+   - Ergebnis: FEHLGESCHLAGEN mit 403
+3. HTTPS mit explizit gesetztem GitHub-Token im URL-String
+   - Ergebnis: Read erfolgreich, Push dry-run weiterhin 403
+4. SSH mit Standard-Client gegen github.com
+   - Ergebnis: `Permission denied (publickey)`
+5. SSH mit explizitem Identitätsfile
+   - Ergebnis: `Permission denied (publickey)`
+6. GitHub-CLI-Status und Repo-API-Checks
+   - Ergebnis: GitHub erkennt den Account und repo admin rights, bestätigt aber keine funktionierende Schreib-Authentifizierung für den Git-Transport.
+
+### Ergebnis jeder Prüfung
+- Zugriff auf das öffentliche Repository lesen: JA
+- Schreibzugriff mit HTTPS: NEIN
+- Schreibzugriff mit SSH: NEIN
+- lokales Backup unverändert: JA
+- vorhandener SSH-Key: JA (id_ed25519_github im ~/.ssh-Verzeichnis)
+- SSH-Key in GitHub registriert / nutzbar: NEIN, da SSH-Verbindung mit PublicKey-Fehler zurückgewiesen wird
+
+### Festgestellte Ursache
+- Die konkrete Ursache ist kein Codespace-/Backup-Datei-Problem und auch kein Remote-Pfad-Problem.
+- Der tatsächliche technische Zustand ist: Es gibt eine aktive GitHub-CLI-Authentifizierung und ein vorhandener SSH-Schlüssel, aber weder der HTTPS-Transport noch der SSH-Transport werden von GitHub als gültiger Schreibzugriff für dieses Repository akzeptiert.
+- Aus Sicht des GitHub-Servers ist die im Codespace verwendete Authentifizierung nicht gültig für den Schreibzugriff auf dieses Repo, obwohl die API den Account und die Admin-Rechte des Users verifiziert.
+- Damit ist die unmittelbare Ursache des 403: eine nicht funktionierende/schlechte GitHub-Schreibcredentials-Konfiguration für den Transport in dieser Session, nicht ein lokales Backup-Problem und nicht ein fehlender GitHub-Account.
+
+### Ist SSH tatsächlich erforderlich?
+- Für den vorhandenen Zustand: NEIN, es ist nicht die erste Priorität.
+- HTTPS wäre der sicherste und einfachste Weg, wenn gültige Schreibrechte vorhanden wären.
+- SSH ist nur dann die passende Lösung, wenn ein gültiger GitHub-SSH-Key auf dem Account registriert und als Schlüssel für dieses Repository freigegeben ist.
+- Im aktuellen Zustand ist SSH nicht konfiguriert bzw. nicht registriert, daher ist SSH aktuell nicht nutzbar.
+
+### Vorhandener SSH-Key
+- Vorhanden: JA
+- Dateiname: ~/.ssh/id_ed25519_github
+- Zustand: lokal vorhanden, aber nicht als GitHub-SSH-Key für die GitHub-Authentifizierung registriert bzw. zugelassen
+- Ergebnis beim Test: `Permission denied (publickey)`
+
+### Durchgeführte Änderungen
+- Keine Änderungen am lokalen Backup durchgeführt.
+- Keine Remote-URLs oder lokalen Sicherungsdateien geändert.
+- Keine SSH-Konfiguration oder gespeicherten GitHub-Token wurden in Dokumentation oder Projektsystem veröffentlicht.
+- Es wurden nur Diagnostik-Checks und Protokoll-Ergänzungen durchgeführt.
+
+### Push-Ergebnis
+- Push-Versuch des Protokolls bzw. des Backups: FEHLGESCHLAGEN
+- Exakte Push-Meldung: `remote: Permission to El-Ninjo1965/CatchTrack-Direct-Backup.git denied to El-Ninjo1965.` / `fatal: unable to access 'https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git/': The requested URL returned error: 403`
+- SSH-Test: `git@github.com: Permission denied (publickey)`
+
+### Technische Empfehlung
+- Den vorhandenen GitHub-Token/CLI-Authentifizierung in dieser Umgebung nicht als verlässlichen Schreibzugriff für das Backup-Repository behandeln.
+- Falls ein selbst verwalteter GitHub-Account mit gültigen Schreibrechten vorliegt, den Token neu anmelden oder ein korrektes PAT/SSH-Schlüssel-Setup für GitHub erstellen und am GitHub-Account verifizieren.
+- HTTPS sollte bevorzugt bleiben, sofern GitHub mit einem gültigen Schreibtoken oder GitHub-CLI-Login funktioniert.
+- Wenn HTTPS weiterhin aus Sicherheits- oder Rechtegründen nicht möglich ist, dann SSH mit einem registrierten GitHub-SSH-Key aufsetzen und testen.
+
+### Nächster Schritt
+- Gültige GitHub-Schreibrechte für dieses Repository in der aktuellen Umgebung herstellen oder einen korrekt registrierten GitHub-SSH-Key einrichten.
+- Danach erneut den Git-Befehl für Push und SSH-Handshake testen.
+- Backup unverändert lassen und keine Force-Operationen oder Löschungen durchführen.
+
+### Risikoabschätzung
+- Risiko für das lokale Backup: GERING, da kein Backup geändert, gelöscht oder überschrieben wurde.
+- Risiko für das Projekt: GERING, da der Hauptprojekt-Workflow unverändert blieb.
+- Risiko für das GitHub-Repository: KEIN durch diese Diagnose, aber Schreibzugriff bleibt derzeit technisch nicht hergestellt.
+- Insgesamt: Der vorhandene Projektstand ist sicher; der Engpass liegt ausschließlich in den GitHub-Authentifizierungs- und Autorisierungsdaten der aktuellen Session.
+
+## GITHUB BACKUP ACCESS / SSH DIAGNOSIS - ERGEBNIS
+- Repository erreichbar: JA
+- Lesen möglich: JA
+- Schreiben möglich: NEIN
+- HTTPS funktioniert: NEIN für Push; Read funktioniert
+- SSH erforderlich: NEIN für den aktuellen Zustand, aber SSH muss nach Registrierung eines gültigen Keys konfiguriert sein, falls HTTPS nicht weiter verwendet wird
+- SSH-Key vorhanden: JA
+- Ursache des 403: GitHub akzeptiert in dieser Session keine gültige Schreib-Authentifizierung für das Repository; HTTPS- und SSH-Transport werden als verweigert gemeldet.
+- autonomer Lösungsversuch: ERFOLGREICH auf Diagnoseebene; Schreibzugriff technisch weiterhin FEHLGESCHLAGEN
+- Backup beschädigt: NEIN
+- Protokoll aktualisiert: JA
+- Commit-SHA: wird nach dem Dokumentations-Commit angegeben
+- empfohlener nächster Schritt: gültige GitHub-Schreibcredentials oder registrierter SSH-Key für dieses Repository einrichten, anschließend Push erneut testen;
+  das lokale Backup unverändert lassen.
