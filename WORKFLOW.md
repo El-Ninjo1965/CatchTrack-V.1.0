@@ -37,16 +37,13 @@ The repository is reduced to a neutral, reusable framework foundation. The imple
   - module-manager.js
   - module-registry.js
   - security.js
-  - user-module.js
-  - admin-module.js
-  - i18n-module.js
-  - app.js
-- Config/
+  - core-user.js
+  - core-admin.js
+  - core-i18n.js
   - config-manager.js
-- Database/
   - database-manager.js
-- Services/
   - service-manager.js
+  - app.js
 
 ## Decisions
 

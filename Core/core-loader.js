@@ -12,8 +12,8 @@
 
     const defaultFrameworkCatalog = Object.freeze([
         {
-            id: 'user-module',
-            name: 'User Module',
+            id: 'core-user',
+            name: 'Core User',
             version: '1.0.0',
             type: 'framework',
             description: 'Framework identity, session and permission layer.',
@@ -21,11 +21,11 @@
             permissions: ['framework:read'],
             capabilities: ['identity', 'session'],
             globalName: 'UserModule',
-            source: 'Core/user-module.js'
+            source: 'Core/core-user.js'
         },
         {
-            id: 'admin-module',
-            name: 'Admin Module',
+            id: 'core-admin',
+            name: 'Core Admin',
             version: '1.0.0',
             type: 'framework',
             description: 'Framework administration and health diagnostics.',
@@ -33,11 +33,11 @@
             permissions: ['framework:read', 'system:view'],
             capabilities: ['diagnostics', 'health-check'],
             globalName: 'AdminModule',
-            source: 'Core/admin-module.js'
+            source: 'Core/core-admin.js'
         },
         {
-            id: 'i18n-module',
-            name: 'i18n Module',
+            id: 'core-i18n',
+            name: 'Core i18n',
             version: '1.0.0',
             type: 'framework',
             description: 'Framework localization and locale management.',
@@ -45,7 +45,7 @@
             permissions: ['framework:read'],
             capabilities: ['localization'],
             globalName: 'I18nModule',
-            source: 'Core/i18n-module.js'
+            source: 'Core/core-i18n.js'
         }
     ]);
 

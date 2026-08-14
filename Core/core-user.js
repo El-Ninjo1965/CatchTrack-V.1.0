@@ -294,15 +294,15 @@
     };
 
     const moduleManifest = Object.freeze({
-        id: 'user-module',
-        name: 'User Module',
+        id: 'core-user',
+        name: 'Core User',
         version: '1.0.0',
         type: 'framework',
-        description: 'Framework identity, session and permission layer.',
+        description: 'Framework identity and user access layer.',
         dependencies: [],
         permissions: ['framework:read'],
         capabilities: ['identity', 'session'],
-        source: 'Modules/user-module/user-module.js'
+        source: 'Core/core-user.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

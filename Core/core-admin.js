@@ -191,15 +191,15 @@
     };
 
     const moduleManifest = Object.freeze({
-        id: 'admin-module',
-        name: 'Admin Module',
+        id: 'core-admin',
+        name: 'Core Admin',
         version: '1.0.0',
         type: 'framework',
         description: 'Framework administration and health diagnostics.',
         dependencies: [],
         permissions: ['framework:read', 'system:view'],
         capabilities: ['diagnostics', 'health-check'],
-        source: 'Modules/admin-module/admin-module.js'
+        source: 'Core/core-admin.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

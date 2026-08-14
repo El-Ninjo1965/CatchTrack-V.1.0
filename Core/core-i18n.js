@@ -130,15 +130,15 @@
     };
 
     const moduleManifest = Object.freeze({
-        id: 'i18n-module',
-        name: 'i18n Module',
+        id: 'core-i18n',
+        name: 'Core i18n',
         version: '1.0.0',
         type: 'framework',
         description: 'Framework localization and locale management.',
         dependencies: [],
         permissions: ['framework:read'],
         capabilities: ['localization'],
-        source: 'Modules/i18n-module/i18n-module.js'
+        source: 'Core/core-i18n.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {
