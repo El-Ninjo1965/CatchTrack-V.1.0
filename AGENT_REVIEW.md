@@ -176,6 +176,20 @@ Es wurde keine bessere Lösung als die Hybrid-Variante erkannt. Die Architektur 
 
 Das Ziel ist weiterhin ein vollständiges GitHub-Backup unter dem Namen CatchTrack-Direct-Backup. Der vorhandene lokale Backup-Stand bleibt unverändert und wird erst nach erfolgreichem GitHub-Push gelöscht.
 
+## BACKUP SYNCHRONIZATION – CatchTrack-V1.0-BACKUP
+
+- exakter lokaler Backup-Pfad: /workspaces/CatchTrack-V1.0-BACKUP
+- Ziel-Repository: https://github.com/El-Ninjo1965/CatchTrack-V1.0-BACKUP.git
+- verwendetes Protokoll: HTTPS
+- Ausgangszustand: lokales Backup-Repository vorhanden, eigenständiges Git-Repository mit eigenem .git-Verzeichnis, Branch `main`, Stand `865c92e` (`backup: CatchTrack V1.0 pre implementation snapshot`), Remote ursprünglich auf `https://github.com/El-Ninjo1965/CatchTrack-Direct-Backup.git` gesetzt
+- durchgeführte Prüfungen: lokaler Pfad, Git-Repository, Working Tree, Branch, Commit, Remote, Dateistruktur, Anzahl der Dateien, `git status -sb`, `git fetch origin`, `gh repo view` für GitHub-Erreichbarkeit, HTTPS- und SSH-Tests
+- Backup-Commit-SHA: `865c92e` (`backup: CatchTrack V1.0 pre implementation snapshot`)
+- Remote-Commit-SHA (Zielrepo vor Push): `4c159b3` (`Initial commit`)
+- Verifikation: HTTPS-Zugriff zum Ziel-Repository funktionierte; `git ls-remote https://github.com/El-Ninjo1965/CatchTrack-V1.0-BACKUP.git` lieferte den aktuellen Remote-Stand; `git fetch origin` zeigte den Remote-Branch `main` mit `4c159b3`
+- Ergebnis: der lokale Backup-Stand war vollständig und sauber, aber der Push auf das Ziel-GitHub-Repository schlug fehl
+- Fehler/Ursache: `git push origin main` endete mit `remote: Permission to El-Ninjo1965/CatchTrack-V1.0-BACKUP.git denied to El-Ninjo1965.` und `fatal: unable to access 'https://github.com/El-Ninjo1965/CatchTrack-V1.0-BACKUP.git/': The requested URL returned error: 403`
+- Bestätigung: das Hauptprojekt in `/workspaces/CatchTrack-V.1.0` wurde nicht verändert; nur die dokumentarische Prüfung und die Dokumentations-Datei wurden in der vorgesehenen Dokumentationsdatei behandelt
+
 # INDEPENDENT ARCHITECTURE ASSESSMENT
 
 ## Gesamturteil
@@ -239,6 +253,29 @@ B – Konzept gut, gezielt vereinfachen
 
 ### Kurzfazit
 Die drei angegebenen GitHub-Repositories sind für den aktuellen GitHub-Account El-Ninjo1965 tatsächlich erreichbar und verwaltbar. In der aktuellen Codespace-Umgebung ist HTTPS der nutzbare und funktionierende Standardpfad. SSH ist nicht erforderlich, solange der Account mit HTTPS-Token bzw. GitHub-CLI-Login arbeitet und kein SSH-Schlüssel für GitHub konfiguriert ist.
+
+## GITHUB AUTHENTICATION DIFFERENCE
+
+- verwendeter gh-Account: El-Ninjo1965
+- gh-Authentifizierung: GitHub-CLI-Login via `gh auth status` mit aktivem `GITHUB_TOKEN`-Login; Git operations protocol: `https`
+- Git-Authentifizierung für HTTPS: Git nutzt den Codespaces-Mechanismus `credential.helper=/.codespaces/bin/gitcredential_github.sh` und zusätzlich `credential.https://github.com.helper=!/usr/bin/gh auth git-credential`
+- festgestellte Differenz: `gh` und `git` verwenden zwar denselben GitHub-Account-Namen auf der Oberfläche (`El-Ninjo1965`), aber sie sind nicht identisch in der tatsächlichen Autorisierung für Schreibvorgänge auf das Zielrepo. `gh repo view` prüft den Token-Kontext des GitHub-CLI-Logins und bestätigt `viewerPermission: ADMIN`, während `git push` mit HTTPS den konkreten HTTP-Credential-Flow für dieses Repository als unzulässig zurückweist. Das ist kein Repository-Not-Found-Fehler und kein SSH-Problem.
+- konkrete Ursache des 403: Die in Git für HTTPS verwendete Credential-Identität bzw. das im Codespace aktivierte Git-Credential, inklusive der GitHub-Codespaces-Umgebung (`GITHUB_TOKEN` / `gitcredential_github.sh`), ist nicht mit der Schreibberechtigung für das Ziel-Repository authentifiziert. Die GitHub-CLI-Authentifizierung bestätigt Verwaltungsrechte für das Repository, aber der von Git verwendete HTTPS-Credential-Flow wird als andere / nicht berechtigte Identity behandelt. Es liegt damit höchstwahrscheinlich an einer Credential-/Authorization-Differenz im Codespace, nicht an einem fehlenden Repository-Zugriff oder an fehlenden Rechten der GitHub-CLI-Session.
+- empfohlene Lösung: Für diesen Codespace am sinnvollsten ist ein konsistenter HTTPS-Auth-Flow über eine GitHub-CLI-gestützte Credential-Integration oder ein explizit auf das Ziel-Repository abgestimmtes Git-HTTPS-Credential mit den korrekten Schreibrechten. SSH ist dafür nicht nötig und nachweislich nicht konfiguriert.
+- notwendige Änderung zur Lösung: Die Git-Credential-Identität muss mit dem GitHub-Account/Token in Einklang gebracht werden, der Schreibzugriff auf `El-Ninjo1965/CatchTrack-V1.0-BACKUP` besitzt. Das bedeutet keine Neu-Initialisierung eines Repos und keinen SSH-Key, sondern eine saubere Harmonisierung des verwendeten GitHub-Credential-Mechanismus für HTTPS innerhalb des Codespaces.
+
+## GITHUB HTTPS AUTH FIX AND BACKUP PUSH
+
+- ursprüngliche Authentifizierungsdifferenz: `gh auth status` meldete `El-Ninjo1965` mit `ADMIN` für das Ziel-Repository, während `git push` über HTTPS auf `https://github.com/El-Ninjo1965/CatchTrack-V1.0-BACKUP.git` mit `403 Permission denied` zurückwies
+- festgestellte Ursache: Git-HTTPS und GitHub-CLI nutzen im Codespace verschiedene Credential- und Autorisierungsflüsse; der Git-HTTPS-Flow verwendet den Codespaces-Credential-Mechanismus (`gitcredential_github.sh` / `gh auth git-credential`), der in dieser Session nicht dieselbe Schreibberechtigung für das Ziel-Repository besitzt wie der `gh`-Token-Login
+- vorgenommene Änderung: minimaler Harmonisierungsschritt `gh auth setup-git` und Prüfung des `git credential`-Flows; keine Secrets oder Credentials gelöscht, keine SSH-Key erstellt, kein Force-Push und kein Backup gelöscht
+- verwendeter Authentifizierungsweg: HTTPS, aber über den GitHub-Codespaces-Credential-Mechanismus, nicht über eine vom Git-Repository separat konfigurierte Schreib-Identity
+- Backup-Pfad: /workspaces/CatchTrack-V1.0-BACKUP
+- Ziel-Repository: https://github.com/El-Ninjo1965/CatchTrack-V1.0-BACKUP.git
+- Backup-Commit: `865c92e` (`backup: CatchTrack V1.0 pre implementation snapshot`)
+- Remote-Commit: `4c159b3` (`Initial commit`)
+- Server-Verifikation: `git fetch origin` und `git log -1 --oneline origin/main` zeigen nach dem Pushversuch weiterhin nur den Remote-Initial-Commit; der gewünschte Backup-Commit ist nicht auf origin/main angekommen
+- Ergebnis: Der Authentifizierungsfehler wurde eindeutig eingegrenzt und dokumentiert; der Backup-Push auf GitHub ist in dieser Session weiterhin fehlgeschlagen, weil der Git-HTTP-Credential-Flow für das Ziel-Repository nicht dieselbe Schreibberechtigung hat wie der `gh`-Login
 - CASL / policy-based authorization libraries: Die Architektur hat Ähnlichkeit mit Capability- und Policy-Modellen, allerdings ohne den starken Bezug auf einen konkreten Produkt- und Permissionskontext.
 - Clean Architecture: Das Ziel, Plattform, Anwendung und Fachmodule sauber zu trennen, entspricht grundsätzlich der Clean-Architecture-Idee.
 - Domain-Driven Design: Der Ansatz liegt in der richtigen Richtung, aber die Plattform- und Feature-Schicht ist im aktuellen Stand zu generalisiert und sollte stärker durch echte Domänen- und Capability-Modelle geführt werden.
