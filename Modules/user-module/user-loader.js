@@ -1,43 +1,42 @@
 /*
- * CatchTrack User Module Loader
- * Version: 1.0
+ * Generic User Module Loader
+ * Version: 1.0.0
  *
- * Registriert und aktiviert das User-Modul im CatchTrack-Core.
+ * Registers and activates the neutral user module in the framework core.
  */
 
 (() => {
     'use strict';
 
-    if (!window.CatchTrackCore || !window.CatchTrackModuleInterface || !window.CatchTrackModuleManager) {
+    if (!window.Core || !window.ModuleInterface || !window.ModuleManager) {
         return;
     }
 
-    if (!window.CatchTrackUserModuleInterface) {
-        console.error('[CatchTrack] UserModuleInterface nicht verfügbar');
+    if (!window.UserModuleInterface) {
+        console.error('[Framework] UserModuleInterface not available');
         return;
     }
 
-    const UserModuleDefinition = window.CatchTrackUserModuleInterface.definition;
-
-    const UserModule = window.CatchTrackModuleInterface.create({
+    const UserModuleDefinition = window.UserModuleInterface.definition;
+    const UserModule = window.ModuleInterface.create({
         id: 'user-module',
-        name: 'CatchTrack User Module',
+        name: 'User Module',
         version: UserModuleDefinition.version || '1.0.0',
-        description: 'Verwaltung von Benutzern und Authentifizierung',
+        description: 'User management and authentication',
         onActivate: UserModuleDefinition.onActivate,
         onDeactivate: UserModuleDefinition.onDeactivate
     });
 
     try {
-        window.CatchTrackModuleManager.register(UserModule);
-        window.CatchTrackModuleManager.activate(UserModule.id);
+        window.ModuleManager.register(UserModule);
+        window.ModuleManager.activate(UserModule.id);
 
-        window.CatchTrackCore.emit('user-module:registered-and-loaded', {
+        window.Core.emit('user-module:registered-and-loaded', {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        if (window.CatchTrackCoreErrorHandler) {
-            window.CatchTrackCoreErrorHandler.handle(error, {
+        if (window.CoreErrorHandler) {
+            window.CoreErrorHandler.handle(error, {
                 type: 'user-module-loader'
             });
         }

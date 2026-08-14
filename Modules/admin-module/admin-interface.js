@@ -1,8 +1,8 @@
 /*
- * CatchTrack Admin Module Interface
- * Version: 1.0
+ * Generic Admin Module Interface
+ * Version: 1.0.0
  *
- * Definiert die öffentliche Schnittstelle des Admin-Moduls für den CatchTrack-Core.
+ * Public interface for the neutral admin module in the framework.
  */
 
 (() => {
@@ -11,53 +11,44 @@
     const AdminModuleInterface = {
         name: 'admin-module',
         version: '1.0.0',
-        description: 'Verwaltungs- und Steuerwerkzeug für die Anwendung',
+        description: 'Administration and system management',
 
         definition: {
-            /**
-             * Wird beim Aktivieren des Moduls aufgerufen
-             */
-            onActivate(moduleContext) {
-                if (!window.CatchTrackAdminModule) {
-                    throw new Error('AdminModule nicht geladen');
+            onActivate() {
+                if (!window.AdminModule) {
+                    throw new Error('AdminModule not loaded');
                 }
 
-                window.CatchTrackAdminModule.init();
+                window.AdminModule.init();
 
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('admin-module:activated', {
+                if (window.Core) {
+                    window.Core.emit('admin-module:activated', {
                         version: this.version
                     });
                 }
             },
 
-            /**
-             * Wird beim Deaktivieren des Moduls aufgerufen
-             */
-            onDeactivate(moduleContext) {
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('admin-module:deactivated', {
+            onDeactivate() {
+                if (window.Core) {
+                    window.Core.emit('admin-module:deactivated', {
                         timestamp: new Date().toISOString()
                     });
                 }
             },
 
-            /**
-             * Öffentliche API des Admin-Moduls
-             */
             api: {
-                getSystemStats: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getSystemStats() : undefined,
-                getLoadedModules: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getLoadedModules() : undefined,
-                getErrorLog: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getErrorLog() : undefined,
-                clearErrorLog: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.clearErrorLog() : undefined,
-                performHealthCheck: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.performHealthCheck() : undefined,
-                getDebugInfo: () => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.getDebugInfo() : undefined,
-                logError: (error) => window.CatchTrackAdminModule ? window.CatchTrackAdminModule.logError(error) : undefined
+                getSystemStats: () => window.AdminModule ? window.AdminModule.getSystemStats() : undefined,
+                getLoadedModules: () => window.AdminModule ? window.AdminModule.getLoadedModules() : undefined,
+                getErrorLog: () => window.AdminModule ? window.AdminModule.getErrorLog() : undefined,
+                clearErrorLog: () => window.AdminModule ? window.AdminModule.clearErrorLog() : undefined,
+                performHealthCheck: () => window.AdminModule ? window.AdminModule.performHealthCheck() : undefined,
+                getDebugInfo: () => window.AdminModule ? window.AdminModule.getDebugInfo() : undefined,
+                logError: (error) => window.AdminModule ? window.AdminModule.logError(error) : undefined
             }
         }
     };
 
-    if (!window.CatchTrackAdminModuleInterface) {
-        window.CatchTrackAdminModuleInterface = Object.freeze(AdminModuleInterface);
+    if (!window.AdminModuleInterface) {
+        window.AdminModuleInterface = Object.freeze(AdminModuleInterface);
     }
 })();

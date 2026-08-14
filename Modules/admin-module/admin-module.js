@@ -1,9 +1,9 @@
 /*
- * CatchTrack Admin Module
- * Version: 1.0
+ * Generic Admin Module
+ * Version: 1.0.0
  *
- * Verwaltungs- und Steuerwerkzeug für die CatchTrack-Anwendung während der Entwicklung.
- * Bietet administrative Funktionen für System- und Modulverwaltung.
+ * Administrative functions for a reusable framework.
+ * No application-specific logic is included here.
  */
 
 (() => {
@@ -20,66 +20,62 @@
             events: []
         },
 
-        /**
-         * Initialisiert das Admin-Modul
-         */
         init() {
             if (this.initialized) {
-                return;
+                return this;
             }
 
             this.systemStats.startedAt = new Date().toISOString();
             this.initialized = true;
 
-            // Event-Listener registrieren
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.on('error:handled', (data) => {
+            if (window.Core) {
+                window.Core.on('error:handled', (data) => {
                     this.logError(data && data.error ? data.error : data);
                 });
 
-                window.CatchTrackCore.on('module:registered', (data) => {
+                window.Core.on('module:registered', (data) => {
                     this.addModuleStats(data);
                 });
 
-                window.CatchTrackCore.emit('admin-module:initialized', {
-                    message: 'Admin-Modul initialisiert',
+                window.Core.emit('admin-module:initialized', {
+                    message: 'Admin module initialized',
                     timestamp: new Date().toISOString()
                 });
             }
+
+            return this;
         },
 
-        /**
-         * Protokolliert einen Fehler
-         * @param {Error|object} error - Fehlerobject
-         */
         logError(error) {
-            const errorEntry = {
-                timestamp: new Date().toISOString(),
-                message: error.message || String(error),
-                stack: error.stack || '',
-                type: error.name || 'Unknown'
-            };
+            const entry = error && typeof error === 'object'
+                ? {
+                    timestamp: new Date().toISOString(),
+                    message: error.message || String(error),
+                    stack: error.stack || '',
+                    type: error.name || 'Unknown'
+                }
+                : {
+                    timestamp: new Date().toISOString(),
+                    message: String(error),
+                    stack: '',
+                    type: 'Unknown'
+                };
 
-            this.systemStats.errors.push(errorEntry);
+            this.systemStats.errors.push(entry);
 
-            // Begrenzen auf letzte 100 Fehler
             if (this.systemStats.errors.length > 100) {
                 this.systemStats.errors.shift();
             }
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('admin-module:error-logged', errorEntry);
+            if (window.Core) {
+                window.Core.emit('admin-module:error-logged', entry);
             }
         },
 
-        /**
-         * Fügt Modul-Statistiken hinzu
-         * @param {object} data - Modul-Daten
-         */
         addModuleStats(data) {
             const moduleEntry = {
-                name: data.name || 'Unknown',
-                version: data.version || 'Unknown',
+                name: data && data.name ? data.name : 'Unknown',
+                version: data && data.version ? data.version : 'Unknown',
                 registeredAt: new Date().toISOString(),
                 status: 'registered'
             };
@@ -87,10 +83,6 @@
             this.systemStats.modules.push(moduleEntry);
         },
 
-        /**
-         * Gibt Systemstatistiken zurück
-         * @returns {object} Systemstatistiken
-         */
         getSystemStats() {
             return {
                 uptime: this.getUptime(),
@@ -102,10 +94,6 @@
             };
         },
 
-        /**
-         * Berechnet die Laufzeit des Systems
-         * @returns {number} Laufzeit in Millisekunden
-         */
         getUptime() {
             if (!this.systemStats.startedAt) {
                 return 0;
@@ -116,74 +104,54 @@
             return now.getTime() - startTime.getTime();
         },
 
-        /**
-         * Gibt eine Liste aller geladenen Module zurück
-         * @returns {array} Array von Modulen
-         */
         getLoadedModules() {
             return this.systemStats.modules;
         },
 
-        /**
-         * Gibt alle protokollierten Fehler zurück
-         * @returns {array} Array von Fehlern
-         */
         getErrorLog() {
             return this.systemStats.errors;
         },
 
-        /**
-         * Löscht das Fehlerprotokoll
-         */
         clearErrorLog() {
             this.systemStats.errors = [];
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('admin-module:error-log-cleared', {
+            if (window.Core) {
+                window.Core.emit('admin-module:error-log-cleared', {
                     timestamp: new Date().toISOString()
                 });
             }
         },
 
-        /**
-         * Führt eine Systemüberprüfung durch
-         * @returns {object} Überprüfungsergebnisse
-         */
         performHealthCheck() {
             const checks = {
                 timestamp: new Date().toISOString(),
-                coreLoaded: !!window.CatchTrackCore,
-                moduleManagerLoaded: !!window.CatchTrackModuleManager,
-                userModuleLoaded: !!window.CatchTrackUserModule,
+                coreLoaded: !!window.Core,
+                moduleManagerLoaded: !!window.ModuleManager,
+                userModuleLoaded: !!window.UserModule,
                 eventsWorking: this.testEventEmission(),
                 storageAccessible: this.testStorageAccess()
             };
 
             checks.healthy = Object.values(checks)
-                .filter(v => typeof v === 'boolean')
-                .every(v => v === true);
+                .filter((value) => typeof value === 'boolean')
+                .every((value) => value === true);
 
             return checks;
         },
 
-        /**
-         * Testet die Event-Emission
-         * @returns {boolean} Erfolgreich
-         */
         testEventEmission() {
             try {
-                if (!window.CatchTrackCore) {
+                if (!window.Core) {
                     return false;
                 }
 
                 let testPassed = false;
-
                 const listener = () => {
                     testPassed = true;
                 };
 
-                window.CatchTrackCore.once('admin-test:event', listener);
-                window.CatchTrackCore.emit('admin-test:event');
+                window.Core.once('admin-test:event', listener);
+                window.Core.emit('admin-test:event');
 
                 return testPassed;
             } catch (error) {
@@ -191,30 +159,23 @@
             }
         },
 
-        /**
-         * Testet den Speicherzugriff
-         * @returns {boolean} Erfolgreich
-         */
         testStorageAccess() {
             try {
-                const testKey = 'admin-health-check-test';
-                const testValue = Date.now().toString();
-
-                if (window.CatchTrackCoreStorage) {
-                    // Einfacher Test für Storage-Verfügbarkeit
-                    return true;
+                if (typeof window.localStorage !== 'undefined') {
+                    const testKey = 'admin-health-check-test';
+                    const testValue = Date.now().toString();
+                    window.localStorage.setItem(testKey, testValue);
+                    const read = window.localStorage.getItem(testKey);
+                    window.localStorage.removeItem(testKey);
+                    return read === testValue;
                 }
 
-                return false;
+                return !!window.DatabaseManager;
             } catch (error) {
                 return false;
             }
         },
 
-        /**
-         * Gibt Debuginformationen aus
-         * @returns {object} Debug-Informationen
-         */
         getDebugInfo() {
             return {
                 timestamp: new Date().toISOString(),
@@ -229,7 +190,7 @@
         }
     };
 
-    if (!window.CatchTrackAdminModule) {
-        window.CatchTrackAdminModule = AdminModule;
+    if (!window.AdminModule) {
+        window.AdminModule = AdminModule;
     }
 })();

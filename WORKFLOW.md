@@ -518,6 +518,37 @@ Danach darf der Schritt nicht erneut als offen behandelt werden.
 
 —
 
+## 20. Finaler Framework-Freeze (Neutral Framework v1.0.0)
+
+Dieser Arbeitsstand gilt als abgeschlossener neutraler Framework-Freeze für die wiederverwendbare Plattformbasis.
+
+### Ergebnis
+
+- Das Framework ist auf generische Core-, Config-, Database-, Service- und Modul-Schnittstellen neutralisiert.
+- Fachliche App-abhängige Bereiche wie GPS und Wetter bleiben bewusst außerhalb des neutralen Framework-Scopes.
+- Die Module `Modules/user-module/`, `Modules/admin-module/` und `Modules/i18n-module/` sind als generische Infrastrukturkomponenten im Framework definiert.
+- `Modules/gps-module/` und `Modules/weather-module/` sind nicht Bestandteil des Freeze-Exports und bleiben separat ausgewiesen.
+
+### Validierung
+
+- Gezielte Suche in den Framework-Bereichen `Core`, `Config`, `Database`, `Services` und den neutralen Modulen: keine Laufzeit- oder Schnittstellenabhängigkeit mehr von CatchTrack-spezifischen Identitäten.
+- Smoke-Test der generischen Runtime in einer Browser-ähnlichen Node-VM: erfolgreich. Start, Modulregistrierung, Benutzer-Authentifizierung, Admin-Health-Check und i18n-Locale-Funktionen wurden verifiziert.
+- `git diff` wurde geprüft; keine unbeabsichtigten Änderungen wurden in den Freeze-Bereich aufgenommen.
+
+### Export
+
+- Archiv: `Neutral-Framework-v1.0.0-Freeze.zip`
+- Export-Regel: Ausschluss von `Modules/gps-module/` und `Modules/weather-module/`
+- ".git"-Daten und temporäre Arbeitsdateien bleiben außerhalb des Freeze-ZIPs
+
+### Git-Abschluss
+
+- Der Abschluss wird mit einem Repository-Commit dokumentiert.
+- Danach erfolgt der Push auf `origin/main`.
+- Erst danach gilt der Framework-Freeze als vollständig synchronisiert und verbindlich veröffentlicht.
+
+—
+
 ## 20. Projektsteuerung
 
 Die Projektsteuerung besteht ausschließlich aus:

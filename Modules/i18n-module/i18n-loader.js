@@ -1,37 +1,36 @@
 /*
- * CatchTrack i18n Module Loader
+ * Generic i18n Module Loader
  * Version: 1.0.0
  */
 
 (() => {
     'use strict';
 
-    if (!window.CatchTrackCore || !window.CatchTrackModuleInterface || !window.CatchTrackModuleManager) {
+    if (!window.Core || !window.ModuleInterface || !window.ModuleManager) {
         return;
     }
 
-    if (!window.CatchTrackI18nInterface) {
-        console.error('[CatchTrack] I18nModuleInterface nicht verfügbar');
+    if (!window.I18nModuleInterface) {
+        console.error('[Framework] I18nModuleInterface not available');
         return;
     }
 
-    const def = window.CatchTrackI18nInterface.definition;
-
-    const I18nModuleInstance = window.CatchTrackModuleInterface.create({
-        id:           'i18n-module',
-        name:         'CatchTrack i18n Module',
-        version:      '1.0.0',
-        description:  'Internationalisierung – DE / EN',
-        onActivate:   def.onActivate,
+    const def = window.I18nModuleInterface.definition;
+    const I18nModuleInstance = window.ModuleInterface.create({
+        id: 'i18n-module',
+        name: 'i18n Module',
+        version: '1.0.0',
+        description: 'Internationalization – DE / EN',
+        onActivate: def.onActivate,
         onDeactivate: def.onDeactivate
     });
 
     try {
-        window.CatchTrackModuleManager.register(I18nModuleInstance);
-        window.CatchTrackModuleManager.activate(I18nModuleInstance.id);
+        window.ModuleManager.register(I18nModuleInstance);
+        window.ModuleManager.activate(I18nModuleInstance.id);
     } catch (error) {
-        if (window.CatchTrackCoreErrorHandler) {
-            window.CatchTrackCoreErrorHandler.handle(error, { type: 'i18n-module-loader' });
+        if (window.CoreErrorHandler) {
+            window.CoreErrorHandler.handle(error, { type: 'i18n-module-loader' });
         }
     }
 })();

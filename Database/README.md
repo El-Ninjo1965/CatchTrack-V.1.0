@@ -1,13 +1,13 @@
-# CatchTrack Database Layer
+# Framework Database Layer
 
 **Version:** 1.0.0  
 **Status:** ✓ Abgeschlossen  
 **Rolle:** Datenbankzugriff und -verwaltung  
-**Letzte Aktualisierung:** 2026-08-11
+**Letzte Aktualisierung:** 2026-08-14
 
 ## Zweck
 
-Der Database Manager bietet eine abstrahierte Schnittstelle zu IndexedDB. Er verwaltet alle Daten der Anwendung und bietet CRUD-Operationen, Indexverwaltung und Transaktionen.
+Der Database Manager bietet eine abstrahierte Schnittstelle zu IndexedDB. Er verwaltet generische Framework-Daten und bietet CRUD-Operationen, Indexverwaltung und Transaktionen ohne fachliche App-Logik.
 
 ## Funktionen
 

@@ -1,5 +1,5 @@
 /*
- * CatchTrack i18n Module Interface
+ * Generic i18n Module Interface
  * Version: 1.0.0
  */
 
@@ -7,45 +7,46 @@
     'use strict';
 
     const I18nModuleInterface = {
-        name:        'i18n-module',
-        version:     '1.0.0',
-        description: 'Internationalisierung – DE / EN',
+        name: 'i18n-module',
+        version: '1.0.0',
+        description: 'Internationalization – DE / EN',
 
         definition: {
             onActivate(moduleContext) {
-                if (!window.CatchTrackI18n) {
-                    throw new Error('CatchTrackI18n nicht geladen');
+                if (!window.I18nModule) {
+                    throw new Error('I18nModule not loaded');
                 }
-                window.CatchTrackI18n.init();
 
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('i18n:activated', {
-                        version: moduleContext.version,
-                        locale:  window.CatchTrackI18n.getLocale()
+                window.I18nModule.init();
+
+                if (window.Core) {
+                    window.Core.emit('i18n:activated', {
+                        version: moduleContext && moduleContext.version,
+                        locale: window.I18nModule.getLocale()
                     });
                 }
             },
 
-            onDeactivate(moduleContext) {
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('i18n:deactivated', {
+            onDeactivate() {
+                if (window.Core) {
+                    window.Core.emit('i18n:deactivated', {
                         timestamp: new Date().toISOString()
                     });
                 }
             },
 
             api: {
-                t:                    (key, params) => window.CatchTrackI18n ? window.CatchTrackI18n.t(key, params) : undefined,
-                setLocale:            (locale)      => window.CatchTrackI18n ? window.CatchTrackI18n.setLocale(locale) : undefined,
-                getLocale:            ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getLocale() : undefined,
-                getStoredPreference:  ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getStoredPreference() : undefined,
-                getSupportedLocales:  ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getSupportedLocales() : undefined,
-                getDeviceLocale:      ()            => window.CatchTrackI18n ? window.CatchTrackI18n.getDeviceLocale() : undefined
+                t: (key, params) => window.I18nModule ? window.I18nModule.t(key, params) : undefined,
+                setLocale: (locale) => window.I18nModule ? window.I18nModule.setLocale(locale) : undefined,
+                getLocale: () => window.I18nModule ? window.I18nModule.getLocale() : undefined,
+                getStoredPreference: () => window.I18nModule ? window.I18nModule.getStoredPreference() : undefined,
+                getSupportedLocales: () => window.I18nModule ? window.I18nModule.getSupportedLocales() : undefined,
+                getDeviceLocale: () => window.I18nModule ? window.I18nModule.getDeviceLocale() : undefined
             }
         }
     };
 
-    if (!window.CatchTrackI18nInterface) {
-        window.CatchTrackI18nInterface = Object.freeze(I18nModuleInterface);
+    if (!window.I18nModuleInterface) {
+        window.I18nModuleInterface = Object.freeze(I18nModuleInterface);
     }
 })();

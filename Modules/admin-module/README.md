@@ -1,13 +1,13 @@
-# CatchTrack Admin Module
+# Framework Admin Module
 
 **Version:** 1.0.0  
 **Status:** ✓ Abgeschlossen  
 **Rolle:** Verwaltungs- und Steuerwerkzeug  
-**Letzte Aktualisierung:** 2026-08-11
+**Letzte Aktualisierung:** 2026-08-14
 
 ## Zweck
 
-Das Admin-Modul bietet Verwaltungs- und Diagnostikfunktionen für die CatchTrack-Anwendung. Es überwacht Systemstatistiken, Fehler und das Gesundheitszustand der Anwendung.
+Das Admin-Modul bietet generische Verwaltungs- und Diagnostikfunktionen für das neutrale Framework. Es überwacht Systemstatistiken, Fehler und den Gesundheitszustand der Plattform, ohne fachliche Anwendungsspezifika zu kennen.
 
 ## Funktionen
 
@@ -25,7 +25,7 @@ Das Admin-Modul bietet Verwaltungs- und Diagnostikfunktionen für die CatchTrack
 Gibt die aktuellen Systemstatistiken zurück.
 
 ```javascript
-const stats = CatchTrackAdminModule.getSystemStats();
+const stats = AdminModule.getSystemStats();
 ```
 
 **Rückgabe:**
@@ -46,7 +46,7 @@ const stats = CatchTrackAdminModule.getSystemStats();
 Gibt alle geladenen Module zurück.
 
 ```javascript
-const modules = CatchTrackAdminModule.getLoadedModules();
+const modules = AdminModule.getLoadedModules();
 ```
 
 **Rückgabe:** Array von Modul-Objekten
@@ -57,7 +57,7 @@ const modules = CatchTrackAdminModule.getLoadedModules();
 Gibt das komplette Fehlerprotokoll zurück.
 
 ```javascript
-const errors = CatchTrackAdminModule.getErrorLog();
+const errors = AdminModule.getErrorLog();
 ```
 
 **Rückgabe:** Array von Fehler-Objekten
@@ -68,7 +68,7 @@ const errors = CatchTrackAdminModule.getErrorLog();
 Löscht das Fehlerprotokoll.
 
 ```javascript
-CatchTrackAdminModule.clearErrorLog();
+AdminModule.clearErrorLog();
 ```
 
 ---
@@ -77,7 +77,7 @@ CatchTrackAdminModule.clearErrorLog();
 Führt eine Gesundheitsprüfung des Systems durch.
 
 ```javascript
-const health = CatchTrackAdminModule.performHealthCheck();
+const health = AdminModule.performHealthCheck();
 ```
 
 **Rückgabe:**
@@ -99,7 +99,7 @@ const health = CatchTrackAdminModule.performHealthCheck();
 Gibt vollständige Debug-Informationen aus.
 
 ```javascript
-const debug = CatchTrackAdminModule.getDebugInfo();
+const debug = AdminModule.getDebugInfo();
 ```
 
 **Rückgabe:**
@@ -121,7 +121,7 @@ Protokolliert einen Fehler manuell.
 try {
     // Code
 } catch (error) {
-    CatchTrackAdminModule.logError(error);
+    AdminModule.logError(error);
 }
 ```
 
@@ -174,7 +174,7 @@ Modules/admin-module/
 ### Health Check durchführen
 
 ```javascript
-const health = CatchTrackAdminModule.performHealthCheck();
+const health = AdminModule.performHealthCheck();
 console.log(health.healthy ? 'System OK' : 'Fehler im System');
 ```
 
@@ -182,7 +182,7 @@ console.log(health.healthy ? 'System OK' : 'Fehler im System');
 
 ```javascript
 setInterval(() => {
-    const stats = CatchTrackAdminModule.getSystemStats();
+    const stats = AdminModule.getSystemStats();
     console.log(`Laufzeit: ${stats.uptime}ms`);
     console.log(`Module: ${stats.moduleCount}`);
     console.log(`Fehler: ${stats.errorCount}`);
@@ -192,7 +192,7 @@ setInterval(() => {
 ### Debug-Informationen abrufen
 
 ```javascript
-const debug = CatchTrackAdminModule.getDebugInfo();
+const debug = AdminModule.getDebugInfo();
 console.log(JSON.stringify(debug, null, 2));
 ```
 

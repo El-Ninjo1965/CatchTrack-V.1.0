@@ -1,13 +1,13 @@
-# CatchTrack User Module
+# Framework User Module
 
-**Version:** 1.1.0  
+**Version:** 1.0.0  
 **Status:** ✓ Abgeschlossen  
 **Rolle:** Benutzerverwaltung und Authentifizierung  
-**Letzte Aktualisierung:** 2026-08-11
+**Letzte Aktualisierung:** 2026-08-14
 
 ## Zweck
 
-Das User-Modul verwaltet Benutzeridentitäten in CatchTrack. Es stellt eine stabile API für Authentifizierung, Rollenprüfung und Benutzerpflege bereit.
+Das User-Modul verwaltet generische Benutzeridentitäten in einem neutralen Framework. Es stellt eine stabile API für Authentifizierung, Rollenprüfung, Berechtigungen und Benutzerpflege bereit.
 
 ## Benutzerdatenstruktur
 
@@ -31,8 +31,8 @@ Das Modul erstellt automatisch zwei Demo-Benutzer:
 
 | ID | Username | Anzeigename | E-Mail | Rolle |
 |---|---|---|---|---|
-| `demo-user-001` | `demo-user` | Demo User | demo@catchtrack.local | developer |
-| `demo-admin-001` | `admin` | Administrator | admin@catchtrack.local | admin |
+| `demo-user-001` | `demo-user` | Demo User | demo@example.local | member |
+| `demo-admin-001` | `admin` | Administrator | admin@example.local | admin |
 
 Wenn der interne User-Speicher unerwartet leer ist, stellt das Modul diese Demo-Benutzer bei der Initialisierung erneut bereit.
 
@@ -74,21 +74,21 @@ Shortcut für `hasRole('admin')`.
 ## Beispiele
 
 ```javascript
-const user = CatchTrackUserModule.authenticate('demo-user-001');
+const user = UserModule.authenticate('demo-user-001');
 if (user) {
     console.log('Angemeldet als', user.username);
 }
 
-const byName = CatchTrackUserModule.getUserByUsername('admin');
+const byName = UserModule.getUserByUsername('admin');
 
-const created = CatchTrackUserModule.createUser({
+const created = UserModule.createUser({
     username: 'janedoe',
     displayName: 'Jane Doe',
-    email: 'jane@catchtrack.local',
-    role: 'user'
+    email: 'jane@example.local',
+    role: 'member'
 });
 
-const updated = CatchTrackUserModule.updateUser(created.id, {
+const updated = UserModule.updateUser(created.id, {
     displayName: 'Jane D.',
     status: 'active'
 });

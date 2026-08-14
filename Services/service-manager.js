@@ -204,9 +204,9 @@
                     } catch (_) {}
                 }
 
-                // Fallback: RAM-basierte Demo-User im UserModule
-                if (!user && window.CatchTrackUserModule) {
-                    user = window.CatchTrackUserModule.getUserById(userId);
+                // Fallback: RAM-basierte Demo-User im generischen UserModule
+                if (!user && window.UserModule) {
+                    user = window.UserModule.getUserById(userId);
                 }
 
                 if (user && (user.status === 'active' || user.active === true)) {

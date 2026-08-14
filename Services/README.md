@@ -1,13 +1,13 @@
-# CatchTrack Services Layer
+# Framework Services Layer
 
 **Version:** 1.0.0  
 **Status:** ✓ Abgeschlossen  
-**Rolle:** Business-Logik und Service-Verwaltung  
-**Letzte Aktualisierung:** 2026-08-11
+**Rolle:** Generic service orchestration  
+**Letzte Aktualisierung:** 2026-08-14
 
 ## Zweck
 
-Der Service Manager koordiniert geschäftslogische Operationen. Alle Services werden zentral registriert und können von Modulen und anderen Services aufgerufen werden.
+Der Service Manager koordiniert generische Framework-Operationen. Alle Services werden zentral registriert und können von Modulen und anderen Services aufgerufen werden, ohne auf spezifische Anwendungsdomänen festgelegt zu sein.
 
 ## Verfügbare Services
 

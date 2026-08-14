@@ -1,13 +1,13 @@
-# CatchTrack Config Manager
+# Framework Config Manager
 
 **Version:** 1.0.0  
 **Status:** ✓ Abgeschlossen  
 **Rolle:** Zentrale Konfigurationsverwaltung  
-**Letzte Aktualisierung:** 2026-08-11
+**Letzte Aktualisierung:** 2026-08-14
 
 ## Zweck
 
-Der Config Manager verwaltet alle Konfigurationen der CatchTrack-Anwendung zentral. Er ermöglicht es, Einstellungen zur Laufzeit zu lesen, zu ändern und zu beobachten.
+Der Config Manager verwaltet die generischen Konfigurationen des neutralen Frameworks zentral. Er ermöglicht das Lesen, Ändern und Beobachten von Laufzeit-Einstellungen ohne anwendungsbezogene Fachlogik.
 
 ## Funktionen
 

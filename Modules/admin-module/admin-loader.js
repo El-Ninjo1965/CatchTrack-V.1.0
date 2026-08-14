@@ -1,43 +1,42 @@
 /*
- * CatchTrack Admin Module Loader
- * Version: 1.0
+ * Generic Admin Module Loader
+ * Version: 1.0.0
  *
- * Registriert und aktiviert das Admin-Modul im CatchTrack-Core.
+ * Registers and activates the neutral admin module in the framework core.
  */
 
 (() => {
     'use strict';
 
-    if (!window.CatchTrackCore || !window.CatchTrackModuleInterface || !window.CatchTrackModuleManager) {
+    if (!window.Core || !window.ModuleInterface || !window.ModuleManager) {
         return;
     }
 
-    if (!window.CatchTrackAdminModuleInterface) {
-        console.error('[CatchTrack] AdminModuleInterface nicht verfügbar');
+    if (!window.AdminModuleInterface) {
+        console.error('[Framework] AdminModuleInterface not available');
         return;
     }
 
-    const AdminModuleDefinition = window.CatchTrackAdminModuleInterface.definition;
-
-    const AdminModule = window.CatchTrackModuleInterface.create({
+    const AdminModuleDefinition = window.AdminModuleInterface.definition;
+    const AdminModule = window.ModuleInterface.create({
         id: 'admin-module',
-        name: 'CatchTrack Admin Module',
+        name: 'Admin Module',
         version: AdminModuleDefinition.version || '1.0.0',
-        description: 'Verwaltungs- und Steuerwerkzeug für die Anwendung',
+        description: 'Administration and system management',
         onActivate: AdminModuleDefinition.onActivate,
         onDeactivate: AdminModuleDefinition.onDeactivate
     });
 
     try {
-        window.CatchTrackModuleManager.register(AdminModule);
-        window.CatchTrackModuleManager.activate(AdminModule.id);
+        window.ModuleManager.register(AdminModule);
+        window.ModuleManager.activate(AdminModule.id);
 
-        window.CatchTrackCore.emit('admin-module:registered-and-loaded', {
+        window.Core.emit('admin-module:registered-and-loaded', {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        if (window.CatchTrackCoreErrorHandler) {
-            window.CatchTrackCoreErrorHandler.handle(error, {
+        if (window.CoreErrorHandler) {
+            window.CoreErrorHandler.handle(error, {
                 type: 'admin-module-loader'
             });
         }
