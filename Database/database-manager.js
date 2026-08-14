@@ -25,8 +25,8 @@
             return this.openDatabase().then(() => {
                 this.initialized = true;
 
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('database:initialized', {
+                if (window.Core) {
+                    window.Core.emit('database:initialized', {
                         timestamp: new Date().toISOString()
                     });
                 }
@@ -285,7 +285,7 @@
         }
     };
 
-    if (!window.CatchTrackDatabaseManager) {
-        window.CatchTrackDatabaseManager = Object.freeze(DatabaseManager);
+    if (!window.DatabaseManager) {
+        window.DatabaseManager = Object.freeze(DatabaseManager);
     }
 })();

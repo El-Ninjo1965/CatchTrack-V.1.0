@@ -25,8 +25,8 @@
             this.loadDefaultConfigs();
             this.initialized = true;
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('config-manager:initialized', {
+            if (window.Core) {
+                window.Core.emit('config-manager:initialized', {
                     timestamp: new Date().toISOString()
                 });
             }
@@ -139,8 +139,8 @@
 
             this.notifyWatchers(key, value, oldValue);
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('config:changed', {
+            if (window.Core) {
+                window.Core.emit('config:changed', {
                     key: key,
                     newValue: value,
                     oldValue: oldValue
@@ -306,7 +306,7 @@
         persist(key) {
             try {
                 const value = this.get(key);
-                localStorage.setItem(`catchtrack-config-${key}`, JSON.stringify(value));
+                localStorage.setItem(`core-config-${key}`, JSON.stringify(value));
             } catch (error) {
                 console.error('Error persisting config:', error);
             }
@@ -319,7 +319,7 @@
          */
         load(key) {
             try {
-                const stored = localStorage.getItem(`catchtrack-config-${key}`);
+                const stored = localStorage.getItem(`core-config-${key}`);
                 if (stored) {
                     const value = JSON.parse(stored);
                     this.set(key, value);
@@ -332,7 +332,7 @@
         }
     };
 
-    if (!window.CatchTrackConfigManager) {
-        window.CatchTrackConfigManager = Object.freeze(ConfigManager);
+    if (!window.ConfigManager) {
+        window.ConfigManager = Object.freeze(ConfigManager);
     }
 })();

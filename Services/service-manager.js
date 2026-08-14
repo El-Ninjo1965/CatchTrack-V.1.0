@@ -24,8 +24,8 @@
             this.registerDefaultServices();
             this.initialized = true;
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('service-manager:initialized', {
+            if (window.Core) {
+                window.Core.emit('service-manager:initialized', {
                     timestamp: new Date().toISOString()
                 });
             }
@@ -58,8 +58,8 @@
 
             this.services.set(name, service);
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('service:registered', {
+            if (window.Core) {
+                window.Core.emit('service:registered', {
                     name: name,
                     timestamp: new Date().toISOString()
                 });
@@ -105,12 +105,12 @@
          * Holt einen Benutzer durch ID
          */
         async getUser(userId) {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 throw new Error('Database not available');
             }
 
             try {
-                const user = await window.CatchTrackDatabaseManager.get('users', userId);
+                const user = await window.DatabaseManager.get('users', userId);
                 return user;
             } catch (error) {
                 console.error('Error getting user:', error);
@@ -122,16 +122,16 @@
          * Speichert einen Benutzer
          */
         async saveUser(user) {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 throw new Error('Database not available');
             }
 
             try {
                 user.updatedAt = new Date().toISOString();
-                await window.CatchTrackDatabaseManager.save('users', user);
+                await window.DatabaseManager.save('users', user);
 
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('user:saved', {
+                if (window.Core) {
+                    window.Core.emit('user:saved', {
                         userId: user.id
                     });
                 }
@@ -147,15 +147,15 @@
          * Löscht einen Benutzer
          */
         async deleteUser(userId) {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 throw new Error('Database not available');
             }
 
             try {
-                await window.CatchTrackDatabaseManager.delete('users', userId);
+                await window.DatabaseManager.delete('users', userId);
 
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('user:deleted', {
+                if (window.Core) {
+                    window.Core.emit('user:deleted', {
                         userId: userId
                     });
                 }
@@ -171,12 +171,12 @@
          * Gibt alle Benutzer zurück
          */
         async getAllUsers() {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 throw new Error('Database not available');
             }
 
             try {
-                const users = await window.CatchTrackDatabaseManager.getAll('users');
+                const users = await window.DatabaseManager.getAll('users');
                 return users;
             } catch (error) {
                 console.error('Error getting all users:', error);
@@ -198,7 +198,7 @@
                 let user = null;
 
                 // Erst DB-basierte Suche versuchen
-                if (window.CatchTrackDatabaseManager) {
+                if (window.DatabaseManager) {
                     try {
                         user = await UserService.getUser(userId);
                     } catch (_) {}
@@ -212,8 +212,8 @@
                 if (user && (user.status === 'active' || user.active === true)) {
                     this.currentUser = user;
 
-                    if (window.CatchTrackCore) {
-                        window.CatchTrackCore.emit('auth:authenticated', {
+                    if (window.Core) {
+                        window.Core.emit('auth:authenticated', {
                             userId: user.id,
                             timestamp: new Date().toISOString()
                         });
@@ -243,8 +243,8 @@
             const previousUser = this.currentUser;
             this.currentUser = null;
 
-            if (window.CatchTrackCore) {
-                window.CatchTrackCore.emit('auth:logout', {
+            if (window.Core) {
+                window.Core.emit('auth:logout', {
                     userId: previousUser ? previousUser.id : null,
                     timestamp: new Date().toISOString()
                 });
@@ -267,7 +267,7 @@
          * Speichert Modul-Metadaten
          */
         async registerModule(moduleData) {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 throw new Error('Database not available');
             }
 
@@ -280,10 +280,10 @@
                     registeredAt: new Date().toISOString()
                 };
 
-                await window.CatchTrackDatabaseManager.save('modules', module);
+                await window.DatabaseManager.save('modules', module);
 
-                if (window.CatchTrackCore) {
-                    window.CatchTrackCore.emit('module-service:registered', {
+                if (window.Core) {
+                    window.Core.emit('module-service:registered', {
                         moduleId: module.id
                     });
                 }
@@ -299,12 +299,12 @@
          * Gibt alle Module zurück
          */
         async getAllModules() {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 throw new Error('Database not available');
             }
 
             try {
-                const modules = await window.CatchTrackDatabaseManager.getAll('modules');
+                const modules = await window.DatabaseManager.getAll('modules');
                 return modules;
             } catch (error) {
                 console.error('Error getting all modules:', error);
@@ -322,7 +322,7 @@
          * Protokolliert eine Nachricht
          */
         async log(message, level = 'info', source = 'app') {
-            if (!window.CatchTrackDatabaseManager) {
+            if (!window.DatabaseManager) {
                 console.log(`[${level.toUpperCase()}] ${message}`);
                 return;
             }
@@ -336,7 +336,7 @@
                     timestamp: new Date().toISOString()
                 };
 
-                await window.CatchTrackDatabaseManager.insert('logs', logEntry);
+                await window.DatabaseManager.insert('logs', logEntry);
                 console.log(`[${level.toUpperCase()}] ${message}`);
 
                 return logEntry;
@@ -386,9 +386,9 @@
 
             this.cache.set(key, entry);
 
-            if (window.CatchTrackDatabaseManager) {
+            if (window.DatabaseManager) {
                 try {
-                    await window.CatchTrackDatabaseManager.save('cache', entry);
+                    await window.DatabaseManager.save('cache', entry);
                 } catch (error) {
                     console.error('Cache save error:', error);
                 }
@@ -420,9 +420,9 @@
         async delete(key) {
             this.cache.delete(key);
 
-            if (window.CatchTrackDatabaseManager) {
+            if (window.DatabaseManager) {
                 try {
-                    await window.CatchTrackDatabaseManager.delete('cache', key);
+                    await window.DatabaseManager.delete('cache', key);
                 } catch (error) {
                     console.error('Cache delete error:', error);
                 }
@@ -435,9 +435,9 @@
         async clear() {
             this.cache.clear();
 
-            if (window.CatchTrackDatabaseManager) {
+            if (window.DatabaseManager) {
                 try {
-                    await window.CatchTrackDatabaseManager.clear('cache');
+                    await window.DatabaseManager.clear('cache');
                 } catch (error) {
                     console.error('Cache clear error:', error);
                 }
@@ -445,7 +445,7 @@
         }
     };
 
-    if (!window.CatchTrackServiceManager) {
-        window.CatchTrackServiceManager = Object.freeze(ServiceManager);
+    if (!window.ServiceManager) {
+        window.ServiceManager = Object.freeze(ServiceManager);
     }
 })();
