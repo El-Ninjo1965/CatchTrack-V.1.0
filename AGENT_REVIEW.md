@@ -535,6 +535,279 @@ Variante A allein ist nur dann vollständig, wenn .git und alle versteckten Date
 
 # END BACKUP AND RESTORE STRATEGY
 
+## CORE / MODULE ARCHITECTURE REVIEW – 2026-08-14 15:00 UTC
+
+### Prüfungsumfang
+Geprüft wurden ausschließlich die tatsächlich vorhandenen Architekturdateien und die vorhandene Laufzeitstruktur des Repositories:
+- Core/core.js
+- Core/core-entry.js
+- Core/core-startup.js
+- Core/core-runtime.js
+- Core/core-lifecycle.js
+- Core/core-shutdown.js
+- Core/core-event-bus.js
+- Core/core-state.js
+- Core/core-storage.js
+- Core/core-config.js
+- Core/core-context.js
+- Core/core-loader.js
+- Core/core-error-handler.js
+- Core/error-log.js
+- Core/module-interface.js
+- Core/module-manager.js
+- Core/module-registry.js
+- Database/database-manager.js
+- Services/service-manager.js
+- Modules/user-module/user-module.js
+- Modules/user-module/user-interface.js
+- Modules/user-module/user-loader.js
+- Modules/admin-module/admin-module.js
+- Modules/admin-module/admin-interface.js
+- Modules/admin-module/admin-loader.js
+- Modules/i18n-module/i18n-module.js
+- Modules/i18n-module/i18n-interface.js
+- Modules/i18n-module/i18n-loader.js
+
+Es wurden keine Implementierungen vorgenommen, keine Core-Dateien verändert, keine Module geändert, keine ZIP-Dateien entpackt und keine neuen Dateien erzeugt.
+
+### Ist-Zustand
+
+#### 1. Core-Unabhängigkeit
+Der aktuelle Core ist nicht bewusst an konkrete Fachmodule gebunden. Er kennt keine `GPS`, `Weather`, `Catchbook`- oder andere fachliche Features direkt. Die echte technische Basis enthält generische Komponenten wie:
+- Core-Init und Event-Bus
+- Lifecycle
+- Module Registry und Module Manager
+- Error Log
+- State/Storage/Context
+- generische Services
+
+Das ist ein echtes generisches Core-Framework im Sinne einer Basis-Architektur.
+
+Wichtig: Der Core verwendet globale `window`-Referenzen und erwartet, dass Module/Services in der runtime bereits vorhanden sind. Das ist nicht fachlich konkret, aber es ist eine Implementierungsabhängigkeit von globalem Boot-Order und globalen Namen.
+
+Die Kernfrage ist daher: Kennt der Core konkrete Module?
+- Nein, nicht im fachlichen Sinne.
+- Ja, in einem technischen Sinne kennt er generische API-Contracts und Modul-Objekte.
+
+Der Core ist also nicht fachlich geknüpft, aber er ist immer noch an ein bestimmtes Boot-/Runtime-Modell gebunden.
+
+#### 2. Modul-Schnittstelle
+Die tatsächliche generische Interface-Architektur ist real implementiert in:
+- Core/module-interface.js
+- Core/module-registry.js
+- Core/module-manager.js
+
+Die `ModuleInterface.create()`-Funktion definiert einen echten generischen Vertrag mit:
+- `id`
+- `name`
+- `version`
+- `description`
+- `status`
+- `active`
+- `dependencies`
+- `permissions`
+- `capabilities`
+- install/init/enable/disable/update/uninstall
+- activate/deactivate Hooks
+
+`ModuleRegistry` verwaltet Module per `Map` und liefert `register`, `unregister`, `get`, `getAll`, `has`, `clear`.
+
+`ModuleManager` ergänzt die Registry um echte Lifecycle-Methoden: `register`, `unregister`, `install`, `initialize`, `enable`, `disable`, `update`, `uninstall`, `activate`, `deactivate`.
+
+Das ist kein bloßer dokumentierter Entwurf, sondern tatsächlich implementierte generische Modul-Logik.
+
+#### 3. Modul-Selbstständigkeit
+Die vorhandenen Module können grundsätzlich ihre eigenen Ressourcen mitbringen:
+- eigener Code und Logik
+- eigene Interfaces
+- eigene Loader
+- eigene Steuerlogik
+- eigene Produkt- oder Framework-Funktionen
+
+Beispiele:
+- Modules/user-module/user-module.js
+- Modules/admin-module/admin-module.js
+- Modules/i18n-module/i18n-module.js
+
+Diese Module sind nicht im Core selbst eingebettet. Ihre Struktur ist modular und selbstständig organisiert.
+
+Aber: Die verteilte Laufzeit ist noch nicht vollständig paket- und datei-übergreifend isoliert. Die zentrale Runtime-Integration erfolgt über globale Objekte und window-Referenzen, nicht über ein echtes Package-Manifest oder einen eigenständigen Modul-Loader außerhalb der globalen JS-Umgebung.
+
+Das bedeutet: Ein neues Modul kann zwar grundsätzlich als eigener Ordner bzw. Paket angelegt werden, aber die Boot- und Lade-Kette ist noch nicht unabhängig von globalen Kern-Referenzen.
+
+#### 4. Modul-Lifecycle
+Real implementiert sind:
+- Installation und Initialisierung über `ModuleInterface.create()`
+- Registrierung über `ModuleManager.register()`
+- Aktivierung über `enable()` / `activate()`
+- Deaktivierung über `disable()` / `deactivate()`
+- Deinstallation über `uninstall()`
+- Versionierung per `version`-Feld und Modul-Definition
+
+Aber: Diese Methoden sind teilweise nur Methoden auf dem Modulobjekt; sie sind nicht zwingend durch einen vollständigen, persistierten Modul-Manager-Workflow mit Dependency-Graph, Version-Checks und sicheren Installationszuständen verknüpft.
+
+Zudem gibt es keine echte, modulübergreifende Package-Installation inklusive manifestbasiertem Discovery- und Installationskontext. Der Lifecycle ist vorhanden, aber noch nicht vollständig als robustes Produkt- und Distribution-Model ausgebaut.
+
+#### 5. Modulabhängigkeiten
+Die actual code shows no direct fachliche dependency between `user`, `admin` and `i18n` modules. Sie sind getrennt.
+
+Tatsächliche Abhängigkeiten bestehen aber über:
+- globale `window`-Variablen
+- globaler `ModuleManager`
+- globaler `ModuleRegistry`
+- globaler Core-Event-Bus
+- gemeinsame `DatabaseManager`
+- gemeinsame `localStorage`-Namensräume
+
+Wichtig: Es gibt derzeit keine harte fachliche Kopplung zwischen den einzelnen generischen Modulen, aber es gibt eine starke technische Shared-Global-Abhängigkeit.
+
+#### 6. Datenzugriff / Modul-Datenmodell
+Der gewünschte Soll-Zustand lautet:
+- Ein Modul verwaltet seine eigenen Daten.
+- Andere Module greifen nicht direkt auf diese Daten zu.
+- Datenzugriff erfolgt über kontrollierte Schnittstellen oder generische Services.
+
+Tatsächlich vorhanden ist bisher eher eine gemeinsame Betriebsschnittstelle:
+- `DatabaseManager` verwaltet gemeinsame Stores wie `users`, `modules`, `logs`, `sessions`, `settings`, `cache`, `sync`.
+- `ServiceManager` greift auf diese Stores zu.
+- `UserService`, `ModuleService`, `LoggingService` und `CacheService` operieren über dieselbe gemeinsame Datenbankebene.
+
+Das bedeutet:
+- Datenzugriff ist technisch zentralisiert.
+- Module haben keine klar getrennten, isolierten Datenspeicherräume im Code.
+- Kein echtes Modul-Private-Store-Konzept ist enforced.
+- Das gewünschte Modell „Modul-Private-Daten mit definierter Schnittstelle“ ist nicht grundsätzlich umgesetzt.
+
+Aktuell ist der Architekturzustand also: gemeinsame Infrastruktur, aber noch keine strenge Modul-Datentrennung.
+
+#### 7. Administrationsbereich / Module Manager
+Der Module Manager ist generisch und potenziell wiederverwendbar. Er kann beliebige Module verwalten, sofern diese eine passende Schnittstelle und passende globale runtime-Registrierung erfüllen.
+
+Das ist gut, aber noch nicht vollständig generisch genug für eine voll eigenständige Paket-Integration, weil:
+- keine dynamische Modul-Paket-Erkennung
+- keine Paketmanifest-Validierung
+- keine echte Dependency-Graph-Validierung
+- keine modul-übergreifende Deployment-Engine
+- keine strenge Modul-Private-Storage-Isolation
+
+Der Administrationsteil ist also grundsätzlich generisch, aber noch nicht als vollwertiger modularer Package-Manager ausgebaut.
+
+#### 8. Generische Wiederverwendbarkeit
+Der aktuelle Core ist für eine andere Anwendung theoretisch wiederverwendbar, sofern eine neue Anwendung nur ein anderes Modul-Paket bereitstellt.
+
+Die generische Basis ist vorhanden, aber die tatsächliche Runtime-Architektur ist noch an eine bestimmte Browser-/Global-Umgebung gebunden. Daher ist der Current State:
+- generische Basis ja
+- vollständige modulare Wiederverwendbarkeit im produktiven Sinne noch nein
+
+### Soll-Zustand
+Das gewünschte Ziel ist klar:
+- Core generisch und unabhängig von fachlichen Modulen
+- Core muss für neue Module nicht verändert werden
+- Modulspezifische Logiken müssen in eigenständigen Modulen/Paketen leben
+- Core erkennt, registriert, installiert, aktiviert, deaktiviert, konfiguriert, aktualisiert und deinstalliert Module über generische Schnittstellen
+- Module haben eigene Daten, UI, Konfiguration und Ressourcen
+- Fachmodule wie GPS, Wetter, Kalender oder CatchTrack-Funktionen dürfen keine feste Kenntnis im Core besitzen
+
+### Abweichungen zwischen Soll und Ist
+
+#### A. Bereits korrekt umgesetzt
+- Der Core selbst ist fachlich neutral.
+- Es gibt ein echtes generisches Modul-Interface.
+- Es gibt eine Registry und einen Manager mit Lifecycle-Methoden.
+- Es gibt generische Module für User, Admin und i18n.
+- Der Core besitzt keine direkten fachlichen Abhängigkeiten zu GPS/Weather/Catchbook.
+
+#### B. Nur dokumentiert / proposed design
+- echte Modul-Paket-Discovery
+- echte independent package manifest and installation model
+- modul-übergreifende Dependency-Graph-Validierung
+- modul-private storage and enforcement
+- package-based lifecycle persistence and versioning
+- strict separation between data ownership and global service access
+
+Diese Dinge sind in der Architektur als Ziel gedacht, aber im tatsächlichen Code noch nicht als vollständiger, belastbarer Mechanismus implementiert.
+
+#### C. Konkrete Abweichungen
+- Global-window dependency instead of true package contract
+- shared database/service layer without module-scoped ownership
+- no explicit dependency resolver between modules
+- no package discovery outside static script inclusion
+- no enforced module-private data boundaries
+- no persisted install/deinstall state anchored in a package manifest
+- no separate security layer that restricts inter-module data access beyond conventions
+
+#### D. Aktuelle Abhängigkeiten
+Tatsächliche Abhängigkeiten im Code:
+- Core -> ModuleManager / ModuleRegistry / EventBus / Lifecycle / ErrorLog / State / Storage
+- Services -> DatabaseManager -> shared stores
+- AuthService -> UserModule global fallback
+- Module loaders depend on existing `window` objects and loader order
+- Interfaces depend on specific globals (UserModule / AdminModule / I18nModule)
+
+Diese Abhängigkeiten sind generisch, aber sie sind noch keine vollständige modular-package-Architektur.
+
+#### E. Was vor einem Core-Freeze noch fehlen würde
+Vor einem endgültigen Core-Freeze müsste noch klarer umgesetzt sein:
+1. echte Modul-Package-Basis statt globaler Bootstrap-Abhängigkeiten
+2. modul-übergreifende Dependency-Graph und Versionierung
+3. modul-Private Storage- und Zugriffskontrolle
+4. Installations-/Deinstallations- und Update-States mit persistenter Struktur
+5. ein klarer generischer Service-Mechanismus für kontrollierten Datenaustausch zwischen Modulen
+
+Betroffene Dateien:
+- Core/module-interface.js
+- Core/module-manager.js
+- Core/module-registry.js
+- Services/service-manager.js
+- Database/database-manager.js
+- Modules/user-module/user-interface.js
+- Modules/admin-module/admin-interface.js
+- Modules/i18n-module/i18n-interface.js
+
+#### F. Was vollständig innerhalb eines Moduls gelöst werden kann
+Ein Modul kann grundsätzlich intern lösen:
+- eigene UI
+- eigene Konfiguration
+- eigene Initialisierung
+- eigene lokale State- und Logik-Modelle
+- eigene Loader und Interface-Definitionen
+- eigene Versionierung und Lifecycle-Methoden
+
+Das gilt für `user`, `admin` und `i18n` bereits im Grunde.
+
+Was nicht vollständig innerhalb eines einzelnen Moduls gelöst werden kann, ist die Schaffung einer sicheren, generischen, globalen Modul- und Daten-Architektur. Das ist Core-/Framework-Angelegenheit.
+
+### G. Abschließende Bewertung
+Nein, der aktuelle Core ist noch nicht vollständig geeignet, als endgültig eingefrorener Core zu gelten, wenn das Ziel ein wirklich autonomes Modulpaket-System ohne weitere Core-Änderungen ist.
+
+Der heutige Stand ist bereits gut als neutraler Core-Base-Layer, aber noch nicht vollständig als das gewünschte Server-/Framework-/Plugin-Modell.
+
+Der zentrale Grund:
+- der Core ist generisch, aber nicht vollständig paket- und datensicher modular
+- die Runtime arbeitet noch über globale Objekt- und Window-Abhängigkeiten
+- die Datenlage ist noch gemeinsam genutzt und nicht module-private enforced
+- der Lifecycle ist real vorhanden, aber noch nicht als vollständiger Package-/Versionierungs- und Dependency-Workflow ausgeführt
+
+Wenn der Core final eingefroren werden soll, müssen diese Punkte vor dem Freeze noch klar in eine generische Package-/Module-/Data-Contract-Architektur formalisiert werden.
+
+### Kurzfazit
+- Core fachlich neutral: ja
+- Modul-Interface konkret implementiert: ja
+- Modul-Lifecycle real vorhanden: ja, aber unvollständig als robustes Package-Model
+- Data isolation per module: nein, noch nicht sicher umgesetzt
+- Modul-Paket-Discovery/Installation: nein, noch nicht vollständig
+- Core-Freeze-Sicherheit für fremde Module: noch nicht vollständig gegeben
+
+Das ist der tatsächliche Ist-/Soll-Stand basierend auf dem realen Code und nicht nur auf Dokumentation.
+
+## GITHUB VERIFY – ARCHITECTURE REVIEW
+
+Die vorliegende Analyse wurde ausschließlich auf den tatsächlichen Code und die realen Abhängigkeiten des Repositories gestützt. Sie dokumentiert den Ist-Zustand und den Soll-Zustand strikt getrennt, ohne den Core oder die Module zu verändern. Der Review-Abschnitt ist als neue, klar abgegrenzte Analyse in dieser Datei ergänzt worden.
+
+Damit ist die Architekturprüfung abgeschlossen, dokumentiert und auf GitHub synchronisierbar.
+
+# END CORE / MODULE ARCHITECTURE REVIEW
+
 ## GITHUB BACKUP ACCESS / SSH DIAGNOSIS
 
 ### Ausgangszustand
