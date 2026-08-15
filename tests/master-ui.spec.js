@@ -1,7 +1,22 @@
 const { test, expect } = require('@playwright/test');
 
 const BASE_URL = 'http://127.0.0.1:8000';
-const DEVELOPER = { username: 'developer', password: 'local-preview-password' };
+const DEVELOPER = { username: 'developer', password: 'playwright-developer-password' };
+
+async function setDeveloperPassword(page, password) {
+  await page.evaluate((value) => {
+    localStorage.setItem('core.bootstrap.developerPassword', value);
+    if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
+      const current = window.ConfigManager.get('bootstrap', {}) || {};
+      window.ConfigManager.set('bootstrap', {
+        ...current,
+        developerPassword: value,
+        passwordRequired: true,
+        passwordSource: 'browser-test'
+      });
+    }
+  }, password);
+}
 
 async function login(page, username, password) {
   await page.fill('#loginUsername', username);
@@ -30,6 +45,12 @@ async function createUser(page, username) {
 }
 
 test.describe('Developer', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+    await setDeveloperPassword(page, DEVELOPER.password);
+    await page.reload();
+  });
+
   test('index.html is the user app with dashboard, profile, modules and admin/developer links', async ({ page }) => {
     await page.goto(BASE_URL);
 
@@ -130,6 +151,12 @@ test.describe('Developer', () => {
 });
 
 test.describe('Normal user', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+    await setDeveloperPassword(page, DEVELOPER.password);
+    await page.reload();
+  });
+
   test('sees only the user app and is denied on admin.html and dev.html', async ({ page }) => {
     const username = `testuser-${Date.now()}`;
 
@@ -171,6 +198,8 @@ test.describe('Normal user', () => {
 
 test('dynamically registered modules appear in the user menu', async ({ page }) => {
   await page.goto(BASE_URL);
+  await setDeveloperPassword(page, DEVELOPER.password);
+  await page.reload();
   await loginIntoShell(page, DEVELOPER.username, DEVELOPER.password);
 
   await page.evaluate(() => {

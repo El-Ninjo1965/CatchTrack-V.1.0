@@ -791,13 +791,13 @@
         developerDisplayId: bootstrapConfig.developerDisplayId || 'USR-000001',
         passwordRequired: true,
         passwordSource: 'local-config-or-storage',
-        developerPassword: bootstrapConfig.developerPassword || 'local-preview-password'
+        developerPassword: ''
       });
     }
 
     const bootstrap = readBootstrapConfig();
     elements.developerUsername.value = bootstrap.developerUsername || 'developer';
-    elements.developerPassword.value = bootstrap.developerPassword || 'local-preview-password';
+    elements.developerPassword.value = bootstrap.developerPassword || '';
 
     if (window.UserModule && typeof window.UserModule.init === 'function') {
       window.UserModule.init();

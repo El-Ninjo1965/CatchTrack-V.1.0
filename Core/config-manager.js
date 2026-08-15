@@ -56,7 +56,7 @@
                 createOnInit: true,
                 passwordRequired: true,
                 passwordSource: 'local-config-or-storage',
-                developerPassword: 'local-preview-password'
+                developerPassword: ''
             });
 
             // Database Config

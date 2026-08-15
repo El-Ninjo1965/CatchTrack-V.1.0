@@ -78,7 +78,7 @@ test('developer bootstrap seed creates a single protected developer without bypa
   const context = loadCore();
 
   const configuredUsername = 'bootstrapdev';
-  const configuredPassword = process.env.CORE_BOOTSTRAP_PASSWORD || 'local-bootstrap-password';
+  const configuredPassword = process.env.CORE_BOOTSTRAP_PASSWORD || 'bootstrap-password-test';
   if (context.ConfigManager && typeof context.ConfigManager.set === 'function') {
     context.ConfigManager.set('bootstrap', {
       developerUsername: configuredUsername,
