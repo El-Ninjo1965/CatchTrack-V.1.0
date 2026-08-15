@@ -5,8 +5,10 @@
     appState: document.getElementById('appState'),
     currentUserView: document.getElementById('currentUserView'),
     userToolsView: document.getElementById('userToolsView'),
+    userListView: document.getElementById('userListView'),
     adminView: document.getElementById('adminView'),
     adminActions: document.getElementById('adminActions'),
+    permissionView: document.getElementById('permissionView'),
     auditView: document.getElementById('auditView'),
     loginUsername: document.getElementById('loginUsername'),
     loginPassword: document.getElementById('loginPassword'),
@@ -94,6 +96,51 @@
     ui.adminActions.classList.remove('hidden');
   };
 
+  const renderUserListState = async () => {
+    if (!window.UserModule || typeof window.UserModule.listUsers !== 'function') {
+      ui.userListView.textContent = 'User list unavailable.';
+      return;
+    }
+
+    const result = await window.UserModule.listUsers();
+    if (!result || !result.ok || !Array.isArray(result.data && result.data.items)) {
+      ui.userListView.textContent = 'No users available.';
+      return;
+    }
+
+    const rows = result.data.items.map((user) => ({
+      username: user.username,
+      displayId: user.displayId,
+      role: Array.isArray(user.roles) ? user.roles.join(', ') : '',
+      protected: !!user.protected,
+      status: user.status || 'active'
+    }));
+
+    ui.userListView.textContent = JSON.stringify(rows, null, 2);
+  };
+
+  const renderPermissionState = () => {
+    const currentUser = window.UserModule && typeof window.UserModule.getCurrentUser === 'function'
+      ? window.UserModule.getCurrentUser()
+      : null;
+
+    if (!currentUser) {
+      ui.permissionView.textContent = 'No permission data while logged out.';
+      return;
+    }
+
+    const permissionChecks = {
+      userRead: window.CoreAccess && typeof window.CoreAccess.can === 'function' ? window.CoreAccess.can(currentUser, 'user:read', 'user').ok : false,
+      userWrite: window.CoreAccess && typeof window.CoreAccess.can === 'function' ? window.CoreAccess.can(currentUser, 'user:write', 'user').ok : false,
+      systemView: window.CoreAccess && typeof window.CoreAccess.can === 'function' ? window.CoreAccess.can(currentUser, 'system:view', 'user').ok : false,
+      roles: currentUser.roles,
+      permissions: currentUser.permissions,
+      protected: !!currentUser.protected
+    };
+
+    ui.permissionView.textContent = JSON.stringify(permissionChecks, null, 2);
+  };
+
   const renderAuditState = () => {
     const audit = window.CoreAudit && typeof window.CoreAudit.list === 'function'
       ? window.CoreAudit.list()
@@ -104,9 +151,11 @@
       : JSON.stringify(audit.slice(-8), null, 2);
   };
 
-  const refreshUi = () => {
+  const refreshUi = async () => {
     renderUserState();
     renderAdminState();
+    renderPermissionState();
+    await renderUserListState();
     renderAuditState();
   };
 
@@ -138,6 +187,8 @@
       }
     }
 
+    await refreshUi();
+
     if (window.CoreRuntime && typeof window.CoreRuntime.start === 'function') {
       await window.CoreRuntime.start();
     }
@@ -161,12 +212,13 @@
       developerDisplayId: 'USR-000001',
       passwordRequired: true,
       passwordSource: 'local-config-or-storage',
-      developerPassword: password
+      developerPassword: password,
+      authMode: 'development-preview'
     });
     if (window.CoreAuth && typeof window.CoreAuth.setDeveloperPassword === 'function') {
       window.CoreAuth.setDeveloperPassword(password);
     }
-    alert('Local developer password saved in the browser storage/config.');
+    alert('Development/preview password saved locally only. This is not production auth.');
   });
 
   document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -183,7 +235,7 @@
       return;
     }
 
-    refreshUi();
+    await refreshUi();
   });
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -191,7 +243,7 @@
       return;
     }
     await window.UserModule.logout();
-    refreshUi();
+    await refreshUi();
   });
 
   document.getElementById('profileBtn').addEventListener('click', () => {
@@ -223,7 +275,7 @@
     }, window.UserModule.getCurrentUser()?.id || 'system');
 
     alert(result && result.ok ? `Created user ${result.data.username}` : `User create failed: ${result && result.message ? result.message : 'unknown error'}`);
-    refreshUi();
+    await refreshUi();
   });
 
   boot();

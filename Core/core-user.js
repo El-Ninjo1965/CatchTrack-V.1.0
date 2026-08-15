@@ -35,6 +35,63 @@
         };
     };
 
+    const persistUsers = async function persistUsers() {
+        const snapshot = Array.from(this.users.values()).map((user) => serializeUser(user)).filter(Boolean);
+
+        try {
+            if (window.DatabaseManager && typeof window.DatabaseManager.clear === 'function' && typeof window.DatabaseManager.save === 'function') {
+                await window.DatabaseManager.clear('users');
+                for (const user of snapshot) {
+                    await window.DatabaseManager.save('users', user);
+                }
+                return snapshot;
+            }
+        } catch (error) {
+            // Persistence fallback intentionally silent for preview/test mode.
+        }
+
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('core:users', JSON.stringify(snapshot));
+        }
+
+        return snapshot;
+    };
+
+    const hydrateUsers = async function hydrateUsers() {
+        let rows = [];
+
+        try {
+            if (window.DatabaseManager && typeof window.DatabaseManager.getAll === 'function') {
+                const storedRows = await window.DatabaseManager.getAll('users');
+                if (Array.isArray(storedRows) && storedRows.length > 0) {
+                    rows = storedRows.map((user) => ensureUserLayout(user)).filter(Boolean);
+                }
+            }
+        } catch (error) {
+            rows = [];
+        }
+
+        if (rows.length === 0 && typeof localStorage !== 'undefined') {
+            try {
+                const raw = localStorage.getItem('core:users');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        rows = parsed.map((user) => ensureUserLayout(user)).filter(Boolean);
+                    }
+                }
+            } catch (error) {
+                rows = [];
+            }
+        }
+
+        if (rows.length > 0) {
+            this.users = new Map(rows.map((user) => [user.id, user]));
+        }
+
+        return rows;
+    };
+
     const normalizePermissions = (user = {}) => {
         const rolePermissions = {
             user: ['user:read'],
@@ -163,7 +220,19 @@
         },
 
         ready() {
-            this.bootstrapDeveloperUser();
+            Promise.resolve(hydrateUsers.call(this)).then((rows) => {
+                if (Array.isArray(rows) && rows.length > 0) {
+                    if (window.Core) {
+                        window.Core.emit('user:hydrated', {
+                            userCount: rows.length,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                }
+                this.bootstrapDeveloperUser();
+            }).catch(() => {
+                this.bootstrapDeveloperUser();
+            });
         },
 
         resolveBootstrapConfig() {
@@ -197,17 +266,17 @@
                 };
             }
 
-            if (this.users.size > 0) {
-                const existingDeveloper = Array.from(this.users.values()).find((user) => user.roles.includes('developer'));
-                if (existingDeveloper) {
-                    return {
-                        ok: true,
-                        code: 'DEVELOPER_BOOTSTRAP_PRESENT',
-                        created: false,
-                        data: serializeUser(existingDeveloper)
-                    };
-                }
+            const existingDeveloper = Array.from(this.users.values()).find((user) => user.username === config.developerUsername || user.roles.includes('developer'));
+            if (existingDeveloper) {
+                return {
+                    ok: true,
+                    code: 'DEVELOPER_BOOTSTRAP_PRESENT',
+                    created: false,
+                    data: serializeUser(existingDeveloper)
+                };
+            }
 
+            if (this.users.size > 0) {
                 return {
                     ok: true,
                     code: 'SYSTEM_USERS_EXIST',
@@ -272,6 +341,12 @@
                     username: developer.username,
                     displayId: developer.displayId,
                     timestamp: now
+                });
+            }
+
+            if (window.DatabaseManager && typeof window.DatabaseManager.clear === 'function' && typeof window.DatabaseManager.save === 'function') {
+                Promise.resolve(persistUsers.call(this)).catch(() => {
+                    // Storage fallback is intentional for preview-only developer bootstrap.
                 });
             }
 
@@ -436,6 +511,9 @@
             }
 
             this.users.set(newUser.id, newUser);
+            Promise.resolve(persistUsers.call(this)).catch(() => {
+                // Persistence fallback is intentional for preview-only mode.
+            });
 
             if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
                 window.CoreAudit.record(actor || 'system', 'user:create', newUser.id, 'success', {
@@ -499,6 +577,7 @@
             merged.permissions = normalizePermissions(merged);
             const stored = ensureUserLayout(merged);
             this.users.set(userId, stored);
+            await persistUsers.call(this);
 
             if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
                 window.CoreAudit.record(actor || 'system', 'user:update', userId, 'success', {
@@ -544,6 +623,7 @@
             };
 
             this.users.set(userId, ensureUserLayout(updated));
+            await persistUsers.call(this);
 
             if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
                 window.CoreAudit.record(actor || 'system', 'user:delete', userId, 'success', {
@@ -589,6 +669,7 @@
 
             const stored = ensureUserLayout(updated);
             this.users.set(userId, stored);
+            await persistUsers.call(this);
 
             if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
                 window.CoreAudit.record(actor || 'system', 'user:set-status', userId, 'success', { status });
