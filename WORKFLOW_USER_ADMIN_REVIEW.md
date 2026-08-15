@@ -2,7 +2,9 @@
 
 ## Final Status
 
-STATUS: STABLE / FREEZE READY
+STATUS: STABLE / READY FOR MASTER FREEZE
+
+Der tatsächliche Repository-Stand ist verifiziert und der Core ist als Master Freeze freigegeben. Keine neuen Architektur- oder Core-Änderungen werden nach diesem Stand mehr eingebaut; spätere Vorschläge werden separat als Backlog dokumentiert.
 
 The repository is reduced to a neutral, reusable framework foundation. The Core initializes correctly, the module lifecycle remains stable, and the Modules directory remains empty and intentionally reserved for future external modules only.
 

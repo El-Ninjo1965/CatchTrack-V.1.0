@@ -2,7 +2,9 @@
 
 ## Status
 
-STATUS: IMPLEMENTATION ACTIVE
+STATUS: FINAL / READY FOR MASTER FREEZE
+
+Der Master Core ist technisch fertiggestellt und verifiziert. Neue Funktionen werden nach dem Freeze nicht mehr in den Core eingepflegt; spätere Vorschläge werden als Backlog, Erweiterung oder separates Modul dokumentiert.
 
 ## Scope
 
