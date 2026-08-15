@@ -2,9 +2,9 @@
 
 ## Projektstatus
 
-STATUS: READY FOR CORE REVIEW
+STATUS: READY FOR FREEZE REVIEW
 
-Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin Master-Core-Fassaden wurden in der bereits genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen. Der aktuelle Stand wurde gegen die freigegebene Architektur und den Laufzeitcode geprüft.
+Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin Master-Core-Fassaden wurden in der bereits genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen. Der aktuelle Stand wurde gegen die freigegebene Architektur, den Laufzeitcode und die Sicherheits-/Async-Checks geprüft. Ein Freeze wird hier nicht durchgeführt.
 
 ## Aktuelle Architekturübersicht
 
@@ -114,12 +114,12 @@ PHASE: User/Admin Master Core Implementierung
 
 - Framework-Core: stabil
 - User/Admin Master-Architektur: genehmigt und umgesetzt
-- Implementierung des Master-Cores: geprüft und bereit für Review
+- Implementierung des Master-Cores: geprüft und bereit für Freeze Review
 - Freeze: nicht durchgeführt
 
 ## Master-Status
 
-STATUS: READY FOR USER/ADMIN MASTER CORE IMPLEMENTATION
+STATUS: READY FOR FREEZE REVIEW
 
 Verweis:
 WORKFLOW_USER_ADMIN_APPROVED.md — vollständige, genehmigte Architektur inkl. Vorimplementierungsentscheidungen
