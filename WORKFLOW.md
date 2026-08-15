@@ -62,6 +62,7 @@ Diese Regel ist verbindlich für alle zukünftigen Workflow-Dokumentationen.
 - Admin soll orchestrieren, nicht duplizieren.
 - Audit, Authentifizierung und Zugriffskontrolle müssen als eigene fachliche Verantwortung modelliert werden.
 - UI bleibt außerhalb des Core und darf niemals alleinige Zugriffskontrolle sein.
+- Der erste Developer-Bootstrap-User wird über den normalen User/Auth/Access-Pfad erzeugt und bleibt ein normaler `developer`-Rollenbenutzer, kein Superuser.
 - Die 11 Architekturentscheidungen wurden fachlich bewertet und genehmigt.
 
 ## Status der 11 Entscheidungen
@@ -114,6 +115,7 @@ PHASE: User/Admin Master Core Implementierung
 
 - Framework-Core: stabil
 - User/Admin Master-Architektur: genehmigt und umgesetzt
+- Initialer Developer-Bootstrap: konfiguriert, idempotent, geschützt und ohne Hardcoded-Credentials
 - Implementierung des Master-Cores: geprüft und bereit für Freeze Review
 - Freeze: nicht durchgeführt
 

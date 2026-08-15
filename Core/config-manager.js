@@ -48,6 +48,16 @@
                 }
             });
 
+            // Bootstrap Config
+            this.set('bootstrap', {
+                enabled: true,
+                developerUsername: 'developer',
+                developerDisplayId: 'USR-000001',
+                createOnInit: true,
+                passwordRequired: false,
+                passwordSource: 'none'
+            });
+
             // Database Config
             this.set('database', {
                 type: 'indexeddb',

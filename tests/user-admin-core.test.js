@@ -58,6 +58,44 @@ const loadCore = () => {
   }
 };
 
+test('developer bootstrap seed creates a single protected developer without bypasses', async () => {
+  loadCore();
+
+  const configuredUsername = 'bootstrapdev';
+  if (window.ConfigManager && typeof window.ConfigManager.set === 'function') {
+    window.ConfigManager.set('bootstrap', {
+      developerUsername: configuredUsername,
+      developerDisplayId: 'USR-000001',
+      enabled: true
+    });
+  }
+
+  const firstBootstrap = await window.UserModule.bootstrapDeveloperUser();
+  assert.equal(firstBootstrap.ok, true);
+  assert.equal(firstBootstrap.created, true);
+  assert.equal(firstBootstrap.data.username, configuredUsername);
+  assert.equal(firstBootstrap.data.displayId, 'USR-000001');
+  assert.equal(firstBootstrap.data.protected, true);
+  assert.equal(firstBootstrap.data.roles.includes('developer'), true);
+
+  const secondBootstrap = await window.UserModule.bootstrapDeveloperUser();
+  assert.equal(secondBootstrap.ok, true);
+  assert.equal(secondBootstrap.created, false);
+  assert.equal(secondBootstrap.data.username, configuredUsername);
+
+  const developerLogin = await window.UserModule.login({ username: configuredUsername });
+  assert.equal(developerLogin.ok, true);
+  assert.equal(window.UserModule.getCurrentUser().username, configuredUsername);
+  assert.equal(window.UserModule.isDeveloper(), true);
+  assert.equal(window.UserModule.isAdmin(), false);
+
+  const developerWrite = window.CoreAccess.can(window.UserModule.getCurrentUser(), 'user:write', 'user');
+  assert.equal(developerWrite.ok, true);
+
+  const adminCheck = window.CoreAccess.can(window.UserModule.getCurrentUser(), 'system:view', 'user');
+  assert.equal(adminCheck.ok, true);
+});
+
 test('user/admin master core core contracts', async () => {
   loadCore();
 

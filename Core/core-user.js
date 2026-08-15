@@ -144,50 +144,128 @@
         },
 
         ready() {
-            if (this.users.size === 0) {
-                this.createDefaultUsers();
+            this.bootstrapDeveloperUser();
+        },
+
+        resolveBootstrapConfig() {
+            let bootstrapConfig = {};
+            if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
+                bootstrapConfig = window.ConfigManager.get('bootstrap', {}) || {};
             }
+
+            const username = typeof bootstrapConfig.developerUsername === 'string' && bootstrapConfig.developerUsername.trim()
+                ? bootstrapConfig.developerUsername.trim()
+                : 'developer';
+            const displayId = typeof bootstrapConfig.developerDisplayId === 'string' && bootstrapConfig.developerDisplayId.trim()
+                ? bootstrapConfig.developerDisplayId.trim()
+                : 'USR-000001';
+
+            return {
+                enabled: bootstrapConfig.enabled !== false,
+                developerUsername: username,
+                developerDisplayId: displayId
+            };
+        },
+
+        bootstrapDeveloperUser() {
+            const config = this.resolveBootstrapConfig();
+            if (!config.enabled) {
+                return {
+                    ok: true,
+                    code: 'BOOTSTRAP_DISABLED',
+                    created: false,
+                    data: null
+                };
+            }
+
+            if (this.users.size > 0) {
+                const existingDeveloper = Array.from(this.users.values()).find((user) => user.roles.includes('developer'));
+                if (existingDeveloper) {
+                    return {
+                        ok: true,
+                        code: 'DEVELOPER_BOOTSTRAP_PRESENT',
+                        created: false,
+                        data: serializeUser(existingDeveloper)
+                    };
+                }
+
+                return {
+                    ok: true,
+                    code: 'SYSTEM_USERS_EXIST',
+                    created: false,
+                    data: null,
+                    message: 'System users already exist. Bootstrap developer seed is skipped.'
+                };
+            }
+
+            const usernameExists = Array.from(this.users.values()).some((user) => user.username === config.developerUsername);
+            if (usernameExists) {
+                return {
+                    ok: false,
+                    code: 'BOOTSTRAP_USERNAME_CONFLICT',
+                    created: false,
+                    message: 'Developer bootstrap username is already taken.'
+                };
+            }
+
+            const now = new Date().toISOString();
+            const developer = ensureUserLayout({
+                id: generateUuid(),
+                displayId: config.developerDisplayId,
+                username: config.developerUsername,
+                displayName: 'Developer User',
+                email: '',
+                status: 'active',
+                roles: ['developer'],
+                permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'],
+                protected: true,
+                createdAt: now,
+                updatedAt: now,
+                schemaVersion: 1,
+                metadata: {
+                    bootstrap: true,
+                    source: 'core-user.bootstrapDeveloperUser'
+                }
+            });
+
+            if (!developer) {
+                return {
+                    ok: false,
+                    code: 'BOOTSTRAP_FAILED',
+                    created: false,
+                    message: 'Developer bootstrap failed.'
+                };
+            }
+
+            this.users.set(developer.id, developer);
+
+            if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                window.CoreAudit.record('system', 'user:bootstrap', developer.id, 'success', {
+                    username: developer.username,
+                    displayId: developer.displayId,
+                    role: 'developer'
+                });
+            }
+
+            if (window.Core) {
+                window.Core.emit('user:bootstrap:developer', {
+                    userId: developer.id,
+                    username: developer.username,
+                    displayId: developer.displayId,
+                    timestamp: now
+                });
+            }
+
+            return {
+                ok: true,
+                code: 'DEVELOPER_BOOTSTRAP_CREATED',
+                created: true,
+                data: serializeUser(developer)
+            };
         },
 
         createDefaultUsers() {
-            const now = new Date().toISOString();
-            const users = [
-                {
-                    id: generateUuid(),
-                    displayId: 'USR-000001',
-                    username: 'developer',
-                    displayName: 'Developer User',
-                    email: 'developer@example.local',
-                    status: 'active',
-                    roles: ['developer'],
-                    permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'],
-                    protected: true,
-                    createdAt: now,
-                    updatedAt: now,
-                    schemaVersion: 1
-                },
-                {
-                    id: generateUuid(),
-                    displayId: 'USR-000002',
-                    username: 'admin',
-                    displayName: 'Administrator',
-                    email: 'admin@example.local',
-                    status: 'active',
-                    roles: ['admin'],
-                    permissions: ['user:read', 'user:write', 'system:view'],
-                    protected: true,
-                    createdAt: now,
-                    updatedAt: now,
-                    schemaVersion: 1
-                }
-            ];
-
-            users.forEach((user) => {
-                const normalized = ensureUserLayout(user);
-                if (normalized) {
-                    this.users.set(normalized.id, normalized);
-                }
-            });
+            return this.bootstrapDeveloperUser();
         },
 
         getNextDisplayId() {
