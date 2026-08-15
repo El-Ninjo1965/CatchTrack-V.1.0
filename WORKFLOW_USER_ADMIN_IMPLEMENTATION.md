@@ -49,6 +49,25 @@ The implementation enforces the approved master architecture:
 
 The user/admin path uses structured results instead of ad hoc `null`/`false`-style responses. Each user/admin operation resolves to a consistent object with `ok`, `code`, `message` and `data` where appropriate.
 
+## Master UI View / Content Activation
+
+The UI shell has been extended with a content-driven rendering model without building a second routing system:
+
+- `#mainContent` is the central content container for the active view
+- each navigation item stores an internal view ID and sets the current view state
+- the main panel re-renders only the selected content while keeping the shell stable
+- dashboard, profile, module, admin and developer views share the same content container and remain integrated with the real core state
+
+### Implemented view model
+
+- Dashboard: current user, role, status, available apps, active module count, system hint
+- Profile: username, display ID, role, status, permissions, protected marker where relevant
+- Module placeholder: registered and active modules show a clean module-available view when no dedicated UI is implemented yet
+- Admin views: user list, roles, permissions, modules, audit, system status
+- Developer views: core status, module status, diagnostics, console, audit
+
+This is an orchestration layer only. It consumes the existing registry, access and runtime APIs rather than creating parallel UI state or duplicated business logic.
+
 ## Validation
 
 The implementation was validated with real runtime tests and actual browser preview verification covering:

@@ -16,8 +16,29 @@ test('developer shell shows bootstrap user and dynamic menu', async ({ page }) =
   await expect(page.locator('#adminSection')).toContainText('ADMIN');
   await expect(page.locator('#developerSection')).toContainText('DEVELOPER');
 
+  await expect(page.locator('#mainContent')).toContainText('Dashboard');
+  await page.click('#userMenu .nav-item >> text=Profil');
+  await expect(page.locator('#mainContent')).toContainText('Profil');
   await page.click('#logoutBtnAlt');
   await expect(page.locator('#currentUserName')).toContainText('Not logged in');
+});
+
+test('developer can switch to admin and developer views in the main content area', async ({ page }) => {
+  await page.goto(BASE_URL);
+  await page.waitForSelector('[data-shell-root="true"]');
+
+  await page.fill('#loginUsername', 'developer');
+  await page.fill('#loginPassword', 'local-preview-password');
+  await page.click('#loginBtn');
+
+  await page.click('#adminMenu .nav-item >> text=Systemstatus');
+  await expect(page.locator('#mainContent')).toContainText('Systemstatus');
+
+  await page.click('#developerMenu .nav-item >> text=Console');
+  await expect(page.locator('#mainContent')).toContainText('Console');
+
+  await page.click('#userMenu .nav-item >> text=Profil');
+  await expect(page.locator('#mainContent')).toContainText('Profil');
 });
 
 test('standard user sees limited menu and cannot access admin area', async ({ page }) => {
@@ -44,4 +65,7 @@ test('standard user sees limited menu and cannot access admin area', async ({ pa
   await expect(page.locator('#userMenu')).toContainText('Dashboard');
   await expect(page.locator('#adminSection')).not.toBeVisible();
   await expect(page.locator('#developerSection')).not.toBeVisible();
+
+  await page.click('#userMenu .nav-item >> text=Profil');
+  await expect(page.locator('#mainContent')).toContainText('Profil');
 });

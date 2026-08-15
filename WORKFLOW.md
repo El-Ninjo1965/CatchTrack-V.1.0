@@ -145,6 +145,42 @@ Status: SYNCHRONISIERT MIT GITHUB
 - User-, Admin- und Developer-Bereiche werden dynamisch aus dem aktuellen Systemzustand aufgebaut.
 - Module werden nur dann im Menü gezeigt, wenn sie registriert, aktiv und permission-basiert freigegeben sind.
 - Der Core wurde für die UI nicht umgebaut; die Oberfläche ist ein echter Consumer der vorhandenen APIs.
+- Eine zentrale Content-/View-Engine wurde ergänzt: Beim Klick auf ein Menüelement wird der aktive View im Hauptbereich gesetzt und der Content-Container neu gerendert, ohne eine zweite Router-Architektur zu bauen.
+
+## Master UI View-/Content-Architektur
+
+STATUS: IMPLEMENTIERT
+
+- Hauptbereich: `#mainContent` als zentraler Render-Container für alle Views
+- Standard-View: Dashboard für angemeldete User
+- Profil-View: Benutzerprofil mit Rollen, Status, Permissions und Protected-State
+- Modul-Views: registrierte und aktive Module erhalten einen definierten View-Einstieg; fehlt eine eigene UI, wird eine saubere Platzhalteransicht mit "Modul verfügbar" angezeigt
+- Admin-Views: Benutzer, Rollen, Permissions, Module, Audit, Systemstatus
+- Developer-Views: Core Status, Module Status, Diagnostics, Console, Audit
+- Navigation bleibt dynamisch, aber statt Console-Logs wird nun der sichtbare View gewechselt
+- Berechtigungen bleiben an der vorhandenen Core-Access-Architektur orientiert; nur berechtigte Menüs werden angezeigt
+
+## Praktischer Browser-/Preview-Teststatus
+
+Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:8000:
+
+- Anwendung startet erfolgreich im Browser
+- Startseite/Login funktioniert
+- Bootstrap-Developer `USR-000001` wird als geschützter `developer`-Benutzer bereitgestellt
+- Developer-Login mit lokal gesetztem Bootstrap-Passwort funktioniert
+- User-Bereich zeigt den aktuellen Benutzer mit `Username`, `displayId`, `Rolle`, `Status` und Logout an
+- User-Menü wird dynamisch aus `ModuleRegistry`/`ModuleManager` sowie aktuellen Berechtigungen erzeugt
+- aktive Module werden mit `ModuleManager`/`ModuleRegistry` erkannt und im UI sichtbar gemacht
+- Admin-Bereich ist für den Developer mit `system:view` bzw. `user:write` zugänglich
+- Developer-Bereich ist nur mit den passenden Permissions sichtbar
+- normale Test-User sehen automatisch ein reduziertes Menü und keinen Admin-/Developer-Zugriff
+- Logout schaltet den Zustand wieder auf `logged out` zurück
+- Console und Systemstatus zeigen die tatsächlichen Core-Komponenten an
+- Die aktive View- und Content-Architektur wechselt den Hauptbereich korrekt je nach Menüauswahl
+- Keine offensichtlichen JavaScript-/Runtime-Fehler im Browser-Flow
+- Keine Auth-/Permission-Bypass-Fehler innerhalb des validierten Szenarios
+
+Status: Preview praktisch getestet, keine Freeze-Aktion durchgeführt.
 
 ## Praktischer Browser-/Preview-Teststatus
 
