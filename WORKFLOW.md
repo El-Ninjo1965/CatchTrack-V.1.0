@@ -276,6 +276,45 @@ Die aktuelle Architektur ist stabil und verifiziert; nachfolgend die wichtigsten
    - Aktive Session-/Rollen-Status im Header sichtbar machen, ohne Sicherheitsinformationen zu泄men.
    - Erfolgs- und Fehlerzustände konsistent über alle Bereiche standardisieren.
 
+## Autonomer Folgeplan für die weitere App-Finalisierung
+
+STATUS: AUTONOMER ARBEITSPROZESS AKTIV
+
+Die App ist im Kern bereits als getrennte User-/Admin-/Developer-Architektur verifiziert. Die weitere Arbeit wird im laufenden Projekt ohne manuelle Rückfrage fortgesetzt, sofern sie im Rahmen der vorhandenen Architektur, des Sicherheitsmodells und der Validierung bleibt.
+
+1. Sofortige Betriebs-/UX-Qualität
+   - Top-Navigation und responsive Verteilung erneut gegen reale Browser-Ausgabe prüfen.
+   - Menüzustände, aktive Button-Styles und leere States für alle Oberflächen konsolidieren.
+   - Laufzeitfehler, fehlende Platzhalter und inkonsistente Labels systematisch bereinigen.
+
+2. Produktreife der Admin-/Developer-Views
+   - Admin-Ansichten mit realistischen Datenbeispielen und konsistenter, lesbarer Präsentation vervollständigen.
+   - Developer-Ansichten mit technischen Status, Audit- und Health-Konsolen auf eine nutzbare Produktstufe bringen.
+   - Leerzustände, Fehlerausgaben und Statuschips standardisieren.
+
+3. Session-, Auth- und Sicherheitsreinigung
+   - Auth- und Session-Handling weiterhin zentral durch die Core-Schicht steuern.
+   - Keine duplicate Login- oder Parallel-Session-Pfade mehr einführen.
+   - Preview-Storage weiterhin ohne Klardaten im Browser oder in Commit-Logs verwenden.
+
+4. Test- und Regression-Absicherung
+   - Browser-Tests nach jeder größeren UI-/Permission-Änderung direkt erneut laufen lassen.
+   - Core-Tests fortlaufend gegen die vorhandenen Auth-/Access-/User-Contracts validieren.
+   - Bei Abweichungen sofort ein minimaler, gezielter Fix mit anschließendem Neu-Lauf.
+
+5. Workflow- und Git-Protokollierung
+   - Nach jeder signifikanten Änderung das Workflow-Update unmittelbar in WORKFLOW.md dokumentieren.
+   - Commit-Nachricht und Push erfolgen direkt nach der Verifikation, damit der Remote-Stand immer mit dem aktuellen Arbeitsstand übereinstimmt.
+   - Keine unprotokollierten Änderungen oder „stille“ Commits im normalen Arbeitsverlauf.
+
+6. Abgrenzung bis zur notwendigen Produktreife
+   - Nur die für die funktionale App-Fertigstellung notwendigen Erweiterungen umsetzen.
+   - Keine überflüssige Architektur-Umstellung mehr ohne neue fachliche Entscheidung.
+   - Sobald die App als nutzbar und verifiziert gilt, die nächsten Schritte als echten Produkt- und Hardening-Plan im Workflow dokumentieren.
+
+Grundsatz:
+Autonomer Arbeitseinsatz innerhalb der bestehenden Architektur, mit sofortiger Protokollierung und sofortiger Verifikation. Es werden keine wiederholten Freigaben pro Einzeländerung mehr angefordert, solange die Änderung innerhalb der definierten App-/Security-/Workflow-Regeln bleibt.
+
 ## Detail-Workflow-Verzeichnis
 
 - WORKFLOW_USER_ADMIN_REVIEW.md — vollständiger Review zu User & Admin Master Core
