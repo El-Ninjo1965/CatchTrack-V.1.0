@@ -62,20 +62,33 @@ Diese Regel ist verbindlich für alle zukünftigen Workflow-Dokumentationen.
 - Admin soll orchestrieren, nicht duplizieren.
 - Audit, Authentifizierung und Zugriffskontrolle müssen als eigene fachliche Verantwortung modelliert werden.
 - UI bleibt außerhalb des Core und darf niemals alleinige Zugriffskontrolle sein.
+- Die 11 Architekturentscheidungen wurden fachlich bewertet und genehmigt.
 
-## Offene Entscheidungen
+## Status der 11 Entscheidungen
 
-1. User-ID-Konzept: Hybridmodell vs. rein sequenziell
-2. Aufteilung der Verantwortung: volle Trennung vs. minimale Trennung
-3. Rolle owner: eigene Rolle vs. protected-Flag
-4. Mindestlänge Benutzername: 1 vs. 3 Zeichen
-5. Mehrfachrollen: roles[] jetzt vs. später
-6. Event-Namensschema: user:* vs. user-module:*
-7. Feature-Flags für User/Admin: Pflichtkomponenten vs. optionale Komponenten
-8. Event-Historie im EventBus: gewünscht vs. nicht gewünscht
-9. Modul-Update-Mechanismus: ModuleManager.update() erforderlich?
-10. Fehlerverhalten: Exceptions vs. Ergebnisobjekte
-11. Zweiter Auth-Pfad in service-manager.js: behalten, bereinigen oder deprecate
+STATUS: BESCHLOSSEN
+
+1. User-ID: genehmigt – technische UUID + Anzeige-ID `USR-000001`
+2. Architektur: genehmigt – Identity / Auth / Access / Audit / Fassade sauber getrennt
+3. Owner: genehmigt – kein generisches `owner`, stattdessen `protected`
+4. Username: genehmigt – Mindestlänge 3
+5. Mehrfachrollen: genehmigt – `roles[]` vorbereitet, komplexe Logik verzögert
+6. Events: genehmigt – `user:*`, `auth:*`, `admin:*`, `module:*`
+7. User/Admin: genehmigt – feste Core-Bestandteile, keine Feature-Flags als Sicherheitsmodell
+8. Event-Historie: genehmigt – Ringpuffer, keine unkontrollierte Persistenz
+9. ModuleManager: genehmigt – `update()` als Lifecycle-Schnittstelle
+10. Fehlerbehandlung: genehmigt – einheitliches Fehler-/Ergebnismodell
+11. Auth: genehmigt – zentrale `core-auth`, zweiter Pfad deprecated
+
+## Genehmigte Architektur-Spezifikation
+
+WORKFLOW_USER_ADMIN_APPROVED.md
+Pfad:
+/workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_APPROVED.md
+Commit-SHA:
+[noch nicht commitet]
+Status:
+VERFÜGBAR – genehmigte Architekturdefinition
 
 ## Architektur-Reviews
 
@@ -87,20 +100,21 @@ Pfad:
 Commit-SHA:
 5baee91ed88dc788769f047073566af4d9007072
 Status:
-OFFEN – Entscheidungen noch nicht abgeschlossen.
+BESCHLOSSEN – 11 Punkte genehmigt, Bewertung dokumentiert.
 
 Referenz- und Auffindbarkeitsregel:
+WORKFLOW.md → WORKFLOW_USER_ADMIN_APPROVED.md → [Commit-SHA nach finalem Commit] → Git Tree → Datei
 WORKFLOW.md → WORKFLOW_USER_ADMIN_REVIEW.md → 5baee91ed88dc788769f047073566af4d9007072 → Git Tree → Datei
 
 ## Arbeitsphase
 
-PHASE: Architekturvorbereitung / Review und Entscheidungslogik
+PHASE: Architekturbestätigung / genehmigte Master-Spezifikation
 
 ## Freeze- und Release-Status
 
 - Framework-Core: stabil
-- User/Admin Master-Architektur: im Review- und Entscheidungsprozess
-- Implementierung des Master-Cores: noch nicht beschlossen
+- User/Admin Master-Architektur: genehmigt, noch nicht implementiert
+- Implementierung des Master-Cores: noch nicht gestartet
 - Freeze: noch nicht finalisiert
 
 ## Kurze Historie der wichtigsten Architekturentscheidungen
@@ -118,3 +132,7 @@ PHASE: Architekturvorbereitung / Review und Entscheidungslogik
   - Pfad: /workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_REVIEW.md
   - Commit-SHA: 5baee91ed88dc788769f047073566af4d9007072
   - Status: synchronisiert mit origin/main
+- WORKFLOW_USER_ADMIN_APPROVED.md — genehmigte Architekturspezifikation für User & Admin Master Core
+  - Pfad: /workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_APPROVED.md
+  - Commit-SHA: [wird nach dem finalen Commit ergänzt]
+  - Status: dokumentiert, noch nicht in origin/main synchronisiert
