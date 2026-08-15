@@ -2,9 +2,9 @@
 
 ## Projektstatus
 
-STATUS: READY FOR FREEZE REVIEW
+STATUS: READY FOR MASTER FREEZE
 
-Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin Master-Core-Fassaden wurden in der bereits genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen. Der aktuelle Stand wurde gegen die freigegebene Architektur, den Laufzeitcode und die Sicherheits-/Async-Checks geprüft. Ein Freeze wird hier nicht durchgeführt.
+Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin/Developer Master-Core-Fassaden wurden in der genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen. Am 2026-08-15 wurde ein finaler Gesamt-Durchlauf durchgeführt: vollständige Prüfung von User-App, Admin-App, Developer-App, Auth, Session, Benutzerverwaltung, Rollen, Permissions, Module, Audit und mobiler UI gegen den tatsächlichen Repository-Stand, gefolgt von einem vollständigen Regressionstest. Alle Tests waren grün, keine offenen Blocker wurden gefunden. Der Core gilt als bereit für den Master Freeze.
 
 ## Aktuelle Architekturübersicht
 
@@ -136,8 +136,8 @@ NEUE IMPLEMENTIERUNGSSTUFE: Admin User Lifecycle & Session Visibility
 - UI-/Preview-Test: realer Browser-Login, User-App, Admin-App, Developer-App und Logout im lokalen Preview validiert
 - Master UI: `index.html`, `admin.html` und `dev.html` sind tatsächlich getrennte Oberflächen
 - Navigation: Top-Navigation verifiziert, statt linke Seitenleiste; aktive Menüeinträge und responsive Verhalten wurden im Browser getestet
-- Implementierung des Master-Cores: geprüft und bereit für Freeze Review
-- Freeze: nicht durchgeführt
+- Implementierung des Master-Cores: geprüft und bereit für Master Freeze
+- Freeze: noch nicht durchgeführt; Status ist READY FOR MASTER FREEZE, die formale Freeze-Entscheidung liegt beim Repository-Owner
 - GitHub-Synchronisierung: aktueller Codespace-Stand wurde auf origin/main veröffentlicht
 
 ## GitHub- und Synchronisationsstatus
@@ -214,22 +214,35 @@ Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://127.0.0.1:8
 
 ### Testausführung
 
-- Testdateien: `tests/master-ui.spec.js` (Playwright, Master-UI-Vertrag), `tests/user-admin-core.test.js` (node:test, Core-Contracts)
+- Testdateien: `tests/master-ui.spec.js` (Playwright, Master-UI-Vertrag, inzwischen 8 Testfälle inkl. Admin-User-CRUD, Rollen/Permissions-Ansicht und dynamischer Module), `tests/user-admin-core.test.js` (node:test, Core-Contracts)
 - Der frühere `tests/catchtrack-shell.spec.js` wurde entfernt; seine Selektoren und Shell-Erwartungen entsprachen nicht mehr dem Master-UI-Vertrag.
 - Kommandos: `npm run test:core`, `npm run test:ui`, `npm test`
-- Voraussetzung: `npx playwright install chromium` und `npx playwright install-deps chromium` (im frischen Codespace fehlten Browser und Systembibliotheken; der frühere „grün“-Status war ohne diese Installation nicht reproduzierbar)
+- Voraussetzung: `npx playwright install chromium --with-deps` (im frischen Codespace fehlten Browser und Systembibliotheken; ohne diese Installation ist kein reproduzierbarer „grün“-Status möglich)
 
-Ergebnis des letzten vollständigen Laufs am 2026-08-15:
+Ergebnis des finalen Gesamt-Durchlaufs am 2026-08-15:
 
 - `node tests/user-admin-core.test.js`: 2 Tests, 2 pass, 0 fail
-- `npx playwright test tests/master-ui.spec.js --reporter=list`: 6 Tests, 6 passed, 0 failed
-- Layout-Verifikation: Top-Navigation wurde im echten Browser-Run erneut geprüft, ohne Functional Regression
+- `npx playwright test tests/master-ui.spec.js --reporter=list` (via `npm test`): 8 Tests, 8 passed, 0 failed
+  - User-App: Dashboard/Profil/Module, Admin-/Developer-Link nur bei Berechtigung
+  - Admin-App: alle Bereiche rendern, Benutzer anlegen/filtern über die echte Admin-UI
+  - Developer-App: alle Diagnosebereiche rendern
+  - normaler User: kein Admin-/Developer-Menü, `admin.html`/`dev.html` direkt aufgerufen → `#accessDenied`, Rückweg in die User-App
+  - Session bleibt beim Wechsel `index.html` → `admin.html` → `dev.html` erhalten, kein zweiter Login
+  - Rollen-/Permission-Ansicht zeigt das reale Core-Rollenmodell
+  - dynamisch registrierte Module erscheinen im User-Menü
+- Layout-Verifikation: Top-Navigation (keine linke Sidebar) wurde im echten Browser-Run erneut geprüft, ohne Functional Regression
 
-Status: Master-UI-Vertrag und Browser-Tests stimmen überein; beide Testsuiten sind tatsächlich grün. Die Green-Claim basiert auf dem erfolgreichen realen Browser-Run und nicht auf einer vorab dokumentierten Vermutung.
+Status: Master-UI-Vertrag und Browser-Tests stimmen überein; beide Testsuiten sind tatsächlich grün. Die Green-Claim basiert auf dem erfolgreichen realen Browser-Run in diesem Durchlauf und nicht auf einer vorab dokumentierten Vermutung.
 
 ## Master-Status
 
-STATUS: READY FOR FREEZE REVIEW
+STATUS: READY FOR MASTER FREEZE
+
+Begründung:
+- Alle in diesem finalen Gesamt-Durchlauf geprüften Punkte (User-App, Mobile-First-Navigation, zentrale Auth, Admin-/Developer-Zugriff ohne zweites Passwort, Session-Erhalt, Logout, Benutzer-/Rollen-/Permission-Verwaltung, Module, Audit) sind im Repository tatsächlich vorhanden und funktionsfähig.
+- Der vollständige Regressionstest (Core-Contracts + Playwright Master-UI) ist grün, ohne erfundene Ergebnisse.
+- Keine offenen technischen Blocker im Sinne der Master-Architektur.
+- Verbleibende Punkte sind ausdrücklich als SPÄTER bzw. ARCHITEKTUR-ENTSCHEIDUNG ERFORDERLICH markiert (siehe Abschnitt „Finaler Gesamt-Durchlauf“) und stehen einem Freeze nicht entgegen.
 
 Verweis:
 WORKFLOW_USER_ADMIN_APPROVED.md — vollständige, genehmigte Architektur inkl. Vorimplementierungsentscheidungen
@@ -379,6 +392,45 @@ Autonomer Arbeitseinsatz innerhalb der bestehenden Architektur, mit sofortiger P
 - Bereich: Admin / Developer
 - Status: JETZT SINNVOLL
 - Begründung: Liegt direkt auf der bestehenden Registrierungs- und Core-Architektur auf.
+
+## Finaler Gesamt-Durchlauf (2026-08-15)
+
+STATUS: ABGESCHLOSSEN
+
+Dieser Durchlauf hat den gesamten vorhandenen Repository-Stand gegen den beauftragten Master-Vertrag geprüft (User-App, Admin-App, Developer-App, Auth, Session, Benutzer, Rollen, Permissions, Module, Audit, Mobile-UI, Tests, Dokumentation), ohne neue Fachmodule oder Architekturentscheidungen einzuführen.
+
+### Ergebnis der Prüfung
+
+- User-App (`index.html`): Dashboard, Profil, Module, dynamisches rollenbasiertes Menü, Logout, Session-/Security-Status, saubere Empty States — vorhanden und verifiziert.
+- Mobile-First-Navigation: obere Navigation, keine linke Sidebar, responsive über `@media`-Breakpoints (860px/560px) mit horizontalem Scroll auf kleinen Displays — vorhanden und verifiziert.
+- Zentrale Auth: ein Login über `CoreAuth`/`UserModule`, automatische Erkennung von Rolle/Rechten, kein zweites Passwort für Admin/Developer-Bereich — vorhanden und verifiziert.
+- Admin-/Developer-Zugriff: Navigation zu `admin.html`/`dev.html` per Link, erneute Berechtigungsprüfung ohne erneuten Login, `#accessDenied` bei fehlender Berechtigung — vorhanden und verifiziert.
+- Session: browserlokale Persistenz über `CoreAuth`, Seitenwechsel zwischen allen drei Oberflächen ohne Session-Verlust, kein Klartext-Passwort für reguläre Benutzer gespeichert — vorhanden und verifiziert.
+- Logout: beendet die Session in allen drei Oberflächen; „Zur User-App“-Navigation aus Admin/Developer ist ausdrücklich kein Logout — vorhanden und verifiziert.
+- Benutzerverwaltung: Liste, Anlegen, Bearbeiten (Edit lädt bestehende Daten), Rollen-Zuweisung, Status, Filter — über bestehende `UserModule`/`AdminModule`-APIs, keine zweite User-Datenbank — vorhanden und verifiziert.
+- Rollenverwaltung/Permission-Matrix: Rollenliste und Permission-Liste werden aus dem realen Core-Rollen-/Access-Modell gelesen, keine eigene UI-Berechnung — vorhanden und verifiziert.
+- Module: Admin-Modulübersicht mit Status/Permissions, sauberer Empty State ohne registrierte Fachmodule — vorhanden und verifiziert.
+- Audit: Admin- und Developer-Audit-Ansicht liest reale `CoreAudit`-Einträge, sauberer Empty State ohne Daten, keine Fake-Daten — vorhanden und verifiziert.
+- Developer-Bereich: Core-, Auth-, Access-, Database-/Storage-, Module-, Diagnostics-, Console-, Audit- und Testansicht vorhanden und funktionsfähig.
+
+### Bewertung zusätzlicher Punkte
+
+- JETZT UMSETZEN: keine weiteren Punkte identifiziert, die technisch eindeutig, architektonisch abgedeckt und noch nicht umgesetzt sind. Die bereits dokumentierten „JETZT SINNVOLL“-Vorschläge (Profil-/Session-Status, Such-/Filterfunktion in der Benutzerverwaltung, Audit-Darstellung, Rollen-/Permission-Ansicht, Modul-/Systemstatus) sind im aktuellen Stand bereits implementiert.
+- SPÄTER: Benachrichtigungen im User-Bereich (`Benachrichtigungen`) sind sinnvoll, aber nicht notwendig für den Master Core; erfordern zunächst eine Entscheidung über Ereignisquelle und Aufbewahrung.
+- ARCHITEKTUR-ENTSCHEIDUNG ERFORDERLICH: echter Passwort-/Account-Änderungsdialog sowie Server-/API-Session (Token statt Local-Preview-Session) bleiben offen und sind bereits als solche in den vorherigen Abschnitten dokumentiert.
+- NICHT SINNVOLL: keine neuen Punkte in dieser Kategorie identifiziert.
+
+### Regressionstest (real ausgeführt)
+
+- `node tests/user-admin-core.test.js`: 2/2 bestanden
+- `npm test` (`node tests/user-admin-core.test.js && playwright test`) mit vorab installiertem `npx playwright install chromium --with-deps`: 8/8 Playwright-Tests bestanden
+- Keine erfundenen Ergebnisse; beide Kommandos wurden in diesem Durchlauf tatsächlich ausgeführt.
+
+### Freeze-Bewertung
+
+Der Core besteht alle vorhandenen Tests, alle in Abschnitt 3–17 des Auftrags geforderten Punkte sind im Repository nachweisbar vorhanden, und es bestehen keine echten technischen Blocker für einen Master Freeze.
+
+STATUS: READY FOR MASTER FREEZE
 
 ## Detail-Workflow-Verzeichnis
 
