@@ -213,6 +213,51 @@ test('session persists across user, admin and developer surfaces without a secon
   await expect(page.locator('#authPanel')).toBeVisible();
 });
 
+test('admin can create users and assign roles through the management UI', async ({ page }) => {
+  await page.goto(BASE_URL);
+  await setDeveloperPassword(page, DEVELOPER.password);
+  await page.reload();
+  await loginIntoShell(page, DEVELOPER.username, DEVELOPER.password);
+
+  await page.click('#adminMenu [data-view="admin:link"]');
+  await expect(page).toHaveURL(/admin\.html$/);
+
+  await page.click('#userMenu [data-view="admin:users"]');
+  await expect(page.locator('#adminUserForm')).toBeVisible();
+
+  const username = `ui-user-${Date.now()}`;
+  await page.fill('#adminUserUsername', username);
+  await page.fill('#adminUserDisplayName', 'UI Test User');
+  await page.selectOption('#adminUserStatus', 'active');
+  await page.selectOption('#adminUserRoles', 'user');
+  await page.click('#adminUserSubmit');
+
+  await expect(page.locator('#mainContent')).toContainText(username);
+  await expect(page.locator('#mainContent')).toContainText('UI Test User');
+
+  await page.selectOption('#adminUserRoleFilter', 'user');
+  await expect(page.locator('#adminUserTable')).toContainText(username);
+});
+
+test('admin roles and permissions pages show the core role model', async ({ page }) => {
+  await page.goto(BASE_URL);
+  await setDeveloperPassword(page, DEVELOPER.password);
+  await page.reload();
+  await loginIntoShell(page, DEVELOPER.username, DEVELOPER.password);
+
+  await page.click('#adminMenu [data-view="admin:link"]');
+  await expect(page).toHaveURL(/admin\.html$/);
+
+  await page.click('#userMenu [data-view="admin:roles"]');
+  await expect(page.locator('#adminRoleList')).toContainText('admin');
+  await expect(page.locator('#adminRoleList')).toContainText('developer');
+  await expect(page.locator('#adminRoleList')).toContainText('user');
+
+  await page.click('#userMenu [data-view="admin:permissions"]');
+  await expect(page.locator('#adminPermissionList')).toContainText('user:read');
+  await expect(page.locator('#adminPermissionList')).toContainText('system:view');
+});
+
 test('dynamically registered modules appear in the user menu', async ({ page }) => {
   await page.goto(BASE_URL);
   await setDeveloperPassword(page, DEVELOPER.password);

@@ -282,6 +282,14 @@ STATUS: AUTONOMER ARBEITSPROZESS AKTIV
 
 Die App ist im Kern bereits als getrennte User-/Admin-/Developer-Architektur verifiziert. Die weitere Arbeit wird im laufenden Projekt ohne manuelle Rückfrage fortgesetzt, sofern sie im Rahmen der vorhandenen Architektur, des Sicherheitsmodells und der Validierung bleibt.
 
+### Aktueller Stand dieser Phase (verifiziert)
+
+- Server-/API-Transition vorbereitet: zentrale Session-/Auth-Schicht bleibt in `CoreAuth`, Preview-Session bleibt kompatibel und ohne zweite Login-Logik.
+- Admin-Benutzerverwaltung erweitert: Benutzerliste, Benutzer anlegen, Status-/Rollen-Auswahl und Filter sind in der Admin-UI umgesetzt.
+- Rollen-/Permissions-Darstellung vorbereitet: Rollen und Permissions werden aus dem bestehenden CoreAccess-/User-Modell gelesen, ohne eine zweite Permission-Engine zu addieren.
+- Gemeinsame Session zwischen User-, Admin- und Developer-Oberflächen verifiziert: kein zweiter Login beim Wechsel zwischen Oberflächen.
+- Workflow- und Git-Protokollierung als verbindlicher Teil des laufenden Prozesses etabliert.
+
 1. Sofortige Betriebs-/UX-Qualität
    - Top-Navigation und responsive Verteilung erneut gegen reale Browser-Ausgabe prüfen.
    - Menüzustände, aktive Button-Styles und leere States für alle Oberflächen konsolidieren.
@@ -314,6 +322,56 @@ Die App ist im Kern bereits als getrennte User-/Admin-/Developer-Architektur ver
 
 Grundsatz:
 Autonomer Arbeitseinsatz innerhalb der bestehenden Architektur, mit sofortiger Protokollierung und sofortiger Verifikation. Es werden keine wiederholten Freigaben pro Einzeländerung mehr angefordert, solange die Änderung innerhalb der definierten App-/Security-/Workflow-Regeln bleibt.
+
+## Zusatzvorschläge mit Bewertung
+
+### 1. User-Profil- und Session-Status
+- Titel: Profilmanagement und Session-Status
+- Problem/Nutzen: Nutzer benötigen einen verständlichen Überblick über ihren eigenen Status, ihre Rolle und die aktive Session.
+- Vorschlag: Im User-Bereich eine Profilansicht mit Status, Display-ID, Rolle, Session-Gültigkeit und Sicherheitshinweis ergänzen.
+- Bereich: User / Core
+- Status: JETZT SINNVOLL
+- Begründung: Diese Funktion nutzt die vorhandene User- und Session-Architektur ohne neue eigentliche Datenquelle oder Architekturentscheidung.
+
+### 2. User- und Admin-Suche / Filter
+- Titel: Such- und Filterfunktionen in Verwaltung
+- Problem/Nutzen: Bei zunehmender Anzahl von Benutzern und Modulen wird die Übersicht unübersichtlich.
+- Vorschlag: Filterfelder für Username, Role, Status und Module ergänzen.
+- Bereich: Admin
+- Status: JETZT SINNVOLL
+- Begründung: Funktionalität kann direkt im UI-Layer auf Basis vorhandener Daten implementiert werden, ohne zusätzliche Architekturentscheidung.
+
+### 3. Audit-Detailansicht und Empty States
+- Titel: Lesbare Audit- und Empty-State-Ansichten
+- Problem/Nutzen: Audit- und leere Zustände müssen für das Produktumfeld sinnvoll verständlich sein.
+- Vorschlag: Audit als Tabelle mit letzten Einträgen, ohne parallele Engine; leere Zustände als klare Meldungen mit Handlungsempfehlung.
+- Bereich: Admin / Developer
+- Status: JETZT SINNVOLL
+- Begründung: Nutzt vorhandene Audit-Daten und stärkt UX bei konsistenter, vorhandener Architektur.
+
+### 4. Server-/API-Transition ohne Hostingannahmen
+- Titel: Session- und API-Schicht vorbereiten
+- Problem/Nutzen: Spätere echte Serveranbindung braucht eine klare Trennung zwischen Browser-Preview und API-Session.
+- Vorschlag: `CoreAuth` bleibt der zentrale Einstieg; Session-Interface und Serialisierung werden dem späteren API-Layer kompatibel gehalten, ohne feste Hosting- oder Deployment-Entscheidungen vorzunehmen.
+- Bereich: Core / Server
+- Status: JETZT SINNVOLL
+- Begründung: Das ist eine reine Architekturvorbereitung, keine fachliche oder technische Entscheidung, die in diesem Repo bereits festgelegt werden müsste.
+
+### 5. Passwort-/Account-Flow als späterer Server-Dialog
+- Titel: Passwortänderung und Account-Flow
+- Problem/Nutzen: Ein echter Passwort-/Account-Dialog ist sinnvoll, aber nur im echten Server- oder API-Kontext tragfähig.
+- Vorschlag: UI-Placeholder und vorbereitete Policy-Checks ergänzen; konkrete Umsetzung erst bei serverseitiger Auth-Umsetzung.
+- Bereich: User / Core / Server
+- Status: SPÄTER SINNVOLL
+- Begründung: Bedarf eine echte serverseitige Auth-Implementierung und sollte nicht eigenmächtig als Frontend-Feature festgelegt werden.
+
+### 6. Richere System-/Module-Statusseite
+- Titel: Detailansichten für Module und Systemstatus
+- Problem/Nutzen: Admins und Developer brauchen übersichtliche Statusdaten, aber nicht eine neue Parallel-Engine.
+- Vorschlag: Konsistente Status-, Module- und Health-Ansichten im bestehenden UI auf Basis von registrierten Modulen und vorhandenen Systemdaten erweitern.
+- Bereich: Admin / Developer
+- Status: JETZT SINNVOLL
+- Begründung: Liegt direkt auf der bestehenden Registrierungs- und Core-Architektur auf.
 
 ## Detail-Workflow-Verzeichnis
 

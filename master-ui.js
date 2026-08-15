@@ -310,6 +310,114 @@
     `;
   };
 
+  const renderAdminUsers = async () => {
+    const result = window.AdminModule && typeof window.AdminModule.listUsers === 'function' ? await window.AdminModule.listUsers() : { ok: true, data: { items: [] } };
+    const users = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
+
+    const html = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Users</h2></div>
+        <div id="adminUserForm" class="admin-form-grid">
+          <div class="form-field">
+            <label for="adminUserUsername">Username</label>
+            <input id="adminUserUsername" type="text" placeholder="new username" />
+          </div>
+          <div class="form-field">
+            <label for="adminUserDisplayName">Display name</label>
+            <input id="adminUserDisplayName" type="text" placeholder="display name" />
+          </div>
+          <div class="form-field">
+            <label for="adminUserStatus">Status</label>
+            <select id="adminUserStatus">
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+              <option value="locked">locked</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="adminUserRoles">Role</label>
+            <select id="adminUserRoles">
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+              <option value="developer">developer</option>
+            </select>
+          </div>
+          <div class="action-list">
+            <button id="adminUserSubmit" type="button" class="primary">Add user</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">User list</h2></div>
+        <div class="form-field compact">
+          <label for="adminUserRoleFilter">Role filter</label>
+          <select id="adminUserRoleFilter">
+            <option value="all">All</option>
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+            <option value="developer">developer</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table id="adminUserTable">
+            <thead><tr><th>Username</th><th>Display name</th><th>Display ID</th><th>Role</th><th>Status</th></tr></thead>
+            <tbody>
+              ${users.length ? users.map((user) => `
+                <tr data-user-row="${escapeHtml(user.id || '')}" data-role="${escapeHtml(Array.isArray(user.roles) ? user.roles.join(',') : (user.role || 'user'))}">
+                  <td>${escapeHtml(user.username || '—')}</td>
+                  <td>${escapeHtml(user.displayName || user.username || '—')}</td>
+                  <td>${escapeHtml(user.displayId || '—')}</td>
+                  <td>${escapeHtml(Array.isArray(user.roles) ? user.roles.join(', ') : (user.role || 'user'))}</td>
+                  <td><span class="status-pill ${user.status === 'active' ? 'active' : user.status === 'deleted' ? 'deleted' : 'warning'}">${escapeHtml(user.status || 'active')}</span></td>
+                </tr>
+              `).join('') : '<tr><td colspan="5"><div class="empty-state">No users available.</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    return html;
+  };
+
+  const renderAdminRoles = async () => {
+    const result = window.AdminModule && typeof window.AdminModule.listUsers === 'function' ? await window.AdminModule.listUsers() : { ok: true, data: { items: [] } };
+    const entries = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
+    const roles = ['user', 'admin', 'developer', ...new Set(entries.flatMap((entry) => Array.isArray(entry.roles) ? entry.roles : [entry.role || 'user']))].filter((role, index, source) => source.indexOf(role) === index);
+
+    const html = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Roles</h2></div>
+        <div id="adminRoleList" class="chip-list">
+          ${roles.map((role) => `<span class="chip">${escapeHtml(role)}</span>`).join('')}
+        </div>
+      </div>
+    `;
+    return html;
+  };
+
+  const renderAdminPermissions = async () => {
+    const currentUser = getCurrentUser();
+    const permissions = Array.from(new Set([
+      ...(Array.isArray(currentUser && currentUser.permissions) ? currentUser.permissions : []),
+      'user:read',
+      'user:write',
+      'system:view',
+      'module:read',
+      'module:update'
+    ]));
+
+    const html = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Permissions</h2></div>
+        <div id="adminPermissionList" class="chip-list">
+          ${permissions.map((permission) => `<span class="chip">${escapeHtml(permission)}</span>`).join('')}
+        </div>
+      </div>
+    `;
+    return html;
+  };
+
   const renderAdminContent = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
@@ -337,35 +445,66 @@
     }
 
     if (view === 'admin:users') {
-      const result = window.AdminModule && typeof window.AdminModule.listUsers === 'function' ? await window.AdminModule.listUsers() : { data: { items: [] } };
-      const users = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
-      page.innerHTML = `
-        <div class="card">
-          <div class="card-header"><h2 class="card-title">Users</h2></div>
-          <div class="table-wrap"><table><thead><tr><th>Username</th><th>Display ID</th><th>Role</th><th>Status</th></tr></thead><tbody>
-            ${users.length ? users.map((user) => `
-              <tr><td>${escapeHtml(user.username || '—')}</td><td>${escapeHtml(user.displayId || '—')}</td><td>${escapeHtml(Array.isArray(user.roles) ? user.roles.join(', ') : (user.role || 'user'))}</td><td><span class="status-pill ${user.status === 'active' ? 'active' : user.status === 'deleted' ? 'deleted' : 'warning'}">${escapeHtml(user.status || 'active')}</span></td></tr>
-            `).join('') : '<tr><td colspan="4"><div class="empty-state">No users available.</div></td></tr>'}
-          </tbody></table></div>
-        </div>
-      `;
+      page.innerHTML = await renderAdminUsers();
+
+      const createButton = document.getElementById('adminUserSubmit');
+      if (createButton) {
+        createButton.addEventListener('click', async () => {
+          const usernameInput = document.getElementById('adminUserUsername');
+          const displayNameInput = document.getElementById('adminUserDisplayName');
+          const statusInput = document.getElementById('adminUserStatus');
+          const roleInput = document.getElementById('adminUserRoles');
+
+          const payload = {
+            username: usernameInput ? usernameInput.value.trim() : '',
+            displayName: displayNameInput ? displayNameInput.value.trim() : '',
+            status: statusInput ? statusInput.value : 'active',
+            roles: roleInput ? [roleInput.value] : ['user'],
+            permissions: []
+          };
+
+          if (!payload.username) {
+            notify('Username ist erforderlich.', 'error');
+            return;
+          }
+
+          const result = window.AdminModule && typeof window.AdminModule.createUser === 'function'
+            ? await window.AdminModule.createUser(payload, currentUser)
+            : await window.UserModule.createUser(payload, currentUser);
+
+          if (!result || !result.ok) {
+            notify((result && result.message) || 'Benutzer konnte nicht erstellt werden.', 'error');
+            return;
+          }
+
+          notify('Benutzer erstellt.', 'success');
+          state.activeView = 'admin:users';
+          await renderPageContent();
+        });
+      }
+
+      const filter = document.getElementById('adminUserRoleFilter');
+      if (filter) {
+        filter.addEventListener('change', async () => {
+          const rows = document.querySelectorAll('#adminUserTable tbody tr[data-user-row]');
+          const selected = filter.value;
+          rows.forEach((row) => {
+            const roleValue = (row.getAttribute('data-role') || '').split(',').map((value) => value.trim());
+            const shouldShow = selected === 'all' || roleValue.includes(selected);
+            row.style.display = shouldShow ? '' : 'none';
+          });
+        });
+      }
       return;
     }
 
     if (view === 'admin:roles') {
-      const result = window.AdminModule && typeof window.AdminModule.listUsers === 'function' ? await window.AdminModule.listUsers() : { data: { items: [] } };
-      const entries = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
-      const roles = [...new Set(entries.flatMap((entry) => Array.isArray(entry.roles) ? entry.roles : [entry.role || 'user']))];
-      page.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">Roles</h2></div><div class="chip-list">${roles.length ? roles.map((role) => `<span class="chip">${escapeHtml(role)}</span>`).join('') : '<span class="chip">No roles found</span>'}</div></div>`;
+      page.innerHTML = await renderAdminRoles();
       return;
     }
 
     if (view === 'admin:permissions') {
-      const permissions = Array.from(new Set([
-        ...(Array.isArray(currentUser.permissions) ? currentUser.permissions : []),
-        ...(Array.isArray(currentUser.roles) ? currentUser.roles.flatMap((role) => role === 'admin' ? ['system:view', 'user:read', 'user:write'] : role === 'developer' ? ['system:view', 'module:read', 'module:update'] : []) : [])
-      ]));
-      page.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">Permissions</h2></div><div class="chip-list">${permissions.length ? permissions.map((permission) => `<span class="chip">${escapeHtml(permission)}</span>`).join('') : '<span class="chip">No permissions</span>'}</div></div>`;
+      page.innerHTML = await renderAdminPermissions();
       return;
     }
 
