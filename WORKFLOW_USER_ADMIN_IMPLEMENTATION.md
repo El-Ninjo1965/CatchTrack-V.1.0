@@ -2,9 +2,9 @@
 
 ## Status
 
-STATUS: FINAL / READY FOR MASTER FREEZE
+STATUS: MASTER FROZEN
 
-Der Master Core ist technisch fertiggestellt und verifiziert. Neue Funktionen werden nach dem Freeze nicht mehr in den Core eingepflegt; spätere Vorschläge werden als Backlog, Erweiterung oder separates Modul dokumentiert.
+Der Master Core ist technisch fertiggestellt, verifiziert und final eingefroren. Neue Funktionen werden nach dem Freeze nicht mehr in den Core eingepflegt; spätere Vorschläge werden als Backlog, Erweiterung oder separates Modul dokumentiert.
 
 ## Scope
 

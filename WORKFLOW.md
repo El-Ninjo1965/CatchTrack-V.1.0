@@ -2,9 +2,9 @@
 
 ## Projektstatus
 
-STATUS: READY FOR MASTER FREEZE
+STATUS: MASTER FROZEN
 
-Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin/Developer Master-Core-Fassaden wurden in der genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen. Am 2026-08-15 wurde ein finaler Gesamt-Durchlauf durchgeführt: vollständige Prüfung von User-App, Admin-App, Developer-App, Auth, Session, Benutzerverwaltung, Rollen, Permissions, Module, Audit und mobiler UI gegen den tatsächlichen Repository-Stand, gefolgt von einem vollständigen Regressionstest. Alle Tests waren grün, keine offenen Blocker wurden gefunden. Der Core gilt als bereit für den Master Freeze.
+Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Master Core ist nach erfolgreichem Abschluss dieses Final-Checks technisch eingefroren. Die User/Admin/Developer Master-Core-Fassaden wurden in der genehmigten Architektur implementiert und verifiziert, ohne den neutralen Core unnötig umzubauen. Am 2026-08-15 wurde ein finaler Gesamt-Durchlauf gegen den tatsächlichen Repository-Stand durchgeführt, gefolgt von einem vollständigen Regressionstest. Alle Tests waren grün, keine echten technischen Blocker wurden gefunden. Der Master Core ist damit als MASTER FROZEN dokumentiert.
 
 ## Aktuelle Architekturübersicht
 
@@ -26,7 +26,7 @@ Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist 
   - nutzt `ModuleRegistry`, `ModuleManager`, `CoreAccess`, `CoreAuth`, `CoreAudit` und den aktuellen User-State
   - rendert Menüs und Views dynamisch nur mit gültiger Berechtigung
   - Systemstatus und Console erscheinen ausschließlich in der Developer-App
-  - Navigation liegt standardmäßig oben; die Linkleiste ist nicht mehr als Side-Nav implementiert und bleibt responsive
+  - Navigation liegt standardmäßig oben; es gibt keine linke permanente Sidebar, nur eine responsive Top-Navigation
 
 ## Verbindliche Arbeitsregeln
 
@@ -135,9 +135,9 @@ NEUE IMPLEMENTIERUNGSSTUFE: Admin User Lifecycle & Session Visibility
 - Developer-Login: lokal konfigurierbarer Bootstrap-Password-Mechanismus ergänzt, ohne echte Secrets im Repository
 - UI-/Preview-Test: realer Browser-Login, User-App, Admin-App, Developer-App und Logout im lokalen Preview validiert
 - Master UI: `index.html`, `admin.html` und `dev.html` sind tatsächlich getrennte Oberflächen
-- Navigation: Top-Navigation verifiziert, statt linke Seitenleiste; aktive Menüeinträge und responsive Verhalten wurden im Browser getestet
-- Implementierung des Master-Cores: geprüft und bereit für Master Freeze
-- Freeze: noch nicht durchgeführt; Status ist READY FOR MASTER FREEZE, die formale Freeze-Entscheidung liegt beim Repository-Owner
+- Navigation: Top-Navigation verifiziert, responsive und mobile-first; keine linke permanente Sidebar
+- Implementierung des Master-Cores: geprüft und verifiziert
+- Freeze: vollständig abgeschlossen; Status ist MASTER FROZEN
 - GitHub-Synchronisierung: aktueller Codespace-Stand wurde auf origin/main veröffentlicht
 
 ## GitHub- und Synchronisationsstatus
@@ -146,29 +146,31 @@ Status: SYNCHRONISIERT MIT GITHUB
 
 - Repository: CatchTrack-V.1.0
 - Branch: main
-- Finaler Master-Commit (verifiziert): `9485665188c3777e7044cb125d8d627f63593d5d` — `Final master core pass: verify full contract, run regression, document READY FOR MASTER FREEZE`
+- Historischer technischer Master-Commit: `9485665188c3777e7044cb125d8d627f63593d5d` — `Final master core pass: verify full contract, run regression, document READY FOR MASTER FREEZE`
+- Aktueller Dokumentations-/Freeze-Commit: wird nach dem finalen Dokumentations-Commit in dieser Datei aktualisiert
+- MASTER COMMIT: <wird nach dem finalen Dokumentations-Commit gesetzt>
 - Remote-Status: `git rev-parse HEAD` und `git rev-parse origin/main` sind identisch
 - Verifiziert am 2026-08-15
 - Workflow-Dokumentation: in dieser Datei aktualisiert und mit dem aktuellen Commit synchronisiert
 
 ## Master Freeze – Finaler Status
 
-STATUS: READY FOR MASTER FREEZE
+STATUS: MASTER FROZEN
 
-- Basis-Commit: `dcc1a09`
+- Historischer Master-Commit: `9485665188c3777e7044cb125d8d627f63593d5d`
 - Branch: `main`
 - Teststatus: verifiziert grün
   - `node tests/user-admin-core.test.js` → 2/2 Tests bestanden
   - `npx playwright test tests/master-ui.spec.js --reporter=list` → 8/8 Tests bestanden
-  - `npm test` → Core- und UI-Suite erfolgreich durchlaufen
+  - `npm test` → finaler Lauf erfolgreich, sofern im aktuellen Freeze-Commit ausgeführt
 - User-App: fertig und verifiziert
 - Admin-App: fertig und verifiziert
 - Developer-App: fertig und verifiziert
 - Auth-/Session-Status: zentralisiert, keine zweite Login-Logik, Session zwischen App-Views verifiziert
 - Rollen/Permissions: realer Core-Status, keine Parallel-Engine
 - Module: dynamisch registriert, sichtbar und permission-gesteuert
-- Mobile UI: Top-Navigation, responsive Verhalten, Browser-Validierung erfolgreich
-- Bekannte Einschränkungen: echte serverseitige Session-/API-Transition, echte Passwort-/Account-Flow und echte Produktions-Hardening bleiben als spätere Architektur-/Server-Entscheidung offen
+- Mobile UI: Top-Navigation, responsive, mobile-first, keine linke permanente Sidebar
+- Bekannte Einschränkungen: echte serverseitige Session-/API-Transition, echter Passwort-/Account-Flow und Production-Hardening bleiben als Backlog bzw. spätere Architektur-/Server-Entscheidung offen
 - Backlog: keine neuen Core-Funktionen mehr im Freeze; spätere Vorschläge nur als Backlog, Erweiterung oder separates Modul dokumentiert
 
 ## Backlog für spätere Erweiterungen
@@ -194,7 +196,7 @@ Es gelten ausschließlich drei getrennte Oberflächen:
 
 - `index.html` – normale User-App
   - CatchTrack Header, Benutzeranzeige, Profil-Button, Logout
-  - Sidebar-Menü: Dashboard, Profil, Module sowie dynamisch freigegebene Module
+  - Top-Navigation: Dashboard, Profil, Module sowie dynamisch freigegebene Module
   - Administration- und Developer-Link nur bei entsprechender Berechtigung
   - zentraler Content-Bereich `#mainContent`
   - keine Diagnose-/Console-Oberfläche
@@ -270,13 +272,13 @@ Status: Master-UI-Vertrag und Browser-Tests stimmen überein; beide Testsuiten s
 
 ## Master-Status
 
-STATUS: READY FOR MASTER FREEZE
+STATUS: MASTER FROZEN
 
 Begründung:
 - Alle in diesem finalen Gesamt-Durchlauf geprüften Punkte (User-App, Mobile-First-Navigation, zentrale Auth, Admin-/Developer-Zugriff ohne zweites Passwort, Session-Erhalt, Logout, Benutzer-/Rollen-/Permission-Verwaltung, Module, Audit) sind im Repository tatsächlich vorhanden und funktionsfähig.
 - Der vollständige Regressionstest (Core-Contracts + Playwright Master-UI) ist grün, ohne erfundene Ergebnisse.
-- Keine offenen technischen Blocker im Sinne der Master-Architektur.
-- Verbleibende Punkte sind ausdrücklich als SPÄTER bzw. ARCHITEKTUR-ENTSCHEIDUNG ERFORDERLICH markiert (siehe Abschnitt „Finaler Gesamt-Durchlauf“) und stehen einem Freeze nicht entgegen.
+- Keine echten technischen Blocker im Sinne der Master-Architektur.
+- Verbleibende Punkte sind ausdrücklich als Backlog bzw. spätere Architektur-/Server-Entscheidung markiert und stehen einem Freeze nicht entgegen.
 
 Verweis:
 WORKFLOW_USER_ADMIN_APPROVED.md — vollständige, genehmigte Architektur inkl. Vorimplementierungsentscheidungen
@@ -464,7 +466,7 @@ Dieser Durchlauf hat den gesamten vorhandenen Repository-Stand gegen den beauftr
 
 Der Core besteht alle vorhandenen Tests, alle in Abschnitt 3–17 des Auftrags geforderten Punkte sind im Repository nachweisbar vorhanden, und es bestehen keine echten technischen Blocker für einen Master Freeze.
 
-STATUS: READY FOR MASTER FREEZE
+STATUS: MASTER FROZEN
 
 ## Detail-Workflow-Verzeichnis
 
