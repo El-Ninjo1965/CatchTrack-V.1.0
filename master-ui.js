@@ -2,7 +2,8 @@
   'use strict';
 
   const pageType = document.body.dataset.page || 'user';
-  const state = { activeView: 'dashboard', redirectTimer: null };
+  const defaultView = pageType === 'admin' ? 'admin:dashboard' : pageType === 'developer' ? 'developer:core' : 'dashboard';
+  const state = { activeView: defaultView };
 
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -124,17 +125,19 @@
     const summaryStatus = document.getElementById('summaryStatus');
     const summaryRoleBadge = document.getElementById('summaryRoleBadge');
     const activeModules = document.getElementById('activeModules');
+    const displayIdTargets = document.querySelectorAll('[data-user-display-id]');
 
     if (!currentUser) {
-      if (currentUserName) currentUserName.textContent = 'Not logged in';
+      if (currentUserName) currentUserName.textContent = 'Nicht angemeldet';
       if (currentUserInitial) currentUserInitial.textContent = '—';
-      if (summaryUsername) summaryUsername.textContent = 'Not logged in';
-      if (summaryStatus) summaryStatus.textContent = 'logged out';
+      if (summaryUsername) summaryUsername.textContent = 'Nicht angemeldet';
+      if (summaryStatus) summaryStatus.textContent = 'abgemeldet';
+      displayIdTargets.forEach((target) => { target.textContent = '—'; });
       if (summaryRoleBadge) {
         summaryRoleBadge.textContent = 'guest';
         summaryRoleBadge.className = 'role-badge user';
       }
-      if (activeModules) activeModules.innerHTML = '<span class="chip">No active modules</span>';
+      if (activeModules) activeModules.innerHTML = '<span class="chip">Keine aktiven Module</span>';
       return;
     }
 
@@ -145,6 +148,7 @@
     if (currentUserInitial) currentUserInitial.textContent = initials;
     if (summaryUsername) summaryUsername.textContent = currentUser.displayName || currentUser.username || 'User';
     if (summaryStatus) summaryStatus.textContent = currentUser.status || 'active';
+    displayIdTargets.forEach((target) => { target.textContent = currentUser.displayId || currentUser.id || '—'; });
     if (summaryRoleBadge) {
       summaryRoleBadge.textContent = role;
       summaryRoleBadge.className = `role-badge ${role}`;
@@ -155,7 +159,7 @@
     if (activeModules) {
       activeModules.innerHTML = modules.length
         ? modules.map((module) => `<span class="chip">${escapeHtml(module.name)}</span>`).join('')
-        : '<span class="chip">No accessible modules</span>';
+        : '<span class="chip">Keine freigeschalteten Module</span>';
     }
   };
 
@@ -179,6 +183,7 @@
     const items = [
       { id: 'dashboard', label: 'Dashboard' },
       { id: 'profile', label: 'Profil' },
+      { id: 'modules', label: 'Module' },
       ...getVisibleModules().map((module) => ({ id: `module:${module.id}`, label: module.name }))
     ];
 
@@ -193,64 +198,35 @@
     });
 
     if (canViewAdmin(currentUser)) {
-      const adminItems = [
-        { id: 'admin:dashboard', label: 'Dashboard' },
-        { id: 'admin:users', label: 'Users' },
-        { id: 'admin:roles', label: 'Roles' },
-        { id: 'admin:permissions', label: 'Permissions' },
-        { id: 'admin:modules', label: 'Modules' },
-        { id: 'admin:audit', label: 'Audit' },
-        { id: 'admin:system', label: 'Systemstatus' },
-        { id: 'admin:link', label: 'Administration', href: 'admin.html' }
-      ];
       if (adminSection) adminSection.classList.remove('hidden');
       if (adminMenu) {
-        adminMenu.innerHTML = adminItems.map((item) => `
-          <button type="button" class="nav-item ${state.activeView === item.id ? 'active' : ''}" data-view="${escapeHtml(item.id)}" data-href="${escapeHtml(item.href || '')}">${escapeHtml(item.label)}</button>
-        `).join('');
-        bindButtonGroup('adminMenu', (view) => {
-          state.activeView = view;
-          renderUserMenu();
-          renderPageContent();
-        });
+        adminMenu.innerHTML = `
+          <button type="button" class="nav-item" data-view="admin:link" data-href="admin.html">Administration</button>
+        `;
+        bindButtonGroup('adminMenu', () => {});
       }
     } else if (adminSection) {
       adminSection.classList.add('hidden');
-      const adminPanel = document.getElementById('adminPanel');
-      if (adminPanel) adminPanel.classList.add('hidden');
       if (adminMenu) adminMenu.innerHTML = '';
     }
 
     if (canViewDeveloper(currentUser)) {
-      const devItems = [
-        { id: 'developer:core', label: 'Core Status' },
-        { id: 'developer:auth', label: 'Auth Status' },
-        { id: 'developer:access', label: 'Access Status' },
-        { id: 'developer:database', label: 'Database Status' },
-        { id: 'developer:modules', label: 'Module Status' },
-        { id: 'developer:diagnostics', label: 'Diagnostics' },
-        { id: 'developer:console', label: 'Console' },
-        { id: 'developer:audit', label: 'Audit' },
-        { id: 'developer:link', label: 'Developer UI', href: 'dev.html' }
-      ];
-      const developerPanel = document.getElementById('developerPanel');
       if (developerSection) developerSection.classList.remove('hidden');
-      if (developerPanel) developerPanel.classList.remove('hidden');
       if (developerMenu) {
-        developerMenu.innerHTML = devItems.map((item) => `
-          <button type="button" class="nav-item ${state.activeView === item.id ? 'active' : ''}" data-view="${escapeHtml(item.id)}" data-href="${escapeHtml(item.href || '')}">${escapeHtml(item.label)}</button>
-        `).join('');
-        bindButtonGroup('developerMenu', (view) => {
-          state.activeView = view;
-          renderUserMenu();
-          renderPageContent();
-        });
+        developerMenu.innerHTML = `
+          <button type="button" class="nav-item" data-view="developer:link" data-href="dev.html">Developer</button>
+        `;
+        bindButtonGroup('developerMenu', () => {});
       }
     } else if (developerSection) {
       developerSection.classList.add('hidden');
-      const developerPanel = document.getElementById('developerPanel');
-      if (developerPanel) developerPanel.classList.add('hidden');
       if (developerMenu) developerMenu.innerHTML = '';
+    }
+  };
+
+  const refreshNavigation = () => {
+    if (pageType === 'user') {
+      renderUserMenu();
     }
   };
 
@@ -266,12 +242,12 @@
           <span class="role-badge ${escapeHtml(Array.isArray(currentUser && currentUser.roles) && currentUser.roles[0] ? currentUser.roles[0] : 'user')}">${escapeHtml(Array.isArray(currentUser && currentUser.roles) && currentUser.roles[0] ? currentUser.roles[0] : 'user')}</span>
         </div>
         <div class="content-wrap">
-          <div class="summary-username">Welcome ${escapeHtml(currentUser ? currentUser.displayName || currentUser.username : 'User')}</div>
+          <div class="summary-username">Willkommen ${escapeHtml(currentUser ? currentUser.displayName || currentUser.username : 'User')}</div>
           <div class="small-muted">${escapeHtml(currentUser ? currentUser.username : 'guest')} · ${escapeHtml(currentUser ? (Array.isArray(currentUser.roles) ? currentUser.roles.join(', ') : 'user') : 'guest')}</div>
           <div class="grid" style="margin-top:16px;">
-            <div class="metric"><span class="metric-label">Available modules</span><div class="metric-value">${modules.length}</div></div>
+            <div class="metric"><span class="metric-label">Verfügbare Module</span><div class="metric-value">${modules.length}</div></div>
             <div class="metric"><span class="metric-label">Status</span><div class="metric-value">${escapeHtml(currentUser ? currentUser.status || 'active' : 'logged-out')}</div></div>
-            <div class="metric"><span class="metric-label">Access</span><div class="metric-value">${escapeHtml(currentUser && currentUser.roles ? currentUser.roles.join(', ') : 'user')}</div></div>
+            <div class="metric"><span class="metric-label">Zugriff</span><div class="metric-value">${escapeHtml(currentUser && currentUser.roles ? currentUser.roles.join(', ') : 'user')}</div></div>
           </div>
         </div>
       </div>
@@ -284,25 +260,38 @@
     if (!page || !currentUser) return;
     page.innerHTML = `
       <div class="card">
-        <div class="card-header"><h2 class="card-title">Profile</h2></div>
+        <div class="card-header"><h2 class="card-title">Profil</h2></div>
         <div class="info-grid">
-          <div class="info-box"><strong>Username</strong><div>${escapeHtml(currentUser.username || '—')}</div></div>
+          <div class="info-box"><strong>Benutzername</strong><div>${escapeHtml(currentUser.username || '—')}</div></div>
           <div class="info-box"><strong>User ID</strong><div>${escapeHtml(currentUser.id || '—')}</div></div>
           <div class="info-box"><strong>Display ID</strong><div>${escapeHtml(currentUser.displayId || '—')}</div></div>
-          <div class="info-box"><strong>Role</strong><div>${escapeHtml(Array.isArray(currentUser.roles) ? currentUser.roles.join(', ') : 'user')}</div></div>
+          <div class="info-box"><strong>Rolle</strong><div>${escapeHtml(Array.isArray(currentUser.roles) ? currentUser.roles.join(', ') : 'user')}</div></div>
           <div class="info-box"><strong>Status</strong><div>${escapeHtml(currentUser.status || 'active')}</div></div>
-          <div class="info-box"><strong>Protected</strong><div>${escapeHtml(currentUser.protected ? 'Yes' : 'No')}</div></div>
+          <div class="info-box"><strong>Geschützt</strong><div>${escapeHtml(currentUser.protected ? 'Ja' : 'Nein')}</div></div>
         </div>
       </div>
     `;
   };
 
-  const renderModuleCard = (moduleId) => {
+  const renderModuleList = () => {
     const page = document.getElementById('mainContent');
+    if (!page) return;
+    const modules = getVisibleModules();
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Module</h2></div>
+        ${modules.length
+          ? `<div class="table-wrap"><table><thead><tr><th>Modul</th><th>Status</th></tr></thead><tbody>${modules.map((module) => `<tr><td>${escapeHtml(module.name)}</td><td><span class="status-pill active">${escapeHtml(module.status || 'available')}</span></td></tr>`).join('')}</tbody></table></div>`
+          : '<div class="empty-state">Keine freigeschalteten Module verfügbar.</div>'}
+      </div>
+    `;
+  };
+
+  const renderModuleCard = (moduleId) => {    const page = document.getElementById('mainContent');
     if (!page) return;
     const module = getVisibleModules().find((entry) => entry.id === moduleId.replace(/^module:/, ''));
     if (!module) {
-      page.innerHTML = '<div class="empty-state">Module not found or not accessible.</div>';
+      page.innerHTML = '<div class="empty-state">Modul nicht gefunden oder nicht freigegeben.</div>';
       return;
     }
 
@@ -312,8 +301,8 @@
           <h2 class="card-title">${escapeHtml(module.name)}</h2>
           <span class="status-badge ok">${escapeHtml(module.status || 'available')}</span>
         </div>
-        <p class="subtle">${escapeHtml(module.description || 'Module available – UI not implemented yet.')}</p>
-        <div class="empty-state">Module available - UI not implemented yet.</div>
+        <p class="subtle">${escapeHtml(module.description || 'Modul verfügbar – UI noch nicht implementiert.')}</p>
+        <div class="empty-state">Modul verfügbar – UI noch nicht implementiert.</div>
       </div>
     `;
   };
@@ -466,6 +455,21 @@
       return;
     }
 
+    if (view === 'developer:tests') {
+      const checks = [
+        { name: 'Core', ok: !!window.Core },
+        { name: 'CoreAuth', ok: !!window.CoreAuth },
+        { name: 'CoreAccess', ok: !!window.CoreAccess },
+        { name: 'CoreAudit', ok: !!window.CoreAudit },
+        { name: 'ModuleRegistry', ok: !!window.ModuleRegistry },
+        { name: 'ModuleManager', ok: !!window.ModuleManager },
+        { name: 'DatabaseManager', ok: !!window.DatabaseManager },
+        { name: 'UserModule', ok: !!window.UserModule }
+      ];
+      page.innerHTML = `<div class="card"><div class="card-header"><h2 class="card-title">Technische Tests</h2></div><div class="table-wrap"><table><thead><tr><th>Prüfung</th><th>Ergebnis</th></tr></thead><tbody>${checks.map((check) => `<tr><td>${escapeHtml(check.name)}</td><td><span class="status-pill ${check.ok ? 'active' : 'disabled'}">${check.ok ? 'pass' : 'fail'}</span></td></tr>`).join('')}</tbody></table></div></div>`;
+      return;
+    }
+
     page.innerHTML = '<div class="empty-state">Select a developer view.</div>';
   };
 
@@ -486,13 +490,12 @@
       case 'profile':
         renderProfile();
         break;
+      case 'modules':
+        renderModuleList();
+        break;
       default:
         if (state.activeView && state.activeView.startsWith('module:')) {
           renderModuleCard(state.activeView);
-        } else if (state.activeView && state.activeView.startsWith('admin:')) {
-          await renderAdminContent();
-        } else if (state.activeView && state.activeView.startsWith('developer:')) {
-          await renderDeveloperContent();
         } else {
           renderDashboard();
         }
@@ -524,7 +527,7 @@
     const loginBtn = document.getElementById('loginBtn');
     const setPasswordBtn = document.getElementById('setPasswordBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const logoutBtnAlt = document.getElementById('logoutBtnAlt');
+    const profileBtn = document.getElementById('profileBtn');
 
     const doLogin = async () => {
       await ensureRuntime();
@@ -534,21 +537,24 @@
       const password = passwordInput ? passwordInput.value : '';
 
       if (!window.UserModule || typeof window.UserModule.login !== 'function') {
-        notify('User module is unavailable.', 'error');
+        notify('Das User-Modul ist nicht verfügbar.', 'error');
         return;
       }
 
       const result = await window.UserModule.login({ username, password });
       if (!result || !result.ok) {
-        notify(result && result.message ? result.message : 'Login failed.', 'error');
+        notify(result && result.message ? result.message : 'Anmeldung fehlgeschlagen.', 'error');
         return;
       }
 
       renderLoginState();
       renderSummary();
-      renderUserMenu();
+      refreshNavigation();
+      if (!enforceAccess()) {
+        return;
+      }
       await renderPageContent();
-      notify('Login successful.', 'success');
+      notify('Anmeldung erfolgreich.', 'success');
     };
 
     if (loginBtn) loginBtn.addEventListener('click', doLogin);
@@ -559,30 +565,37 @@
       } else if (window.CoreAuth && typeof window.CoreAuth.logout === 'function') {
         await window.CoreAuth.logout();
       }
+      state.activeView = defaultView;
       renderLoginState();
       renderSummary();
-      renderUserMenu();
-      state.activeView = 'dashboard';
+      refreshNavigation();
       await renderPageContent();
-      notify('Logged out.', 'info');
+      notify('Abgemeldet.', 'info');
     };
 
     if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
-    if (logoutBtnAlt) logoutBtnAlt.addEventListener('click', doLogout);
+
+    if (profileBtn) {
+      profileBtn.addEventListener('click', async () => {
+        state.activeView = 'profile';
+        refreshNavigation();
+        await renderPageContent();
+      });
+    }
 
     if (setPasswordBtn) {
       setPasswordBtn.addEventListener('click', () => {
         const passwordInput = document.getElementById('developerPassword');
         const value = passwordInput ? passwordInput.value : '';
         if (!window.CoreAuth || typeof window.CoreAuth.setDeveloperPassword !== 'function') {
-          notify('Core auth is not available.', 'error');
+          notify('Core Auth ist nicht verfügbar.', 'error');
           return;
         }
         const result = window.CoreAuth.setDeveloperPassword(value);
         if (result && result.ok) {
-          notify('Developer password saved.', 'success');
+          notify('Developer-Passwort gespeichert.', 'success');
         } else {
-          notify((result && result.message) || 'Password update failed.', 'error');
+          notify((result && result.message) || 'Passwort konnte nicht gesetzt werden.', 'error');
         }
       });
     }
@@ -592,6 +605,9 @@
     const currentUser = getCurrentUser();
     const authPanel = document.getElementById('authPanel');
     const appShell = document.getElementById('appShell');
+    const accessDenied = document.getElementById('accessDenied');
+
+    if (accessDenied) accessDenied.classList.add('hidden');
 
     if (!currentUser) {
       if (authPanel) authPanel.classList.remove('hidden');
@@ -603,27 +619,31 @@
     if (appShell) appShell.classList.remove('hidden');
   };
 
-  const enforceAccess = () => {
-    if (state.redirectTimer) {
-      window.clearTimeout(state.redirectTimer);
-      state.redirectTimer = null;
-    }
+  const denyAccess = (message) => {
+    const authPanel = document.getElementById('authPanel');
+    const appShell = document.getElementById('appShell');
+    const accessDenied = document.getElementById('accessDenied');
+    const main = document.getElementById('mainContent');
 
+    if (authPanel) authPanel.classList.add('hidden');
+    if (appShell) appShell.classList.add('hidden');
+    if (accessDenied) accessDenied.classList.remove('hidden');
+    if (main) main.innerHTML = `<div class="empty-state">${escapeHtml(message)}</div>`;
+  };
+
+  const enforceAccess = () => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
       return true;
     }
 
     if (pageType === 'admin' && !canViewAdmin(currentUser)) {
-      const main = document.getElementById('mainContent');
-      if (main) main.innerHTML = '<div class="empty-state">Access denied. Redirecting to the user app.</div>';
-      state.redirectTimer = window.setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+      denyAccess('Zugriff verweigert. Admin-Berechtigung erforderlich.');
       return false;
     }
+
     if (pageType === 'developer' && !canViewDeveloper(currentUser)) {
-      const main = document.getElementById('mainContent');
-      if (main) main.innerHTML = '<div class="empty-state">Developer access denied. Redirecting to the user app.</div>';
-      state.redirectTimer = window.setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+      denyAccess('Zugriff verweigert. Developer-Berechtigung erforderlich.');
       return false;
     }
 
@@ -640,7 +660,9 @@
       bindStaticNavigation();
     }
     bindAuth();
-    enforceAccess();
+    if (!enforceAccess()) {
+      return;
+    }
     await renderPageContent();
   };
 

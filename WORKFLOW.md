@@ -18,11 +18,14 @@ Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist 
   - keine Fachmodule im Core
 - User und Admin bleiben Core-Bestandteile, keine optionalen Fachmodule
 - Fachmodule sind optional und sollten untereinander unabhängig bleiben
-- CatchTrack App Shell
-  - auf der bestehenden Developer-HTML als sichtbare Shell aufgebaut
-  - nutzt `ModuleRegistry`, `ModuleManager`, `CoreAccess` und den aktuellen User-State
-  - rendert Benutzer-, Admin- und Developer-Bereiche dynamisch nur mit gültiger Berechtigung
-  - zeigt Systemstatus und Console aus den tatsächlichen Core-Komponenten an
+- CatchTrack Master UI
+  - `index.html` – normale CatchTrack User-App
+  - `admin.html` – eigenständige CatchTrack Admin-App
+  - `dev.html` – eigenständige Developer-/Diagnose-App
+  - alle drei Oberflächen konsumieren denselben Core und teilen sich `style.css` sowie `master-ui.js`
+  - nutzt `ModuleRegistry`, `ModuleManager`, `CoreAccess`, `CoreAuth`, `CoreAudit` und den aktuellen User-State
+  - rendert Menüs und Views dynamisch nur mit gültiger Berechtigung
+  - Systemstatus und Console erscheinen ausschließlich in der Developer-App
 
 ## Verbindliche Arbeitsregeln
 
@@ -122,7 +125,8 @@ PHASE: User/Admin Master Core Implementierung
 - User/Admin Master-Architektur: genehmigt und umgesetzt
 - Initialer Developer-Bootstrap: konfiguriert, idempotent, geschützt und ohne Hardcoded-Credentials
 - Developer-Login: lokal konfigurierbarer Bootstrap-Password-Mechanismus ergänzt, ohne echte Secrets im Repository
-- UI-/Preview-Test: realer Browser-Login, Admin-Ansicht und Logout im lokalen Preview validiert
+- UI-/Preview-Test: realer Browser-Login, User-App, Admin-App, Developer-App und Logout im lokalen Preview validiert
+- Master UI: `index.html`, `admin.html` und `dev.html` sind tatsächlich getrennte Oberflächen
 - Implementierung des Master-Cores: geprüft und bereit für Freeze Review
 - Freeze: nicht durchgeführt
 - GitHub-Synchronisierung: aktueller Codespace-Stand wurde auf origin/main veröffentlicht
@@ -138,46 +142,78 @@ Status: SYNCHRONISIERT MIT GITHUB
 - Verifiziert am 2026-08-15
 - Workflow-Dokumentation: in dieser Datei aktualisiert und mit dem aktuellen Commit synchronisiert
 
-## Dynamische CatchTrack App Shell
+## CatchTrack Master UI (drei getrennte Oberflächen)
 
-- Die bestehende Developer-HTML wurde als sichtbare App-Shell weiterverwendet und nicht durch eine parallele Demo ersetzt.
-- Die Oberfläche konsumiert die bestehende Core-Architektur: `ModuleRegistry`, `ModuleManager`, `CoreAccess`, `CoreAuth`, `CoreAudit` und den aktuellen User-Status.
-- User-, Admin- und Developer-Bereiche werden dynamisch aus dem aktuellen Systemzustand aufgebaut.
-- Module werden nur dann im Menü gezeigt, wenn sie registriert, aktiv und permission-basiert freigegeben sind.
-- Der Core wurde für die UI nicht umgebaut; die Oberfläche ist ein echter Consumer der vorhandenen APIs.
-- Eine zentrale Content-/View-Engine wurde ergänzt: Beim Klick auf ein Menüelement wird der aktive View im Hauptbereich gesetzt und der Content-Container neu gerendert, ohne eine zweite Router-Architektur zu bauen.
+STATUS: IMPLEMENTIERT UND VERIFIZIERT
+
+Der frühere Ansatz „bestehende Developer-HTML als sichtbare App-Shell“ ist aufgehoben und entfernt.
+Es gelten ausschließlich drei getrennte Oberflächen:
+
+- `index.html` – normale User-App
+  - CatchTrack Header, Benutzeranzeige, Profil-Button, Logout
+  - Sidebar-Menü: Dashboard, Profil, Module sowie dynamisch freigegebene Module
+  - Administration- und Developer-Link nur bei entsprechender Berechtigung
+  - zentraler Content-Bereich `#mainContent`
+  - keine Diagnose-/Console-Oberfläche
+- `admin.html` – Admin-App
+  - Admin Header und Admin-Navigation: Admin Dashboard, Benutzer, Rollen, Permissions, Module, Audit, System
+  - eigener zentraler Content-Bereich `#mainContent`
+  - Zugriffsschutz beim direkten Aufruf: authentifiziert **und** Admin-Berechtigung
+  - ohne Berechtigung: `#accessDenied`-Ansicht, App-Shell bleibt verborgen, Rückweg in die User-App
+- `dev.html` – Developer-/Diagnose-App
+  - Navigation: Core Status, Auth Status, Access Status, Database/Storage, Module Status, Diagnostics, Console, Audit, Technische Tests
+  - Zugriffsschutz beim direkten Aufruf: authentifiziert **und** Developer-Berechtigung
+  - ohne Berechtigung: `#accessDenied`-Ansicht, App-Shell bleibt verborgen
+
+Weitere Eigenschaften:
+
+- Der sichtbare Admin-/Developer-Link im User-Menü ist reine Navigation und ersetzt keine Berechtigungsprüfung.
+- Menüs werden aus aktuellem User, Rollen, Permissions, `CoreAccess`, `ModuleRegistry` und `ModuleManager` aufgebaut.
+- Module erscheinen nur, wenn sie registriert, aktiv und permission-basiert freigegeben sind.
+- Der Core wurde für die UI nicht umgebaut; die Oberflächen sind Consumer der vorhandenen APIs.
+- Sessions sind aktuell laufzeitgebunden (kein persistenter Session-Store); jeder Seitenaufruf erfordert eine gültige Anmeldung.
+- Designgrundlage bleibt `style.css`: helle, professionelle, responsive Web-App mit Sidebar-Menü und zentraler Content-Fläche.
 
 ## Master UI View-/Content-Architektur
 
 STATUS: IMPLEMENTIERT
 
-- Hauptbereich: `#mainContent` als zentraler Render-Container für alle Views
-- Standard-View: Dashboard für angemeldete User
-- Profil-View: Benutzerprofil mit Rollen, Status, Permissions und Protected-State
-- Modul-Views: registrierte und aktive Module erhalten einen definierten View-Einstieg; fehlt eine eigene UI, wird eine saubere Platzhalteransicht mit "Modul verfügbar" angezeigt
-- Admin-Views: Benutzer, Rollen, Permissions, Module, Audit, Systemstatus
-- Developer-Views: Core Status, Module Status, Diagnostics, Console, Audit
-- Navigation bleibt dynamisch, aber statt Console-Logs wird nun der sichtbare View gewechselt
-- Berechtigungen bleiben an der vorhandenen Core-Access-Architektur orientiert; nur berechtigte Menüs werden angezeigt
+- Hauptbereich: `#mainContent` als zentraler Render-Container je Oberfläche
+- Standard-View: `index.html` → Dashboard, `admin.html` → Admin Dashboard, `dev.html` → Core Status
+- Profil-View: Benutzerprofil mit Rolle, Status, Display-ID und Protected-State
+- Modul-Views: Übersicht „Module“ plus je Modul ein View-Einstieg; fehlt eine eigene UI, erscheint eine saubere Platzhalteransicht
+- Admin-Views (nur `admin.html`): Benutzer, Rollen, Permissions, Module, Audit, Systemstatus
+- Developer-Views (nur `dev.html`): Core Status, Auth Status, Access Status, Database/Storage, Module Status, Diagnostics, Console, Audit, Technische Tests
+- Die User-App rendert keine Admin- oder Developer-Views mehr im eigenen Content-Bereich
+- Navigation wechselt den sichtbaren View; Berechtigungen bleiben an `CoreAccess` orientiert
 
 ## Praktischer Browser-/Preview-Teststatus
 
-Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:8000:
+Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://127.0.0.1:8000 (Chromium, Playwright):
 
-- Anwendung startet erfolgreich im Browser
-- Startseite/Login funktioniert
-- `index.html` entspricht dem aktuellen User-App-Contract mit Master-UI-Shell
-- `admin.html` und `dev.html` sind validierte eigene Route-Apps mit Berechtigungs-Checks
+- Anwendung startet erfolgreich im Browser, Login funktioniert
+- `index.html` ist die normale User-App: Dashboard, Profil, Module, Logout
+- Developer sieht zusätzlich die Menüeinträge Administration und Developer
+- `admin.html` ist eine eigenständige Admin-App; alle Bereiche (Admin Dashboard, Benutzer, Rollen, Permissions, Module, Audit, System) rendern
+- `dev.html` ist eine eigenständige Developer-App; alle Bereiche (Core, Auth, Access, Database/Storage, Module, Diagnostics, Console, Audit, Technische Tests) rendern
 - Bootstrap-Developer `USR-000001` wird als geschützter `developer`-Benutzer bereitgestellt
-- Developer-Login mit lokal gesetztem Bootstrap-Passwort funktioniert
-- User-, Admin- und Developer-Ansichten sind im aktuellen Master-UI-Vertrag implementiert und funktionieren
-- normale Test-User sehen ein reduziertes Menü und keinen Admin-/Developer-Zugriff
-- direkter Zugriff auf `admin.html` und `dev.html` verweigert ohne Berechtigung korrekt
-- Dashboard, Profil und dynamische Module funktionieren im aktuellen UI-Vertrag
-- Logout schaltet den Zustand wieder auf Login-/Guest-Zustand zurück
-- Browser-Tests basieren auf dem aktuellen Master-UI-Vertrag und sind grün
+- normaler Test-User: kein Admin-Menü, kein Developer-Menü
+- direkter Aufruf von `admin.html` und `dev.html` ohne Berechtigung wird mit `#accessDenied` verweigert; die App-Shell bleibt verborgen
+- Logout schaltet den Zustand zurück auf die Login-Ansicht
 
-Status: Playwright-Browser-Testlauf erfolgreich validiert; aktuelle Master-UI-Struktur stimmt mit den Tests überein.
+### Testausführung
+
+- Testdateien: `tests/master-ui.spec.js` (Playwright, Master-UI-Vertrag), `tests/user-admin-core.test.js` (node:test, Core-Contracts)
+- Der frühere `tests/catchtrack-shell.spec.js` wurde entfernt; seine Selektoren und Shell-Erwartungen entsprachen nicht mehr dem Master-UI-Vertrag.
+- Kommandos: `npm run test:core`, `npm run test:ui`, `npm test`
+- Voraussetzung: `npx playwright install chromium` und `npx playwright install-deps chromium` (im frischen Codespace fehlten Browser und Systembibliotheken; der frühere „grün“-Status war ohne diese Installation nicht reproduzierbar)
+
+Ergebnis des letzten vollständigen Laufs am 2026-08-15:
+
+- `node tests/user-admin-core.test.js`: 2 Tests, 2 pass, 0 fail
+- `npx playwright test`: 5 Tests, 5 passed, 0 failed
+
+Status: Master-UI-Vertrag und Browser-Tests stimmen überein; beide Testsuiten sind tatsächlich grün.
 
 ## Master-Status
 

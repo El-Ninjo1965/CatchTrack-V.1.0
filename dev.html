@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body data-page="developer">
+    <div id="accessDenied" class="auth-shell hidden">
+      <div class="auth-card">
+        <h2>Zugriff verweigert</h2>
+        <p class="subtle">Für die Developer-Konsole ist eine Developer-Berechtigung erforderlich.</p>
+        <div class="action-list">
+          <a class="nav-item" id="backToAppLink" href="index.html">Zurück zur Anwendung</a>
+        </div>
+      </div>
+    </div>
+
     <div id="authPanel" class="auth-shell">
       <div class="auth-card">
         <h2>Developer Console</h2>
@@ -63,7 +73,8 @@
             <button type="button" class="nav-item" data-view="developer:diagnostics">Diagnostics</button>
             <button type="button" class="nav-item" data-view="developer:console">Console</button>
             <button type="button" class="nav-item" data-view="developer:audit">Audit</button>
-            <button type="button" class="nav-item" data-view="dashboard">Return to app</button>
+            <button type="button" class="nav-item" data-view="developer:tests">Technische Tests</button>
+            <button type="button" class="nav-item" data-view="dashboard" data-href="index.html">Zur User-App</button>
           </div>
         </div>
       </aside>
