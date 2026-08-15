@@ -80,6 +80,63 @@
             return window.UserModule || null;
         },
 
+        resolveBootstrapConfig() {
+            const configManager = window.ConfigManager && typeof window.ConfigManager.get === 'function'
+                ? window.ConfigManager.get('bootstrap', {})
+                : {};
+
+            const bootstrapConfig = configManager && typeof configManager === 'object' ? configManager : {};
+            const username = typeof bootstrapConfig.developerUsername === 'string' && bootstrapConfig.developerUsername.trim()
+                ? bootstrapConfig.developerUsername.trim()
+                : 'developer';
+
+            const envPassword = (typeof process !== 'undefined' && process && process.env && typeof process.env.CORE_BOOTSTRAP_PASSWORD === 'string')
+                ? process.env.CORE_BOOTSTRAP_PASSWORD
+                : '';
+
+            const password = typeof bootstrapConfig.developerPassword === 'string' && bootstrapConfig.developerPassword.trim()
+                ? bootstrapConfig.developerPassword
+                : (envPassword || (typeof localStorage !== 'undefined' ? localStorage.getItem('core.bootstrap.developerPassword') || '' : ''));
+
+            return {
+                username,
+                password,
+                passwordRequired: bootstrapConfig.passwordRequired !== false,
+                enabled: bootstrapConfig.enabled !== false
+            };
+        },
+
+        setDeveloperPassword(password) {
+            const normalized = String(password || '').trim();
+            if (!normalized) {
+                return {
+                    ok: false,
+                    code: 'INVALID_PASSWORD',
+                    message: 'Developer password must not be empty.'
+                };
+            }
+
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('core.bootstrap.developerPassword', normalized);
+            }
+
+            if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
+                const current = window.ConfigManager.get('bootstrap', {}) || {};
+                window.ConfigManager.set('bootstrap', {
+                    ...current,
+                    developerPassword: normalized,
+                    passwordRequired: true,
+                    passwordSource: 'local-storage'
+                });
+            }
+
+            return {
+                ok: true,
+                code: 'DEVELOPER_PASSWORD_SET',
+                data: { password: normalized }
+            };
+        },
+
         async login(credentialsOrUserId) {
             const input = credentialsOrUserId && typeof credentialsOrUserId === 'object'
                 ? credentialsOrUserId
@@ -116,6 +173,26 @@
                     code: 'INVALID_USER',
                     message: 'User is not valid or not active.'
                 };
+            }
+
+            const bootstrapConfig = this.resolveBootstrapConfig();
+            if (bootstrapConfig.enabled && user.username === bootstrapConfig.username && bootstrapConfig.passwordRequired) {
+                const expectedPassword = bootstrapConfig.password;
+                const givenPassword = typeof input.password === 'string' ? input.password : '';
+                if (!expectedPassword) {
+                    return {
+                        ok: false,
+                        code: 'PASSWORD_REQUIRED',
+                        message: 'Set a local bootstrap password before testing the developer login.'
+                    };
+                }
+                if (givenPassword !== expectedPassword) {
+                    return {
+                        ok: false,
+                        code: 'INVALID_PASSWORD',
+                        message: 'Developer password is invalid.'
+                    };
+                }
             }
 
             const sessionId = randomUuid();

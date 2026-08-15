@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CatchTrack Demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f172a;
+        --panel: #111827;
+        --panel-alt: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --success: #22c55e;
+        --warn: #f59e0b;
+        --danger: #ef4444;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #020817, #0f172a 50%, #111827);
+        color: var(--text);
+      }
+      .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+      .status {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--accent);
+        border: 1px solid rgba(56, 189, 248, 0.4);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+      }
+      .panel {
+        background: rgba(17, 24, 39, 0.96);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 8px 26px rgba(15, 23, 42, 0.28);
+      }
+      h2, h3 { margin-top: 0; }
+      .muted { color: var(--muted); }
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      label {
+        display: block;
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      input, select, button {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text);
+        padding: 10px 12px;
+        font-size: 1rem;
+      }
+      button {
+        cursor: pointer;
+        background: linear-gradient(135deg, #0ea5e9, #2563eb);
+        border: none;
+        font-weight: 700;
+        transition: 0.2s ease;
+      }
+      button.secondary {
+        background: rgba(148, 163, 184, 0.12);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+      }
+      button.danger {
+        background: linear-gradient(135deg, #f97316, #ef4444);
+      }
+      button:hover { filter: brightness(1.05); }
+      .form-group { margin-bottom: 14px; }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: rgba(34, 197, 94, 0.15);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.35);
+      }
+      .pill.warn { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+      .pill.danger { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+      .log {
+        min-height: 140px;
+        background: rgba(2, 6, 23, 0.45);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        padding: 12px;
+        border-radius: 10px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        color: var(--muted);
+      }
+      .hidden { display: none; }
+      ul { padding-left: 18px; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+      th, td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        vertical-align: top;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">CatchTrack Core Demo</div>
+        <div id="appState" class="status">booting…</div>
+      </div>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>Developer bootstrap</h2>
+          <div class="form-group">
+            <label for="developerUsername">Developer username</label>
+            <input id="developerUsername" type="text" value="developer" />
+          </div>
+          <div class="form-group">
+            <label for="developerPassword">Local developer password</label>
+            <input id="developerPassword" type="password" placeholder="set a local bootstrap password" />
+          </div>
+          <div class="row">
+            <button id="setPasswordBtn" type="button">Set local developer password</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Login</h2>
+          <div class="form-group">
+            <label for="loginUsername">Username</label>
+            <input id="loginUsername" type="text" value="developer" />
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" placeholder="local bootstrap password" />
+          </div>
+          <div class="row">
+            <button id="loginBtn" type="button">Login</button>
+            <button id="logoutBtn" class="secondary" type="button">Logout</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="grid" style="margin-top: 24px;">
+        <section class="panel">
+          <h2>Current user</h2>
+          <div id="currentUserView" class="log">Not logged in.</div>
+        </section>
+
+        <section class="panel">
+          <h2>User tools</h2>
+          <div class="row">
+            <button id="profileBtn" class="secondary" type="button">Open profile</button>
+            <button id="refreshUserBtn" class="secondary" type="button">Refresh user</button>
+          </div>
+          <div id="userToolsView" class="log" style="margin-top: 12px;">User tools are unavailable until login.</div>
+        </section>
+      </div>
+
+      <div class="grid" style="margin-top: 24px;">
+        <section class="panel">
+          <h2>Admin tools</h2>
+          <div id="adminView" class="log">Admin area is not open.</div>
+          <div id="adminActions" class="hidden" style="margin-top: 12px;">
+            <div class="form-group">
+              <label for="newUserUsername">New user username</label>
+              <input id="newUserUsername" type="text" value="demo-user" />
+            </div>
+            <div class="form-group">
+              <label for="newUserRole">Role</label>
+              <select id="newUserRole">
+                <option value="user">user</option>
+                <option value="admin">admin</option>
+                <option value="developer">developer</option>
+              </select>
+            </div>
+            <div class="row">
+              <button id="createUserBtn" type="button">Create test user</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Audit & permissions</h2>
+          <div id="auditView" class="log">No audit entries yet.</div>
+        </section>
+      </div>
+    </div>
+
+    <script src="Core/core.js"></script>
+    <script src="Core/core-event-bus.js"></script>
+    <script src="Core/core-error-handler.js"></script>
+    <script src="Core/error-log.js"></script>
+    <script src="Core/core-config.js"></script>
+    <script src="Core/core-context.js"></script>
+    <script src="Core/core-lifecycle.js"></script>
+    <script src="Core/core-state.js"></script>
+    <script src="Core/core-storage.js"></script>
+    <script src="Core/module-interface.js"></script>
+    <script src="Core/module-registry.js"></script>
+    <script src="Core/module-manager.js"></script>
+    <script src="Core/core-loader.js"></script>
+    <script src="Core/config-manager.js"></script>
+    <script src="Core/database-manager.js"></script>
+    <script src="Core/security.js"></script>
+    <script src="Core/core-auth.js"></script>
+    <script src="Core/core-access.js"></script>
+    <script src="Core/core-audit.js"></script>
+    <script src="Core/core-event-ring.js"></script>
+    <script src="Core/core-user.js"></script>
+    <script src="Core/core-admin.js"></script>
+    <script src="Core/service-manager.js"></script>
+    <script src="Core/core-startup.js"></script>
+    <script src="Core/core-runtime.js"></script>
+    <script src="Core/core-entry.js"></script>
+    <script src="Core/app.js"></script>
+    <script src="app-demo.js"></script>
+  </body>
+</html>

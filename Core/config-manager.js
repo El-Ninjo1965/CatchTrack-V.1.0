@@ -54,8 +54,9 @@
                 developerUsername: 'developer',
                 developerDisplayId: 'USR-000001',
                 createOnInit: true,
-                passwordRequired: false,
-                passwordSource: 'none'
+                passwordRequired: true,
+                passwordSource: 'local-config-or-storage',
+                developerPassword: ''
             });
 
             // Database Config

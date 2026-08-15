@@ -1,0 +1,27 @@
+{
+  "name": "catchtrack-v.1.0",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app-demo.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/El-Ninjo1965/CatchTrack-V.1.0.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0/issues"
+  },
+  "homepage": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0#readme",
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

@@ -51,7 +51,7 @@ The user/admin path uses structured results instead of ad hoc `null`/`false`-sty
 
 ## Validation
 
-The implementation was validated with real runtime tests covering:
+The implementation was validated with real runtime tests and actual browser preview verification covering:
 
 - user create/read/list/update/delete
 - display ID and UUID stability
@@ -64,6 +64,16 @@ The implementation was validated with real runtime tests covering:
 - audit and event ring behavior
 - module manager update flow
 - async APIs and structured result handling
+- local browser preview for start page, developer login, current user state, admin view and logout
+
+Preview verification status (2026-08-15):
+
+- App served successfully at http://localhost:4173
+- Developer bootstrap user `USR-000001` was present and authenticated
+- Browser login succeeded using the local bootstrap password
+- User and admin areas were accessible according to the access rules
+- Logout returned to a logged-out state
+- No auth or permission bypass was observed in the tested flow
 
 ## Follow-ups
 

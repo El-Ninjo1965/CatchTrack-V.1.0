@@ -114,6 +114,25 @@
         return { ok: true };
     };
 
+    const resolveActorUser = async (actor) => {
+        if (!actor || actor === 'system' || (typeof actor === 'string' && actor.trim() === 'system')) {
+            return null;
+        }
+
+        if (actor && typeof actor === 'object' && actor.id) {
+            return actor;
+        }
+
+        if (typeof actor === 'string' && actor.trim()) {
+            const lookup = await UserModule.getUserById(actor);
+            if (lookup && lookup.ok && lookup.data) {
+                return lookup.data;
+            }
+        }
+
+        return null;
+    };
+
     const UserModule = {
         name: 'user-module',
         version: '1.0.0',
@@ -360,7 +379,9 @@
                 };
             }
 
-            if (actor && actor !== 'system' && !window.CoreAccess) {
+            const actorUser = await resolveActorUser(actor);
+
+            if (actorUser && !window.CoreAccess) {
                 return {
                     ok: false,
                     code: 'ACCESS_UNAVAILABLE',
@@ -368,8 +389,8 @@
                 };
             }
 
-            if (actor && actor !== 'system' && window.CoreAccess && typeof window.CoreAccess.can === 'function') {
-                const access = window.CoreAccess.can(actor, 'user:write', 'user');
+            if (actorUser && window.CoreAccess && typeof window.CoreAccess.can === 'function') {
+                const access = window.CoreAccess.can(actorUser, 'user:write', 'user');
                 if (!access || !access.ok) {
                     return {
                         ok: false,
@@ -450,8 +471,9 @@
                 return { ok: false, code: 'USER_NOT_FOUND', message: 'User not found.' };
             }
 
-            if (actor && actor !== 'system') {
-                const access = evaluateWriteAccess(actor, currentUser);
+            const actorUser = await resolveActorUser(actor);
+            if (actorUser) {
+                const access = evaluateWriteAccess(actorUser, currentUser);
                 if (!access.ok) {
                     return access;
                 }
@@ -506,8 +528,9 @@
             }
 
             const user = currentResult.data;
-            if (actor && actor !== 'system') {
-                const access = evaluateWriteAccess(actor, user);
+            const actorUser = await resolveActorUser(actor);
+            if (actorUser) {
+                const access = evaluateWriteAccess(actorUser, user);
                 if (!access.ok) {
                     return access;
                 }
@@ -550,8 +573,9 @@
             }
 
             const user = currentResult.data;
-            if (actor && actor !== 'system') {
-                const access = evaluateWriteAccess(actor, user);
+            const actorUser = await resolveActorUser(actor);
+            if (actorUser) {
+                const access = evaluateWriteAccess(actorUser, user);
                 if (!access.ok) {
                     return access;
                 }

@@ -4,29 +4,43 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const loadFile = (filePath) => {
+const loadFile = (filePath, context) => {
   const code = fs.readFileSync(filePath, 'utf8');
-  vm.runInNewContext(code, globalThis, { filename: filePath });
+  vm.runInNewContext(code, context, { filename: filePath });
 };
 
 const root = path.join(__dirname, '..');
 
 const loadCore = () => {
-  globalThis.window = globalThis;
-  globalThis.window.addEventListener = () => {};
-  globalThis.window.removeEventListener = () => {};
-  globalThis.document = {
-    readyState: 'complete',
-    addEventListener() {}
+  const context = {
+    console,
+    process,
+    require,
+    Buffer,
+    URL,
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
+    performance,
+    document: {
+      readyState: 'complete',
+      addEventListener() {},
+      removeEventListener() {}
+    },
+    navigator: {
+      userAgent: 'node-test',
+      language: 'en-US',
+      platform: 'linux',
+      onLine: true
+    },
+    crypto: require('node:crypto').webcrypto,
+    addEventListener() {},
+    removeEventListener() {}
   };
-  globalThis.navigator = {
-    userAgent: 'node-test',
-    language: 'en-US',
-    platform: 'linux',
-    onLine: true
-  };
-  globalThis.crypto = require('node:crypto').webcrypto;
-  globalThis.console = console;
+
+  context.window = context;
+  context.globalThis = context;
 
   const files = [
     'Core/core.js',
@@ -54,23 +68,28 @@ const loadCore = () => {
   ];
 
   for (const file of files) {
-    loadFile(path.join(root, file));
+    loadFile(path.join(root, file), context);
   }
+
+  return context;
 };
 
-test('developer bootstrap seed creates a single protected developer without bypasses', async () => {
-  loadCore();
+test('developer bootstrap seed creates a single protected developer without bypasses', { concurrency: false }, async () => {
+  const context = loadCore();
 
   const configuredUsername = 'bootstrapdev';
-  if (window.ConfigManager && typeof window.ConfigManager.set === 'function') {
-    window.ConfigManager.set('bootstrap', {
+  const configuredPassword = process.env.CORE_BOOTSTRAP_PASSWORD || 'local-bootstrap-password';
+  if (context.ConfigManager && typeof context.ConfigManager.set === 'function') {
+    context.ConfigManager.set('bootstrap', {
       developerUsername: configuredUsername,
       developerDisplayId: 'USR-000001',
-      enabled: true
+      enabled: true,
+      passwordRequired: true,
+      developerPassword: configuredPassword
     });
   }
 
-  const firstBootstrap = await window.UserModule.bootstrapDeveloperUser();
+  const firstBootstrap = await context.UserModule.bootstrapDeveloperUser();
   assert.equal(firstBootstrap.ok, true);
   assert.equal(firstBootstrap.created, true);
   assert.equal(firstBootstrap.data.username, configuredUsername);
@@ -78,28 +97,29 @@ test('developer bootstrap seed creates a single protected developer without bypa
   assert.equal(firstBootstrap.data.protected, true);
   assert.equal(firstBootstrap.data.roles.includes('developer'), true);
 
-  const secondBootstrap = await window.UserModule.bootstrapDeveloperUser();
+  const secondBootstrap = await context.UserModule.bootstrapDeveloperUser();
   assert.equal(secondBootstrap.ok, true);
   assert.equal(secondBootstrap.created, false);
   assert.equal(secondBootstrap.data.username, configuredUsername);
 
-  const developerLogin = await window.UserModule.login({ username: configuredUsername });
+  const developerLogin = await context.UserModule.login({ username: configuredUsername, password: configuredPassword });
   assert.equal(developerLogin.ok, true);
-  assert.equal(window.UserModule.getCurrentUser().username, configuredUsername);
-  assert.equal(window.UserModule.isDeveloper(), true);
-  assert.equal(window.UserModule.isAdmin(), false);
+  assert.equal(context.UserModule.getCurrentUser().username, configuredUsername);
+  assert.equal(context.UserModule.isDeveloper(), true);
+  assert.equal(context.UserModule.isAdmin(), false);
 
-  const developerWrite = window.CoreAccess.can(window.UserModule.getCurrentUser(), 'user:write', 'user');
+  const developerWrite = context.CoreAccess.can(context.UserModule.getCurrentUser(), 'user:write', 'user');
   assert.equal(developerWrite.ok, true);
 
-  const adminCheck = window.CoreAccess.can(window.UserModule.getCurrentUser(), 'system:view', 'user');
+  const adminCheck = context.CoreAccess.can(context.UserModule.getCurrentUser(), 'system:view', 'user');
   assert.equal(adminCheck.ok, true);
 });
 
-test('user/admin master core core contracts', async () => {
-  loadCore();
+test('user/admin master core core contracts', { concurrency: false }, async () => {
+  const context = loadCore();
+  await context.UserModule.bootstrapDeveloperUser();
 
-  const userResponse = await window.UserModule.createUser({
+  const userResponse = await context.UserModule.createUser({
     username: 'alice',
     displayName: 'Alice Example',
     roles: ['user'],
@@ -111,22 +131,32 @@ test('user/admin master core core contracts', async () => {
   assert.equal(userResponse.data.username, 'alice');
   assert.equal(userResponse.data.roles.includes('user'), true);
 
-  const lookup = await window.UserModule.getUserById(userResponse.data.id);
+  const lookup = await context.UserModule.getUserById(userResponse.data.id);
   assert.equal(lookup.ok, true);
   assert.equal(lookup.data.username, 'alice');
 
-  const login = await window.UserModule.login({ userId: userResponse.data.id });
+  const login = await context.UserModule.login({ userId: userResponse.data.id });
   assert.equal(login.ok, true);
-  assert.equal(window.UserModule.getCurrentUser().username, 'alice');
-  assert.equal(window.CoreAuth.isAuthenticated(), true);
+  assert.equal(context.UserModule.getCurrentUser().username, 'alice');
+  assert.equal(context.CoreAuth.isAuthenticated(), true);
 
-  const access = window.CoreAccess.can(window.UserModule.getCurrentUser(), 'user:read', 'user');
+  const access = context.CoreAccess.can(context.UserModule.getCurrentUser(), 'user:read', 'user');
   assert.equal(access.ok, true);
 
-  const denied = window.CoreAccess.can(window.UserModule.getCurrentUser(), 'system:view', 'user');
+  const denied = context.CoreAccess.can(context.UserModule.getCurrentUser(), 'system:view', 'user');
   assert.equal(denied.ok, false);
 
-  const adminResponse = await window.AdminModule.createUser({
+  const developerUser = await context.UserModule.getUserByUsername('developer');
+  const developerCreate = await context.UserModule.createUser({
+    username: 'charlie',
+    displayName: 'Charlie Developer',
+    roles: ['user'],
+    permissions: ['user:read']
+  }, developerUser.data.id);
+  assert.equal(developerCreate.ok, true);
+  assert.equal(developerCreate.data.username, 'charlie');
+
+  const adminResponse = await context.AdminModule.createUser({
     username: 'bob',
     displayName: 'Bob Admin',
     roles: ['admin'],
@@ -134,17 +164,17 @@ test('user/admin master core core contracts', async () => {
   }, 'system');
   assert.equal(adminResponse.ok, true);
 
-  const ring = window.CoreEventRing.push('user', { action: 'test' });
+  const ring = context.CoreEventRing.push('user', { action: 'test' });
   assert.equal(Array.isArray(ring), true);
   assert.ok(ring.length <= 256);
 
-  const health = window.AdminModule.healthCheck();
+  const health = context.AdminModule.healthCheck();
   assert.equal(health.healthy, true);
 
-  const stats = await window.AdminModule.getSystemStats();
+  const stats = await context.AdminModule.getSystemStats();
   assert.equal(typeof stats.userCount, 'number');
 
-  const protectedUser = await window.UserModule.createUser({
+  const protectedUser = await context.UserModule.createUser({
     username: 'secureuser',
     displayName: 'Secure User',
     roles: ['user'],
@@ -152,31 +182,31 @@ test('user/admin master core core contracts', async () => {
     protected: true
   }, 'system');
 
-  const unauthorizedProtectedUpdate = await window.UserModule.updateUser(
+  const unauthorizedProtectedUpdate = await context.UserModule.updateUser(
     protectedUser.data.id,
     { displayName: 'Unauthorized change' },
     { id: 'actor-readonly', roles: ['user'], permissions: ['user:read'] }
   );
   assert.equal(unauthorizedProtectedUpdate.ok, false);
 
-  const updateResult = await window.UserModule.updateUser(userResponse.data.id, {
+  const updateResult = await context.UserModule.updateUser(userResponse.data.id, {
     displayName: 'Alice Updated'
   }, 'system');
   assert.equal(updateResult.ok, true);
   assert.equal(updateResult.data.displayName, 'Alice Updated');
 
-  const deleteResult = await window.UserModule.deleteUser(userResponse.data.id, 'system');
+  const deleteResult = await context.UserModule.deleteUser(userResponse.data.id, 'system');
   assert.equal(deleteResult.ok, true);
 
-  const userAfterDelete = await window.UserModule.getUserById(userResponse.data.id);
+  const userAfterDelete = await context.UserModule.getUserById(userResponse.data.id);
   assert.equal(userAfterDelete.ok, true);
   assert.equal(userAfterDelete.data.status, 'deleted');
 
-  const authService = window.ServiceManager.get('auth');
+  const authService = context.ServiceManager.get('auth');
   assert.equal(typeof authService.authenticate, 'function');
   assert.equal(typeof authService.logout, 'function');
 
-  window.ModuleRegistry.register({
+  context.ModuleRegistry.register({
     id: 'core-user',
     name: 'Core User',
     version: '1.0.0',
@@ -186,6 +216,6 @@ test('user/admin master core core contracts', async () => {
     capabilities: ['identity']
   });
 
-  const moduleManagerUpdate = window.ModuleManager.update('core-user');
+  const moduleManagerUpdate = context.ModuleManager.update('core-user');
   assert.ok(moduleManagerUpdate !== null);
 });

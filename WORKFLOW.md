@@ -116,8 +116,26 @@ PHASE: User/Admin Master Core Implementierung
 - Framework-Core: stabil
 - User/Admin Master-Architektur: genehmigt und umgesetzt
 - Initialer Developer-Bootstrap: konfiguriert, idempotent, geschützt und ohne Hardcoded-Credentials
+- Developer-Login: lokal konfigurierbarer Bootstrap-Password-Mechanismus ergänzt, ohne echte Secrets im Repository
+- UI-/Preview-Test: realer Browser-Login, Admin-Ansicht und Logout im lokalen Preview validiert
 - Implementierung des Master-Cores: geprüft und bereit für Freeze Review
 - Freeze: nicht durchgeführt
+
+## Praktischer Browser-/Preview-Teststatus
+
+Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:4173:
+
+- Anwendung startet erfolgreich im Browser
+- Startseite/Login funktioniert
+- Bootstrap-Developer `USR-000001` wird als geschützter `developer`-Benutzer bereitgestellt
+- Developer-Login mit lokal gesetztem Bootstrap-Passwort funktioniert
+- User-Bereich ist aufrufbar und zeigt den aktuellen Benutzer korrekt an
+- Admin-Bereich ist für den Developer mit `system:view` bzw. `user:write` zugänglich
+- Logout schaltet den Zustand wieder auf `logged out` zurück
+- Keine offensichtlichen JavaScript-/Runtime-Fehler im Browser-Flow
+- Keine Auth-/Permission-Bypass-Fehler innerhalb des validierten Szenarios
+
+Status: Preview praktisch getestet, aber keine Freeze-Aktion durchgeführt.
 
 ## Master-Status
 
