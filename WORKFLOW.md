@@ -26,6 +26,7 @@ Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist 
   - nutzt `ModuleRegistry`, `ModuleManager`, `CoreAccess`, `CoreAuth`, `CoreAudit` und den aktuellen User-State
   - rendert Menüs und Views dynamisch nur mit gültiger Berechtigung
   - Systemstatus und Console erscheinen ausschließlich in der Developer-App
+  - Navigation liegt standardmäßig oben; die Linkleiste ist nicht mehr als Side-Nav implementiert und bleibt responsive
 
 ## Verbindliche Arbeitsregeln
 
@@ -127,6 +128,7 @@ PHASE: User/Admin Master Core Implementierung
 - Developer-Login: lokal konfigurierbarer Bootstrap-Password-Mechanismus ergänzt, ohne echte Secrets im Repository
 - UI-/Preview-Test: realer Browser-Login, User-App, Admin-App, Developer-App und Logout im lokalen Preview validiert
 - Master UI: `index.html`, `admin.html` und `dev.html` sind tatsächlich getrennte Oberflächen
+- Navigation: Top-Navigation verifiziert, statt linke Seitenleiste; aktive Menüeinträge und responsive Verhalten wurden im Browser getestet
 - Implementierung des Master-Cores: geprüft und bereit für Freeze Review
 - Freeze: nicht durchgeführt
 - GitHub-Synchronisierung: aktueller Codespace-Stand wurde auf origin/main veröffentlicht
@@ -173,7 +175,8 @@ Weitere Eigenschaften:
 - Der Core wurde für die UI nicht umgebaut; die Oberflächen sind Consumer der vorhandenen APIs.
 - Die zentrale CatchTrack-Session wird local-preview-persistiert, ohne das Passwort selbst im Klartext zu speichern. Seitenwechsel zwischen `index.html`, `admin.html` und `dev.html` bleiben mit derselben Session verbunden.
 - Die Berechtigung für Admin/Developer wird beim direkten Aufruf erneut aus dem aktuellen Auth- und User-State geprüft; ein zweiter Login wird nicht ausgelöst.
-- Designgrundlage bleibt `style.css`: helle, professionelle, responsive Web-App mit Sidebar-Menü und zentraler Content-Fläche.
+- Designgrundlage bleibt `style.css`: helle, professionelle, responsive Web-App mit Top-Navigation und zentralem Content-Bereich.
+- Das User-Menü wird dynamisch aus Rollen, Permissions und registrierten Modulen erzeugt; die Navigation bleibt ohne duplicate login und ohne eigene Berechtigungsquelle.
 
 ## Master UI View-/Content-Architektur
 
@@ -213,6 +216,7 @@ Ergebnis des letzten vollständigen Laufs am 2026-08-15:
 
 - `node tests/user-admin-core.test.js`: 2 Tests, 2 pass, 0 fail
 - `npx playwright test tests/master-ui.spec.js --reporter=list`: 6 Tests, 6 passed, 0 failed
+- Layout-Verifikation: Top-Navigation wurde im echten Browser-Run erneut geprüft, ohne Functional Regression
 
 Status: Master-UI-Vertrag und Browser-Tests stimmen überein; beide Testsuiten sind tatsächlich grün. Die Green-Claim basiert auf dem erfolgreichen realen Browser-Run und nicht auf einer vorab dokumentierten Vermutung.
 
