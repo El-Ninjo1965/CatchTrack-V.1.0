@@ -93,8 +93,7 @@ test.describe('Developer', () => {
 
     await page.click('#adminMenu [data-view="admin:link"]');
     await expect(page).toHaveURL(/admin\.html$/);
-
-    await loginIntoShell(page, DEVELOPER.username, DEVELOPER.password);
+    await expect(page.locator('#authPanel')).toHaveClass(/hidden/);
     await expect(page.locator('body')).toHaveAttribute('data-page', 'admin');
     await expect(page.locator('#mainContent')).toContainText('Administration Dashboard');
 
@@ -123,8 +122,7 @@ test.describe('Developer', () => {
 
     await page.click('#developerMenu [data-view="developer:link"]');
     await expect(page).toHaveURL(/dev\.html$/);
-
-    await loginIntoShell(page, DEVELOPER.username, DEVELOPER.password);
+    await expect(page.locator('#authPanel')).toHaveClass(/hidden/);
     await expect(page.locator('body')).toHaveAttribute('data-page', 'developer');
     await expect(page.locator('#mainContent')).toContainText('Core Status');
 
@@ -174,7 +172,6 @@ test.describe('Normal user', () => {
     await expect(page.locator('#developerSection')).toHaveClass(/hidden/);
 
     await page.goto(`${BASE_URL}/admin.html`);
-    await login(page, username, '');
     await expect(page.locator('#accessDenied')).toBeVisible();
     await expect(page.locator('#accessDenied')).toContainText('Zugriff verweigert');
     await expect(page.locator('#appShell')).toHaveClass(/hidden/);
@@ -183,17 +180,37 @@ test.describe('Normal user', () => {
     await expect(page).toHaveURL(/index\.html$/);
 
     await page.goto(`${BASE_URL}/dev.html`);
-    await login(page, username, '');
     await expect(page.locator('#accessDenied')).toBeVisible();
     await expect(page.locator('#accessDenied')).toContainText('Zugriff verweigert');
     await expect(page.locator('#appShell')).toHaveClass(/hidden/);
 
     await page.goto(BASE_URL);
-    await expect(page.locator('#authPanel')).toBeVisible();
-    await loginIntoShell(page, username, '');
+    await expect(page.locator('#appShell')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#mainContent')).toContainText('Dashboard');
     await page.click('#logoutBtn');
     await expect(page.locator('#authPanel')).toBeVisible();
   });
+});
+
+test('session persists across user, admin and developer surfaces without a second login', async ({ page }) => {
+  await page.goto(BASE_URL);
+  await setDeveloperPassword(page, DEVELOPER.password);
+  await page.reload();
+  await loginIntoShell(page, DEVELOPER.username, DEVELOPER.password);
+
+  await page.goto(`${BASE_URL}/admin.html`);
+  await expect(page.locator('#authPanel')).toHaveClass(/hidden/);
+  await expect(page.locator('body')).toHaveAttribute('data-page', 'admin');
+  await expect(page.locator('#mainContent')).toContainText('Administration Dashboard');
+
+  await page.goto(`${BASE_URL}/dev.html`);
+  await expect(page.locator('#authPanel')).toHaveClass(/hidden/);
+  await expect(page.locator('body')).toHaveAttribute('data-page', 'developer');
+  await expect(page.locator('#mainContent')).toContainText('Core Status');
+
+  await page.goto(BASE_URL);
+  await page.click('#logoutBtn');
+  await expect(page.locator('#authPanel')).toBeVisible();
 });
 
 test('dynamically registered modules appear in the user menu', async ({ page }) => {

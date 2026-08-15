@@ -54,6 +54,100 @@
         return safeUser;
     };
 
+    const SESSION_STORAGE_KEY = 'catchtrack.auth.session';
+
+    const readStoredSession = () => {
+        if (typeof localStorage === 'undefined') {
+            return null;
+        }
+
+        try {
+            const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+            if (!raw) {
+                return null;
+            }
+
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') {
+                return null;
+            }
+
+            if (parsed.session && typeof parsed.session === 'object') {
+                return parsed;
+            }
+        } catch (error) {
+            // Ignore invalid persisted session payloads.
+        }
+
+        return null;
+    };
+
+    const persistStoredSession = (session, user) => {
+        if (typeof localStorage === 'undefined') {
+            return;
+        }
+
+        if (!session || !user) {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return;
+        }
+
+        const safeUser = normalizeUserRecord(user);
+        if (!safeUser) {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return;
+        }
+
+        const payload = {
+            session: {
+                sessionId: session.sessionId,
+                userId: session.userId,
+                issuedAt: session.issuedAt,
+                expiresAt: session.expiresAt,
+                status: session.status || 'active'
+            },
+            user: safeUser
+        };
+
+        try {
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
+        } catch (error) {
+            // Storage is intentionally best-effort for preview mode.
+        }
+    };
+
+    const restoreStoredSession = () => {
+        const payload = readStoredSession();
+        if (!payload || !payload.session || !payload.user) {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return false;
+        }
+
+        const session = payload.session;
+        const expiresAt = session.expiresAt ? new Date(session.expiresAt).getTime() : 0;
+        if (session.status !== 'active' || !session.sessionId || !session.userId || (expiresAt && expiresAt <= Date.now())) {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return false;
+        }
+
+        const user = normalizeUserRecord(payload.user);
+        if (!user) {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+            return false;
+        }
+
+        CoreAuth.sessions.set(session.sessionId, session);
+        CoreAuth.currentSession = session;
+        CoreAuth.currentUser = user;
+
+        if (window.UserModule) {
+            window.UserModule.currentUser = user;
+            window.UserModule.currentSession = session;
+        }
+
+        return true;
+    };
+
     const CoreAuth = {
         initialized: false,
         sessions: new Map(),
@@ -66,6 +160,10 @@
             }
 
             this.initialized = true;
+
+            if (typeof localStorage !== 'undefined') {
+                restoreStoredSession();
+            }
 
             if (window.Core) {
                 window.Core.emit('auth:initialized', {
@@ -211,6 +309,12 @@
             this.sessions.set(sessionId, session);
             this.currentSession = session;
             this.currentUser = normalizeUserRecord(user);
+            persistStoredSession(session, this.currentUser);
+
+            if (window.UserModule) {
+                window.UserModule.currentUser = this.currentUser;
+                window.UserModule.currentSession = session;
+            }
 
             if (window.Core) {
                 window.Core.emit('auth:authenticated', {
@@ -242,6 +346,15 @@
             const previousUser = this.currentUser;
             this.currentSession = null;
             this.currentUser = null;
+
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            }
+
+            if (window.UserModule) {
+                window.UserModule.currentUser = null;
+                window.UserModule.currentSession = null;
+            }
 
             if (window.Core) {
                 window.Core.emit('auth:logout', {

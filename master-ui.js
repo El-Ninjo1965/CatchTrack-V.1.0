@@ -23,7 +23,10 @@
 
   const getCurrentUser = () => {
     if (window.UserModule && typeof window.UserModule.getCurrentUser === 'function') {
-      return window.UserModule.getCurrentUser();
+      const user = window.UserModule.getCurrentUser();
+      if (user) {
+        return user;
+      }
     }
     if (window.CoreAuth && typeof window.CoreAuth.getCurrentUser === 'function') {
       return window.CoreAuth.getCurrentUser();
@@ -652,6 +655,15 @@
 
   const init = async () => {
     await ensureRuntime();
+
+    if (window.CoreAuth && typeof window.CoreAuth.init === 'function') {
+      window.CoreAuth.init();
+    }
+
+    if (window.UserModule && typeof window.UserModule.init === 'function') {
+      window.UserModule.init();
+    }
+
     renderLoginState();
     renderSummary();
     if (pageType === 'user') {

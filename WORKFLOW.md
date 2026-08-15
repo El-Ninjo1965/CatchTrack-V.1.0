@@ -137,7 +137,7 @@ Status: SYNCHRONISIERT MIT GITHUB
 
 - Repository: CatchTrack-V.1.0
 - Branch: main
-- Relevanter Commit der aktuellen verifizierten Änderung: e3b0586085ff522d136cd8512b501da7c91e428e
+- Relevanter Commit der aktuellen verifizierten Änderung: wird nach dem finalen Commit und Push in dieser Datei ergänzt
 - Remote-Status: `git rev-parse HEAD` und `git rev-parse origin/main` sind identisch
 - Verifiziert am 2026-08-15
 - Workflow-Dokumentation: in dieser Datei aktualisiert und mit dem aktuellen Commit synchronisiert
@@ -171,7 +171,8 @@ Weitere Eigenschaften:
 - Menüs werden aus aktuellem User, Rollen, Permissions, `CoreAccess`, `ModuleRegistry` und `ModuleManager` aufgebaut.
 - Module erscheinen nur, wenn sie registriert, aktiv und permission-basiert freigegeben sind.
 - Der Core wurde für die UI nicht umgebaut; die Oberflächen sind Consumer der vorhandenen APIs.
-- Sessions sind aktuell laufzeitgebunden (kein persistenter Session-Store); jeder Seitenaufruf erfordert eine gültige Anmeldung.
+- Die zentrale CatchTrack-Session wird local-preview-persistiert, ohne das Passwort selbst im Klartext zu speichern. Seitenwechsel zwischen `index.html`, `admin.html` und `dev.html` bleiben mit derselben Session verbunden.
+- Die Berechtigung für Admin/Developer wird beim direkten Aufruf erneut aus dem aktuellen Auth- und User-State geprüft; ein zweiter Login wird nicht ausgelöst.
 - Designgrundlage bleibt `style.css`: helle, professionelle, responsive Web-App mit Sidebar-Menü und zentraler Content-Fläche.
 
 ## Master UI View-/Content-Architektur
@@ -211,7 +212,7 @@ Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://127.0.0.1:8
 Ergebnis des letzten vollständigen Laufs am 2026-08-15:
 
 - `node tests/user-admin-core.test.js`: 2 Tests, 2 pass, 0 fail
-- `npx playwright test tests/master-ui.spec.js --reporter=list`: 5 Tests, 5 passed, 0 failed
+- `npx playwright test tests/master-ui.spec.js --reporter=list`: 6 Tests, 6 passed, 0 failed
 
 Status: Master-UI-Vertrag und Browser-Tests stimmen überein; beide Testsuiten sind tatsächlich grün. Die Green-Claim basiert auf dem erfolgreichen realen Browser-Run und nicht auf einer vorab dokumentierten Vermutung.
 
