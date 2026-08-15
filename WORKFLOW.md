@@ -1101,6 +1101,188 @@ nicht auf die Dateien.
 11. **OFFENE ENTSCHEIDUNG** – Umgang mit dem zweiten Auth-Pfad in `service-manager.js`
     (dieser liegt in einer bereits als stabil geltenden Datei)
 
+## 11 OFFENE ENTSCHEIDUNGEN – USER & ADMIN MASTER CORE
+
+Die folgenden 11 Punkte sind die dokumentierten offenen Architekturentscheidungen
+für die Master-Komponenten `core-user.js` und `core-admin.js`. Keine dieser
+Entscheidungen ist als beschlossen markiert, solange sie nicht ausdrücklich
+verabschiedet wurde.
+
+### 1. User-ID-Konzept: Hybridmodell vs. rein sequenziell
+- Thema: Technische Identität und sichtbare Referenz des Benutzers
+- bisherige Ausgangsannahme: Die User-ID soll im Format `USR-000001` dauerhaft und
+  eindeutig sein, ohne separate technische Primär-ID.
+- technischer Befund: Fortlaufende, aufzählbare IDs sind für Browser- und später
+  Server-/Sync-Szenarien technisch fragil. Die ID ist nicht dauerhaft unabhängig
+  von der Gesamtzahl der Benutzer, und `Date.now()`-basierte IDs sind kollisionsfähig.
+- Empfehlung: Für die Master-API eine technische Primär-ID wie `usr_<UUIDv4>`
+  verwenden, zusätzlich eine abgeleitete, lesbare Anzeige-ID `USR-000001` bereitstellen,
+  aber Fremdschlüssel niemals auf der Anzeige-ID basieren lassen.
+- mögliche Alternative: Reines sequenzielles Format `USR-000001` als einzige ID.
+- Konsequenz für die spätere Master-Implementierung: Das Datenmodell und alle
+  Referenzfelder müssen klar zwischen `userId` und `userRef` trennen.
+- Status: OFFEN
+
+### 2. Aufteilung der Verantwortung: volle Trennung vs. minimale Trennung
+- Thema: Architektur der Master-Komponenten und der dahinterliegenden Core-Komponenten
+- bisherige Ausgangsannahme: `core-user.js` und `core-admin.js` sollen als Master-Fassaden
+  stabil bleiben, während fachliche Logik in zusätzliche Core-Komponenten ausgelagert wird.
+- technischer Befund: Die aktuelle Implementierung vermischt Identität, Auth,
+  Rechteprüfung und Admin-Funktionen in denselben Objekten. Dieses Design ist für
+  ein späteres Freeze zu breit und nicht langfristig stabil.
+- Empfehlung: Die Master-Komponenten auf API- und Modellvertrag begrenzen und
+  konkrete Verantwortung in separate Komponenten auslagern, etwa `core-identity`,
+  `core-auth`, `core-access`, `core-audit`.
+- mögliche Alternative: Minimalvariante mit nur zwei Auslagerungen (`core-auth` und
+  `core-audit`) und die restliche Verantwortung in den Master-Dateien belassen.
+- Konsequenz für die spätere Master-Implementierung: Die öffentliche API bleibt klein,
+  aber die technischen Abläufe werden hinter der Fassade austauschbar und erweiterbar.
+- Status: OFFEN
+
+### 3. Rolle `owner`: eigene Rolle vs. `protected`-Flag
+- Thema: Sonderrolle für Letztverantwortung und Schutz kritischer Accounts
+- bisherige Ausgangsannahme: Eine Rolle `owner` könnte als zusätzliches Verwaltungskonstrukt
+  eingeführt werden.
+- technischer Befund: Ein `owner` ist nur dann sinnvoll, wenn ein Mandantenmodell,
+  ein System-Admin-Reservat oder vererbbare Superrechte wirklich benötigt werden.
+  Für eine allgemeine Framework-Schicht ist das oft unnötig und schwer zu begrenzen.
+- Empfehlung: Eine generische Schutzlogik mit `protected: true` oder einer
+  vergleichbaren Metadatenregel bevorzugen und nur dann eine separate Rolle `owner`
+  einführen, wenn ein klarer fachlicher Bedarf entsteht.
+- mögliche Alternative: Zusätzliche Rolle `owner` mit separat definierten Rechten.
+- Konsequenz für die spätere Master-Implementierung: Die Core-Rollenliste bleibt schlank,
+  und kritische Benutzer können geschützt werden, ohne die Rollenhierarchie unnötig zu verzerren.
+- Status: OFFEN
+
+### 4. Mindestlänge des Benutzernamens: 1 vs. 3 Zeichen
+- Thema: Eindeutigkeit und Nutzbarkeit des verwendbaren Namensraums
+- bisherige Ausgangsannahme: Der Benutzername kann kurz sein, und ein Beispiel wie `L`
+  ist technisch ausreichend.
+- technischer Befund: Eine sehr kurze Mindestlänge erschwert Zustände wie Mehrdeutigkeit,
+  UI-Styling, historische Referenzen und menschlich lesbare Benennungen. Gleichzeitig
+  ist die Prämisse „ein Zeichen ist genug" heute nicht als robust genug anzusehen.
+- Empfehlung: Eine Mindestlänge von 3 Zeichen festlegen, sofern nicht ein sehr enger,
+  explizit definierter Anwendungsfall etwas anderes erfordert.
+- mögliche Alternative: Mindestlänge 1, damit der Benutzername extrem kurz sein kann.
+- Konsequenz für die spätere Master-Implementierung: Validierungslogik und Datenmodell
+  müssen die zulässige Länge vor dem Einfrieren festlegen.
+- Status: OFFEN
+
+### 5. Mehrfachrollen: `roles[]` jetzt vs. später
+- Thema: Modell von Rollen und berechneter effektiver Berechtigung
+- bisherige Ausgangsannahme: Eine primäre Rolle reicht für den ersten Stand;
+  Mehrfachrollen können später ergänzt werden.
+- technischer Befund: Wenn Benutzer mit mehreren Rollen gleichzeitig umgehen müssen,
+  ist `role` als einzelne String-Variable unzureichend. Das wirkt sich auf Rechte
+  und Audit aus, sobald komplexere Arbeitsabläufe entstehen.
+- Empfehlung: `role` als primäre Rolle beibehalten, aber `roles[]` als normalisierte,
+  erweiterbare Liste mit definieren, damit die effektive Berechtigung nicht auf einen
+  einzelnen String festgelegt wird.
+- mögliche Alternative: Nur eine Rolle, keine `roles[]`-Liste, dafür mit einem
+  eigenen Permission-Set pro Benutzer.
+- Konsequenz für die spätere Master-Implementierung: Das Datenmodell, die Rechtesemantik
+  und die Audit-Events müssen bereits eine Mehrfachrollen-Strategie berücksichtigen.
+- Status: OFFEN
+
+### 6. Event-Namensschema: `user:*` vs. `user-module:*`
+- Thema: Einfache, konsistente Event-Namespace-Strategie im frameworkweiten Bus
+- bisherige Ausgangsannahme: Ein einzelnes Namensschema für User- und Admin-Events
+  ist ausreichend, und das System kann seine Namenskonventionen selbst wählen.
+- technischer Befund: Heute existieren parallel `user:*` und `user-module:*` sowie
+  `auth:*` und `admin-module:*`. Diese scheinbar redundanten Namespaces erzeugen
+  doppelte Signalquellen und machen spätere Beobachtbarkeit schwieriger.
+- Empfehlung: Eindeutiges Event-Schema definieren, bevorzugt auf fachliche Kernbereiche
+  wie `user:*`, `auth:*`, `admin:*`, `module:*`, statt auf Implementierungsnamen der
+  Datei oder des Moduls.
+- mögliche Alternative: Modul-/Dateiname als Präfix beibehalten (`user-module:*`),
+  um den Kontext an der Entstehungsstelle zu verankern.
+- Konsequenz für die spätere Master-Implementierung: Event-Listener und Audit-Korrelation
+  müssen von vornherein auf einen konsistenten Namespace festgelegt werden.
+- Status: OFFEN
+
+### 7. Feature-Flags für User/Admin: Pflichtkomponenten vs. optionale Komponenten
+- Thema: `userModule` und `adminModule` als Core-Features
+- bisherige Ausgangsannahme: User und Admin könnten als optionale Features aktiviert
+  oder deaktiviert werden.
+- technischer Befund: Der Auftrag fordert User und Admin als Core-Bestandteile und als
+  Kernanforderung jeder Anwendung. Wenn sie mit Feature-Flags deaktivierbar sind,
+  widerspricht das den angestrebten Sicherheits- und Architekturprinzipien.
+- Empfehlung: User und Admin als Pflichtbestandteile des Frameworks behandeln und die
+  Feature-Flags entfernen oder auf reine Komfortfunktionen reduzieren, die keine
+  Zugriffskontrolle beeinflussen.
+- mögliche Alternative: Feature-Flags beibehalten, aber nur als Entwicklungsumgebungs-Flag,
+  nicht als Sicherheits- oder Laufzeitentscheidungen.
+- Konsequenz für die spätere Master-Implementierung: Die Initialisierung darf den Core
+  nicht mit optionalen, aber erforderlichen Komponenten auflösen; sie muss die gesetzten
+  Framework-Pflichtbestandteile verifizieren.
+- Status: OFFEN
+
+### 8. Event-Historie im EventBus: gewünscht vs. nicht gewünscht
+- Thema: Persistierte Event-Chronik als Diagnose- und Audit-Hilfsmittel
+- bisherige Ausgangsannahme: Der Event-Bus kann ohne Historie auskommen, da Logs und
+  Fehlerpuffer bereits existieren.
+- technischer Befund: Für Diagnose, Reproduktion und Sicherheitsüberprüfung ist eine
+  Event-Historie wertvoll. Ohne sie fehlen spätere Entwickler und Support-Teams an
+  wichtigem Kontext.
+- Empfehlung: Eine optionale, begrenzte Event-Historie im EventBus als Ringpuffer
+  einführen, aber nur mit klar definierten Speichergrenzen und Datenschutzregeln.
+- mögliche Alternative: Keine Event-Historie; Diagnose nur über `ErrorLog`,
+  `Audit` und `ServiceManager.LoggingService`.
+- Konsequenz für die spätere Master-Implementierung: Der EventBus muss als beobachtbar
+  und dokumentierbar spezifiziert sein, nicht nur als synchroner Broadcast-Mechanismus.
+- Status: OFFEN
+
+### 9. Modul-Update-Mechanismus: `ModuleManager.update()` erforderlich?
+- Thema: Aktualisierung von Modulen im Framework
+- bisherige Ausgangsannahme: Modulverwaltung umfasst Installation, Aktivierung,
+  Deaktivierung und Entfernung; Aktualisierung kann später dazukommen.
+- technischer Befund: Ein Admin-Bereich, der Module verwaltet, aber kein Update-Konzept
+  hat, ist in der Praxis unvollständig. Besonders bei Versionskontrolle und Abhängigkeiten
+  entsteht schnell technische Schuldenbildung.
+- Empfehlung: `ModuleManager.update()` als feste, aber separate Kernfunktion definieren,
+  statt sie im Admin zu implementieren. Der Admin ruft nur die Methode auf.
+- mögliche Alternative: Updates explizit nicht unterstützen und nur Installation plus
+  Deaktivierung/Entfernung zulassen.
+- Konsequenz für die spätere Master-Implementierung: Das Modullifecycle-Modell muss eine
+  Versionierung und Aktualisierungskette definieren, auch wenn sie zunächst nur als Stub
+  oder Schnittstelle existiert.
+- Status: OFFEN
+
+### 10. Fehlerverhalten: Exceptions vs. Ergebnisobjekte
+- Thema: Einheitliches Verhalten für erwartbare Fehlerzustände in User/Admin-API
+- bisherige Ausgangsannahme: Die API kann je nach Methode Ausnahme, `null`, `false`
+  oder ein gemischtes Verhalten verwenden.
+- technischer Befund: Das ist für ein später einzufrierendes Framework zu undefiniert.
+  Es verhindert verlässliche Rechteprüfung, Diagnose und Fehlerbehandlung.
+- Empfehlung: Ein konsistentes Fehler- und Ergebnismodell für erwartete Zustände definieren,
+  etwa `Result`-Objekte oder eindeutig dokumentierte Exceptions für kritische Fälle.
+- mögliche Alternative: Die API wirft nur Exceptions und verwendet für „nicht gefunden"
+  oder „nicht erlaubt" speziell definierte Fehlerklassen.
+- Konsequenz für die spätere Master-Implementierung: Die öffentliche API wird verlässlich,
+  testbar und für spätere UI-Schichten brauchbar, ohne implizite Semantik zu erfinden.
+- Status: OFFEN
+
+### 11. Zweiter Auth-Pfad in `service-manager.js`: behalten, bereinigen oder deprecate
+- Thema: Dualität zwischen `UserModule.authenticate()` und `ServiceManager.AuthService.authenticate()`
+- bisherige Ausgangsannahme: Beide Pfade können nebenher existieren, solange sie in der
+  Praxis dieselbe Logik übernehmen.
+- technischer Befund: Das ist eine doppelte, konkurrierende Wahrheit über den aktuellen
+  Benutzer. Das ist bei der späteren Einfrierung des Master-Cores eine unmittelbare
+  Sicherheits- und Wartungsrisikoquelle.
+- Empfehlung: Den zweiten Auth-Pfad als veraltet kennzeichnen und bis zum Freeze auf eine
+  einheitliche Signatur und einen einheitlichen Zugriffspunkt reduzieren; die eigentliche
+  Authentifizierung gehört in `core-auth`.
+- mögliche Alternative: Beide Pfade ausdrücklich parallel unterstützen, aber mit einer
+  klaren Priorität und einem `impersonate()`-Begleitpfad für administrative Fälle.
+- Konsequenz für die spätere Master-Implementierung: Der Framework-Start, die Session,
+  die Rechteprüfung und der Audit-Stream müssen auf eine einzige Quelle für die
+  Identität ausgerichtet sein.
+- Status: OFFEN
+
+Diese 11 Punkte bilden den verbindlichen Entscheidungskatalog für den nächsten
+Architektur-Schritt. Sie sind als offene Entscheidungen dokumentiert und noch nicht
+mit einem Beschluss abgeschlossen.
+
 ## 8. Abschließende technische Empfehlung
 
 Die Grundidee ist tragfähig. User und Admin gehören in den Core, und die
