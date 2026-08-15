@@ -233,6 +233,45 @@ WORKFLOW_USER_ADMIN_IMPLEMENTATION.md — tatsächliche Implementierungsdokument
 - Audit- und Sicherheitsmodell als klare Architekturbedarfe bestätigt
 - Detail-Review und Entscheidungslogik in eigene Workflow-Datei ausgelagert
 
+## Empfohlene nächste Erweiterungen und Qualitätsmaßnahmen
+
+Die aktuelle Architektur ist stabil und verifiziert; nachfolgend die wichtigsten empfohlenen nächsten Schritte, damit das System aus Sicht von Produkt, Security und Betrieb weiter ausgebaut werden kann:
+
+1. Server-/API-Transition vorbereiten
+   - Der aktuelle Session-Store ist browser-local und damit preview-tauglich.
+   - Nächster Schritt: Session-Token auf serverseitige API-Auswertung umstellen, ohne die Core-Interfaces zu brechen.
+   - Empfehlung: zentrale Token-/Session-Schicht in `core-auth` absichern und nur noch auf serialisierte Session-Daten aufsetzen.
+
+2. Benutzer- und Rollenverwaltung konkret ausbauen
+   - Admin-Bereich um echte CRUD-Formulare erweitern: Benutzer anlegen, bearbeiten, deaktivieren, Rollen zuweisen, Status ändern.
+   - Rollenverwaltung um benutzerdefinierte Rollen und eine Rollen-/Permission-Matrix erweitern.
+   - Permission-Ansicht als effektive Berechnungslogik ausgeben, nicht als eigene Parallel-Engine.
+
+3. Sicherheit und Session-Hardening
+   - HTTPS/secure-cookie-Umstellung für echte Server-Session vorbereiten.
+   - CSRF-, XSS- und Session-Timeout-Mechanismen für die API-Schicht definieren.
+   - Keine jeden Benutzer- oder Developer-Seed-Informationen im Frontend speichern; nur Token/Session-IDs und minimal nötige User-Metadaten.
+
+4. Mobile UX weiter optimieren
+   - Navigation top-aligned beibehalten und auf kleine Geräte mit kompakten Gruppen und horizontalem Scroll-Overflow verfeinern.
+   - Fokus auf sichtbare Prioritäten: Dashboard, Module, Administration, Developer.
+   - Touch-Target-Größen und Lesbarkeit für Smartphone-Layout weiter verifizieren.
+
+5. Teststrategie erweitern
+   - Zusätzliche Playwright-Checks für Rollenwechsel, Session-Expiry und direkte Zugriffs-Links ergänzen.
+   - Sichtbarkeits- und Empty-State-Tests für Admin-/Audit-/Permission-Ansichten ergänzen.
+   - Regressionstests vor jedem größeren UI-/Permission-Release durchführen.
+
+6. Architektur-/Code-Qualität
+   - Guard-Clauses und zentrale `isAuthenticated`, `hasAdminPermission`, `hasDeveloperPermission`-Helpers weiter konsolidieren.
+   - Admin-/Developer-Gate-Layer bewusst als Policy-Check auf der UI-Seite und als Core-Access-Check auf der Logikseite halten.
+   - Keine UI-Logik als alleinige Sicherheitsinstanz nutzen; damit bleibt eine saubere spätere API-Umsetzung möglich.
+
+7. Produkt-/UX-Verbesserung
+   - Module-Übersicht und Audit-Ansichten mit Filter, Suche und Sortierung ausstatten.
+   - Aktive Session-/Rollen-Status im Header sichtbar machen, ohne Sicherheitsinformationen zu泄men.
+   - Erfolgs- und Fehlerzustände konsistent über alle Bereiche standardisieren.
+
 ## Detail-Workflow-Verzeichnis
 
 - WORKFLOW_USER_ADMIN_REVIEW.md — vollständiger Review zu User & Admin Master Core
