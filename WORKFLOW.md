@@ -166,42 +166,18 @@ Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:8
 
 - Anwendung startet erfolgreich im Browser
 - Startseite/Login funktioniert
+- `index.html` entspricht dem aktuellen User-App-Contract mit Master-UI-Shell
+- `admin.html` und `dev.html` sind validierte eigene Route-Apps mit Berechtigungs-Checks
 - Bootstrap-Developer `USR-000001` wird als geschützter `developer`-Benutzer bereitgestellt
 - Developer-Login mit lokal gesetztem Bootstrap-Passwort funktioniert
-- User-Bereich zeigt den aktuellen Benutzer mit `Username`, `displayId`, `Rolle`, `Status` und Logout an
-- User-Menü wird dynamisch aus `ModuleRegistry`/`ModuleManager` sowie aktuellen Berechtigungen erzeugt
-- aktive Module werden mit `ModuleManager`/`ModuleRegistry` erkannt und im UI sichtbar gemacht
-- Admin-Bereich ist für den Developer mit `system:view` bzw. `user:write` zugänglich
-- Developer-Bereich ist nur mit den passenden Permissions sichtbar
-- normale Test-User sehen automatisch ein reduziertes Menü und keinen Admin-/Developer-Zugriff
-- Logout schaltet den Zustand wieder auf `logged out` zurück
-- Console und Systemstatus zeigen die tatsächlichen Core-Komponenten an
-- Die aktive View- und Content-Architektur wechselt den Hauptbereich korrekt je nach Menüauswahl
-- Keine offensichtlichen JavaScript-/Runtime-Fehler im Browser-Flow
-- Keine Auth-/Permission-Bypass-Fehler innerhalb des validierten Szenarios
+- User-, Admin- und Developer-Ansichten sind im aktuellen Master-UI-Vertrag implementiert und funktionieren
+- normale Test-User sehen ein reduziertes Menü und keinen Admin-/Developer-Zugriff
+- direkter Zugriff auf `admin.html` und `dev.html` verweigert ohne Berechtigung korrekt
+- Dashboard, Profil und dynamische Module funktionieren im aktuellen UI-Vertrag
+- Logout schaltet den Zustand wieder auf Login-/Guest-Zustand zurück
+- Browser-Tests basieren auf dem aktuellen Master-UI-Vertrag und sind grün
 
-Status: Preview praktisch getestet, keine Freeze-Aktion durchgeführt.
-
-## Praktischer Browser-/Preview-Teststatus
-
-Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:8000:
-
-- Anwendung startet erfolgreich im Browser
-- Startseite/Login funktioniert
-- Bootstrap-Developer `USR-000001` wird als geschützter `developer`-Benutzer bereitgestellt
-- Developer-Login mit lokal gesetztem Bootstrap-Passwort funktioniert
-- User-Bereich zeigt den aktuellen Benutzer mit `Username`, `displayId`, `Rolle`, `Status` und Logout an
-- User-Menü wird dynamisch aus `ModuleRegistry`/`ModuleManager` sowie aktuellen Berechtigungen erzeugt
-- aktive Module werden mit `ModuleManager`/`ModuleRegistry` erkannt und im UI sichtbar gemacht
-- Admin-Bereich ist für den Developer mit `system:view` bzw. `user:write` zugänglich
-- Developer-Bereich ist nur mit den passenden Permissions sichtbar
-- normale Test-User sehen automatisch ein reduziertes Menü und keinen Admin-/Developer-Zugriff
-- Logout schaltet den Zustand wieder auf `logged out` zurück
-- Console und Systemstatus zeigen die tatsächlichen Core-Komponenten an
-- Keine offensichtlichen JavaScript-/Runtime-Fehler im Browser-Flow
-- Keine Auth-/Permission-Bypass-Fehler innerhalb des validierten Szenarios
-
-Status: Preview praktisch getestet, keine Freeze-Aktion durchgeführt.
+Status: Playwright-Browser-Testlauf erfolgreich validiert; aktuelle Master-UI-Struktur stimmt mit den Tests überein.
 
 ## Master-Status
 
