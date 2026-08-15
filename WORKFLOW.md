@@ -86,9 +86,9 @@ WORKFLOW_USER_ADMIN_APPROVED.md
 Pfad:
 /workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_APPROVED.md
 Commit-SHA:
-[noch nicht commitet]
+546ebc0a78a60156e9900a687e86c65a3edab796
 Status:
-VERFÜGBAR – genehmigte Architekturdefinition
+VORHANDEN UND SYNCHRONISIERT MIT origin/main – genehmigte Architekturdefinition
 
 ## Architektur-Reviews
 
@@ -103,7 +103,7 @@ Status:
 BESCHLOSSEN – 11 Punkte genehmigt, Bewertung dokumentiert.
 
 Referenz- und Auffindbarkeitsregel:
-WORKFLOW.md → WORKFLOW_USER_ADMIN_APPROVED.md → [Commit-SHA nach finalem Commit] → Git Tree → Datei
+WORKFLOW.md → WORKFLOW_USER_ADMIN_APPROVED.md → 546ebc0a78a60156e9900a687e86c65a3edab796 → Git Tree → Datei
 WORKFLOW.md → WORKFLOW_USER_ADMIN_REVIEW.md → 5baee91ed88dc788769f047073566af4d9007072 → Git Tree → Datei
 
 ## Arbeitsphase
@@ -131,8 +131,8 @@ PHASE: Architekturbestätigung / genehmigte Master-Spezifikation
 - WORKFLOW_USER_ADMIN_REVIEW.md — vollständiger Review zu User & Admin Master Core
   - Pfad: /workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_REVIEW.md
   - Commit-SHA: 5baee91ed88dc788769f047073566af4d9007072
-  - Status: synchronisiert mit origin/main
+  - Status: vorhanden und synchronisiert mit origin/main
 - WORKFLOW_USER_ADMIN_APPROVED.md — genehmigte Architekturspezifikation für User & Admin Master Core
   - Pfad: /workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_APPROVED.md
-  - Commit-SHA: [wird nach dem finalen Commit ergänzt]
-  - Status: dokumentiert, noch nicht in origin/main synchronisiert
+  - Commit-SHA: 546ebc0a78a60156e9900a687e86c65a3edab796
+  - Status: vorhanden und synchronisiert mit origin/main
