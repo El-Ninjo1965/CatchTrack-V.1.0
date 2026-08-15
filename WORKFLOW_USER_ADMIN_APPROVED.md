@@ -244,46 +244,99 @@ Admin Facade:
 - UI kann Ergebnisse anzeigen, ohne die intern zugrunde liegende Architektur zu kennen.
 - Keine Sicherheits-Checks werden als `false`-Werte versteckt.
 
-## 4. Technische Follow-ups
+## 4. Technische Follow-ups – Vorimplementierungsentscheidungen
 
-### FOLLOW-UP / TECHNISCHE LÜCKE 1
+### 4.1 AUTH-DUPLIKAT
 
-Doppelte Auth- und Session-Wahrheiten existieren derzeit noch im Repository. Die Architektur löst das durch die zentrale `core-auth`-Regel, aber die vorhandenen Legacy-Pfade müssen vor der Implementierung bereinigt werden.
+Die Architekturentscheidung ist eindeutig: `core-auth` ist die einzige Authentifizierungswahrheit.
+Ein zweiter Auth-Pfad ist hier nicht zulässig.
 
-Empfehlung:
-- `service-manager.js` als legacy/deprecated behandeln
-- Überschneidungen mit `UserModule` vor der Implementierung auflösen
-- keine neue Auth-Logik parallel zu `core-auth` etablieren
+Umsetzungsvorgaben:
+- `service-manager.js` wird als Legacy-/Compatibility-Wrapper behandelt, nicht als zweite Authentifizierungsquelle.
+- `AuthService.authenticate()` darf nur noch als Delegation an `core-auth` fungieren.
+- `UserModule.currentUser` und `ServiceManager.AuthService.currentUser` dürfen keine getrennten, parallelen Session-Status-Felder weiterführen.
+- Auth-Events bleiben auf `auth:*` begrenzt; keine parallelen `user-module:*`-Authentifizierungsereignisse als alternative Wahrheit.
+- Die zentrale Authentifizierung liefert Session-Status, User-Context und Token-/Login-Resultat.
 
-### FOLLOW-UP / TECHNISCHE LÜCKE 2
+Bevorzugte Variante:
+- `service-manager.js` erhält eine deprecation warning und darf nur noch adapterartig auf `core-auth` verweisen.
+- Das verhindert doppelte Wahrheiten beim Login/Logout und entlastet die spätere Implementierung von einem zweiten Sicherheitszustand.
 
-Persistenz und asynchrone Datenmodelle müssen in der späteren Implementierung sauber durchgesetzt werden. Die Masterarchitektur erlaubt jetzt `async`-APIs, aber der aktuelle Code verwendet noch synchrones Verhalten in mehreren Stellen.
+FOLLOW-UP-ENTSCHEIDUNG:
+- `core-auth` ist der einzige authentifizierende Pfad.
+- Legacy Auth im Service-Manager ist nur noch Delegationsschicht und darf keine eigene Session-Logik mehr behalten.
 
-Empfehlung:
-- `async` als Standard für User-/Session-/Auth-APIs
-- Persistenz über Datenbank-/Storage-Schicht anstatt in RAM-Map
-- keine synchronen Master-APIs einfrieren
+### 4.2 ASYNCHRONE PERSISTENZ
 
-### FOLLOW-UP / TECHNISCHE LÜCKE 3
+Die Architektur verlangt `async`-fähig für alle datenberührenden User-/Admin-Operationen.
+Synchrones Verhalten ist nur zulässig, wenn es keinen Persistenz- oder Storage-Call verkapselt und keine langfristige Benutzer-/Admin-API definiert.
 
-Die Rolle `developer` und die exakten Audit-/Security-Metadaten müssen in der späteren Implementierung präzisiert werden.
+Umsetzungsvorgaben:
+- `createUser`, `getUserById`, `listUsers`, `updateUser`, `deleteUser`, `login`, `logout`, `session`-Operationen werden als `async`-APIs modelliert.
+- Persistenz über IndexedDB oder späteren Backend-Store darf dabei keine Brake-Change-Schnittstelle erzwingen.
+- Das Master-Interface darf keine synchronen Signaturen festlegen, die später nur durch Storage-Schnittstellen oder Server-Calls verzerrt werden.
+- Ergebnis- und Fehlerobjekte bleiben im zentralen Ergebnis-/Fehlermodell.
 
-Empfehlung:
-- `developer` als separaten Status/Rolle mit klarer Zweckgrenze modellieren
-- `protected` und `audit` als explizite Metadaten in der Datenstruktur definieren
-- keine generischen `owner`-Semantiken in der späteren Implementierung aufnehmen
+Bevorzugte Variante:
+- `async` wird als Standard für alle Datenbank-/Persistance-Aktionen gewählt.
+- Damit bleibt die spätere Persistenz-Implementierung kompatibel und ohne API-Breaks umsetzbar.
 
-### FOLLOW-UP / TECHNISCHE LÜCKE 4
+FOLLOW-UP-ENTSCHEIDUNG:
+- Alle benutzer- und adminbezogenen Datenoperationen werden als asynchron modelliert; die Master-Architektur erlaubt keine synchronen Persistenzsignaturen.
 
-Der Event-Ringpuffer ist erlaubt, aber seine konkrete Obergrenze und Retention müssen noch spezifiziert werden.
+### 4.3 DEVELOPER-ROLLE
 
-Empfehlung:
-- feste Obergrenze je Event-Typ
-- separate Audit- und Diagnostics-Queues
-- keine unlimitierte eventuelle Persistenz
+Die Rolle `developer` ist ein normaler, explizit berechtigter Zugriffskontext und kein eigener Sicherheitsmodus.
+Sie ist nicht mit `admin` identisch und darf keine Sonderrechte außerhalb der zentralen Access-Logik bekommen.
 
-## 5. Abschlussstatus
+Umsetzungsvorgaben:
+- `developer` ist eine Rolle im `roles[]`-Modell.
+- Die Rechte werden über `permissions[]` bzw. Access-Regeln vergeben.
+- `developer` darf Diagnose-/Debug-Access erhalten, aber nur auf Basis der zentralen Permission-Logik.
+- Das Recht auf Benutzer-/Admin-Operationen bleibt weiterhin explizit und wird nicht durch `developer` automatisch gewährt.
+- `developer` ist kein Admin-Bypass und kein eigener Superuser.
+
+Bevorzugte Variante:
+- `developer` bleibt ein normales Rollen- und Permissions-Objekt, nicht ein dedizierter Sonderfall im Admin-
+  oder Auth-Kontext.
+
+FOLLOW-UP-ENTSCHEIDUNG:
+- `developer` ist Teil des zentralen Access-Modells, nicht ein eigener Auth-/Admin-Pfad.
+
+### 4.4 EVENT-RINGPUFFER
+
+Der Event-Ringpuffer ist für Diagnose, Debugging und Audit-Unterstützung zulässig, aber streng begrenzt.
+Er ist kein Ersatz für einen Audit-Log und keine permanente Ereignis-Store-Mechanik.
+
+Umsetzungsvorgaben:
+- Maximalgröße: 256 Einträge pro Event-Namespace.
+- Ringpuffer verwirft immer die ältesten Einträge, wenn die Grenze erreicht ist.
+- Keine unkontrollierte Persistenz auf Disk oder IndexedDB.
+- Ringpuffer ist nur ein in-memory Debug-/Diagnose-Kontext innerhalb der Laufzeit.
+- Audit-Events und Debug-Events sind getrennt zu behandeln; der Ringpuffer unterstützt nur die Diagnose, nicht die primäre Audit-Wahrheit.
+
+Bevorzugte Variante:
+- 256 Einträge pro Namespace als feste, nachvollziehbare Obergrenze.
+- Das ist ausreichend für Nachvollziehbarkeit und verhindert Speicher-Leaks oder ungebremste Event-Sammlung.
+
+FOLLOW-UP-ENTSCHEIDUNG:
+- Event-Ringpuffer max. 256 Einträge pro Namespace, in-memory, keine Dauerpersistenz, ausschließlich für Diagnose/Debugging/Audit-Unterstützung.
+
+## 5. Abschlussbewertung
+
+STATUS: READY FOR USER/ADMIN MASTER CORE IMPLEMENTATION
+
+Begründung:
+- Die 11 genehmigten Architekturentscheidungen bleiben unverändert gültig.
+- Die vier dokumentierten technischen Follow-ups wurden konsistent konkretisiert und als Vorimplementierungsregeln festgelegt.
+- Es gibt keine offen gebliebenen Architektur-Blocker für die spätere User/Admin-Implementierung.
+- Keine Implementierung wurde gestartet; die Architektur ist für die nächste technische Umsetzungsphase vorbereitet.
+
+Es verbleiben keine technischen Blocker im Sinne der Master-Architektur.
+
+## 6. Abschlussstatus
 
 Die 11 Architekturentscheidungen sind genehmigt und als verbindlich festgesetzt.
+Die technischen Follow-ups wurden vor der Implementierung als klare, umsetzungsfähige Regeln konkretisiert.
 Die Implementierung selbst bleibt weiterhin offen und wird nicht eingefroren.
 Die Datei dient als Grundlage für die spätere technische Umsetzung in den Master-Komponenten.
