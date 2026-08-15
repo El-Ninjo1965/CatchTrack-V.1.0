@@ -28,6 +28,30 @@ Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist 
 - Details, die länger als die Master-Übersicht lesbar bleiben, werden ausgelagert.
 - Die Masterdatei darf klein, lesbar und vollständig einlesbar bleiben.
 
+## Dokumentations- und Git-Regel für WORKFLOW_*.md
+
+Für jede neue oder geänderte Workflow-Datei gelten die folgenden verbindlichen Regeln:
+
+1. Datei vollständig erstellen bzw. aktualisieren.
+2. Prüfen, dass die Datei tatsächlich im Repository vorhanden ist.
+3. Pfad und Zweck der Datei in WORKFLOW.md dokumentieren.
+4. Nach dem Commit die Commit-SHA in WORKFLOW.md vermerken.
+5. Änderungen committen.
+6. Auf origin/main pushen.
+7. Danach den Remote-Stand verifizieren.
+8. Sicherstellen, dass die referenzierte Datei über den Commit und den Repository-Tree eindeutig auffindbar ist.
+9. Keine WORKFLOW-Datei darf in WORKFLOW.md referenziert werden, wenn sie nicht tatsächlich im Repository vorhanden und auf origin/main synchronisiert ist.
+
+WORKFLOW.md bleibt die zentrale Index-/Masterdatei.
+
+Wiederauffindbarkeitsregel:
+WORKFLOW.md → Dateipfad → Commit-SHA → Git Tree → Datei
+
+Jede Detaildatei muss einen eindeutigen Repository-Pfad verwenden, z. B.:
+WORKFLOW_USER_ADMIN_REVIEW.md
+
+Diese Regel ist verbindlich für alle zukünftigen Workflow-Dokumentationen.
+
 ## Aktuelle Master-Entscheidungen
 
 - Das Framework bleibt neutral und wiederverwendbar.
@@ -58,8 +82,15 @@ Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist 
 ### User & Admin Master Core
 Detailanalyse:
 WORKFLOW_USER_ADMIN_REVIEW.md
+Pfad:
+/workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_REVIEW.md
+Commit-SHA:
+5baee91ed88dc788769f047073566af4d9007072
 Status:
 OFFEN – Entscheidungen noch nicht abgeschlossen.
+
+Referenz- und Auffindbarkeitsregel:
+WORKFLOW.md → WORKFLOW_USER_ADMIN_REVIEW.md → 5baee91ed88dc788769f047073566af4d9007072 → Git Tree → Datei
 
 ## Arbeitsphase
 
@@ -84,3 +115,6 @@ PHASE: Architekturvorbereitung / Review und Entscheidungslogik
 ## Detail-Workflow-Verzeichnis
 
 - WORKFLOW_USER_ADMIN_REVIEW.md — vollständiger Review zu User & Admin Master Core
+  - Pfad: /workspaces/CatchTrack-V.1.0/WORKFLOW_USER_ADMIN_REVIEW.md
+  - Commit-SHA: 5baee91ed88dc788769f047073566af4d9007072
+  - Status: synchronisiert mit origin/main
