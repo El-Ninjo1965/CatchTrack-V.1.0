@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0#readme",
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "playwright": "^1.62.1"
   }
 }

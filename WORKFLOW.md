@@ -18,6 +18,11 @@ Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist 
   - keine Fachmodule im Core
 - User und Admin bleiben Core-Bestandteile, keine optionalen Fachmodule
 - Fachmodule sind optional und sollten untereinander unabhängig bleiben
+- CatchTrack App Shell
+  - auf der bestehenden Developer-HTML als sichtbare Shell aufgebaut
+  - nutzt `ModuleRegistry`, `ModuleManager`, `CoreAccess` und den aktuellen User-State
+  - rendert Benutzer-, Admin- und Developer-Bereiche dynamisch nur mit gültiger Berechtigung
+  - zeigt Systemstatus und Console aus den tatsächlichen Core-Komponenten an
 
 ## Verbindliche Arbeitsregeln
 
@@ -128,26 +133,39 @@ Status: SYNCHRONISIERT MIT GITHUB
 
 - Repository: CatchTrack-V.1.0
 - Branch: main
-- Relevanter Commit der letzten verifizierten Code-Änderung: 388acde3093afb928442d88eb386a220e72754cb
-- Remote-Status: `git rev-parse HEAD` und `git rev-parse origin/main` waren identisch
+- Relevanter Commit der aktuellen verifizierten Änderung: a757d8ceae2013b041dd8b3f00b98d4fd5797280
+- Remote-Status: `git rev-parse HEAD` und `git rev-parse origin/main` sind identisch
 - Verifiziert am 2026-08-15
-- Workflow-Dokumentation: in dieser Datei aktualisiert, anschließend commit/push ausgeführt
+- Workflow-Dokumentation: in dieser Datei aktualisiert und mit dem aktuellen Commit synchronisiert
+
+## Dynamische CatchTrack App Shell
+
+- Die bestehende Developer-HTML wurde als sichtbare App-Shell weiterverwendet und nicht durch eine parallele Demo ersetzt.
+- Die Oberfläche konsumiert die bestehende Core-Architektur: `ModuleRegistry`, `ModuleManager`, `CoreAccess`, `CoreAuth`, `CoreAudit` und den aktuellen User-Status.
+- User-, Admin- und Developer-Bereiche werden dynamisch aus dem aktuellen Systemzustand aufgebaut.
+- Module werden nur dann im Menü gezeigt, wenn sie registriert, aktiv und permission-basiert freigegeben sind.
+- Der Core wurde für die UI nicht umgebaut; die Oberfläche ist ein echter Consumer der vorhandenen APIs.
 
 ## Praktischer Browser-/Preview-Teststatus
 
-Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:4173:
+Verifiziert am 2026-08-15 in der lokalen Preview-Umgebung auf http://localhost:8000:
 
 - Anwendung startet erfolgreich im Browser
 - Startseite/Login funktioniert
 - Bootstrap-Developer `USR-000001` wird als geschützter `developer`-Benutzer bereitgestellt
 - Developer-Login mit lokal gesetztem Bootstrap-Passwort funktioniert
-- User-Bereich ist aufrufbar und zeigt den aktuellen Benutzer korrekt an
+- User-Bereich zeigt den aktuellen Benutzer mit `Username`, `displayId`, `Rolle`, `Status` und Logout an
+- User-Menü wird dynamisch aus `ModuleRegistry`/`ModuleManager` sowie aktuellen Berechtigungen erzeugt
+- aktive Module werden mit `ModuleManager`/`ModuleRegistry` erkannt und im UI sichtbar gemacht
 - Admin-Bereich ist für den Developer mit `system:view` bzw. `user:write` zugänglich
+- Developer-Bereich ist nur mit den passenden Permissions sichtbar
+- normale Test-User sehen automatisch ein reduziertes Menü und keinen Admin-/Developer-Zugriff
 - Logout schaltet den Zustand wieder auf `logged out` zurück
+- Console und Systemstatus zeigen die tatsächlichen Core-Komponenten an
 - Keine offensichtlichen JavaScript-/Runtime-Fehler im Browser-Flow
 - Keine Auth-/Permission-Bypass-Fehler innerhalb des validierten Szenarios
 
-Status: Preview praktisch getestet, aber keine Freeze-Aktion durchgeführt.
+Status: Preview praktisch getestet, keine Freeze-Aktion durchgeführt.
 
 ## Master-Status
 

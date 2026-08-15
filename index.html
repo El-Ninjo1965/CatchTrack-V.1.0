@@ -135,17 +135,26 @@
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="topbar">
-        <div class="brand">CatchTrack Core Demo</div>
-        <div id="appState" class="status">booting…</div>
-      </div>
+    <div class="shell" data-shell-root="true">
+      <header class="shell-header">
+        <div class="brand-wrap">
+          <div class="brand-mark">C</div>
+          <div>
+            <div class="brand-name">CatchTrack</div>
+            <div class="brand-subtitle">App Shell</div>
+          </div>
+        </div>
+        <div class="shell-actions">
+          <span id="appState" class="status-badge">booting…</span>
+          <button id="refreshBtn" class="ghost" type="button">Refresh</button>
+        </div>
+      </header>
 
-      <div class="grid">
-        <section class="panel">
-          <h2>DEVELOPER (Development / Preview only)</h2>
+      <div id="authPanel" class="auth-panel">
+        <section class="panel auth-card">
+          <h2>Developer Bootstrap</h2>
           <div class="muted" style="margin-bottom: 12px;">
-            This local password is only for preview testing and will later be replaced by a server-side auth service.
+            Default bootstrap user: <strong>developer</strong> / <strong>USR-000001</strong>
           </div>
           <div class="form-group">
             <label for="developerUsername">Developer username</label>
@@ -153,22 +162,23 @@
           </div>
           <div class="form-group">
             <label for="developerPassword">Local preview password</label>
-            <input id="developerPassword" type="password" placeholder="set local preview password" />
+            <input id="developerPassword" type="password" value="local-preview-password" />
           </div>
           <div class="row">
-            <button id="setPasswordBtn" type="button">Set local preview password</button>
+            <button id="setPasswordBtn" type="button">Set preview password</button>
           </div>
+          <div id="bootstrapUserStats" class="bootstrap-user" style="margin-top: 16px;">Bootstrap user not initialized.</div>
         </section>
 
-        <section class="panel">
-          <h2>LOGIN</h2>
+        <section class="panel auth-card">
+          <h2>Login</h2>
           <div class="form-group">
             <label for="loginUsername">Username</label>
             <input id="loginUsername" type="text" value="developer" />
           </div>
           <div class="form-group">
             <label for="loginPassword">Password</label>
-            <input id="loginPassword" type="password" placeholder="preview password" />
+            <input id="loginPassword" type="password" value="local-preview-password" placeholder="preview password" />
           </div>
           <div class="row">
             <button id="loginBtn" type="button">Login</button>
@@ -177,51 +187,106 @@
         </section>
       </div>
 
-      <div class="grid" style="margin-top: 24px;">
-        <section class="panel">
-          <h2>USER</h2>
-          <div id="currentUserView" class="log">Not logged in.</div>
-        </section>
-
-        <section class="panel">
-          <h2>USER PROFILE & RIGHTS</h2>
-          <div class="row">
-            <button id="profileBtn" class="secondary" type="button">Open profile</button>
-            <button id="refreshUserBtn" class="secondary" type="button">Refresh user</button>
-          </div>
-          <div id="userToolsView" class="log" style="margin-top: 12px;">User tools are unavailable until login.</div>
-          <div id="userListView" class="log" style="margin-top: 12px;">No users loaded yet.</div>
-        </section>
-      </div>
-
-      <div class="grid" style="margin-top: 24px;">
-        <section class="panel">
-          <h2>ADMIN</h2>
-          <div id="adminView" class="log">Admin area is not open.</div>
-          <div id="adminActions" class="hidden" style="margin-top: 12px;">
-            <div class="form-group">
-              <label for="newUserUsername">Create test user</label>
-              <input id="newUserUsername" type="text" value="demo-user" />
-            </div>
-            <div class="form-group">
-              <label for="newUserRole">Role</label>
-              <select id="newUserRole">
-                <option value="user">user</option>
-                <option value="admin">admin</option>
-                <option value="developer">developer</option>
-              </select>
-            </div>
-            <div class="row">
-              <button id="createUserBtn" type="button">Create test user</button>
+      <div id="appShell" class="app-shell hidden">
+        <aside class="sidebar">
+          <div class="sidebar-brand-box">
+            <div class="mini-label">CatchTrack</div>
+            <div class="user-card">
+              <div id="currentUserInitial" class="avatar">D</div>
+              <div>
+                <div id="currentUserName">Developer</div>
+                <div class="small" data-user-display-id>USR-000001</div>
+              </div>
             </div>
           </div>
-        </section>
 
-        <section class="panel">
-          <h2>PERMISSIONS & AUDIT</h2>
-          <div id="permissionView" class="log">No permissions loaded yet.</div>
-          <div id="auditView" class="log" style="margin-top: 12px;">No audit entries yet.</div>
-        </section>
+          <nav class="side-nav">
+            <div class="nav-section">
+              <div class="nav-header">USER</div>
+              <div id="userMenu" class="nav-list"></div>
+            </div>
+
+            <div id="adminSection" class="nav-section hidden">
+              <div class="nav-header">ADMIN</div>
+              <div id="adminMenu" class="nav-list"></div>
+            </div>
+
+            <div id="developerSection" class="nav-section hidden">
+              <div class="nav-header">DEVELOPER</div>
+              <div id="developerMenu" class="nav-list"></div>
+            </div>
+          </nav>
+        </aside>
+
+        <main class="main-panel">
+          <section class="summary-row">
+            <div class="summary-card">
+              <div class="section-label">Angemeldet als</div>
+              <div class="user-summary-line">
+                <strong id="summaryUsername">Developer</strong>
+                <span id="summaryRoleBadge" class="role-badge developer" data-user-role>developer</span>
+              </div>
+              <div class="small" data-user-display-id>USR-000001</div>
+              <div class="small">Status: <span id="summaryStatus">active</span></div>
+              <button id="logoutBtnAlt" class="secondary compact" type="button">Logout</button>
+            </div>
+
+            <div class="summary-card">
+              <div class="section-label">ACTIVE MODULES</div>
+              <div id="activeModules" class="chip-list"></div>
+            </div>
+          </section>
+
+          <section class="content-grid">
+            <div class="panel">
+              <div class="panel-header">ACCOUNT</div>
+              <div id="accountActions" class="action-list">
+                <button type="button" class="secondary action-button" data-account-action="profile">Profil</button>
+                <button type="button" class="secondary action-button" data-account-action="settings">Einstellungen</button>
+                <button type="button" class="danger action-button" data-account-action="logout">Logout</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">SYSTEM STATUS</div>
+              <div id="systemStatus" class="status-list"></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">CONSOLE</div>
+            <div id="consoleLog" class="log"></div>
+          </section>
+
+          <section class="panel hidden" id="adminPanel">
+            <div class="panel-header">ADMIN</div>
+            <div id="adminView" class="log">Admin area is not open.</div>
+            <div id="adminActions" class="hidden" style="margin-top: 12px;">
+              <div class="form-group">
+                <label for="newUserUsername">Create test user</label>
+                <input id="newUserUsername" type="text" value="demo-user" />
+              </div>
+              <div class="form-group">
+                <label for="newUserRole">Role</label>
+                <select id="newUserRole">
+                  <option value="user">user</option>
+                  <option value="manager">manager</option>
+                  <option value="admin">admin</option>
+                  <option value="developer">developer</option>
+                </select>
+              </div>
+              <div class="row">
+                <button id="createUserBtn" type="button">Create test user</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel hidden" id="developerPanel">
+            <div class="panel-header">DEVELOPER</div>
+            <div id="permissionView" class="log">No permissions loaded yet.</div>
+            <div id="auditView" class="log" style="margin-top: 12px;">No audit entries yet.</div>
+          </section>
+        </main>
       </div>
     </div>
 
