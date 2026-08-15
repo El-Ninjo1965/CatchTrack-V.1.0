@@ -3,7 +3,7 @@
 
   const pageType = document.body.dataset.page || 'user';
   const defaultView = pageType === 'admin' ? 'admin:dashboard' : pageType === 'developer' ? 'developer:core' : 'dashboard';
-  const state = { activeView: defaultView };
+  const state = { activeView: defaultView, adminEditUserId: null };
 
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -238,6 +238,10 @@
     if (!page) return;
     const currentUser = getCurrentUser();
     const modules = getVisibleModules();
+    const session = window.CoreAuth && typeof window.CoreAuth.getSessionStateSnapshot === 'function'
+      ? window.CoreAuth.getSessionStateSnapshot()
+      : { authenticated: !!currentUser, sessionId: null, expiresAt: null, status: currentUser ? 'active' : 'inactive' };
+
     page.innerHTML = `
       <div class="card">
         <div class="card-header">
@@ -254,6 +258,15 @@
           </div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Session & Security</h2></div>
+        <div class="info-grid">
+          <div class="info-box"><strong>Authenticated</strong><div>${session.authenticated ? 'Yes' : 'No'}</div></div>
+          <div class="info-box"><strong>Session</strong><div>${escapeHtml(session.sessionId || '—')}</div></div>
+          <div class="info-box"><strong>Session status</strong><div>${escapeHtml(session.status || 'inactive')}</div></div>
+          <div class="info-box"><strong>Expires</strong><div>${escapeHtml(session.expiresAt || '—')}</div></div>
+        </div>
+      </div>
     `;
   };
 
@@ -261,6 +274,10 @@
     const page = document.getElementById('mainContent');
     const currentUser = getCurrentUser();
     if (!page || !currentUser) return;
+    const session = window.CoreAuth && typeof window.CoreAuth.getSessionStateSnapshot === 'function'
+      ? window.CoreAuth.getSessionStateSnapshot()
+      : { sessionId: null, expiresAt: null, roles: currentUser.roles || [], permissions: currentUser.permissions || [] };
+
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Profil</h2></div>
@@ -271,6 +288,9 @@
           <div class="info-box"><strong>Rolle</strong><div>${escapeHtml(Array.isArray(currentUser.roles) ? currentUser.roles.join(', ') : 'user')}</div></div>
           <div class="info-box"><strong>Status</strong><div>${escapeHtml(currentUser.status || 'active')}</div></div>
           <div class="info-box"><strong>Geschützt</strong><div>${escapeHtml(currentUser.protected ? 'Ja' : 'Nein')}</div></div>
+          <div class="info-box"><strong>Session ID</strong><div>${escapeHtml(session.sessionId || '—')}</div></div>
+          <div class="info-box"><strong>Session expires</strong><div>${escapeHtml(session.expiresAt || '—')}</div></div>
+          <div class="info-box"><strong>Permissions</strong><div>${escapeHtml((session.permissions || []).join(', ') || '—')}</div></div>
         </div>
       </div>
     `;
@@ -360,7 +380,7 @@
         </div>
         <div class="table-wrap">
           <table id="adminUserTable">
-            <thead><tr><th>Username</th><th>Display name</th><th>Display ID</th><th>Role</th><th>Status</th></tr></thead>
+            <thead><tr><th>Username</th><th>Display name</th><th>Display ID</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               ${users.length ? users.map((user) => `
                 <tr data-user-row="${escapeHtml(user.id || '')}" data-role="${escapeHtml(Array.isArray(user.roles) ? user.roles.join(',') : (user.role || 'user'))}">
@@ -369,8 +389,9 @@
                   <td>${escapeHtml(user.displayId || '—')}</td>
                   <td>${escapeHtml(Array.isArray(user.roles) ? user.roles.join(', ') : (user.role || 'user'))}</td>
                   <td><span class="status-pill ${user.status === 'active' ? 'active' : user.status === 'deleted' ? 'deleted' : 'warning'}">${escapeHtml(user.status || 'active')}</span></td>
+                  <td><button type="button" class="secondary edit-user-btn" data-user-id="${escapeHtml(user.id || '')}">Edit</button></td>
                 </tr>
-              `).join('') : '<tr><td colspan="5"><div class="empty-state">No users available.</div></td></tr>'}
+              `).join('') : '<tr><td colspan="6"><div class="empty-state">No users available.</div></td></tr>'}
             </tbody>
           </table>
         </div>
@@ -468,20 +489,63 @@
             return;
           }
 
-          const result = window.AdminModule && typeof window.AdminModule.createUser === 'function'
-            ? await window.AdminModule.createUser(payload, currentUser)
-            : await window.UserModule.createUser(payload, currentUser);
+          if (state.adminEditUserId) {
+            const result = window.UserModule && typeof window.UserModule.updateUser === 'function'
+              ? await window.UserModule.updateUser(state.adminEditUserId, payload, currentUser)
+              : { ok: false, message: 'User update is not available.' };
 
-          if (!result || !result.ok) {
-            notify((result && result.message) || 'Benutzer konnte nicht erstellt werden.', 'error');
-            return;
+            if (!result || !result.ok) {
+              notify((result && result.message) || 'Benutzer konnte nicht aktualisiert werden.', 'error');
+              return;
+            }
+
+            notify('Benutzer aktualisiert.', 'success');
+            state.adminEditUserId = null;
+            createButton.textContent = 'Add user';
+          } else {
+            const result = window.AdminModule && typeof window.AdminModule.createUser === 'function'
+              ? await window.AdminModule.createUser(payload, currentUser)
+              : await window.UserModule.createUser(payload, currentUser);
+
+            if (!result || !result.ok) {
+              notify((result && result.message) || 'Benutzer konnte nicht erstellt werden.', 'error');
+              return;
+            }
+
+            notify('Benutzer erstellt.', 'success');
           }
 
-          notify('Benutzer erstellt.', 'success');
           state.activeView = 'admin:users';
           await renderPageContent();
         });
       }
+
+      const editButtons = document.querySelectorAll('.edit-user-btn');
+      editButtons.forEach((button) => {
+        button.addEventListener('click', async () => {
+          const userId = button.getAttribute('data-user-id');
+          const userResult = window.UserModule && typeof window.UserModule.getUserById === 'function'
+            ? await window.UserModule.getUserById(userId)
+            : null;
+          const user = userResult && userResult.ok ? userResult.data : null;
+          if (!user) {
+            notify('User konnte nicht geladen werden.', 'error');
+            return;
+          }
+
+          state.adminEditUserId = user.id;
+          const usernameInput = document.getElementById('adminUserUsername');
+          const displayNameInput = document.getElementById('adminUserDisplayName');
+          const statusInput = document.getElementById('adminUserStatus');
+          const roleInput = document.getElementById('adminUserRoles');
+
+          if (usernameInput) usernameInput.value = user.username || '';
+          if (displayNameInput) displayNameInput.value = user.displayName || user.username || '';
+          if (statusInput) statusInput.value = user.status || 'active';
+          if (roleInput) roleInput.value = Array.isArray(user.roles) && user.roles.length ? user.roles[0] : 'user';
+          if (createButton) createButton.textContent = 'Update user';
+        });
+      });
 
       const filter = document.getElementById('adminUserRoleFilter');
       if (filter) {

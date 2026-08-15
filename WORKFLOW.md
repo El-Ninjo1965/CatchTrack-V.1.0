@@ -120,6 +120,13 @@ WORKFLOW.md → WORKFLOW_USER_ADMIN_REVIEW.md → 5baee91ed88dc788769f047073566a
 
 PHASE: User/Admin Master Core Implementierung
 
+NEUE IMPLEMENTIERUNGSSTUFE: Admin User Lifecycle & Session Visibility
+
+- Ziel: Benutzer im Admin-UI bearbeiten, filtern und aktualisieren, ohne den neutralen Core oder die zentralen Auth-/Access-Regeln zu verlassen.
+- Umsetzung: Admin-Benutzerliste enthält Edit-Aktionen; beim Klick werden vorhandene Daten in das Formular geladen; Submit aktualisiert den bestehenden Nutzer statt nur neue Einträge zu erzeugen.
+- Zusatz: Dashboard und Profil zeigen Session-/Security-Details aus `CoreAuth`, damit Admin-/User-Flows die aktuelle Session-Quelle sichtbar machen.
+- Status: browser-validiert und in den nächsten verifizierten Lauf eingebettet.
+
 ## Freeze- und Release-Status
 
 - Framework-Core: stabil

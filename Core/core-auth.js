@@ -390,6 +390,44 @@
             return this.currentSession ? { ...this.currentSession } : null;
         },
 
+        getSessionStateSnapshot() {
+            const user = this.getCurrentUser();
+            const session = this.getCurrentSession();
+            return {
+                authenticated: this.isAuthenticated(),
+                userId: user ? user.id : null,
+                username: user ? user.username : null,
+                displayId: user ? user.displayId : null,
+                roles: user ? [...user.roles] : [],
+                permissions: user ? [...user.permissions] : [],
+                sessionId: session ? session.sessionId : null,
+                issuedAt: session ? session.issuedAt : null,
+                expiresAt: session ? session.expiresAt : null,
+                status: session ? session.status : 'inactive',
+                source: session && session.authContext ? session.authContext.source : 'preview-local'
+            };
+        },
+
+        serializeSessionForTransport() {
+            const snapshot = this.getSessionStateSnapshot();
+            if (!snapshot.authenticated) {
+                return null;
+            }
+
+            return {
+                sessionId: snapshot.sessionId,
+                userId: snapshot.userId,
+                username: snapshot.username,
+                displayId: snapshot.displayId,
+                roles: snapshot.roles,
+                permissions: snapshot.permissions,
+                issuedAt: snapshot.issuedAt,
+                expiresAt: snapshot.expiresAt,
+                status: snapshot.status,
+                source: snapshot.source
+            };
+        },
+
         isAuthenticated() {
             return !!this.currentSession && this.currentSession.status === 'active';
         },
