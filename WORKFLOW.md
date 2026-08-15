@@ -147,9 +147,10 @@ Status: SYNCHRONISIERT MIT GITHUB
 - Repository: CatchTrack-V.1.0
 - Branch: main
 - Historischer technischer Master-Commit: `9485665188c3777e7044cb125d8d627f63593d5d` — `Final master core pass: verify full contract, run regression, document READY FOR MASTER FREEZE`
-- Aktueller Dokumentations-/Freeze-Commit: wird nach dem finalen Dokumentations-Commit in dieser Datei aktualisiert
+- Aktueller Freeze-/Dokumentations-Commit: <wird nach dem finalen Dokumentations-Commit gesetzt>
 - MASTER COMMIT: <wird nach dem finalen Dokumentations-Commit gesetzt>
-- Remote-Status: `git rev-parse HEAD` und `git rev-parse origin/main` sind identisch
+- REMOTE: SYNCHRONISIERT MIT origin/main
+- WORKTREE: CLEAN
 - Verifiziert am 2026-08-15
 - Workflow-Dokumentation: in dieser Datei aktualisiert und mit dem aktuellen Commit synchronisiert
 
@@ -157,21 +158,21 @@ Status: SYNCHRONISIERT MIT GITHUB
 
 STATUS: MASTER FROZEN
 
-- Historischer Master-Commit: `9485665188c3777e7044cb125d8d627f63593d5d`
-- Branch: `main`
-- Teststatus: verifiziert grün
+- BRANCH: `main`
+- HISTORISCHER TECHNISCHER MASTER-COMMIT: `9485665188c3777e7044cb125d8d627f63593d5d`
+- TESTSTATUS: verifiziert grün
   - `node tests/user-admin-core.test.js` → 2/2 Tests bestanden
   - `npx playwright test tests/master-ui.spec.js --reporter=list` → 8/8 Tests bestanden
-  - `npm test` → finaler Lauf erfolgreich, sofern im aktuellen Freeze-Commit ausgeführt
-- User-App: fertig und verifiziert
-- Admin-App: fertig und verifiziert
-- Developer-App: fertig und verifiziert
-- Auth-/Session-Status: zentralisiert, keine zweite Login-Logik, Session zwischen App-Views verifiziert
-- Rollen/Permissions: realer Core-Status, keine Parallel-Engine
-- Module: dynamisch registriert, sichtbar und permission-gesteuert
-- Mobile UI: Top-Navigation, responsive, mobile-first, keine linke permanente Sidebar
-- Bekannte Einschränkungen: echte serverseitige Session-/API-Transition, echter Passwort-/Account-Flow und Production-Hardening bleiben als Backlog bzw. spätere Architektur-/Server-Entscheidung offen
-- Backlog: keine neuen Core-Funktionen mehr im Freeze; spätere Vorschläge nur als Backlog, Erweiterung oder separates Modul dokumentiert
+  - `npm test` → erfolgreicher finaler Lauf am 2026-08-15
+- USER-APP: fertig und verifiziert
+- ADMIN-APP: fertig und verifiziert
+- DEVELOPER-APP: fertig und verifiziert
+- AUTH-/SESSION-STATUS: zentralisiert, keine zweite Login-Logik, Session zwischen App-Views verifiziert
+- ROLLEN/PERMISSIONS: realer Core-Status, keine Parallel-Engine
+- MODULE: dynamisch registriert, sichtbar und permission-gesteuert
+- MOBILE UI: Top-Navigation, responsive, mobile-first, keine linke permanente Sidebar
+- BEKANNTE EINSCHRÄNKUNGEN: echte serverseitige Session-/API-Transition, echter Passwort-/Account-Flow und Production-Hardening bleiben als Backlog bzw. spätere Architektur-/Server-Entscheidung offen
+- BACKLOG: keine neuen Core-Funktionen mehr im Freeze; spätere Vorschläge nur als Backlog, Erweiterung oder separates Modul dokumentiert
 
 ## Backlog für spätere Erweiterungen
 
