@@ -2,30 +2,90 @@
  * Generic User Module
  * Version: 1.0.0
  *
- * User management for a neutral framework.
- * Contains only generic identity, role, permission and session logic.
+ * User facade for the approved master architecture.
+ * It delegates identity, auth, access and audit to central core services.
  */
 
 (() => {
     'use strict';
 
-    const normalizePermissions = (user) => {
-        const basePermissions = Array.isArray(user && user.permissions)
-            ? [...user.permissions]
-            : [];
+    const generateUuid = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
 
+        if (typeof require === 'function' && typeof process !== 'undefined') {
+            return require('crypto').randomUUID();
+        }
+
+        return `uuid-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    };
+
+    const serializeUser = (user) => {
+        if (!user || typeof user !== 'object') {
+            return null;
+        }
+
+        return {
+            ...user,
+            roles: Array.isArray(user.roles) ? [...user.roles] : [],
+            permissions: Array.isArray(user.permissions) ? [...user.permissions] : [],
+            protected: !!user.protected,
+            metadata: user.metadata && typeof user.metadata === 'object' ? { ...user.metadata } : {}
+        };
+    };
+
+    const normalizePermissions = (user = {}) => {
         const rolePermissions = {
-            admin: ['user:read', 'user:write', 'role:read', 'role:write', 'system:view'],
-            manager: ['user:read', 'user:write', 'role:read'],
-            member: ['user:read']
+            member: ['user:read'],
+            manager: ['user:read', 'user:write'],
+            admin: ['user:read', 'user:write', 'system:view'],
+            developer: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update']
         };
 
-        const set = new Set([
-            ...basePermissions,
-            ...(rolePermissions[user && user.role] || [])
-        ]);
+        const explicit = Array.isArray(user.permissions)
+            ? user.permissions.filter(Boolean).map(String)
+            : [];
+        const roles = Array.isArray(user.roles)
+            ? user.roles.filter(Boolean).map(String)
+            : (typeof user.role === 'string' && user.role.trim() ? [user.role.trim()] : []);
+
+        const set = new Set(explicit);
+        roles.forEach((role) => {
+            const mapped = rolePermissions[role] || [];
+            mapped.forEach((permission) => set.add(permission));
+        });
 
         return Array.from(set);
+    };
+
+    const ensureUserLayout = (user) => {
+        if (!user || typeof user !== 'object') {
+            return null;
+        }
+
+        const roles = Array.isArray(user.roles) && user.roles.length > 0
+            ? user.roles.map(String)
+            : (typeof user.role === 'string' && user.role.trim() ? [user.role.trim()] : ['member']);
+
+        return {
+            id: String(user.id || generateUuid()),
+            displayId: user.displayId || '',
+            username: String(user.username || '').trim(),
+            displayName: user.displayName || user.username || '',
+            email: user.email || '',
+            status: user.status || 'active',
+            roles,
+            permissions: normalizePermissions({
+                roles,
+                permissions: user.permissions || []
+            }),
+            protected: !!user.protected,
+            createdAt: user.createdAt || new Date().toISOString(),
+            updatedAt: user.updatedAt || new Date().toISOString(),
+            schemaVersion: user.schemaVersion || 1,
+            metadata: user.metadata && typeof user.metadata === 'object' ? { ...user.metadata } : {}
+        };
     };
 
     const UserModule = {
@@ -33,6 +93,7 @@
         version: '1.0.0',
         initialized: false,
         currentUser: null,
+        currentSession: null,
         users: new Map(),
 
         init() {
@@ -43,253 +104,398 @@
                 return this;
             }
 
-            if (this.users.size === 0) {
-                this.createDefaultUsers();
-            }
-
+            this.ready();
             this.initialized = true;
 
             if (window.Core) {
-                window.Core.emit('user-module:initialized', {
-                    userCount: this.users.size
+                window.Core.emit('user:initialized', {
+                    userCount: this.users.size,
+                    timestamp: new Date().toISOString()
                 });
             }
 
             return this;
         },
 
+        ready() {
+            if (this.users.size === 0) {
+                this.createDefaultUsers();
+            }
+        },
+
         createDefaultUsers() {
             const now = new Date().toISOString();
             const users = [
                 {
-                    id: 'demo-user-001',
-                    username: 'demo-user',
-                    displayName: 'Demo User',
-                    email: 'demo@example.local',
-                    avatar: null,
-                    role: 'member',
+                    id: generateUuid(),
+                    displayId: 'USR-000001',
+                    username: 'developer',
+                    displayName: 'Developer User',
+                    email: 'developer@example.local',
                     status: 'active',
-                    permissions: ['user:read'],
+                    roles: ['developer'],
+                    permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'],
+                    protected: true,
                     createdAt: now,
-                    lastLoginAt: null
+                    updatedAt: now,
+                    schemaVersion: 1
                 },
                 {
-                    id: 'demo-admin-001',
+                    id: generateUuid(),
+                    displayId: 'USR-000002',
                     username: 'admin',
                     displayName: 'Administrator',
                     email: 'admin@example.local',
-                    avatar: null,
-                    role: 'admin',
                     status: 'active',
-                    permissions: ['user:read', 'user:write', 'role:read', 'role:write', 'system:view'],
+                    roles: ['admin'],
+                    permissions: ['user:read', 'user:write', 'system:view'],
+                    protected: true,
                     createdAt: now,
-                    lastLoginAt: null
+                    updatedAt: now,
+                    schemaVersion: 1
                 }
             ];
 
             users.forEach((user) => {
-                const normalized = {
-                    ...user,
-                    permissions: normalizePermissions(user)
-                };
-                this.users.set(normalized.id, normalized);
+                const normalized = ensureUserLayout(user);
+                if (normalized) {
+                    this.users.set(normalized.id, normalized);
+                }
             });
         },
 
-        authenticate(userId) {
-            const user = this.users.get(userId);
-            if (user && user.status === 'active') {
-                user.lastLoginAt = new Date().toISOString();
-                this.currentUser = {
-                    ...user,
-                    permissions: normalizePermissions(user)
-                };
-
-                if (window.Core) {
-                    window.Core.emit('user-module:authenticated', {
-                        userId: user.id,
-                        username: user.username,
-                        role: user.role
-                    });
-                }
-
-                return this.currentUser;
-            }
-
-            if (window.Core) {
-                window.Core.emit('user-module:auth-failed', {
-                    userId,
-                    timestamp: new Date().toISOString()
-                });
-            }
-
-            return null;
+        getNextDisplayId() {
+            const sequence = this.users.size + 1;
+            return `USR-${String(sequence).padStart(6, '0')}`;
         },
 
-        getCurrentUser() {
-            if (!this.currentUser) {
-                return null;
-            }
-
+        async listUsers() {
+            const items = Array.from(this.users.values()).map((user) => serializeUser(user));
             return {
-                ...this.currentUser,
-                permissions: [...this.currentUser.permissions]
+                ok: true,
+                code: 'USERS_LISTED',
+                data: {
+                    items,
+                    count: items.length
+                }
             };
         },
 
-        logout() {
-            const prev = this.currentUser;
-            this.currentUser = null;
-            if (window.Core) {
-                window.Core.emit('user-module:logout', {
-                    userId: prev ? prev.id : null,
-                    timestamp: new Date().toISOString()
-                });
+        async getUserById(userId) {
+            if (!userId) {
+                return {
+                    ok: false,
+                    code: 'INVALID_USER_ID',
+                    message: 'User ID is required.'
+                };
             }
-        },
 
-        getAllUsers() {
-            return Array.from(this.users.values()).map((user) => ({
-                ...user,
-                permissions: [...user.permissions]
-            }));
-        },
-
-        getUserById(userId) {
             const user = this.users.get(userId);
             if (!user) {
-                return null;
+                return {
+                    ok: false,
+                    code: 'USER_NOT_FOUND',
+                    message: 'User not found.'
+                };
             }
 
             return {
-                ...user,
-                permissions: [...user.permissions]
+                ok: true,
+                code: 'USER_FOUND',
+                data: serializeUser(user)
             };
         },
 
-        getUserByUsername(username) {
+        async getUserByUsername(username) {
+            const normalized = String(username || '').trim();
+            if (!normalized) {
+                return {
+                    ok: false,
+                    code: 'INVALID_USERNAME',
+                    message: 'Username is required.'
+                };
+            }
+
             for (const user of this.users.values()) {
-                if (user.username === username) {
+                if (user.username === normalized) {
                     return {
-                        ...user,
-                        permissions: [...user.permissions]
+                        ok: true,
+                        code: 'USER_FOUND',
+                        data: serializeUser(user)
                     };
                 }
             }
-            return null;
+
+            return {
+                ok: false,
+                code: 'USER_NOT_FOUND',
+                message: 'User not found.'
+            };
         },
 
         isUsernameAvailable(username, excludeId = null) {
+            const normalized = String(username || '').trim();
+            if (!normalized || normalized.length < 3) {
+                return false;
+            }
+
             for (const [id, user] of this.users.entries()) {
-                if (user.username === username && id !== excludeId) {
+                if (user.username === normalized && id !== excludeId) {
                     return false;
                 }
             }
             return true;
         },
 
-        createUser(userData) {
-            if (!userData || !userData.username || !userData.username.trim()) {
-                throw new Error('Username is required');
+        async createUser(userData, actor = null) {
+            if (!userData || typeof userData !== 'object') {
+                return {
+                    ok: false,
+                    code: 'INVALID_USER_DATA',
+                    message: 'User data is required.'
+                };
             }
 
-            const username = userData.username.trim();
+            const username = String(userData.username || '').trim();
             if (!this.isUsernameAvailable(username)) {
-                throw new Error(`Username "${username}" is already taken`);
+                return {
+                    ok: false,
+                    code: 'USERNAME_INVALID',
+                    message: 'Username must be at least 3 characters and unique.'
+                };
             }
 
-            const userId = `usr-${Date.now()}`;
-            const role = userData.role || 'member';
-            const newUser = {
-                id: userId,
+            const nextDisplayId = this.getNextDisplayId();
+            const createdAt = new Date().toISOString();
+            const newUser = ensureUserLayout({
+                id: generateUuid(),
+                displayId: nextDisplayId,
                 username,
                 displayName: userData.displayName || username,
                 email: userData.email || '',
-                avatar: userData.avatar || null,
-                role,
-                status: 'active',
-                permissions: normalizePermissions({ role, permissions: userData.permissions || [] }),
-                createdAt: new Date().toISOString(),
-                lastLoginAt: null
-            };
+                status: userData.status || 'active',
+                roles: Array.isArray(userData.roles) && userData.roles.length > 0 ? userData.roles.map(String) : [userData.role || 'member'],
+                permissions: userData.permissions || [],
+                protected: !!userData.protected,
+                createdAt,
+                updatedAt: createdAt,
+                schemaVersion: userData.schemaVersion || 1,
+                metadata: userData.metadata || {}
+            });
 
-            this.users.set(userId, newUser);
+            if (!newUser) {
+                return {
+                    ok: false,
+                    code: 'USER_CREATE_FAILED',
+                    message: 'User could not be created.'
+                };
+            }
+
+            this.users.set(newUser.id, newUser);
+
+            if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                window.CoreAudit.record(actor || 'system', 'user:create', newUser.id, 'success', {
+                    username: newUser.username,
+                    displayId: newUser.displayId
+                });
+            }
 
             if (window.Core) {
-                window.Core.emit('user-module:user-created', {
+                window.Core.emit('user:created', {
                     userId: newUser.id,
-                    username: newUser.username
+                    displayId: newUser.displayId,
+                    username: newUser.username,
+                    timestamp: new Date().toISOString()
                 });
             }
 
             return {
-                ...newUser,
-                permissions: [...newUser.permissions]
+                ok: true,
+                code: 'USER_CREATED',
+                data: serializeUser(newUser)
             };
         },
 
-        updateUser(userId, updates) {
-            const user = this.users.get(userId);
-            if (!user) {
-                return null;
+        async updateUser(userId, updates = {}, actor = null) {
+            const currentResult = await this.getUserById(userId);
+            if (!currentResult.ok) {
+                return currentResult;
             }
 
-            if (updates.username && updates.username !== user.username) {
-                if (!this.isUsernameAvailable(updates.username, userId)) {
-                    throw new Error(`Username "${updates.username}" is already taken`);
+            const currentUser = currentResult.data;
+            if (!currentUser) {
+                return { ok: false, code: 'USER_NOT_FOUND', message: 'User not found.' };
+            }
+
+            if (updates.username && String(updates.username).trim().length >= 3) {
+                const username = String(updates.username).trim();
+                if (!this.isUsernameAvailable(username, userId)) {
+                    return { ok: false, code: 'USERNAME_INVALID', message: 'Username must be unique and at least 3 characters.' };
                 }
             }
 
-            const { id: _id, createdAt: _ca, ...safeUpdates } = updates;
-            const updated = {
-                ...user,
-                ...safeUpdates,
-                permissions: normalizePermissions({
-                    role: safeUpdates.role || user.role,
-                    permissions: safeUpdates.permissions || user.permissions
-                })
+            const merged = {
+                ...currentUser,
+                ...updates,
+                updatedAt: new Date().toISOString(),
+                roles: Array.isArray(updates.roles) ? updates.roles.map(String) : currentUser.roles,
+                permissions: Array.isArray(updates.permissions) ? updates.permissions.map(String) : currentUser.permissions,
+                protected: typeof updates.protected === 'boolean' ? updates.protected : currentUser.protected,
+                metadata: updates.metadata && typeof updates.metadata === 'object' ? { ...currentUser.metadata, ...updates.metadata } : currentUser.metadata
             };
 
-            this.users.set(userId, updated);
+            merged.permissions = normalizePermissions(merged);
+            const stored = ensureUserLayout(merged);
+            this.users.set(userId, stored);
+
+            if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                window.CoreAudit.record(actor || 'system', 'user:update', userId, 'success', {
+                    username: stored.username,
+                    displayId: stored.displayId
+                });
+            }
 
             if (window.Core) {
-                window.Core.emit('user-module:user-updated', { userId });
+                window.Core.emit('user:updated', {
+                    userId,
+                    timestamp: new Date().toISOString()
+                });
             }
 
             return {
-                ...updated,
-                permissions: [...updated.permissions]
+                ok: true,
+                code: 'USER_UPDATED',
+                data: serializeUser(stored)
             };
         },
 
-        deleteUser(userId) {
-            if (!this.users.has(userId)) {
-                return false;
+        async deleteUser(userId, actor = null) {
+            const currentResult = await this.getUserById(userId);
+            if (!currentResult.ok) {
+                return currentResult;
             }
 
-            this.users.delete(userId);
+            const user = currentResult.data;
+            const updated = {
+                ...user,
+                status: 'deleted',
+                updatedAt: new Date().toISOString(),
+                protected: !!user.protected
+            };
+
+            this.users.set(userId, ensureUserLayout(updated));
+
+            if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                window.CoreAudit.record(actor || 'system', 'user:delete', userId, 'success', {
+                    username: user.username,
+                    displayId: user.displayId
+                });
+            }
 
             if (window.Core) {
-                window.Core.emit('user-module:user-deleted', { userId });
+                window.Core.emit('user:deleted', {
+                    userId,
+                    timestamp: new Date().toISOString()
+                });
             }
 
-            return true;
+            return {
+                ok: true,
+                code: 'USER_DELETED',
+                data: { userId }
+            };
+        },
+
+        async setStatus(userId, status, actor = null) {
+            const currentResult = await this.getUserById(userId);
+            if (!currentResult.ok) {
+                return currentResult;
+            }
+
+            const user = currentResult.data;
+            const updated = {
+                ...user,
+                status,
+                updatedAt: new Date().toISOString()
+            };
+
+            const stored = ensureUserLayout(updated);
+            this.users.set(userId, stored);
+
+            if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                window.CoreAudit.record(actor || 'system', 'user:set-status', userId, 'success', { status });
+            }
+
+            return {
+                ok: true,
+                code: 'USER_STATUS_UPDATED',
+                data: serializeUser(stored)
+            };
+        },
+
+        async login(credentials) {
+            if (!window.CoreAuth || typeof window.CoreAuth.login !== 'function') {
+                return { ok: false, code: 'AUTH_NOT_AVAILABLE', message: 'Core auth is not available.' };
+            }
+
+            const result = await window.CoreAuth.login(credentials);
+            if (!result.ok) {
+                return result;
+            }
+
+            this.currentUser = result.data.user;
+            this.currentSession = result.data.session;
+            return result;
+        },
+
+        async logout(sessionId = null) {
+            if (!window.CoreAuth || typeof window.CoreAuth.logout !== 'function') {
+                return { ok: false, code: 'AUTH_NOT_AVAILABLE', message: 'Core auth is not available.' };
+            }
+
+            const result = await window.CoreAuth.logout(sessionId);
+            this.currentUser = null;
+            this.currentSession = null;
+            return result;
+        },
+
+        getCurrentUser() {
+            const authUser = window.CoreAuth && typeof window.CoreAuth.getCurrentUser === 'function'
+                ? window.CoreAuth.getCurrentUser()
+                : this.currentUser;
+            return authUser ? serializeUser(authUser) : null;
+        },
+
+        getCurrentSession() {
+            return window.CoreAuth && typeof window.CoreAuth.getCurrentSession === 'function'
+                ? window.CoreAuth.getCurrentSession()
+                : this.currentSession;
         },
 
         hasRole(role) {
-            return !!this.currentUser && this.currentUser.role === role;
+            const user = this.getCurrentUser();
+            return !!user && Array.isArray(user.roles) && user.roles.includes(role);
         },
 
         hasPermission(permission) {
-            if (!this.currentUser) {
+            const user = this.getCurrentUser();
+            if (!user) {
                 return false;
             }
 
-            return this.currentUser.permissions.includes(permission) || this.currentUser.role === 'admin';
+            if (window.CoreAccess && typeof window.CoreAccess.hasPermission === 'function') {
+                return !!window.CoreAccess.hasPermission(user, permission);
+            }
+
+            return Array.isArray(user.permissions) && user.permissions.includes(permission);
         },
 
         isAdmin() {
             return this.hasRole('admin');
+        },
+
+        isDeveloper() {
+            return this.hasRole('developer');
         }
     };
 
@@ -298,10 +504,10 @@
         name: 'Core User',
         version: '1.0.0',
         type: 'framework',
-        description: 'Framework identity and user access layer.',
-        dependencies: [],
-        permissions: ['framework:read'],
-        capabilities: ['identity', 'session'],
+        description: 'Framework identity, session and access facade.',
+        dependencies: ['core-auth', 'core-access', 'core-audit'],
+        permissions: ['framework:read', 'user:read', 'user:write'],
+        capabilities: ['identity', 'session', 'access'],
         source: 'Core/core-user.js'
     });
 

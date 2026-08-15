@@ -72,6 +72,10 @@
          * @returns {object} Service-Objekt
          */
         get(name) {
+            if (!this.initialized) {
+                this.init();
+            }
+
             if (!this.services.has(name)) {
                 throw new Error(`Service "${name}" not found`);
             }
@@ -85,6 +89,10 @@
          * @returns {boolean}
          */
         has(name) {
+            if (!this.initialized) {
+                this.init();
+            }
+
             return this.services.has(name);
         },
 
@@ -193,53 +201,38 @@
         /**
          * Authentifiziert einen Benutzer
          */
-        async authenticate(userId) {
-            try {
-                let user = null;
-
-                // Erst DB-basierte Suche versuchen
-                if (window.DatabaseManager) {
-                    try {
-                        user = await UserService.getUser(userId);
-                    } catch (_) {}
-                }
-
-                // Fallback: RAM-basierte Demo-User im generischen UserModule
-                if (!user && window.UserModule) {
-                    user = window.UserModule.getUserById(userId);
-                }
-
-                if (user && (user.status === 'active' || user.active === true)) {
-                    this.currentUser = user;
-
-                    if (window.Core) {
-                        window.Core.emit('auth:authenticated', {
-                            userId: user.id,
-                            timestamp: new Date().toISOString()
-                        });
-                    }
-
-                    return user;
-                }
-
+        async authenticate(userIdOrCredentials) {
+            if (!window.CoreAuth || typeof window.CoreAuth.login !== 'function') {
                 return null;
-            } catch (error) {
-                console.error('Authentication error:', error);
-                throw error;
             }
+
+            const result = await window.CoreAuth.login(userIdOrCredentials);
+            if (!result || !result.ok) {
+                return null;
+            }
+
+            this.currentUser = result.data && result.data.user ? result.data.user : null;
+            return this.currentUser;
         },
 
         /**
          * Gibt den aktuellen Benutzer zurück
          */
         getCurrentUser() {
+            if (window.CoreAuth && typeof window.CoreAuth.getCurrentUser === 'function') {
+                return window.CoreAuth.getCurrentUser();
+            }
             return this.currentUser;
         },
 
         /**
          * Meldet den Benutzer ab
          */
-        logout() {
+        logout(sessionId = null) {
+            if (window.CoreAuth && typeof window.CoreAuth.logout === 'function') {
+                return window.CoreAuth.logout(sessionId);
+            }
+
             const previousUser = this.currentUser;
             this.currentUser = null;
 
@@ -249,12 +242,17 @@
                     timestamp: new Date().toISOString()
                 });
             }
+
+            return true;
         },
 
         /**
          * Prüft, ob der Benutzer authentifiziert ist
          */
         isAuthenticated() {
+            if (window.CoreAuth && typeof window.CoreAuth.isAuthenticated === 'function') {
+                return window.CoreAuth.isAuthenticated();
+            }
             return this.currentUser !== null;
         }
     };

@@ -64,6 +64,22 @@
                         await window.DatabaseManager.init();
                     }
 
+                    if (window.CoreAuth && typeof window.CoreAuth.init === 'function') {
+                        window.CoreAuth.init();
+                    }
+
+                    if (window.CoreAccess && typeof window.CoreAccess.init === 'function') {
+                        window.CoreAccess.init();
+                    }
+
+                    if (window.CoreAudit && typeof window.CoreAudit.init === 'function') {
+                        window.CoreAudit.init();
+                    }
+
+                    if (window.CoreEventRing && typeof window.CoreEventRing.init === 'function') {
+                        window.CoreEventRing.init();
+                    }
+
                     if (window.ServiceManager && typeof window.ServiceManager.init === 'function') {
                         window.ServiceManager.init();
                     }

@@ -330,7 +330,11 @@
                 'CoreContext',
                 'CoreState',
                 'CoreEventBus',
-                'CoreLifecycle'
+                'CoreLifecycle',
+                'CoreAuth',
+                'CoreAccess',
+                'CoreAudit',
+                'CoreEventRing'
             ];
 
             const missingComponents = requiredComponents.filter(

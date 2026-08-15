@@ -2,8 +2,9 @@
  * Generic Admin Module
  * Version: 1.0.0
  *
- * Administrative functions for a reusable framework.
- * No application-specific logic is included here.
+ * Administrative facade for the approved master architecture.
+ * It orchestrates user, access, audit and module management without creating
+ * a second auth or session truth.
  */
 
 (() => {
@@ -13,123 +14,132 @@
         name: 'admin-module',
         version: '1.0.0',
         initialized: false,
-        systemStats: {
-            startedAt: null,
-            modules: [],
-            errors: [],
-            events: []
-        },
+        startedAt: new Date().toISOString(),
 
         init() {
             if (this.initialized) {
                 return this;
             }
 
-            this.systemStats.startedAt = new Date().toISOString();
             this.initialized = true;
 
             if (window.Core) {
                 window.Core.on('error:handled', (data) => {
-                    this.logError(data && data.error ? data.error : data);
+                    if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                        window.CoreAudit.record('system', 'admin:error', data && data.context ? data.context.type || 'error' : 'error', 'handled', data || {});
+                    }
                 });
 
-                window.Core.on('module:registered', (data) => {
-                    this.addModuleStats(data);
-                });
-
-                window.Core.emit('admin-module:initialized', {
-                    message: 'Admin module initialized',
-                    timestamp: new Date().toISOString()
+                window.Core.emit('admin:initialized', {
+                    timestamp: new Date().toISOString(),
+                    startedAt: this.startedAt
                 });
             }
 
             return this;
         },
 
-        logError(error) {
-            const entry = error && typeof error === 'object'
-                ? {
-                    timestamp: new Date().toISOString(),
-                    message: error.message || String(error),
-                    stack: error.stack || '',
-                    type: error.name || 'Unknown'
-                }
-                : {
-                    timestamp: new Date().toISOString(),
-                    message: String(error),
-                    stack: '',
-                    type: 'Unknown'
-                };
-
-            this.systemStats.errors.push(entry);
-
-            if (this.systemStats.errors.length > 100) {
-                this.systemStats.errors.shift();
-            }
-
-            if (window.Core) {
-                window.Core.emit('admin-module:error-logged', entry);
-            }
+        getUptime() {
+            const start = new Date(this.startedAt);
+            return Date.now() - start.getTime();
         },
 
-        addModuleStats(data) {
-            const moduleEntry = {
-                name: data && data.name ? data.name : 'Unknown',
-                version: data && data.version ? data.version : 'Unknown',
-                registeredAt: new Date().toISOString(),
-                status: 'registered'
-            };
+        async listUsers() {
+            if (!window.UserModule || typeof window.UserModule.listUsers !== 'function') {
+                return { ok: false, code: 'USER_MODULE_UNAVAILABLE', message: 'User module is not available.' };
+            }
 
-            this.systemStats.modules.push(moduleEntry);
+            return await window.UserModule.listUsers();
+        },
+
+        async getUserById(userId) {
+            if (!window.UserModule || typeof window.UserModule.getUserById !== 'function') {
+                return { ok: false, code: 'USER_MODULE_UNAVAILABLE', message: 'User module is not available.' };
+            }
+
+            return await window.UserModule.getUserById(userId);
+        },
+
+        async createUser(userData, actor = 'system') {
+            if (!window.UserModule || typeof window.UserModule.createUser !== 'function') {
+                return { ok: false, code: 'USER_MODULE_UNAVAILABLE', message: 'User module is not available.' };
+            }
+
+            return await window.UserModule.createUser(userData, actor);
+        },
+
+        async updateUser(userId, updates, actor = 'system') {
+            if (!window.UserModule || typeof window.UserModule.updateUser !== 'function') {
+                return { ok: false, code: 'USER_MODULE_UNAVAILABLE', message: 'User module is not available.' };
+            }
+
+            return await window.UserModule.updateUser(userId, updates, actor);
+        },
+
+        async deleteUser(userId, actor = 'system') {
+            if (!window.UserModule || typeof window.UserModule.deleteUser !== 'function') {
+                return { ok: false, code: 'USER_MODULE_UNAVAILABLE', message: 'User module is not available.' };
+            }
+
+            return await window.UserModule.deleteUser(userId, actor);
+        },
+
+        getCurrentUser() {
+            if (!window.UserModule || typeof window.UserModule.getCurrentUser !== 'function') {
+                return null;
+            }
+
+            return window.UserModule.getCurrentUser();
+        },
+
+        getAuditLog() {
+            return window.CoreAudit && typeof window.CoreAudit.list === 'function'
+                ? window.CoreAudit.list()
+                : [];
+        },
+
+        getEventRingBuffer() {
+            return window.CoreEventRing && typeof window.CoreEventRing.get === 'function'
+                ? window.CoreEventRing.get()
+                : {};
         },
 
         getSystemStats() {
+            const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+                ? window.ModuleRegistry.getAll()
+                : [];
+
+            const users = window.UserModule && typeof window.UserModule.listUsers === 'function'
+                ? (window.UserModule.listUsers() || { data: { count: 0 } })
+                : { data: { count: 0 } };
+
             return {
+                startedAt: this.startedAt,
                 uptime: this.getUptime(),
-                moduleCount: this.systemStats.modules.length,
-                modules: this.systemStats.modules,
-                errorCount: this.systemStats.errors.length,
-                recentErrors: this.systemStats.errors.slice(-10),
-                startedAt: this.systemStats.startedAt
+                moduleCount: registry.length,
+                userCount: users && users.data && typeof users.data.count === 'number' ? users.data.count : 0,
+                modules: registry.map((module) => ({ id: module.id, name: module.name, status: module.status || 'available' }))
             };
         },
 
-        getUptime() {
-            if (!this.systemStats.startedAt) {
-                return 0;
+        async canAccess(subject, action, resource = null) {
+            if (!window.CoreAccess || typeof window.CoreAccess.can !== 'function') {
+                return { ok: false, code: 'ACCESS_UNAVAILABLE', message: 'Core access is not available.' };
             }
 
-            const startTime = new Date(this.systemStats.startedAt);
-            const now = new Date();
-            return now.getTime() - startTime.getTime();
+            return window.CoreAccess.can(subject, action, resource);
         },
 
-        getLoadedModules() {
-            return this.systemStats.modules;
-        },
-
-        getErrorLog() {
-            return this.systemStats.errors;
-        },
-
-        clearErrorLog() {
-            this.systemStats.errors = [];
-
-            if (window.Core) {
-                window.Core.emit('admin-module:error-log-cleared', {
-                    timestamp: new Date().toISOString()
-                });
-            }
-        },
-
-        performHealthCheck() {
+        healthCheck() {
             const checks = {
                 timestamp: new Date().toISOString(),
                 coreLoaded: !!window.Core,
-                moduleManagerLoaded: !!window.ModuleManager,
+                authLoaded: !!window.CoreAuth,
+                accessLoaded: !!window.CoreAccess,
+                auditLoaded: !!window.CoreAudit,
+                eventRingLoaded: !!window.CoreEventRing,
                 userModuleLoaded: !!window.UserModule,
-                eventsWorking: this.testEventEmission(),
-                storageAccessible: this.testStorageAccess()
+                moduleManagerLoaded: !!window.ModuleManager
             };
 
             checks.healthy = Object.values(checks)
@@ -139,53 +149,16 @@
             return checks;
         },
 
-        testEventEmission() {
-            try {
-                if (!window.Core) {
-                    return false;
-                }
-
-                let testPassed = false;
-                const listener = () => {
-                    testPassed = true;
-                };
-
-                window.Core.once('admin-test:event', listener);
-                window.Core.emit('admin-test:event');
-
-                return testPassed;
-            } catch (error) {
-                return false;
-            }
-        },
-
-        testStorageAccess() {
-            try {
-                if (typeof window.localStorage !== 'undefined') {
-                    const testKey = 'admin-health-check-test';
-                    const testValue = Date.now().toString();
-                    window.localStorage.setItem(testKey, testValue);
-                    const read = window.localStorage.getItem(testKey);
-                    window.localStorage.removeItem(testKey);
-                    return read === testValue;
-                }
-
-                return !!window.DatabaseManager;
-            } catch (error) {
-                return false;
-            }
-        },
-
         getDebugInfo() {
             return {
                 timestamp: new Date().toISOString(),
                 environment: {
-                    userAgent: navigator.userAgent,
-                    language: navigator.language,
-                    onLine: navigator.onLine
+                    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+                    language: typeof navigator !== 'undefined' ? navigator.language : 'unknown',
+                    onLine: typeof navigator !== 'undefined' ? navigator.onLine : true
                 },
-                systemStats: this.getSystemStats(),
-                healthCheck: this.performHealthCheck()
+                stats: this.getSystemStats(),
+                health: this.healthCheck()
             };
         }
     };
@@ -195,10 +168,10 @@
         name: 'Core Admin',
         version: '1.0.0',
         type: 'framework',
-        description: 'Framework administration and health diagnostics.',
-        dependencies: [],
-        permissions: ['framework:read', 'system:view'],
-        capabilities: ['diagnostics', 'health-check'],
+        description: 'Framework administration and governance facade.',
+        dependencies: ['core-user', 'core-auth', 'core-access', 'core-audit', 'core-event-ring'],
+        permissions: ['framework:read', 'system:view', 'user:read', 'user:write'],
+        capabilities: ['diagnostics', 'audit', 'admin'],
         source: 'Core/core-admin.js'
     });
 
