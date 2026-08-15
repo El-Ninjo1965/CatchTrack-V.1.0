@@ -37,6 +37,7 @@
 
     const normalizePermissions = (user = {}) => {
         const rolePermissions = {
+            user: ['user:read'],
             member: ['user:read'],
             manager: ['user:read', 'user:write'],
             admin: ['user:read', 'user:write', 'system:view'],
@@ -66,7 +67,7 @@
 
         const roles = Array.isArray(user.roles) && user.roles.length > 0
             ? user.roles.map(String)
-            : (typeof user.role === 'string' && user.role.trim() ? [user.role.trim()] : ['member']);
+            : (typeof user.role === 'string' && user.role.trim() ? [user.role.trim()] : ['user']);
 
         return {
             id: String(user.id || generateUuid()),
@@ -86,6 +87,31 @@
             schemaVersion: user.schemaVersion || 1,
             metadata: user.metadata && typeof user.metadata === 'object' ? { ...user.metadata } : {}
         };
+    };
+
+    const evaluateWriteAccess = (subject, targetUser) => {
+        if (!subject || subject === 'system' || (typeof subject === 'string' && subject.trim() === 'system')) {
+            return { ok: true };
+        }
+
+        if (!window.CoreAccess || typeof window.CoreAccess.can !== 'function') {
+            return { ok: true };
+        }
+
+        const resource = targetUser && typeof targetUser === 'object'
+            ? { id: targetUser.id, protected: !!targetUser.protected }
+            : { protected: false };
+
+        const accessResult = window.CoreAccess.can(subject, 'user:write', resource);
+        if (!accessResult || !accessResult.ok) {
+            return {
+                ok: false,
+                code: 'ACCESS_DENIED',
+                message: 'User write access denied.'
+            };
+        }
+
+        return { ok: true };
     };
 
     const UserModule = {
@@ -256,6 +282,25 @@
                 };
             }
 
+            if (actor && actor !== 'system' && !window.CoreAccess) {
+                return {
+                    ok: false,
+                    code: 'ACCESS_UNAVAILABLE',
+                    message: 'Access module is not available.'
+                };
+            }
+
+            if (actor && actor !== 'system' && window.CoreAccess && typeof window.CoreAccess.can === 'function') {
+                const access = window.CoreAccess.can(actor, 'user:write', 'user');
+                if (!access || !access.ok) {
+                    return {
+                        ok: false,
+                        code: 'ACCESS_DENIED',
+                        message: 'User creation requires user:write permission.'
+                    };
+                }
+            }
+
             const username = String(userData.username || '').trim();
             if (!this.isUsernameAvailable(username)) {
                 return {
@@ -274,7 +319,7 @@
                 displayName: userData.displayName || username,
                 email: userData.email || '',
                 status: userData.status || 'active',
-                roles: Array.isArray(userData.roles) && userData.roles.length > 0 ? userData.roles.map(String) : [userData.role || 'member'],
+                roles: Array.isArray(userData.roles) && userData.roles.length > 0 ? userData.roles.map(String) : [userData.role || 'user'],
                 permissions: userData.permissions || [],
                 protected: !!userData.protected,
                 createdAt,
@@ -327,6 +372,13 @@
                 return { ok: false, code: 'USER_NOT_FOUND', message: 'User not found.' };
             }
 
+            if (actor && actor !== 'system') {
+                const access = evaluateWriteAccess(actor, currentUser);
+                if (!access.ok) {
+                    return access;
+                }
+            }
+
             if (updates.username && String(updates.username).trim().length >= 3) {
                 const username = String(updates.username).trim();
                 if (!this.isUsernameAvailable(username, userId)) {
@@ -376,6 +428,13 @@
             }
 
             const user = currentResult.data;
+            if (actor && actor !== 'system') {
+                const access = evaluateWriteAccess(actor, user);
+                if (!access.ok) {
+                    return access;
+                }
+            }
+
             const updated = {
                 ...user,
                 status: 'deleted',
@@ -413,6 +472,13 @@
             }
 
             const user = currentResult.data;
+            if (actor && actor !== 'system') {
+                const access = evaluateWriteAccess(actor, user);
+                if (!access.ok) {
+                    return access;
+                }
+            }
+
             const updated = {
                 ...user,
                 status,

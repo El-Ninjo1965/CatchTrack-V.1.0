@@ -104,20 +104,24 @@
                 : {};
         },
 
-        getSystemStats() {
+        async getSystemStats() {
             const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
                 ? window.ModuleRegistry.getAll()
                 : [];
 
-            const users = window.UserModule && typeof window.UserModule.listUsers === 'function'
-                ? (window.UserModule.listUsers() || { data: { count: 0 } })
-                : { data: { count: 0 } };
+            let userCount = 0;
+            if (window.UserModule && typeof window.UserModule.listUsers === 'function') {
+                const usersResult = await window.UserModule.listUsers();
+                userCount = usersResult && usersResult.data && typeof usersResult.data.count === 'number'
+                    ? usersResult.data.count
+                    : 0;
+            }
 
             return {
                 startedAt: this.startedAt,
                 uptime: this.getUptime(),
                 moduleCount: registry.length,
-                userCount: users && users.data && typeof users.data.count === 'number' ? users.data.count : 0,
+                userCount,
                 modules: registry.map((module) => ({ id: module.id, name: module.name, status: module.status || 'available' }))
             };
         },
@@ -149,7 +153,7 @@
             return checks;
         },
 
-        getDebugInfo() {
+        async getDebugInfo() {
             return {
                 timestamp: new Date().toISOString(),
                 environment: {
@@ -157,7 +161,7 @@
                     language: typeof navigator !== 'undefined' ? navigator.language : 'unknown',
                     onLine: typeof navigator !== 'undefined' ? navigator.onLine : true
                 },
-                stats: this.getSystemStats(),
+                stats: await this.getSystemStats(),
                 health: this.healthCheck()
             };
         }

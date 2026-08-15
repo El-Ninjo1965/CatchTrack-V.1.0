@@ -2,9 +2,9 @@
 
 ## Projektstatus
 
-STATUS: IMPLEMENTATION ACTIVE / MASTER CORE IN PROGRESS
+STATUS: READY FOR CORE REVIEW
 
-Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin Master-Core-Fassaden werden in der bereits genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen.
+Das Repository bleibt ein neutrales, wiederverwendbares Framework. Der Core ist stabil, und die User/Admin Master-Core-Fassaden wurden in der bereits genehmigten Architektur implementiert, ohne den neutralen Core unnötig umzubauen. Der aktuelle Stand wurde gegen die freigegebene Architektur und den Laufzeitcode geprüft.
 
 ## Aktuelle Architekturübersicht
 
@@ -113,8 +113,8 @@ PHASE: User/Admin Master Core Implementierung
 ## Freeze- und Release-Status
 
 - Framework-Core: stabil
-- User/Admin Master-Architektur: genehmigt und umsetzungsreif
-- Implementierung des Master-Cores: aktiv
+- User/Admin Master-Architektur: genehmigt und umgesetzt
+- Implementierung des Master-Cores: geprüft und bereit für Review
 - Freeze: nicht durchgeführt
 
 ## Master-Status

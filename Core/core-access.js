@@ -11,6 +11,7 @@
     'use strict';
 
     const DEFAULT_ROLE_PERMISSIONS = {
+        user: ['user:read'],
         member: ['user:read'],
         manager: ['user:read', 'user:write'],
         admin: ['user:read', 'user:write', 'system:view'],

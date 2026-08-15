@@ -64,14 +64,14 @@ test('user/admin master core core contracts', async () => {
   const userResponse = await window.UserModule.createUser({
     username: 'alice',
     displayName: 'Alice Example',
-    roles: ['member'],
+    roles: ['user'],
     permissions: ['user:read']
   });
 
   assert.equal(userResponse.ok, true);
   assert.match(userResponse.data.displayId, /^USR-\d{6}$/);
   assert.equal(userResponse.data.username, 'alice');
-  assert.equal(userResponse.data.roles.includes('member'), true);
+  assert.equal(userResponse.data.roles.includes('user'), true);
 
   const lookup = await window.UserModule.getUserById(userResponse.data.id);
   assert.equal(lookup.ok, true);
@@ -102,6 +102,24 @@ test('user/admin master core core contracts', async () => {
 
   const health = window.AdminModule.healthCheck();
   assert.equal(health.healthy, true);
+
+  const stats = await window.AdminModule.getSystemStats();
+  assert.equal(typeof stats.userCount, 'number');
+
+  const protectedUser = await window.UserModule.createUser({
+    username: 'secureuser',
+    displayName: 'Secure User',
+    roles: ['user'],
+    permissions: ['user:read'],
+    protected: true
+  }, 'system');
+
+  const unauthorizedProtectedUpdate = await window.UserModule.updateUser(
+    protectedUser.data.id,
+    { displayName: 'Unauthorized change' },
+    { id: 'actor-readonly', roles: ['user'], permissions: ['user:read'] }
+  );
+  assert.equal(unauthorizedProtectedUpdate.ok, false);
 
   const updateResult = await window.UserModule.updateUser(userResponse.data.id, {
     displayName: 'Alice Updated'

@@ -196,10 +196,10 @@
     // Auth Service
     const AuthService = {
         name: 'auth',
-        currentUser: null,
 
         /**
          * Authentifiziert einen Benutzer
+         * Compatibility-only delegation to the central CoreAuth truth.
          */
         async authenticate(userIdOrCredentials) {
             if (!window.CoreAuth || typeof window.CoreAuth.login !== 'function') {
@@ -211,8 +211,7 @@
                 return null;
             }
 
-            this.currentUser = result.data && result.data.user ? result.data.user : null;
-            return this.currentUser;
+            return result.data && result.data.user ? result.data.user : null;
         },
 
         /**
@@ -222,7 +221,7 @@
             if (window.CoreAuth && typeof window.CoreAuth.getCurrentUser === 'function') {
                 return window.CoreAuth.getCurrentUser();
             }
-            return this.currentUser;
+            return null;
         },
 
         /**
@@ -233,12 +232,9 @@
                 return window.CoreAuth.logout(sessionId);
             }
 
-            const previousUser = this.currentUser;
-            this.currentUser = null;
-
             if (window.Core) {
                 window.Core.emit('auth:logout', {
-                    userId: previousUser ? previousUser.id : null,
+                    userId: null,
                     timestamp: new Date().toISOString()
                 });
             }
@@ -253,7 +249,7 @@
             if (window.CoreAuth && typeof window.CoreAuth.isAuthenticated === 'function') {
                 return window.CoreAuth.isAuthenticated();
             }
-            return this.currentUser !== null;
+            return false;
         }
     };
 
