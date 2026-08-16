@@ -1,0 +1,6 @@
+Options -Indexes
+ServerSignature Off
+
+<FilesMatch "\.(env|ini|log|sql)$">
+  Require all denied
+</FilesMatch>

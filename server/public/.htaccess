@@ -1,0 +1,16 @@
+Options -Indexes
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteCond %{REQUEST_URI} ^/api/?$
+  RewriteRule ^api/?$ /api/index.php [L,QSA]
+
+  RewriteCond %{REQUEST_URI} ^/admin/?$
+  RewriteRule ^admin/?$ /admin/index.php [L,QSA]
+</IfModule>
+
+<FilesMatch "^(\.env|composer\.(json|lock)|phpunit\.xml)$">
+  Require all denied
+</FilesMatch>
