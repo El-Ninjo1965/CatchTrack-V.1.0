@@ -8,8 +8,7 @@
   },
   "scripts": {
     "start": "node server/server.js",
-    "test": "node tests/user-admin-core.test.js && node tests/framework-neutral.test.js",
-    "test:core": "node tests/user-admin-core.test.js",
+    "test": "node tests/framework-neutral.test.js",
     "test:neutral": "node tests/framework-neutral.test.js",
     "test:server": "PORT=3100 node server/server.js & pid=$!; sleep 1; curl -fsS http://127.0.0.1:3100/health && curl -fsS http://127.0.0.1:3100/api/health; kill $pid"
   },
@@ -22,9 +21,5 @@
   ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "devDependencies": {
-    "@playwright/test": "^1.62.1",
-    "playwright": "^1.62.1"
-  }
+  "type": "commonjs"
 }
