@@ -68,3 +68,6 @@ terminal.md
 *.pid
 *.pid.lock
 *.seed
+# Server local runtime config
+server/config/config.local.php
+server/config/.env

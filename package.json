@@ -1,7 +1,7 @@
 {
-  "name": "catchtrack-v.1.0",
+  "name": "web-app-platform-v1",
   "version": "1.0.0",
-  "description": "",
+  "description": "Neutral reusable web app platform",
   "main": "app-demo.js",
   "directories": {
     "test": "tests"
@@ -11,18 +11,10 @@
     "test:core": "node tests/user-admin-core.test.js",
     "test:ui": "playwright test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/El-Ninjo1965/CatchTrack-V.1.0.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0/issues"
-  },
-  "homepage": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0#readme",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "playwright": "^1.62.1"
