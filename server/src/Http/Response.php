@@ -10,7 +10,15 @@ final class Response
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
         header('X-Content-Type-Options: nosniff');
-        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $encoded = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if ($encoded === false) {
+            http_response_code(500);
+            echo '{"ok":false,"error":"encoding_error","message":"Response encoding failed."}';
+            return;
+        }
+
+        echo $encoded;
     }
 
     public static function redirect(string $path): void

@@ -11,9 +11,14 @@ use Platform\Auth\AuthService;
 use Platform\Database\Connection;
 use Platform\Modules\ModuleManager;
 use Platform\Admin\AdminService;
+use Platform\Security\SessionManager;
 
 session_id('platform-smoke-test');
-session_start();
+SessionManager::start([
+    'session_name' => 'platform_test_session',
+    'session_lifetime' => 3600,
+    'session_secure' => false,
+]);
 
 $connection = new Connection([
     'driver' => 'sqlite',

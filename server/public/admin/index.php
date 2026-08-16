@@ -20,8 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($username === '' || $password === '') {
         $errorMessage = 'Username and password are required.';
-    } elseif (!$authService->login($username, $password) || !$authService->requireAdmin()) {
+    } elseif (!$authService->login($username, $password)) {
         $errorMessage = 'Invalid administrator credentials.';
+    } elseif (!$authService->requireAdmin()) {
+        $authService->logout();
+        \Platform\Http\Response::redirect('/admin/index.php');
+        exit;
     } else {
         \Platform\Http\Response::redirect('/admin/index.php');
         exit;

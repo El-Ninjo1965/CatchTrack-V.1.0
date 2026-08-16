@@ -31,27 +31,33 @@ final class AuthService
         $passwordHash = password_hash((string) $bootstrapConfig['password'], PASSWORD_DEFAULT);
 
         $pdo->beginTransaction();
+        try {
+            $insertUser = $pdo->prepare('INSERT INTO users (username, password_hash, display_name, status, created_at, updated_at) VALUES (:username, :password_hash, :display_name, :status, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
+            $insertUser->execute([
+                'username' => $bootstrapConfig['username'],
+                'password_hash' => $passwordHash,
+                'display_name' => $bootstrapConfig['display_name'],
+                'status' => 'active'
+            ]);
 
-        $insertUser = $pdo->prepare('INSERT INTO users (username, password_hash, display_name, status, created_at, updated_at) VALUES (:username, :password_hash, :display_name, :status, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
-        $insertUser->execute([
-            'username' => $bootstrapConfig['username'],
-            'password_hash' => $passwordHash,
-            'display_name' => $bootstrapConfig['display_name'],
-            'status' => 'active'
-        ]);
+            $userId = (int) $pdo->lastInsertId();
 
-        $userId = (int) $pdo->lastInsertId();
+            $roleQuery = $pdo->prepare('SELECT id FROM roles WHERE name = :name LIMIT 1');
+            $roleQuery->execute(['name' => 'admin']);
+            $adminRole = $roleQuery->fetch(PDO::FETCH_ASSOC);
 
-        $roleQuery = $pdo->prepare('SELECT id FROM roles WHERE name = :name LIMIT 1');
-        $roleQuery->execute(['name' => 'admin']);
-        $adminRole = $roleQuery->fetch(PDO::FETCH_ASSOC);
+            if ($adminRole) {
+                $link = $pdo->prepare('INSERT INTO user_roles (user_id, role_id, assigned_at) VALUES (:user_id, :role_id, CURRENT_TIMESTAMP)');
+                $link->execute(['user_id' => $userId, 'role_id' => (int) $adminRole['id']]);
+            }
 
-        if ($adminRole) {
-            $link = $pdo->prepare('INSERT INTO user_roles (user_id, role_id, assigned_at) VALUES (:user_id, :role_id, CURRENT_TIMESTAMP)');
-            $link->execute(['user_id' => $userId, 'role_id' => (int) $adminRole['id']]);
+            $pdo->commit();
+        } catch (\Throwable $exception) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $exception;
         }
-
-        $pdo->commit();
     }
 
     public function login(string $username, string $password): bool
