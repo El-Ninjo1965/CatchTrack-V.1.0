@@ -13,6 +13,9 @@ $adminService = new \Platform\Admin\AdminService($connection, $moduleManager);
 $authService->ensureBootstrapAdmin($config['app']['bootstrap_admin']);
 
 $errorMessage = '';
+if (($_GET['error'] ?? '') === 'forbidden') {
+    $errorMessage = 'Access denied: administrator role required.';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim((string) ($_POST['username'] ?? ''));
@@ -24,11 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errorMessage = 'Invalid administrator credentials.';
     } elseif (!$authService->requireAdmin()) {
         $authService->logout();
-        \Platform\Http\Response::redirect('/admin/index.php');
-        exit;
+        \Platform\Http\Response::redirect('/admin/index.php?error=forbidden');
     } else {
         \Platform\Http\Response::redirect('/admin/index.php');
-        exit;
     }
 }
 

@@ -24,5 +24,6 @@ final class Response
     public static function redirect(string $path): void
     {
         header('Location: ' . $path, true, 302);
+        exit;
     }
 }
