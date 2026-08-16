@@ -2,7 +2,7 @@
  * Generic Admin Module
  * Version: 1.0.0
  *
- * Administrative facade for the approved master architecture.
+ * Administrative facade for the generic platform architecture.
  * It orchestrates user, access, audit and module management without creating
  * a second auth or session truth.
  */

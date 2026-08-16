@@ -2,7 +2,7 @@
  * Generic User Module
  * Version: 1.0.0
  *
- * User facade for the approved master architecture.
+ * User facade for the generic platform architecture.
  * It delegates identity, auth, access and audit to central core services.
  */
 
