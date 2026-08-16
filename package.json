@@ -1,8 +1,8 @@
 {
-  "name": "catchtrack-v.1.0",
+  "name": "web-app-framework",
   "version": "1.0.0",
-  "description": "",
-  "main": "app-demo.js",
+  "description": "Neutral reusable web-app framework",
+  "main": "Core/core-entry.js",
   "directories": {
     "test": "tests"
   },
