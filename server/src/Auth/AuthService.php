@@ -32,7 +32,7 @@ final class AuthService
 
         $pdo->beginTransaction();
 
-        $insertUser = $pdo->prepare('INSERT INTO users (username, password_hash, display_name, status, created_at, updated_at) VALUES (:username, :password_hash, :display_name, :status, NOW(), NOW())');
+        $insertUser = $pdo->prepare('INSERT INTO users (username, password_hash, display_name, status, created_at, updated_at) VALUES (:username, :password_hash, :display_name, :status, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
         $insertUser->execute([
             'username' => $bootstrapConfig['username'],
             'password_hash' => $passwordHash,
@@ -47,7 +47,7 @@ final class AuthService
         $adminRole = $roleQuery->fetch(PDO::FETCH_ASSOC);
 
         if ($adminRole) {
-            $link = $pdo->prepare('INSERT INTO user_roles (user_id, role_id, assigned_at) VALUES (:user_id, :role_id, NOW())');
+            $link = $pdo->prepare('INSERT INTO user_roles (user_id, role_id, assigned_at) VALUES (:user_id, :role_id, CURRENT_TIMESTAMP)');
             $link->execute(['user_id' => $userId, 'role_id' => (int) $adminRole['id']]);
         }
 
