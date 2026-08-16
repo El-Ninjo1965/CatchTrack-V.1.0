@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Platform Administration</title>
+    <title>Platform Diagnostics</title>
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body data-page="admin">
+  <body data-page="developer">
     <div id="accessDenied" class="auth-shell hidden">
       <div class="auth-card">
         <h2>Access denied</h2>
-        <p class="subtle">Administrative access requires an authorized role.</p>
+        <p class="subtle">Developer diagnostics require an authorized role.</p>
         <div class="action-list">
           <a class="nav-item" id="backToAppLink" href="index.html">Return to platform</a>
         </div>
@@ -19,8 +19,8 @@
 
     <div id="authPanel" class="auth-shell">
       <div class="auth-card">
-        <h2>Platform Administration</h2>
-        <p class="subtle">Sign in to access the administrator workspace.</p>
+        <h2>Developer Console</h2>
+        <p class="subtle">Technical diagnostics and system status for the runtime.</p>
         <div class="form-grid">
           <div class="form-field">
             <label for="loginUsername">Username</label>
@@ -38,7 +38,7 @@
             <button id="setPasswordBtn" class="secondary" type="button">Set password</button>
             <button id="loginBtn" class="primary" type="button">Sign in</button>
           </div>
-          <div id="authMessage" class="message info">Use the preview auth flow for local testing.</div>
+          <div id="authMessage" class="message info">Developer access is limited to authenticated and authorized users.</div>
         </div>
       </div>
     </div>
@@ -46,10 +46,10 @@
     <div id="appShell" class="app-shell hidden">
       <aside class="sidebar">
         <div class="brand-box">
-          <div class="brand-mark">P</div>
+          <div class="brand-mark">D</div>
           <div>
             <div class="brand-name">Platform</div>
-            <div class="brand-subtitle">Administration</div>
+            <div class="brand-subtitle">Diagnostics</div>
           </div>
         </div>
         <div class="user-card">
@@ -60,31 +60,35 @@
           </div>
         </div>
         <div class="nav-section">
-          <div class="nav-section-title">Administration</div>
+          <div class="nav-section-title">Developer</div>
           <div id="userMenu" class="nav-list">
-            <button type="button" class="nav-item active" data-view="admin:dashboard">Administration Dashboard</button>
-            <button type="button" class="nav-item" data-view="admin:users">Users</button>
-            <button type="button" class="nav-item" data-view="admin:roles">Roles</button>
-            <button type="button" class="nav-item" data-view="admin:permissions">Permissions</button>
-            <button type="button" class="nav-item" data-view="admin:modules">Modules</button>
-            <button type="button" class="nav-item" data-view="admin:audit">Audit</button>
-            <button type="button" class="nav-item" data-view="admin:system">System</button>
+            <button type="button" class="nav-item active" data-view="developer:core">Core Status</button>
+            <button type="button" class="nav-item" data-view="developer:auth">Auth Status</button>
+            <button type="button" class="nav-item" data-view="developer:access">Access Status</button>
+            <button type="button" class="nav-item" data-view="developer:database">Database / Storage</button>
+            <button type="button" class="nav-item" data-view="developer:modules">Module Status</button>
+            <button type="button" class="nav-item" data-view="developer:diagnostics">Diagnostics</button>
+            <button type="button" class="nav-item" data-view="developer:console">Console</button>
+            <button type="button" class="nav-item" data-view="developer:audit">Audit</button>
+            <button type="button" class="nav-item" data-view="developer:tests">Technical Tests</button>
             <button type="button" class="nav-item" data-view="dashboard" data-href="index.html">Back to platform</button>
           </div>
         </div>
       </aside>
+
       <main class="main-panel">
         <div class="topbar">
-          <div class="topbar-title">Platform Administration</div>
+          <div class="topbar-title">Platform Diagnostics</div>
           <div class="header-actions">
             <span id="summaryRoleBadge" class="role-badge developer">developer</span>
             <button id="logoutBtn" class="secondary" type="button">Logout</button>
           </div>
         </div>
+
         <div class="summary-row">
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">Administrator</h2>
+              <h2 class="card-title">Developer identity</h2>
             </div>
             <div class="user-summary">
               <div>
@@ -96,42 +100,43 @@
           </div>
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">System overview</h2>
+              <h2 class="card-title">Runtime state</h2>
             </div>
-            <div id="activeModules" class="chip-list"><span class="chip">Admin access granted</span></div>
+            <div id="activeModules" class="chip-list"><span class="chip">Developer mode active</span></div>
           </div>
         </div>
+
         <div id="mainContent" class="content-wrap"></div>
       </main>
     </div>
 
-    <script src="Core/core.js"></script>
-    <script src="Core/core-event-bus.js"></script>
-    <script src="Core/core-error-handler.js"></script>
-    <script src="Core/error-log.js"></script>
-    <script src="Core/core-config.js"></script>
-    <script src="Core/core-context.js"></script>
-    <script src="Core/core-lifecycle.js"></script>
-    <script src="Core/core-state.js"></script>
-    <script src="Core/core-storage.js"></script>
-    <script src="Core/module-interface.js"></script>
-    <script src="Core/module-registry.js"></script>
-    <script src="Core/module-manager.js"></script>
-    <script src="Core/core-loader.js"></script>
-    <script src="Core/config-manager.js"></script>
-    <script src="Core/database-manager.js"></script>
-    <script src="Core/security.js"></script>
-    <script src="Core/core-auth.js"></script>
-    <script src="Core/core-access.js"></script>
-    <script src="Core/core-audit.js"></script>
-    <script src="Core/core-event-ring.js"></script>
-    <script src="Core/core-user.js"></script>
-    <script src="Core/core-admin.js"></script>
-    <script src="Core/service-manager.js"></script>
-    <script src="Core/core-startup.js"></script>
-    <script src="Core/core-runtime.js"></script>
-    <script src="Core/core-entry.js"></script>
-    <script src="Core/app.js"></script>
+    <script src="../Core/core.js"></script>
+    <script src="../Core/core-event-bus.js"></script>
+    <script src="../Core/core-error-handler.js"></script>
+    <script src="../Core/error-log.js"></script>
+    <script src="../Core/core-config.js"></script>
+    <script src="../Core/core-context.js"></script>
+    <script src="../Core/core-lifecycle.js"></script>
+    <script src="../Core/core-state.js"></script>
+    <script src="../Core/core-storage.js"></script>
+    <script src="../Core/module-interface.js"></script>
+    <script src="../Core/module-registry.js"></script>
+    <script src="../Core/module-manager.js"></script>
+    <script src="../Core/core-loader.js"></script>
+    <script src="../Core/config-manager.js"></script>
+    <script src="../Core/database-manager.js"></script>
+    <script src="../Core/security.js"></script>
+    <script src="../Core/core-auth.js"></script>
+    <script src="../Core/core-access.js"></script>
+    <script src="../Core/core-audit.js"></script>
+    <script src="../Core/core-event-ring.js"></script>
+    <script src="../Core/core-user.js"></script>
+    <script src="../Core/core-admin.js"></script>
+    <script src="../Core/service-manager.js"></script>
+    <script src="../Core/core-startup.js"></script>
+    <script src="../Core/core-runtime.js"></script>
+    <script src="../Core/core-entry.js"></script>
+    <script src="../Core/app.js"></script>
     <script src="master-ui.js"></script>
   </body>
 </html>

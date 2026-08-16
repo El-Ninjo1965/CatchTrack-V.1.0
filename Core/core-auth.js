@@ -54,7 +54,7 @@
         return safeUser;
     };
 
-    const SESSION_STORAGE_KEY = 'catchtrack.auth.session';
+    const SESSION_STORAGE_KEY = 'platform.auth.session';
 
     const readStoredSession = () => {
         if (typeof localStorage === 'undefined') {

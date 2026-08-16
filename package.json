@@ -1,28 +1,36 @@
 {
-  "name": "catchtrack-v.1.0",
+  "name": "neutral-web-platform",
   "version": "1.0.0",
-  "description": "",
-  "main": "app-demo.js",
+  "description": "Neutral reusable web application platform with core, server, webroot, administration, and module scaffolding.",
+  "main": "server/server.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "node tests/user-admin-core.test.js && playwright test",
+    "start": "node server/server.js",
+    "test": "node tests/user-admin-core.test.js && node tests/framework-neutral.test.js",
     "test:core": "node tests/user-admin-core.test.js",
-    "test:ui": "playwright test"
+    "test:neutral": "node tests/framework-neutral.test.js",
+    "test:server": "node server/server.js & pid=$!; sleep 1; curl -fsS http://127.0.0.1:3000/api/health; kill $pid"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/El-Ninjo1965/CatchTrack-V.1.0.git"
+    "url": "git+https://github.com/example/neutral-web-platform.git"
   },
-  "keywords": [],
+  "keywords": [
+    "platform",
+    "framework",
+    "web-app",
+    "modular",
+    "neutral"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0/issues"
+    "url": "https://github.com/example/neutral-web-platform/issues"
   },
-  "homepage": "https://github.com/El-Ninjo1965/CatchTrack-V.1.0#readme",
+  "homepage": "https://github.com/example/neutral-web-platform#readme",
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "playwright": "^1.62.1"
