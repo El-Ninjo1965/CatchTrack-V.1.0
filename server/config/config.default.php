@@ -20,7 +20,7 @@ return [
     'session' => [
         'name' => getenv('SESSION_NAME') ?: 'platform_session',
         'lifetime' => (int) (getenv('SESSION_LIFETIME') ?: '3600'),
-        'secure' => filter_var(getenv('SESSION_SECURE') ?: 'false', FILTER_VALIDATE_BOOL),
+        'secure' => filter_var(getenv('SESSION_SECURE') ?: 'true', FILTER_VALIDATE_BOOL),
         'httponly' => true,
         'samesite' => getenv('SESSION_SAMESITE') ?: 'Lax'
     ]
