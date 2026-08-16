@@ -462,7 +462,7 @@
         dependencies: ['core-user'],
         permissions: ['framework:read', 'auth:read', 'auth:write'],
         capabilities: ['authentication', 'session'],
-        source: 'Core/core-auth.js'
+        source: 'platform/core-auth.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

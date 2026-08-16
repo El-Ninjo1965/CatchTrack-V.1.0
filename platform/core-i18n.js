@@ -138,7 +138,7 @@
         dependencies: [],
         permissions: ['framework:read'],
         capabilities: ['localization'],
-        source: 'Core/core-i18n.js'
+        source: 'platform/core-i18n.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

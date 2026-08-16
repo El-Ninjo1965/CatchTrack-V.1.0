@@ -84,7 +84,7 @@
         dependencies: [],
         permissions: ['framework:read', 'audit:read', 'audit:write'],
         capabilities: ['audit', 'trace'],
-        source: 'Core/core-audit.js'
+        source: 'platform/core-audit.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

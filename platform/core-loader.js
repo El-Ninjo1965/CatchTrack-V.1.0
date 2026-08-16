@@ -21,7 +21,7 @@
             permissions: ['framework:read'],
             capabilities: ['identity', 'session'],
             globalName: 'UserModule',
-            source: 'Core/core-user.js'
+            source: 'platform/core-user.js'
         },
         {
             id: 'core-admin',
@@ -33,7 +33,7 @@
             permissions: ['framework:read', 'system:view'],
             capabilities: ['diagnostics', 'health-check'],
             globalName: 'AdminModule',
-            source: 'Core/core-admin.js'
+            source: 'platform/core-admin.js'
         },
         {
             id: 'core-i18n',
@@ -45,7 +45,7 @@
             permissions: ['framework:read'],
             capabilities: ['localization'],
             globalName: 'I18nModule',
-            source: 'Core/core-i18n.js'
+            source: 'platform/core-i18n.js'
         }
     ]);
 

@@ -133,7 +133,7 @@
         dependencies: [],
         permissions: ['framework:read', 'access:read', 'access:write'],
         capabilities: ['authorization', 'permission-check'],
-        source: 'Core/core-access.js'
+        source: 'platform/core-access.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

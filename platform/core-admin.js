@@ -176,7 +176,7 @@
         dependencies: ['core-user', 'core-auth', 'core-access', 'core-audit', 'core-event-ring'],
         permissions: ['framework:read', 'system:view', 'user:read', 'user:write'],
         capabilities: ['diagnostics', 'audit', 'admin'],
-        source: 'Core/core-admin.js'
+        source: 'platform/core-admin.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {

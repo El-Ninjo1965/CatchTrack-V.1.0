@@ -757,7 +757,7 @@
         dependencies: ['core-auth', 'core-access', 'core-audit'],
         permissions: ['framework:read', 'user:read', 'user:write'],
         capabilities: ['identity', 'session', 'access'],
-        source: 'Core/core-user.js'
+        source: 'platform/core-user.js'
     });
 
     if (!Array.isArray(window.FrameworkModuleCatalog)) {
