@@ -109,3 +109,11 @@ Run from repository root:
 - Tests: npm test 8/8 passed; npx playwright test --reporter=list 1/1 passed.
 - Branch: copilot/framework-acceptance-module-isolation.
 - Next step: commit, push, create PR, and squash-merge after GitHub reports a clean merge state.
+
+### Completion
+
+- PR #4 was squash-merged after GitHub reported OPEN, non-draft, CLEAN, and MERGEABLE.
+- Merge commit and final framework change on main: 9733e443c2c4e3e1dee224888f89b3836eadcf6c.
+- Verification on origin/main: npm test 8/8 passed; npx playwright test --reporter=list 1/1 passed.
+- Current preview endpoint: http://127.0.0.1:3000/.
+- Result: framework acceptance completed; no external module is required for core startup, discovery, or the preview.
