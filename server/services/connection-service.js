@@ -122,13 +122,31 @@ const createConnectionService = (storePath) => {
     fs.writeFileSync(storePath, JSON.stringify(data, null, 2) + '\n');
   };
 
-  const upsertConnection = (input) => {
+  const filterByApp = (connections, appId = null) => {
+    const normalizedAppId = normalizeText(appId);
+    if (!normalizedAppId) {
+      return connections;
+    }
+
+    return connections.filter((entry) => entry.appId === normalizedAppId);
+  };
+
+  const upsertConnection = (input, scopeAppId = null) => {
     const currentStore = readStore();
     const existing = currentStore.connections.find((entry) => entry.id === slugify(input && (input.id || input.appId)));
     const normalized = normalizeConnection(input, existing);
 
     if (!normalized.ok) {
       return normalized;
+    }
+
+    const scopedAppId = normalizeText(scopeAppId);
+    if (scopedAppId && normalized.data.appId !== scopedAppId) {
+      return {
+        ok: false,
+        code: 'ACCESS_DENIED',
+        message: 'Connection scope does not match the requested app.'
+      };
     }
 
     const nextConnections = currentStore.connections.filter((entry) => entry.id !== normalized.data.id);
@@ -147,7 +165,7 @@ const createConnectionService = (storePath) => {
     };
   };
 
-  const removeConnection = (connectionId) => {
+  const removeConnection = (connectionId, scopeAppId = null) => {
     const id = slugify(connectionId);
     if (!id) {
       return {
@@ -158,6 +176,16 @@ const createConnectionService = (storePath) => {
     }
 
     const currentStore = readStore();
+    const scopedAppId = normalizeText(scopeAppId);
+    const existing = currentStore.connections.find((entry) => entry.id === id);
+    if (scopedAppId && existing && existing.appId !== scopedAppId) {
+      return {
+        ok: false,
+        code: 'ACCESS_DENIED',
+        message: 'Connection scope does not match the requested app.'
+      };
+    }
+
     const nextConnections = currentStore.connections.filter((entry) => entry.id !== id);
 
     if (nextConnections.length === currentStore.connections.length) {
@@ -181,17 +209,27 @@ const createConnectionService = (storePath) => {
   };
 
   return {
-    listConnections() {
-      return readStore().connections;
+    listConnections(appId = null) {
+      return filterByApp(readStore().connections, appId);
     },
 
-    getConnection(connectionId) {
+    getConnection(connectionId, appId = null) {
       const id = slugify(connectionId);
       if (!id) {
         return null;
       }
 
-      return readStore().connections.find((entry) => entry.id === id) || null;
+      const connection = readStore().connections.find((entry) => entry.id === id) || null;
+      if (!connection) {
+        return null;
+      }
+
+      const scopedAppId = normalizeText(appId);
+      if (scopedAppId && connection.appId !== scopedAppId) {
+        return null;
+      }
+
+      return connection;
     },
 
     upsertConnection,

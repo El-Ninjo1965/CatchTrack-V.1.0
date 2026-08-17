@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "apps": [
+    {
+      "appId": "primary-web-app",
+      "appName": "Primary Web App",
+      "mountPath": "/",
+      "webRootDir": "webroot",
+      "dataRootDir": "server/state/apps/primary-web-app",
+      "apiBasePath": "/api",
+      "connectionScope": "primary-web-app",
+      "active": true,
+      "metadata": {}
+    }
+  ]
+}

@@ -2,7 +2,8 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { port, host, rootDir, webRootDir, apiBase, connectionStorePath } = require('../config');
+const { port, host, rootDir, webRootDir, apiBase, connectionStorePath, appRegistryPath } = require('../config');
+const { createAppRegistryService } = require('../services/app-registry');
 const { createConnectionService } = require('../services/connection-service');
 
 const appModulesDir = path.join(rootDir, 'app', 'modules');
@@ -158,9 +159,29 @@ const readAppModuleManifests = (modulesDir = appModulesDir) => {
   return manifests;
 };
 
-const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionService } = {}) => {
+const toPublicAppContext = (appContext) => {
+  if (!appContext) {
+    return null;
+  }
+
+  return {
+    appId: appContext.appId,
+    appName: appContext.appName,
+    mountPath: appContext.mountPath,
+    apiBasePath: appContext.apiBasePath,
+    connectionScope: appContext.connectionScope,
+    active: appContext.active,
+    metadata: appContext.metadata || {},
+    isAppScoped: !!appContext.isAppScoped
+  };
+};
+
+const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionService, appRegistryService, appContext } = {}) => {
   const pathname = url.pathname;
-  if (pathname === '/health' || pathname === `${apiBase}/health`) {
+  const routePath = appContext && appContext.relativePath ? appContext.relativePath : pathname;
+  const apiPrefix = appContext && appContext.apiBasePath ? appContext.apiBasePath : apiBase;
+
+  if (pathname === '/health' || routePath === `${apiPrefix}/health`) {
     sendJson(res, 200, {
       ok: true,
       service: 'neutral-platform',
@@ -171,7 +192,7 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
     return true;
   }
 
-  if (pathname === `${apiBase}/status`) {
+  if (routePath === `${apiPrefix}/status`) {
     sendJson(res, 200, {
       ok: true,
       environment: process.env.NODE_ENV || 'development',
@@ -185,7 +206,7 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
     return true;
   }
 
-  if (pathname === `${apiBase}/modules`) {
+  if (routePath === `${apiPrefix}/modules`) {
     const modules = readAppModuleManifests(modulesDir);
     sendJson(res, 200, {
       ok: true,
@@ -194,7 +215,35 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
     return true;
   }
 
-  if (pathname === `${apiBase}/connections`) {
+  if (routePath === `${apiPrefix}/app-context`) {
+    sendJson(res, 200, {
+      ok: true,
+      app: toPublicAppContext(appContext),
+      appCount: appRegistryService.listApps().length
+    });
+    return true;
+  }
+
+  if (routePath === `${apiPrefix}/apps`) {
+    if (!hasAdminAccess(req, adminAccessToken)) {
+      sendJson(res, adminAccessToken ? 403 : 401, {
+        ok: false,
+        code: adminAccessToken ? 'FORBIDDEN' : 'UNAUTHORIZED',
+        message: adminAccessToken
+          ? 'Administrative pages require server-side authorization.'
+          : 'Administrative access token is not configured.'
+      });
+      return true;
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      apps: appRegistryService.listApps()
+    });
+    return true;
+  }
+
+  if (routePath === `${apiPrefix}/connections`) {
     if (!hasAdminAccess(req, adminAccessToken)) {
       sendJson(res, adminAccessToken ? 403 : 401, {
         ok: false,
@@ -209,7 +258,7 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
     if (req.method === 'GET') {
       sendJson(res, 200, {
         ok: true,
-        connections: connectionService.listConnections()
+        connections: connectionService.listConnections(appContext && appContext.isAppScoped ? appContext.appId : null)
       });
       return true;
     }
@@ -227,7 +276,12 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
       }
 
       const payload = await readRequestJson(req);
-      const result = connectionService.upsertConnection(payload);
+      const result = connectionService.upsertConnection(
+        appContext && appContext.isAppScoped
+          ? { ...(payload || {}), appId: appContext.appId }
+          : payload,
+        appContext && appContext.isAppScoped ? appContext.appId : null
+      );
       sendJson(res, result.ok ? 201 : 400, result);
       return true;
     }
@@ -236,8 +290,8 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
     return true;
   }
 
-  if (pathname.startsWith(`${apiBase}/connections/`)) {
-    const connectionId = decodeURIComponent(pathname.slice(`${apiBase}/connections/`.length));
+  if (routePath.startsWith(`${apiPrefix}/connections/`)) {
+    const connectionId = decodeURIComponent(routePath.slice(`${apiPrefix}/connections/`.length));
 
     if (!hasAdminAccess(req, adminAccessToken)) {
       sendJson(res, adminAccessToken ? 403 : 401, {
@@ -251,7 +305,7 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
     }
 
     if (req.method === 'GET') {
-      const connection = connectionService.getConnection(connectionId);
+      const connection = connectionService.getConnection(connectionId, appContext && appContext.isAppScoped ? appContext.appId : null);
       if (!connection) {
         sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: 'Connection not found.' });
         return true;
@@ -263,13 +317,18 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
 
     if (req.method === 'PUT' || req.method === 'PATCH') {
       const payload = await readRequestJson(req);
-      const result = connectionService.upsertConnection({ ...(payload || {}), id: connectionId, appId: (payload && payload.appId) || connectionId });
+      const result = connectionService.upsertConnection(
+        appContext && appContext.isAppScoped
+          ? { ...(payload || {}), id: connectionId, appId: appContext.appId }
+          : { ...(payload || {}), id: connectionId, appId: (payload && payload.appId) || connectionId },
+        appContext && appContext.isAppScoped ? appContext.appId : null
+      );
       sendJson(res, result.ok ? 200 : 400, result);
       return true;
     }
 
     if (req.method === 'DELETE') {
-      const result = connectionService.removeConnection(connectionId);
+      const result = connectionService.removeConnection(connectionId, appContext && appContext.isAppScoped ? appContext.appId : null);
       sendJson(res, result.ok ? 200 : 404, result);
       return true;
     }
@@ -281,17 +340,24 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
   return false;
 };
 
-const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionStorePath: storePath = connectionStorePath } = {}) => {
+const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionStorePath: storePath = connectionStorePath, appRegistryPath: registryPath = appRegistryPath } = {}) => {
   const connectionApi = createConnectionService(storePath);
+  const appRegistry = createAppRegistryService(registryPath, { rootDir });
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${host}:${port}`);
+    const resolvedApp = appRegistry.resolveRequest(url.pathname);
+    const appContext = {
+      ...resolvedApp.app,
+      relativePath: resolvedApp.relativePath,
+      isAppScoped: !resolvedApp.isGlobalRoot || resolvedApp.app.mountPath !== '/'
+    };
 
-    if (await routeApi(req, url, res, { modulesDir, adminAccessToken, connectionService: connectionApi })) {
+    if (await routeApi(req, url, res, { modulesDir, adminAccessToken, connectionService: connectionApi, appRegistryService: appRegistry, appContext })) {
       return;
     }
 
-    let requestPath = decodeURIComponent(url.pathname);
+    let requestPath = decodeURIComponent(resolvedApp.relativePath);
 
     const protectedRoutes = {
       '/admin': '/admin.html',
@@ -320,7 +386,7 @@ const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.e
       requestPath = protectedRoutes[requestPath];
     }
 
-    if (requestPath === '/') {
+    if (requestPath === '/' || requestPath === '') {
       requestPath = '/index.html';
     }
 
@@ -339,7 +405,7 @@ const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.e
       return;
     }
 
-    const filePath = safeResolve(webRootDir, requestPath);
+    const filePath = safeResolve(appContext.webRootDir || webRootDir, requestPath);
     if (!filePath) {
       sendJson(res, 403, { ok: false, code: 'FORBIDDEN', message: 'Directory traversal is blocked.' });
       return;

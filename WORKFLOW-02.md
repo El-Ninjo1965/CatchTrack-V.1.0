@@ -110,3 +110,38 @@ Fortsetzung von WORKFLOW.md
 - Verbleibende Punkte:
   - Die Connection-Verwaltung ist bewusst app-neutral; konkrete App-Instanzen oder CatchTrack-spezifische Verbindungen werden noch nicht fest verdrahtet.
   - Weitere Lifecycle-Themen wie Deployments, Backups oder Benutzerverwaltung bleiben separat.
+
+## 2026-08-17 - Neutrale Multi-App-Serverstruktur
+
+- Aufgabe: Die Plattform so vorbereiten, dass mehrere voneinander getrennte Apps auf derselben Serverbasis laufen können, ohne den Core app-spezifisch zu machen.
+- Architekturentscheidung:
+  - Eine App wird jetzt über einen neutralen Registry-Eintrag identifiziert (`appId`, `appName`, `mountPath`, `webRootDir`, `dataRootDir`, `apiBasePath`, `connectionScope`).
+  - Der Server löst Requests gegen die App-Registry auf und trennt globale Root-Zugriffe von app-gebundenen Pfaden.
+  - App-spezifische Connection-Zugriffe sind an die jeweilige App-ID gebunden; globaler Admin-Zugriff bleibt davon getrennt.
+  - Die primäre Web-App bleibt auf `/`, spätere Apps können unter eigenen Mount-Paths wie `/catchtrack/` oder `/zukunft/` ergänzt werden.
+  - Gemeinsame Plattform-Bausteine bleiben unter `platform/` und werden nicht in app-spezifische Bereiche verschoben.
+- Neue Struktur:
+  - `server/state/apps.json` enthält die neutrale App-Registry.
+  - `server/services/app-registry.js` löst App-Kontexte und Mount-Paths auf.
+  - `server/services/connection-service.js` unterstützt app-gebundene Listen, Lese- und Schreibzugriffe.
+  - Der Server kann app-gebundene APIs unter dem jeweiligen Mount-Path bereitstellen, ohne die bestehende User-App zu verändern.
+- Wie eine App identifiziert wird:
+  - Über `appId` in der Registry und im Connection-Record.
+  - Über den Mount-Path der Request-URL, der auf den passenden Registry-Eintrag aufgelöst wird.
+  - Über `api/app-context`, das den aktuellen App-Kontext zurückgibt.
+- Wie Isolation funktioniert:
+  - App-gebundene Connection-Zugriffe werden serverseitig auf die aktuelle App-ID begrenzt.
+  - Der globale Admin-Bereich bleibt neutral und kann weiterhin appübergreifend verwalten.
+  - Daten-/Konfigurationspfade sind pro App getrennt vorgesehen.
+- Wie später `/catchtrack/` daraus entstehen kann:
+  - Durch einen weiteren Registry-Eintrag mit eigenem Mount-Path und eigenen Daten-/Webroot-Pfaden.
+  - Ohne Änderung an der neutralen Core-, Connection- oder Admin-Logik.
+- Bewusst offen:
+  - Keine konkrete zweite App implementiert.
+  - Kein Deployment auf `/catchtrack/`.
+  - Keine Benutzerverwaltung, Backups oder Update-Verwaltung.
+  - Kein App-spezifisches Frontend-Routing jenseits der Registry-Grundlage.
+- Tests:
+  - `npm test`: 10/10 bestanden
+  - `npx playwright test --reporter=list`: 3/3 bestanden
+  - `git diff --check`: keine Fehler

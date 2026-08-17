@@ -284,7 +284,9 @@ test('server exposes neutral module catalog and module assets', async () => {
 
 test('server grants protected technical routes with the configured token', async () => {
   const { createServer } = require(path.join(root, 'server', 'server.js'));
-  const serverInstance = createServer({ adminAccessToken: 'unit-admin-token' });
+  const tempStoreDir = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-connections-'));
+  const connectionStorePath = path.join(tempStoreDir, 'connections.json');
+  const serverInstance = createServer({ adminAccessToken: 'unit-admin-token', connectionStorePath });
 
   await new Promise((resolve, reject) => {
     serverInstance.listen(0, '127.0.0.1', () => resolve());
@@ -337,6 +339,100 @@ test('server grants protected technical routes with the configured token', async
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));
   });
+
+  fs.rmSync(tempStoreDir, { recursive: true, force: true });
+});
+
+test('server resolves app context and keeps app-scoped connections isolated', async () => {
+  const { createServer } = require(path.join(root, 'server', 'server.js'));
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-apps-'));
+  const futureWebRoot = path.join(tempRoot, 'future-webroot');
+  const futureDataRoot = path.join(tempRoot, 'future-data');
+  fs.mkdirSync(futureWebRoot, { recursive: true });
+  fs.mkdirSync(futureDataRoot, { recursive: true });
+  fs.writeFileSync(path.join(futureWebRoot, 'index.html'), '<!doctype html><html><head><title>Future App</title></head><body><h1>Future App</h1></body></html>');
+
+  const appRegistryPath = path.join(tempRoot, 'apps.json');
+  fs.writeFileSync(appRegistryPath, JSON.stringify({
+    schemaVersion: 1,
+    apps: [
+      {
+        appId: 'primary-web-app',
+        appName: 'Primary Web App',
+        mountPath: '/',
+        webRootDir: 'webroot',
+        dataRootDir: 'server/state/apps/primary-web-app',
+        apiBasePath: '/api',
+        connectionScope: 'primary-web-app',
+        active: true,
+        metadata: {}
+      },
+      {
+        appId: 'future-app',
+        appName: 'Future App',
+        mountPath: '/future',
+        webRootDir: futureWebRoot,
+        dataRootDir: futureDataRoot,
+        apiBasePath: '/api',
+        connectionScope: 'future-app',
+        active: true,
+        metadata: {}
+      }
+    ]
+  }, null, 2));
+
+  const connectionStorePath = path.join(tempRoot, 'connections.json');
+  const serverInstance = createServer({
+    adminAccessToken: 'unit-admin-token',
+    connectionStorePath,
+    appRegistryPath
+  });
+
+  await new Promise((resolve, reject) => {
+    serverInstance.listen(0, '127.0.0.1', () => resolve());
+    serverInstance.once('error', reject);
+  });
+
+  const port = serverInstance.address().port;
+  const appContext = await requestJson(port, '/future/api/app-context');
+  const futureIndex = await requestText(port, '/future/');
+  const denied = await requestJson(port, '/future/api/connections');
+  const createdConnection = await requestRaw(
+    port,
+    '/future/api/connections',
+    { 'x-admin-access-token': 'unit-admin-token', 'Content-Type': 'application/json' },
+    'POST',
+    JSON.stringify({
+      appId: 'ignored-app',
+      appName: 'Future App',
+      serverUrl: 'https://future.example',
+      apiBasePath: '/api',
+      connectionStatus: 'configured',
+      parameters: { tier: 'future' }
+    })
+  );
+  const scopedConnections = await requestJson(port, '/future/api/connections', { 'x-admin-access-token': 'unit-admin-token' });
+  const crossAppLookup = await requestJson(port, '/future/api/connections/primary-web-app', { 'x-admin-access-token': 'unit-admin-token' });
+  const globalConnections = await requestJson(port, '/api/connections', { 'x-admin-access-token': 'unit-admin-token' });
+
+  assert.equal(appContext.statusCode, 200);
+  assert.equal(appContext.body.app.appId, 'future-app');
+  assert.equal(futureIndex.statusCode, 200);
+  assert.match(futureIndex.body, /Future App/);
+  assert.equal(denied.statusCode, 403);
+  assert.equal(createdConnection.statusCode, 201);
+  assert.equal(scopedConnections.statusCode, 200);
+  assert.equal(scopedConnections.body.connections.length, 1);
+  assert.equal(scopedConnections.body.connections[0].appId, 'future-app');
+  assert.equal(crossAppLookup.statusCode, 404);
+  assert.equal(globalConnections.statusCode, 200);
+  assert.equal(globalConnections.body.connections.length, 1);
+
+  await new Promise((resolve, reject) => {
+    serverInstance.close((error) => (error ? reject(error) : resolve()));
+  });
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
 test('webroot assets are present and reference real files', () => {

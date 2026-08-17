@@ -11,5 +11,6 @@ module.exports = {
   webRootDir: path.join(rootDir, 'webroot'),
   testsPath: path.join(rootDir, 'tests'),
   apiBase: '/api',
-  connectionStorePath: path.join(rootDir, 'server', 'state', 'connections.json')
+  connectionStorePath: process.env.CONNECTION_STORE_PATH || path.join(rootDir, 'server', 'state', 'connections.json'),
+  appRegistryPath: process.env.APP_REGISTRY_PATH || path.join(rootDir, 'server', 'state', 'apps.json')
 };
