@@ -47,6 +47,25 @@ test('administrative pages load with the server token', async ({ browser }) => {
     await adminPage.goto('/admin');
     await expect(adminPage.getByRole('heading', { name: 'Platform Administration' })).toBeVisible();
     await expect(adminPage.locator('#authPanel')).toBeVisible();
+    await adminPage.getByLabel('Bootstrap password').fill('playwright-admin-password');
+    await adminPage.getByRole('button', { name: 'Set password' }).click();
+    await adminPage.locator('#loginPassword').fill('playwright-admin-password');
+    await adminPage.getByRole('button', { name: 'Sign in' }).click();
+    await adminPage.waitForFunction(() => {
+      const appShell = document.getElementById('appShell');
+      return appShell && !appShell.classList.contains('hidden');
+    });
+    await expect(adminPage.locator('#appShell')).toBeVisible();
+    await expect(adminPage.locator('#connectionManagerCard')).toBeVisible();
+    await adminPage.getByLabel('App ID').fill('playwright-app');
+    await adminPage.getByLabel('App name').fill('Playwright App');
+    await adminPage.getByLabel('Server/API address').fill('https://playwright.example');
+    await adminPage.getByLabel('API base path').fill('/api');
+    await adminPage.getByLabel('Connection status').selectOption('configured');
+    await adminPage.getByLabel('Parameters (JSON)').fill('{"region":"test"}');
+    await adminPage.getByRole('button', { name: 'Save connection' }).click();
+    await expect(adminPage.locator('#connectionManagerCard')).toContainText('Playwright App');
+    await adminPage.locator('[data-connection-delete="playwright-app"]').click();
   } finally {
     await context.close();
   }

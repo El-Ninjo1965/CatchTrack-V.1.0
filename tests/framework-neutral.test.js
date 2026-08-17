@@ -69,6 +69,7 @@ const loadPlatformContext = () => {
     'platform/core-admin.js',
     'platform/service-manager.js',
     'platform/config-manager.js',
+    'platform/connection-manager.js',
     'platform/database-manager.js',
     'platform/core-startup.js'
   ];
@@ -132,6 +133,28 @@ const requestText = (port, pathname, headers = {}) => new Promise((resolve, reje
   });
 
   req.on('error', reject);
+});
+
+const requestRaw = (port, pathname, headers = {}, method = 'GET', body = null) => new Promise((resolve, reject) => {
+  const req = http.request({
+    hostname: '127.0.0.1',
+    port,
+    path: pathname,
+    method,
+    headers
+  }, (res) => {
+    let raw = '';
+    res.on('data', (chunk) => { raw += chunk; });
+    res.on('end', () => {
+      resolve({ statusCode: res.statusCode, headers: res.headers, body: raw });
+    });
+  });
+
+  req.on('error', reject);
+  if (body !== null && typeof body !== 'undefined') {
+    req.write(body);
+  }
+  req.end();
 });
 
 test('platform initializes without old app logic', () => {
@@ -270,14 +293,46 @@ test('server grants protected technical routes with the configured token', async
 
   const port = serverInstance.address().port;
   const denied = await requestJson(port, '/admin');
-  const allowedAdmin = await requestText(port, '/admin', { 'x-admin-access-token': 'unit-admin-token' });
-  const allowedDeveloper = await requestText(port, '/developer', { 'x-admin-access-token': 'unit-admin-token' });
+  const allowedAdmin = await requestRaw(port, '/admin', { 'x-admin-access-token': 'unit-admin-token' });
+  const allowedDeveloper = await requestRaw(port, '/developer', { 'x-admin-access-token': 'unit-admin-token' });
+  const cookie = Array.isArray(allowedAdmin.headers['set-cookie']) ? allowedAdmin.headers['set-cookie'][0] : '';
+  const cookieHeader = cookie ? cookie.split(';')[0] : '';
+  const protectedConnections = await requestJson(port, '/api/connections', cookieHeader ? { cookie: cookieHeader } : {});
+  const createdConnection = await requestRaw(
+    port,
+    '/api/connections',
+    cookieHeader
+      ? { cookie: cookieHeader, 'Content-Type': 'application/json' }
+      : { 'Content-Type': 'application/json' },
+    'POST',
+    JSON.stringify({
+      appId: 'future-app',
+      appName: 'Future App',
+      serverUrl: 'https://example.org',
+      apiBasePath: '/future/api',
+      connectionStatus: 'configured',
+      parameters: { region: 'eu' }
+    })
+  );
+  const updatedConnections = cookieHeader ? await requestJson(port, '/api/connections', { cookie: cookieHeader }) : { statusCode: 0, body: {} };
+  const removedConnection = cookieHeader
+    ? await requestRaw(port, '/api/connections/future-app', { cookie: cookieHeader }, 'DELETE')
+    : { statusCode: 0 };
+  const cleanedConnections = cookieHeader ? await requestJson(port, '/api/connections', { cookie: cookieHeader }) : { statusCode: 0, body: {} };
 
   assert.equal(denied.statusCode, 403);
   assert.equal(allowedAdmin.statusCode, 200);
   assert.match(allowedAdmin.body, /Platform Administration/i);
+  assert.ok(cookieHeader, 'Expected protected admin route to set an auth cookie.');
   assert.equal(allowedDeveloper.statusCode, 200);
   assert.match(allowedDeveloper.body, /Platform Diagnostics/i);
+  assert.equal(protectedConnections.statusCode, 200);
+  assert.ok(Array.isArray(protectedConnections.body.connections));
+  assert.equal(createdConnection.statusCode, 201);
+  assert.equal(updatedConnections.statusCode, 200);
+  assert.ok(updatedConnections.body.connections.some((connection) => connection.appId === 'future-app'));
+  assert.equal(removedConnection.statusCode, 200);
+  assert.ok(!cleanedConnections.body.connections.some((connection) => connection.appId === 'future-app'));
 
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));

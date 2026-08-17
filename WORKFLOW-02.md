@@ -80,3 +80,33 @@ Fortsetzung von WORKFLOW.md
   - Reverse-Proxy-Header für den Admin-Token müssen im Deployment sauber gesetzt werden.
   - Weitere Verwaltungsfunktionen wie Benutzerverwaltung, Updates und Backups bleiben bewusst offen.
 - Aktueller Stand: Die Plattform kann als separater User- und Admin-Bereich auf einem echten Server betrieben werden, ohne GPS oder andere Module fest in den Core zu verdrahten.
+
+## 2026-08-17 - Neutrale Connection-Verwaltung als App-Grundlage
+
+- Aufgabe: Eine app-neutrale Connection-Struktur schaffen, damit mehrere unabhängige Apps später auf demselben Server mit eigenen API-Basispfaden betrieben werden können.
+- Architekturentscheidung:
+  - Connection-Profile sind bewusst neutral modelliert: `appId`, `appName`, `serverUrl`, `apiBasePath`, `connectionStatus`, `parameters` und `metadata`.
+  - Die Serverquelle für Connections liegt in `server/state/connections.json`; es werden keine Zugangsdaten im Frontend gespeichert.
+  - Der Admin-Bereich erhält eine neutrale Verwaltungskarte mit Liste, Formular, Bearbeiten-, Löschen- und Aktualisieren-Aktionen.
+  - Der Server schützt die Connection-API serverseitig und erlaubt Browserzugriff über ein HttpOnly-Cookie, das aus dem bereits geprüften Admin-Token abgeleitet wird.
+  - Die User-App bleibt technisch vorbereitet, lädt den Connection-Manager aber ohne eigene CatchTrack-Verbindung oder fachliche Kopplung.
+- Tatsächlich durchgeführt:
+  - Neue neutrale Connection-Registry im Browser ergänzt.
+  - `server/bootstrap/server.js` um `/api/connections` erweitert und auf cookie-basierte Folgezugriffe vorbereitet.
+  - Admin-/User-/Developer-Seiten laden den Connection-Manager, ohne technische Navigation in der User-App sichtbar zu machen.
+  - Tests ergänzt, damit Connection-API, Cookie-geschützte Admin-Zugriffe und die adminseitige Oberfläche verifiziert werden.
+- Geänderte Dateien:
+  - `platform/connection-manager.js`
+  - `platform/config-manager.js`
+  - `server/bootstrap/server.js`
+  - `server/config/index.js`
+  - `server/services/connection-service.js`
+  - `webroot/admin.html`
+  - `webroot/index.html`
+  - `webroot/dev.html`
+  - `webroot/master-ui.js`
+  - `tests/framework-neutral.test.js`
+  - `tests/smoke.spec.js`
+- Verbleibende Punkte:
+  - Die Connection-Verwaltung ist bewusst app-neutral; konkrete App-Instanzen oder CatchTrack-spezifische Verbindungen werden noch nicht fest verdrahtet.
+  - Weitere Lifecycle-Themen wie Deployments, Backups oder Benutzerverwaltung bleiben separat.

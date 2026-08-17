@@ -10,5 +10,6 @@ module.exports = {
   appPath: path.join(rootDir, 'app'),
   webRootDir: path.join(rootDir, 'webroot'),
   testsPath: path.join(rootDir, 'tests'),
-  apiBase: '/api'
+  apiBase: '/api',
+  connectionStorePath: path.join(rootDir, 'server', 'state', 'connections.json')
 };

@@ -1,7 +1,9 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { port, host, rootDir, webRootDir, apiBase } = require('../config');
+const crypto = require('node:crypto');
+const { port, host, rootDir, webRootDir, apiBase, connectionStorePath } = require('../config');
+const { createConnectionService } = require('../services/connection-service');
 
 const appModulesDir = path.join(rootDir, 'app', 'modules');
 
@@ -47,6 +49,65 @@ const serveStaticFile = (res, filePath) => {
     'Cache-Control': 'no-store'
   });
   res.end(content);
+};
+
+const readRequestJson = (req) => new Promise((resolve, reject) => {
+  let raw = '';
+  req.on('data', (chunk) => {
+    raw += chunk;
+  });
+  req.on('end', () => {
+    if (!raw.trim()) {
+      resolve(null);
+      return;
+    }
+
+    try {
+      resolve(JSON.parse(raw));
+    } catch (error) {
+      reject(new Error('Invalid JSON payload.'));
+    }
+  });
+  req.on('error', reject);
+});
+
+const ADMIN_SESSION_COOKIE = 'admin_access_session';
+
+const hashAdminToken = (token) => crypto.createHash('sha256').update(String(token)).digest('hex');
+
+const parseCookies = (cookieHeader = '') => cookieHeader.split(';').reduce((cookies, entry) => {
+  const separatorIndex = entry.indexOf('=');
+  if (separatorIndex === -1) {
+    return cookies;
+  }
+
+  const key = entry.slice(0, separatorIndex).trim();
+  const value = entry.slice(separatorIndex + 1).trim();
+  if (key) {
+    cookies[key] = decodeURIComponent(value);
+  }
+  return cookies;
+}, {});
+
+const hasAdminAccess = (req, adminAccessToken) => {
+  if (!adminAccessToken) {
+    return false;
+  }
+
+  if (req.headers['x-admin-access-token'] === adminAccessToken) {
+    return true;
+  }
+
+  const cookies = parseCookies(req.headers.cookie || '');
+  return cookies[ADMIN_SESSION_COOKIE] === hashAdminToken(adminAccessToken);
+};
+
+const setAdminAccessCookie = (res, adminAccessToken) => {
+  if (!adminAccessToken) {
+    return;
+  }
+
+  res.setHeader('Set-Cookie', `${ADMIN_SESSION_COOKIE}=${encodeURIComponent(hashAdminToken(adminAccessToken))}; HttpOnly; Path=/; SameSite=Lax`);
 };
 
 const readAppModuleManifests = (modulesDir = appModulesDir) => {
@@ -97,7 +158,7 @@ const readAppModuleManifests = (modulesDir = appModulesDir) => {
   return manifests;
 };
 
-const routeApi = (url, res, modulesDir = appModulesDir) => {
+const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionService } = {}) => {
   const pathname = url.pathname;
   if (pathname === '/health' || pathname === `${apiBase}/health`) {
     sendJson(res, 200, {
@@ -133,29 +194,8 @@ const routeApi = (url, res, modulesDir = appModulesDir) => {
     return true;
   }
 
-  return false;
-};
-
-const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN } = {}) => http.createServer((req, res) => {
-  const url = new URL(req.url, `http://${host}:${port}`);
-
-  if (routeApi(url, res, modulesDir)) {
-    return;
-  }
-
-  let requestPath = decodeURIComponent(url.pathname);
-
-  const protectedRoutes = {
-    '/admin': '/admin.html',
-    '/admin.html': '/admin.html',
-    '/dev': '/dev.html',
-    '/developer': '/dev.html',
-    '/dev.html': '/dev.html'
-  };
-
-  if (protectedRoutes[requestPath]) {
-    const suppliedToken = req.headers['x-admin-access-token'];
-    if (!adminAccessToken || suppliedToken !== adminAccessToken) {
+  if (pathname === `${apiBase}/connections`) {
+    if (!hasAdminAccess(req, adminAccessToken)) {
       sendJson(res, adminAccessToken ? 403 : 401, {
         ok: false,
         code: adminAccessToken ? 'FORBIDDEN' : 'UNAUTHORIZED',
@@ -163,47 +203,159 @@ const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.e
           ? 'Administrative pages require server-side authorization.'
           : 'Administrative access token is not configured.'
       });
+      return true;
+    }
+
+    if (req.method === 'GET') {
+      sendJson(res, 200, {
+        ok: true,
+        connections: connectionService.listConnections()
+      });
+      return true;
+    }
+
+    if (req.method === 'POST') {
+      if (!hasAdminAccess(req, adminAccessToken)) {
+        sendJson(res, adminAccessToken ? 403 : 401, {
+          ok: false,
+          code: adminAccessToken ? 'FORBIDDEN' : 'UNAUTHORIZED',
+          message: adminAccessToken
+            ? 'Administrative pages require server-side authorization.'
+            : 'Administrative access token is not configured.'
+        });
+        return true;
+      }
+
+      const payload = await readRequestJson(req);
+      const result = connectionService.upsertConnection(payload);
+      sendJson(res, result.ok ? 201 : 400, result);
+      return true;
+    }
+
+    sendJson(res, 405, { ok: false, code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' });
+    return true;
+  }
+
+  if (pathname.startsWith(`${apiBase}/connections/`)) {
+    const connectionId = decodeURIComponent(pathname.slice(`${apiBase}/connections/`.length));
+
+    if (!hasAdminAccess(req, adminAccessToken)) {
+      sendJson(res, adminAccessToken ? 403 : 401, {
+        ok: false,
+        code: adminAccessToken ? 'FORBIDDEN' : 'UNAUTHORIZED',
+        message: adminAccessToken
+          ? 'Administrative pages require server-side authorization.'
+          : 'Administrative access token is not configured.'
+      });
+      return true;
+    }
+
+    if (req.method === 'GET') {
+      const connection = connectionService.getConnection(connectionId);
+      if (!connection) {
+        sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: 'Connection not found.' });
+        return true;
+      }
+
+      sendJson(res, 200, { ok: true, connection });
+      return true;
+    }
+
+    if (req.method === 'PUT' || req.method === 'PATCH') {
+      const payload = await readRequestJson(req);
+      const result = connectionService.upsertConnection({ ...(payload || {}), id: connectionId, appId: (payload && payload.appId) || connectionId });
+      sendJson(res, result.ok ? 200 : 400, result);
+      return true;
+    }
+
+    if (req.method === 'DELETE') {
+      const result = connectionService.removeConnection(connectionId);
+      sendJson(res, result.ok ? 200 : 404, result);
+      return true;
+    }
+
+    sendJson(res, 405, { ok: false, code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed.' });
+    return true;
+  }
+
+  return false;
+};
+
+const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionStorePath: storePath = connectionStorePath } = {}) => {
+  const connectionApi = createConnectionService(storePath);
+
+  return http.createServer(async (req, res) => {
+    const url = new URL(req.url, `http://${host}:${port}`);
+
+    if (await routeApi(req, url, res, { modulesDir, adminAccessToken, connectionService: connectionApi })) {
       return;
     }
 
-    requestPath = protectedRoutes[requestPath];
-  }
+    let requestPath = decodeURIComponent(url.pathname);
 
-  if (requestPath === '/') {
-    requestPath = '/index.html';
-  }
+    const protectedRoutes = {
+      '/admin': '/admin.html',
+      '/admin.html': '/admin.html',
+      '/dev': '/dev.html',
+      '/developer': '/dev.html',
+      '/dev.html': '/dev.html'
+    };
 
-  if (requestPath.startsWith('/webroot/')) {
-    requestPath = requestPath.replace(/^\/webroot\//, '/');
-  }
+    if (protectedRoutes[requestPath]) {
+      if (!hasAdminAccess(req, adminAccessToken)) {
+        sendJson(res, adminAccessToken ? 403 : 401, {
+          ok: false,
+          code: adminAccessToken ? 'FORBIDDEN' : 'UNAUTHORIZED',
+          message: adminAccessToken
+            ? 'Administrative pages require server-side authorization.'
+            : 'Administrative access token is not configured.'
+        });
+        return;
+      }
 
-  if (requestPath.startsWith('/platform/')) {
-    serveStaticFile(res, safeResolve(rootDir, requestPath));
-    return;
-  }
+      if (req.headers['x-admin-access-token'] === adminAccessToken) {
+        setAdminAccessCookie(res, adminAccessToken);
+      }
 
-  if (requestPath.startsWith('/app/modules/')) {
-    const modulePath = requestPath.slice('/app/modules/'.length);
-    serveStaticFile(res, safeResolve(modulesDir, modulePath));
-    return;
-  }
+      requestPath = protectedRoutes[requestPath];
+    }
 
-  const filePath = safeResolve(webRootDir, requestPath);
-  if (!filePath) {
-    sendJson(res, 403, { ok: false, code: 'FORBIDDEN', message: 'Directory traversal is blocked.' });
-    return;
-  }
+    if (requestPath === '/') {
+      requestPath = '/index.html';
+    }
 
-  if (filePath.endsWith(path.sep) || !path.extname(filePath)) {
-    const candidate = path.join(filePath, 'index.html');
-    if (fs.existsSync(candidate)) {
-      serveStaticFile(res, candidate);
+    if (requestPath.startsWith('/webroot/')) {
+      requestPath = requestPath.replace(/^\/webroot\//, '/');
+    }
+
+    if (requestPath.startsWith('/platform/')) {
+      serveStaticFile(res, safeResolve(rootDir, requestPath));
       return;
     }
-  }
 
-  serveStaticFile(res, filePath);
-});
+    if (requestPath.startsWith('/app/modules/')) {
+      const modulePath = requestPath.slice('/app/modules/'.length);
+      serveStaticFile(res, safeResolve(modulesDir, modulePath));
+      return;
+    }
+
+    const filePath = safeResolve(webRootDir, requestPath);
+    if (!filePath) {
+      sendJson(res, 403, { ok: false, code: 'FORBIDDEN', message: 'Directory traversal is blocked.' });
+      return;
+    }
+
+    if (filePath.endsWith(path.sep) || !path.extname(filePath)) {
+      const candidate = path.join(filePath, 'index.html');
+      if (fs.existsSync(candidate)) {
+        serveStaticFile(res, candidate);
+        return;
+      }
+    }
+
+    serveStaticFile(res, filePath);
+  });
+};
 
 const server = createServer();
 
@@ -214,5 +366,5 @@ if (require.main === module) {
 }
 
 module.exports = server;
-module.exports.config = { port, host, rootDir, webRootDir, apiBase };
+module.exports.config = { port, host, rootDir, webRootDir, apiBase, connectionStorePath };
 module.exports.createServer = createServer;
