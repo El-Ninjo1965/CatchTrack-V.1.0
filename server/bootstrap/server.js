@@ -145,6 +145,15 @@ const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer(
 
   let requestPath = decodeURIComponent(url.pathname);
 
+  if (requestPath === '/admin.html' || requestPath === '/dev.html') {
+    const adminToken = process.env.ADMIN_ACCESS_TOKEN;
+    const suppliedToken = req.headers['x-admin-access-token'];
+    if (!adminToken || suppliedToken !== adminToken) {
+      sendJson(res, 403, { ok: false, code: 'FORBIDDEN', message: 'Administrative pages require server-side authorization.' });
+      return;
+    }
+  }
+
   if (requestPath === '/') {
     requestPath = '/index.html';
   }

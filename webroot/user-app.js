@@ -1,0 +1,12 @@
+(() => {
+  'use strict';
+  const content = document.getElementById('userAppContent');
+  const escapeHtml = (value) => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  const getModules = () => window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function' ? window.ModuleRegistry.getAll().filter((module) => module && module.id && (module.active || module.status === 'enabled')) : [];
+  const bindNavigation = () => document.querySelectorAll('[data-user-view]').forEach((button) => button.addEventListener('click', () => button.dataset.userView === 'settings' ? renderSettings() : renderModules()));
+  const renderSettings = () => { content.innerHTML = '<section class="user-app-panel"><h1>Settings</h1><p>There are no user settings available yet.</p></section>'; };
+  const renderModule = (moduleId) => { const module = getModules().find((entry) => entry.id === moduleId); if (!module) return renderModules(); content.innerHTML = '<section class="user-app-panel"><button class="user-app-back" type="button" data-user-view="modules">Back to modules</button><div id="moduleUserInterface"></div></section>'; const target = document.getElementById('moduleUserInterface'); if (typeof module.renderUserInterface === 'function') module.renderUserInterface(target); else target.innerHTML = '<h1>' + escapeHtml(module.name || module.id) + '</h1><p>This module does not provide a user interface.</p>'; bindNavigation(); };
+  const renderModules = () => { const modules = getModules(); content.innerHTML = '<section class="user-app-panel"><h1>Modules</h1>' + (modules.length ? '<div class="user-module-list">' + modules.map((module) => '<button type="button" class="user-module-card" data-module-id="' + escapeHtml(module.id) + '"><span>' + escapeHtml(module.name || module.id) + '</span><small>Active</small></button>').join('') + '</div>' : '<p>No modules are currently active.</p>') + '</section>'; content.querySelectorAll('[data-module-id]').forEach((button) => button.addEventListener('click', () => renderModule(button.dataset.moduleId))); };
+  const start = async () => { if (window.CoreStartup && typeof window.CoreStartup.start === 'function') await window.CoreStartup.start(); if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') await window.ModuleManager.discoverModules(); renderModules(); bindNavigation(); };
+  start();
+})();

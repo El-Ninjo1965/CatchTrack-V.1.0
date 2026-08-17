@@ -1,28 +1,26 @@
 const { test, expect } = require('@playwright/test');
 
-test('neutral platform web shell loads and registers the gps module', async ({ page }) => {
+test('user app opens directly and renders the active gps module', async ({ page }) => {
+  await page.context().grantPermissions(['geolocation'], { origin: 'http://127.0.0.1:8000' });
+  await page.context().setGeolocation({ latitude: 52.52, longitude: 13.405 });
   await page.goto('/');
 
-  await expect(page).toHaveTitle(/Neutral Platform|Platform/i);
-  await expect(page.locator('h2').first()).toContainText(/Neutral Platform|Platform/i);
-  await expect(page.locator('link[rel="stylesheet"]').first()).toHaveAttribute('href', /style\.css/i);
-  await page.waitForFunction(() => window.GpsModule && window.ModuleRegistry && typeof window.ModuleRegistry.has === 'function' && window.ModuleRegistry.has('gps'));
-  await expect(page.locator('#frameworkPreview')).toContainText('CatchTrack Framework');
-  await expect(page.locator('#frameworkStatus')).toHaveText('OK');
-  await expect(page.locator('#moduleDiscoveryStatus')).toHaveText('OK');
-  await expect(page.locator('#gpsModuleStatus')).toContainText('installed');
-  await expect(page.locator('#discoveredModules')).toContainText('GPS Tracker');
+  await expect(page).toHaveTitle('CatchTrack');
+  await expect(page.locator('.user-app-brand')).toHaveText('CatchTrack');
+  await expect(page.getByRole('button', { name: 'Modules' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
+  await expect(page.locator('text=Framework Status')).toHaveCount(0);
+  await expect(page.locator('text=Developer')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'GPS Tracker' })).toBeVisible();
 
-  const gpsState = await page.evaluate(() => ({
-    hasGpsModule: !!window.GpsModule,
-    registryHasGps: window.ModuleRegistry.has('gps'),
-    gpsStatus: window.ModuleRegistry.get('gps') && typeof window.ModuleRegistry.get('gps').getStatus === 'function'
-      ? window.ModuleRegistry.get('gps').getStatus()
-      : null,
-    appVersion: window.App && window.App.version
-  }));
+  await page.getByRole('button', { name: 'GPS Tracker' }).click();
+  await expect(page.locator('h1')).toHaveText('GPS');
+  await expect(page.locator('#gpsUserStatus')).toContainText(/Ready|Tracking active/);
+  await page.getByRole('button', { name: 'Get current position' }).click();
+  await expect(page.locator('#gpsPosition')).toContainText('52.52');
+});
 
-  expect(gpsState.hasGpsModule).toBe(true);
-  expect(gpsState.registryHasGps).toBe(true);
-  expect(gpsState.appVersion).toBe('1.0.0');
+test('administrative pages are protected server-side', async ({ request }) => {
+  const response = await request.get('/admin.html');
+  expect(response.status()).toBe(403);
 });
