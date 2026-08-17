@@ -3,110 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Neutral Platform</title>
+    <title>CatchTrack</title>
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body data-page="user">
-    <section id="frameworkPreview" class="framework-preview" aria-live="polite">
-      <div class="framework-preview-heading">
-        <span class="framework-preview-kicker">CatchTrack Framework</span>
-        <h1>Framework Preview</h1>
-      </div>
-      <dl class="framework-preview-grid">
-        <div><dt>Framework Status</dt><dd id="frameworkStatus">Loading</dd></div>
-        <div><dt>Module Discovery</dt><dd id="moduleDiscoveryStatus">Loading</dd></div>
-        <div><dt>GPS</dt><dd id="gpsModuleStatus">Loading</dd></div>
-      </dl>
-      <div><span class="framework-preview-label">Discovered Modules</span><div id="discoveredModules" class="chip-list"></div></div>
-    </section>
-    <div id="authPanel" class="auth-shell">
-      <div class="auth-card">
-        <h2>Neutral Platform</h2>
-        <p class="subtle">Sign in to access the framework shell.</p>
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="loginUsername">Username</label>
-            <input id="loginUsername" type="text" value="developer" />
-          </div>
-          <div class="form-field">
-            <label for="loginPassword">Password</label>
-            <input id="loginPassword" type="password" value="" />
-          </div>
-          <div class="form-field">
-            <label for="developerPassword">Bootstrap password</label>
-            <input id="developerPassword" type="password" placeholder="Optional test password" />
-          </div>
-          <div class="action-list">
-            <button id="setPasswordBtn" class="secondary" type="button">Set password</button>
-            <button id="loginBtn" class="primary" type="button">Sign in</button>
-          </div>
-          <div id="authMessage" class="message info">Framework preview login for local validation.</div>
-        </div>
-      </div>
+  <body class="user-app">
+    <div class="user-app-shell">
+      <header class="user-app-header"><span class="user-app-brand">CatchTrack</span></header>
+      <nav class="user-app-nav" aria-label="User menu">
+        <button type="button" class="user-app-nav-item active" data-user-view="modules">Modules</button>
+        <button type="button" class="user-app-nav-item" data-user-view="settings">Settings</button>
+      </nav>
+      <main id="userAppContent" class="user-app-content"></main>
     </div>
-
-    <div id="appShell" class="app-shell hidden">
-      <aside class="sidebar">
-        <div class="brand-box">
-          <div class="brand-mark">N</div>
-          <div>
-            <div class="brand-name">Neutral Platform</div>
-            <div class="brand-subtitle">Platform shell</div>
-          </div>
-        </div>
-        <div class="user-card">
-          <div id="currentUserInitial" class="avatar">D</div>
-          <div class="user-meta">
-            <div id="currentUserName" class="user-name">Developer</div>
-            <div class="user-id" data-user-display-id>USR-000001</div>
-          </div>
-        </div>
-        <div class="nav-section">
-          <div class="nav-section-title">Areas</div>
-          <div id="userMenu" class="nav-list"></div>
-        </div>
-        <div id="adminSection" class="nav-section hidden">
-          <div class="nav-section-title">Administration</div>
-          <div id="adminMenu" class="nav-list"></div>
-        </div>
-        <div id="developerSection" class="nav-section hidden">
-          <div class="nav-section-title">Developer</div>
-          <div id="developerMenu" class="nav-list"></div>
-        </div>
-      </aside>
-      <main class="main-panel">
-        <div class="topbar">
-          <div class="topbar-title">Neutral Platform</div>
-          <div class="header-actions">
-            <span id="summaryRoleBadge" class="role-badge developer" data-user-role="developer">developer</span>
-            <button id="profileBtn" class="ghost" type="button">Profile</button>
-            <button id="logoutBtn" class="secondary" type="button">Logout</button>
-          </div>
-        </div>
-        <div class="summary-row">
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Active user</h2>
-            </div>
-            <div class="user-summary">
-              <div>
-                <div id="summaryUsername" class="summary-username">Developer</div>
-                <div class="small-muted" data-user-display-id>USR-000001</div>
-              </div>
-              <span id="summaryStatus" class="status-badge ok">active</span>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header">
-              <h2 class="card-title">Modules</h2>
-            </div>
-            <div id="activeModules" class="chip-list"><span class="chip">Platform ready</span></div>
-          </div>
-        </div>
-        <div id="mainContent" class="content-wrap"></div>
-      </main>
-    </div>
-
     <script src="../platform/core.js"></script>
     <script src="../platform/core-event-bus.js"></script>
     <script src="../platform/core-error-handler.js"></script>
@@ -134,6 +42,6 @@
     <script src="../platform/core-runtime.js"></script>
     <script src="../platform/core-entry.js"></script>
     <script src="../platform/app.js"></script>
-    <script src="master-ui.js"></script>
+    <script src="user-app.js"></script>
   </body>
 </html>

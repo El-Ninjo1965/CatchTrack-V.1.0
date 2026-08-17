@@ -117,3 +117,18 @@ Run from repository root:
 - Verification on origin/main: npm test 8/8 passed; npx playwright test --reporter=list 1/1 passed.
 - Current preview endpoint: http://127.0.0.1:3000/.
 - Result: framework acceptance completed; no external module is required for core startup, discovery, or the preview.
+
+
+## 2026-08-17 - User application, GPS activation, and admin separation
+
+- Task: Replace the technical landing page with a direct user application, expose the optional GPS reference module through the generic module UI contract, and separate technical pages from the user route.
+- Starting point: main at f6c8bf6 with the optional-module acceptance suite already merged.
+- User app: index.html is now a minimal application shell with only Modules and Settings. It has no framework, server, developer, diagnostics, or admin information.
+- GPS activation: the module remains discovered from app/modules through /api/modules and the generic loader. Its lifecycle now mirrors status and active on the module contract, so generic user interfaces can list it without core-specific logic.
+- GPS UI: GPS owns renderUserInterface and provides current-position, start-tracking, and stop-tracking actions with human-readable permission and location failure messages.
+- Optional modules: user-app.js renders only generic active modules and calls a module-provided renderUserInterface hook when available. Without GPS, the app remains functional and shows no GPS entry.
+- Admin separation: admin.html and dev.html require ADMIN_ACCESS_TOKEN through the x-admin-access-token request header. Requests without a configured matching server token return 403.
+- Security: module-asset traversal protection remains covered; direct technical-page access is now additionally covered by Node and browser tests.
+- Tests: npm test 8/8 passed; npx playwright test --reporter=list 2/2 passed.
+- Branch: copilot/user-app-gps-admin-separation.
+- Next step: commit, push, create PR, and squash-merge after a clean GitHub check.

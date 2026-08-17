@@ -91,11 +91,14 @@
         description: 'Neutral GPS tracking module.',
         permissions: [],
         capabilities: ['gps', 'geolocation'],
+        status: 'available',
+        active: false,
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
 
         install() {
             status = 'installed';
+            this.status = status;
             audit('gps:install', { moduleId: this.id });
             emit('gps:installed', { moduleId: this.id });
             return { ok: true, status };
@@ -112,6 +115,8 @@
 
         enable() {
             status = 'enabled';
+            this.status = status;
+            this.active = true;
             audit('gps:enable', { moduleId: this.id });
             emit('gps:enabled', { moduleId: this.id });
             return { ok: true, status };
@@ -120,6 +125,8 @@
         disable() {
             this.stopTracking();
             status = 'disabled';
+            this.status = status;
+            this.active = false;
             audit('gps:disable', { moduleId: this.id });
             emit('gps:disabled', { moduleId: this.id });
             return { ok: true, status };
@@ -128,6 +135,8 @@
         uninstall() {
             this.stopTracking();
             status = 'available';
+            this.status = status;
+            this.active = false;
             lastPosition = null;
             audit('gps:uninstall', { moduleId: this.id });
             emit('gps:uninstalled', { moduleId: this.id });
@@ -226,6 +235,20 @@
     };
 
     // ── Register on window ────────────────────────────────────────────────────
+
+    GpsModule.renderUserInterface = (container) => {
+        if (!container) return;
+        const render = (message = '', isError = false) => {
+            const position = GpsModule.getLastPosition();
+            const trackingNow = GpsModule.isTracking();
+            const label = trackingNow ? 'Tracking active' : status === 'enabled' ? 'Ready' : 'Not active';
+            container.innerHTML = `<div class="gps-user-module"><h1>GPS</h1><p id="gpsUserStatus" class="gps-status ${isError ? 'error' : ''}">${label}</p><div class="gps-actions"><button type="button" data-gps-action="current">Get current position</button><button type="button" data-gps-action="start" ${trackingNow ? 'disabled' : ''}>Start tracking</button><button type="button" data-gps-action="stop" ${trackingNow ? '' : 'disabled'}>Stop tracking</button></div><p id="gpsUserMessage" class="gps-message">${message}</p><dl id="gpsPosition" class="gps-position">${position ? `<div><dt>Latitude</dt><dd>${position.lat}</dd></div><div><dt>Longitude</dt><dd>${position.lng}</dd></div>` : '<div><dt>Position</dt><dd>Not available</dd></div>'}</dl></div>`;
+            container.querySelector('[data-gps-action="current"]').addEventListener('click', async () => { render('Requesting location...'); try { await GpsModule.getCurrentPosition(); render('Location updated.'); } catch (error) { render(error && error.code === 1 ? 'Location permission was denied.' : 'Location could not be retrieved.', true); } });
+            container.querySelector('[data-gps-action="start"]').addEventListener('click', () => { const result = GpsModule.startTracking(); render(result.ok ? 'Tracking started.' : 'Location tracking is unavailable.', !result.ok); });
+            container.querySelector('[data-gps-action="stop"]').addEventListener('click', () => { GpsModule.stopTracking(); render('Tracking stopped.'); });
+        };
+        render();
+    };
 
     window.GpsModule = GpsModule;
 
