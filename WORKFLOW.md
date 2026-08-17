@@ -94,3 +94,18 @@ Run from repository root:
 - Testergebnisse auf origin/main: npm test 6/6 bestanden; npx playwright test --reporter=list 1/1 bestanden.
 - Ergebnis: Die Browser-Discovery bleibt kataloggetrieben und neutral; die statische Modulroute ist auf ihren kanonischen Basisordner beschraenkt.
 - Naechster sinnvoller Schritt: keiner.
+
+
+## 2026-08-17 - Framework acceptance, module isolation, and browser preview
+
+- Task: Verify that the neutral framework operates without the optional GPS reference module, stabilize the testable module contract, and provide a first browser preview.
+- Starting point: main at e653c78; PR #2 and PR #3 were already merged.
+- Isolation verification: server module discovery now accepts an injected modulesDir for tests. A temporary empty directory proves that CoreLoader discovers zero external modules, /api/modules returns an empty list, and a missing module asset returns 404 without modifying app/modules/gps.
+- Contract and lifecycle: ARCHITECTURE.md now records required id, globalName, permissions, and capabilities fields, plus optional lifecycle/API ownership. A generic sample module test covers install, initialize, enable, disable, uninstall, missing module handling, duplicate registration, and invalid manifests.
+- Browser preview: webroot/index.html and master-ui.js render a login-independent framework preview. It reports framework status, discovery status, dynamically discovered modules, and optional GPS status. The UI still works when GPS is absent and displays not installed.
+- Branding boundary: The browser preview contains the requested product label only in the presentation layer. The neutral source scan remains limited to platform, server, app, and config components.
+- Security: the app/modules route remains constrained to the app/modules base directory; its traversal regression test remains green.
+- Start mechanism: npm start uses node server/server.js on 127.0.0.1:3000 by default. Playwright starts the same server on 127.0.0.1:8000 through playwright.config.js.
+- Tests: npm test 8/8 passed; npx playwright test --reporter=list 1/1 passed.
+- Branch: copilot/framework-acceptance-module-isolation.
+- Next step: commit, push, create PR, and squash-merge after GitHub reports a clean merge state.

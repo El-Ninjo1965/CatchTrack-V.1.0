@@ -434,3 +434,20 @@ The verified architecture is a neutral, modular platform with a clear separation
 - storage and event infrastructure
 
 This is the baseline that future work must respect.
+
+
+## Module contract
+
+Application modules are optional and live below app/modules/<id>/. The core only consumes a neutral manifest contract and never imports an application module by name.
+
+Required manifest fields:
+- id: stable unique module identifier.
+- globalName: browser global assigned by the entry script.
+- permissions: declared module permissions; an empty list is valid.
+- capabilities: declared technical capabilities; an empty list is valid.
+
+Optional manifest fields include name, version, description, dependencies, entry, main, type, and lifecycle metadata. The module entry owns its functional API and may expose additional methods.
+
+Core responsibility: discover manifests, validate the neutral fields, register modules, and invoke generic install, initialize, enable, disable, and uninstall methods when present. Invalid manifests, missing optional modules, and failed module activation must not prevent the core from starting.
+
+Module responsibility: provide its manifest and entry implementation, handle its own optional services defensively, and clean up its own resources on disable and uninstall. A module may be added, removed, or replaced without a core code change.
