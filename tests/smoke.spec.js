@@ -12,10 +12,17 @@ test('user app opens directly and renders the active gps module', async ({ page 
   await expect(page.locator('text=Framework Status')).toHaveCount(0);
   await expect(page.locator('text=Developer')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'GPS Tracker' })).toBeVisible();
+  await expect(page.locator('.user-module-card')).toContainText('Ready to use');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.locator('h1')).toHaveText('Your app, kept simple.');
+  await page.getByRole('button', { name: 'Modules' }).click();
 
   await page.getByRole('button', { name: 'GPS Tracker' }).click();
   await expect(page.locator('h1')).toHaveText('GPS');
   await expect(page.locator('#gpsUserStatus')).toContainText(/Ready|Tracking active/);
+  await expect(page.locator('.gps-location-card')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start tracking' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Stop tracking' })).toBeVisible();
   await page.getByRole('button', { name: 'Get current position' }).click();
   await expect(page.locator('#gpsPosition')).toContainText('52.52');
 });

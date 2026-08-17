@@ -8,12 +8,12 @@
   </head>
   <body class="user-app">
     <div class="user-app-shell">
-      <header class="user-app-header"><span class="user-app-brand">CatchTrack</span></header>
+      <header class="user-app-header"><div class="user-app-identity"><span class="user-app-mark" aria-hidden="true">C</span><span class="user-app-brand">CatchTrack</span></div></header>
       <nav class="user-app-nav" aria-label="User menu">
         <button type="button" class="user-app-nav-item active" data-user-view="modules">Modules</button>
         <button type="button" class="user-app-nav-item" data-user-view="settings">Settings</button>
       </nav>
-      <main id="userAppContent" class="user-app-content"></main>
+      <main id="userAppContent" class="user-app-content" tabindex="-1"></main>
     </div>
     <script src="../platform/core.js"></script>
     <script src="../platform/core-event-bus.js"></script>
