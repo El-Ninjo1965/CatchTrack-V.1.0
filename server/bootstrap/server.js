@@ -159,7 +159,8 @@ const server = http.createServer((req, res) => {
   }
 
   if (requestPath.startsWith('/app/modules/')) {
-    serveStaticFile(res, safeResolve(rootDir, requestPath));
+    const modulePath = requestPath.slice('/app/modules/'.length);
+    serveStaticFile(res, safeResolve(appModulesDir, modulePath));
     return;
   }
 

@@ -105,6 +105,65 @@
         }
     };
 
+    const readModuleCatalog = async (catalogPath) => {
+        if (typeof fetch !== 'function') {
+            return [];
+        }
+
+        try {
+            const response = await fetch(catalogPath, { cache: 'no-store' });
+
+            if (!response.ok) {
+                return [];
+            }
+
+            const payload = await response.json();
+            const modules = Array.isArray(payload)
+                ? payload
+                : Array.isArray(payload.modules)
+                    ? payload.modules
+                    : [];
+
+            return modules.filter((entry) => entry && typeof entry === 'object');
+        } catch (error) {
+            return [];
+        }
+    };
+
+    const normalizeModuleKey = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const resolveModuleImplementation = (manifest) => {
+        const candidates = [
+            manifest && manifest.globalName,
+            manifest && manifest.name,
+            manifest && manifest.id
+        ].filter((value) => typeof value === 'string' && value.trim());
+
+        for (const candidate of candidates) {
+            if (window[candidate]) {
+                return window[candidate];
+            }
+        }
+
+        const targetKey = normalizeModuleKey(manifest && manifest.id);
+        if (!targetKey) {
+            return null;
+        }
+
+        const keys = Object.keys(window);
+        const exactKey = keys.find((key) => normalizeModuleKey(key) === targetKey);
+        if (exactKey && window[exactKey]) {
+            return window[exactKey];
+        }
+
+        const fuzzyKey = keys.find((key) => /^([A-Z].*)$/.test(key) && normalizeModuleKey(key).includes(targetKey));
+        if (fuzzyKey && window[fuzzyKey]) {
+            return window[fuzzyKey];
+        }
+
+        return null;
+    };
+
     const evaluateModuleScript = (scriptText) => {
         if (!scriptText || typeof scriptText !== 'string') {
             return null;
@@ -170,30 +229,7 @@
 
             evaluateModuleScript(scriptText);
 
-            const implementation = (
-                normalizedManifest.globalName && window[normalizedManifest.globalName]
-            ) || (
-                normalizedManifest.name && window[normalizedManifest.name]
-            ) || Object.keys(window).find((key) => key.toLowerCase() === String(normalizedManifest.id).toLowerCase().replace(/[^a-z0-9]/gi, ''))
-                ? window[Object.keys(window).find((key) => key.toLowerCase() === String(normalizedManifest.id).toLowerCase().replace(/[^a-z0-9]/gi, ''))]
-                : null;
-
-            if (!implementation) {
-                const globalCandidate = Object.keys(window)
-                    .filter((key) => /^([A-Z].*)$/.test(key))
-                    .find((key) => key.toLowerCase().includes(String(normalizedManifest.id).toLowerCase().replace(/[^a-z0-9]/gi, '')) || key.toLowerCase().includes(String(normalizedManifest.name || '').toLowerCase().replace(/[^a-z0-9]/gi, '')));
-
-                if (globalCandidate) {
-                    return {
-                        ...window[globalCandidate],
-                        id: normalizedManifest.id,
-                        name: normalizedManifest.name || window[globalCandidate].name || normalizedManifest.id,
-                        manifest: normalizedManifest,
-                        modulePath: moduleRootPath,
-                        source: entryPath
-                    };
-                }
-            }
+            const implementation = resolveModuleImplementation(normalizedManifest);
 
             if (!implementation) {
                 return null;
@@ -211,9 +247,27 @@
             };
         },
 
-        async discoverExternalModules(basePath = 'Modules') {
-            const rootPath = (typeof basePath === 'string' && basePath.trim()) ? basePath.trim() : 'Modules';
+        async discoverExternalModules(basePath = 'app/modules') {
+            const rootPath = (typeof basePath === 'string' && basePath.trim()) ? basePath.trim() : 'app/modules';
             const discovered = [];
+            const seenModuleKeys = new Set();
+
+            const markModuleSeen = (entry) => {
+                const moduleKey = normalizeModuleKey(
+                    entry && (entry.id || entry.globalName || entry.name || entry.modulePath)
+                );
+
+                if (!moduleKey) {
+                    return false;
+                }
+
+                if (seenModuleKeys.has(moduleKey)) {
+                    return true;
+                }
+
+                seenModuleKeys.add(moduleKey);
+                return false;
+            };
 
             if (typeof require === 'function' && typeof process !== 'undefined') {
                 const fs = require('fs');
@@ -238,6 +292,10 @@
                         continue;
                     }
 
+                    if (markModuleSeen(manifest)) {
+                        continue;
+                    }
+
                     const loaded = await this.loadModuleFromManifest(moduleDirectory, manifest);
                     if (loaded) {
                         discovered.push(loaded);
@@ -247,11 +305,13 @@
                 return discovered;
             }
 
+            const apiCatalog = await readModuleCatalog('/api/modules');
             const externalCatalog = Array.isArray(window.ExternalModuleCatalog)
                 ? window.ExternalModuleCatalog
                 : [];
+            const combinedCatalog = [...apiCatalog, ...externalCatalog];
 
-            for (const entry of externalCatalog) {
+            for (const entry of combinedCatalog) {
                 if (!entry || typeof entry !== 'object') {
                     continue;
                 }
@@ -261,6 +321,10 @@
                     : null;
 
                 if (!manifest) {
+                    continue;
+                }
+
+                if (markModuleSeen(manifest)) {
                     continue;
                 }
 
@@ -300,6 +364,10 @@
                         : null;
 
                     if (!manifest) {
+                        continue;
+                    }
+
+                    if (markModuleSeen(manifest)) {
                         continue;
                     }
 

@@ -121,6 +121,18 @@ const requestJson = (port, pathname) => new Promise((resolve, reject) => {
   req.on('error', reject);
 });
 
+const requestText = (port, pathname) => new Promise((resolve, reject) => {
+  const req = http.get({ hostname: '127.0.0.1', port, path: pathname }, (res) => {
+    let raw = '';
+    res.on('data', (chunk) => { raw += chunk; });
+    res.on('end', () => {
+      resolve({ statusCode: res.statusCode, body: raw });
+    });
+  });
+
+  req.on('error', reject);
+});
+
 test('platform initializes without old app logic', () => {
   const context = loadPlatformContext();
 
@@ -152,6 +164,37 @@ test('server exposes neutral health endpoints', async () => {
   assert.equal(apiHealth.statusCode, 200);
   assert.equal(apiHealth.body.ok, true);
   assert.equal(apiHealth.body.status, 'healthy');
+
+  await new Promise((resolve, reject) => {
+    serverInstance.close((error) => (error ? reject(error) : resolve()));
+  });
+});
+
+test('server exposes neutral module catalog and module assets', async () => {
+  const server = require(path.join(root, 'server', 'server.js'));
+  const serverInstance = server;
+
+  await new Promise((resolve, reject) => {
+    serverInstance.listen(0, '127.0.0.1', () => resolve());
+    serverInstance.once('error', reject);
+  });
+
+  const port = serverInstance.address().port;
+  const modules = await requestJson(port, '/api/modules');
+  const gpsManifest = await requestJson(port, '/app/modules/gps/module.json');
+  const gpsScript = await requestText(port, '/app/modules/gps/index.js');
+  const traversalAttempt = await requestText(port, '/app/modules/..%2f..%2fplatform/core.js');
+
+  assert.equal(modules.statusCode, 200);
+  assert.equal(modules.body.ok, true);
+  assert.ok(Array.isArray(modules.body.modules));
+  assert.ok(modules.body.modules.some((module) => module.id === 'gps'));
+
+  assert.equal(gpsManifest.statusCode, 200);
+  assert.equal(gpsManifest.body.id, 'gps');
+  assert.equal(gpsScript.statusCode, 200);
+  assert.match(gpsScript.body, /window\.GpsModule/);
+  assert.equal(traversalAttempt.statusCode, 404);
 
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));
