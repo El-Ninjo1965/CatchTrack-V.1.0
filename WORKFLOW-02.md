@@ -33,3 +33,50 @@ Fortsetzung von WORKFLOW.md
 - Final verification on origin/main: npm test 8/8 passed; npx playwright test --reporter=list 2/2 passed.
 - Result: the user route has a refined responsive app presentation while module discovery, GPS functionality, and administrative route protection are unchanged.
 - Next planned phase: server deployment and authenticated administrative entry; no additional modules or user features were implemented in this UI phase.
+
+
+## 2026-08-17 - Serverseitige Produktionsgrundlage und technischer Admin-Einstieg
+
+- Aufgabe: Die echte Serverbasis so schärfen, dass die User-App separat bleibt, technische Bereiche serverseitig abgesichert sind und der Betrieb auf einem echten Server bzw. hinter einem Reverse Proxy vorbereitet ist.
+- Ausgangszustand: Der Node-Server lief bereits, `/api/modules` und die GPS-Referenz waren vorhanden, aber der Serverstart war noch an localhost orientiert und der technische Browser-Einstieg war nicht sauber als kanonische Route abgesetzt.
+- Architekturentscheidung:
+  - `server/server.js` nutzt jetzt die zentrale Konfiguration für Port und Host.
+  - `server/config/index.js` bindet standardmäßig an `0.0.0.0`, damit Reverse-Proxy- und Serverbetrieb möglich sind.
+  - `server/bootstrap/server.js` behandelt `/admin` und `/developer` als kanonische technische Einstiege und schützt sie serverseitig über `ADMIN_ACCESS_TOKEN` + `x-admin-access-token`.
+  - Die Browseroberfläche für den User-Bereich bleibt getrennt; die User-App zeigt keine Admin- oder Developer-Navigation.
+  - Admin/Developer bleiben technische Oberflächen mit nachgelagertem Login innerhalb der jeweiligen Seite.
+- Tatsächlich durchgeführt:
+  - Canonische technische Routen `/admin` und `/developer` ergänzt, inklusive Schutz auf dem HTTP-Server.
+  - Serverfehlercodes für fehlende bzw. falsche technische Zugriffe sauber getrennt (401/403).
+  - `webroot/master-ui.js` so angepasst, dass die User-App keine technischen Navigationspunkte anzeigt.
+  - Playwright auf einen serverseitig gesetzten Admin-Token vorbereitet.
+  - Tests erweitert, damit User-App, technische Routes, API, GPS-Discovery und sichere Admin-Zugriffe abgesichert sind.
+- Geänderte Dateien:
+  - `server/bootstrap/server.js`
+  - `server/config/index.js`
+  - `server/server.js`
+  - `webroot/master-ui.js`
+  - `tests/framework-neutral.test.js`
+  - `tests/smoke.spec.js`
+  - `playwright.config.js`
+- Branch: `copilot/server-production-admin-entry`
+- Commit: `dda169e` - `feat: add server admin entry routes`
+- Testergebnisse:
+  - `npm test`: 9/9 bestanden
+  - `npx playwright test --reporter=list`: 3/3 bestanden
+  - `git diff --check`: keine Fehler
+  - Produktionsnaher Start: `PORT=3100 HOST=127.0.0.1 ADMIN_ACCESS_TOKEN=prod-admin node server/server.js`
+  - HTTP-Prüfungen: `/` ok, `/api/modules` ok, `/admin` ohne Token 403, `/admin` mit Token erreichbar
+- Produktivserver-Kopierumfang:
+  - `server/`
+  - `platform/`
+  - `webroot/`
+  - `app/modules/`
+  - `package.json`
+  - `package-lock.json`
+  - optional: `.env` bzw. die Laufzeit-Umgebungsvariablen für Port, Host und Admin-Token
+- Verbleibende Punkte:
+  - Langfristig sollte die technische Admin-Authentifizierung in ein echtes Rollen-/Session-Modell überführt werden.
+  - Reverse-Proxy-Header für den Admin-Token müssen im Deployment sauber gesetzt werden.
+  - Weitere Verwaltungsfunktionen wie Benutzerverwaltung, Updates und Backups bleiben bewusst offen.
+- Aktueller Stand: Die Plattform kann als separater User- und Admin-Bereich auf einem echten Server betrieben werden, ohne GPS oder andere Module fest in den Core zu verdrahten.
