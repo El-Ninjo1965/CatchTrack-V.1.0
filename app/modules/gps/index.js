@@ -2,7 +2,7 @@
  * GPS Tracker Module
  * Version: 1.0.0
  *
- * Neutral GPS tracking module for the neutral app platform.
+ * Neutral GPS tracking module for the platform.
  * Provides geolocation access, CoreEventBus integration,
  * CoreStorage / DatabaseManager persistence, CoreAudit recording
  * and a full ModuleInterface lifecycle.
