@@ -183,6 +183,7 @@ test('server exposes neutral module catalog and module assets', async () => {
   const modules = await requestJson(port, '/api/modules');
   const gpsManifest = await requestJson(port, '/app/modules/gps/module.json');
   const gpsScript = await requestText(port, '/app/modules/gps/index.js');
+  const traversalAttempt = await requestText(port, '/app/modules/..%2f..%2fplatform/core.js');
 
   assert.equal(modules.statusCode, 200);
   assert.equal(modules.body.ok, true);
@@ -193,6 +194,7 @@ test('server exposes neutral module catalog and module assets', async () => {
   assert.equal(gpsManifest.body.id, 'gps');
   assert.equal(gpsScript.statusCode, 200);
   assert.match(gpsScript.body, /window\.GpsModule/);
+  assert.equal(traversalAttempt.statusCode, 404);
 
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));
