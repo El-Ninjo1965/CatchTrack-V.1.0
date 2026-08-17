@@ -6,7 +6,8 @@ This document is the technical baseline for the currently verified neutral platf
 
 - platform/: technical core infrastructure and reusable runtime services.
 - server/: HTTP server, routing, bootstrap, and API-facing runtime behavior.
-- app/: reserved for future application-level logic; not part of the current neutral runtime baseline.
+- app/: application layer. Contains app-specific logic and modules under app/modules/.
+- app/modules/: directory for self-contained application modules. Each module has its own subdirectory with a module.json manifest and an index.js entry point.
 - webroot/: browser-facing front-end assets and page shells.
 - config/: configuration defaults and environment-driven runtime values.
 - tests/: verification of neutral architecture and server health behavior.
@@ -84,15 +85,21 @@ Disallowed dependencies:
 ### app/
 
 Responsibility:
-- Placeholder for future application logic.
-- Current code is a demo shell and UI harness, not the platform baseline itself.
+- Application layer for offline-first user-facing functionality.
+- app/modules/ contains self-contained application modules. Each module lives in its own subdirectory and is completely self-contained with a module.json manifest and an index.js entry point.
+- The server discovers modules by reading app/modules/ at runtime and exposes them via /api/modules.
+- The browser runtime loads module scripts from /app/modules/<id>/index.js via the server static route.
 
 Dependencies:
 - app may use platform services and module APIs
 - app is not part of the neutral runtime core
 
+Module contract (per module in app/modules/<id>/):
+- module.json: { id, name, version, type, entry, globalName, description, permissions, capabilities, dependencies }
+- index.js: IIFE that assigns window[globalName]
+
 Public interfaces:
-- browser-level UI actions and bootstrap flows in app/app-demo.js
+- app/modules/gps/: GPS tracking module (neutral test module, no domain logic, no permissions)
 
 Disallowed dependencies:
 - app may not be a dependency of platform
@@ -295,10 +302,11 @@ The runtime server currently exposes these endpoints in the actual server bootst
   - Returns environment, server, runtime metadata
 
 - GET /api/modules
-  - Returns ok and a message indicating the registry is available to runtime components
+  - Reads app/modules/ directory on the server filesystem and returns parsed module.json manifests as an array
 
 Static serving:
 - /platform/... is served as static browser asset access
+- /app/modules/... is served as static browser asset access (module scripts and manifests)
 - /webroot/... is normalized for browser asset serving
 - / is redirected to /index.html
 
@@ -315,8 +323,9 @@ The helper file server/api/health.js exists and contains the same health/status 
 ### Discovery
 
 - ModuleManager.discoverModules() checks the framework module catalog and optional external modules.
-- CoreLoader can discover external module directories under Modules.
+- CoreLoader can discover external module directories under app/modules.
 - ModuleRegistry.discover() also validates manifest metadata before registration.
+- The server reads app/modules/ at request time for /api/modules and returns parsed manifests.
 
 ### Activation
 
