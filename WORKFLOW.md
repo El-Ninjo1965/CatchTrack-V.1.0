@@ -73,3 +73,9 @@ Run from repository root:
   - Optional könnte der Browser-Loader bei fehlender `/api/modules`-Antwort zusätzlich eine explizite Fehlermeldung im Diagnostics-Log hinterlassen, ohne den Start abzubrechen.
 - Aktueller Projektstand: neutrales Framework bleibt funktionsfähig ohne GPS; GPS ist nun im Browser als Referenzmodul registrierbar.
 - Nächster sinnvoller Schritt: Änderungen pushen und bei Bedarf einen PR öffnen.
+
+### Follow-up
+
+- Branch wurde auf `origin/copilot/neutral-module-loader-browser-api` gepusht.
+- Pull Request `#3` ist geöffnet: `feat: load external modules from api`.
+- PR-Body wurde auf die neutralen Lade- und Testschritte korrigiert.
