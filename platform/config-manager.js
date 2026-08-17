@@ -92,7 +92,7 @@
             this.set('modules', {
                 autoLoad: true,
                 autoActivate: true,
-                loadPath: 'Modules/',
+                loadPath: 'app/modules/',
                 scriptExtension: '.js',
                 errorHandling: 'continue',
                 moduleTimeout: 5000

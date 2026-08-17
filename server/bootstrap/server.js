@@ -3,6 +3,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { port, host, rootDir, webRootDir, apiBase } = require('../config');
 
+const appModulesDir = path.join(rootDir, 'app', 'modules');
+
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -47,6 +49,54 @@ const serveStaticFile = (res, filePath) => {
   res.end(content);
 };
 
+const readAppModuleManifests = () => {
+  if (!fs.existsSync(appModulesDir)) {
+    return [];
+  }
+
+  const manifests = [];
+
+  try {
+    const entries = fs.readdirSync(appModulesDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const manifestPath = path.join(appModulesDir, entry.name, 'module.json');
+      const fallbackPath = path.join(appModulesDir, entry.name, 'manifest.json');
+      const resolvedManifestPath = fs.existsSync(manifestPath)
+        ? manifestPath
+        : fs.existsSync(fallbackPath)
+          ? fallbackPath
+          : null;
+
+      if (!resolvedManifestPath) {
+        continue;
+      }
+
+      try {
+        const raw = fs.readFileSync(resolvedManifestPath, 'utf8');
+        const manifest = JSON.parse(raw);
+
+        if (manifest && manifest.id) {
+          manifests.push({
+            ...manifest,
+            modulePath: `app/modules/${entry.name}`
+          });
+        }
+      } catch {
+        // Skip manifests that cannot be parsed.
+      }
+    }
+  } catch {
+    // Return empty list on filesystem error.
+  }
+
+  return manifests;
+};
+
 const routeApi = (url, res) => {
   const pathname = url.pathname;
   if (pathname === '/health' || pathname === `${apiBase}/health`) {
@@ -75,10 +125,10 @@ const routeApi = (url, res) => {
   }
 
   if (pathname === `${apiBase}/modules`) {
+    const modules = readAppModuleManifests();
     sendJson(res, 200, {
       ok: true,
-      modules: [],
-      message: 'Module registry is available to runtime components.'
+      modules
     });
     return true;
   }
@@ -104,6 +154,11 @@ const server = http.createServer((req, res) => {
   }
 
   if (requestPath.startsWith('/platform/')) {
+    serveStaticFile(res, safeResolve(rootDir, requestPath));
+    return;
+  }
+
+  if (requestPath.startsWith('/app/modules/')) {
     serveStaticFile(res, safeResolve(rootDir, requestPath));
     return;
   }

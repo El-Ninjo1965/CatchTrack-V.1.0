@@ -140,7 +140,7 @@
             const discovered = [];
 
             const discoveredExternal = window.CoreLoader && typeof window.CoreLoader.discoverExternalModules === 'function'
-                ? await window.CoreLoader.discoverExternalModules('Modules')
+                ? await window.CoreLoader.discoverExternalModules('app/modules')
                 : [];
 
             const combinedCatalog = [...catalog, ...discoveredExternal.map((module) => ({
