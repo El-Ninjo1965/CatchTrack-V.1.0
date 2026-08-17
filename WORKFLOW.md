@@ -132,3 +132,6 @@ Run from repository root:
 - Tests: npm test 8/8 passed; npx playwright test --reporter=list 2/2 passed.
 - Branch: copilot/user-app-gps-admin-separation.
 - Next step: commit, push, create PR, and squash-merge after a clean GitHub check.
+
+
+Fortsetzung: WORKFLOW-02.md
