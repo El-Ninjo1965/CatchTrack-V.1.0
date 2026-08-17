@@ -106,8 +106,8 @@ const walkProjectFiles = (baseDirs) => {
   return files;
 };
 
-const requestJson = (port, pathname) => new Promise((resolve, reject) => {
-  const req = http.get({ hostname: '127.0.0.1', port, path: pathname }, (res) => {
+const requestJson = (port, pathname, headers = {}) => new Promise((resolve, reject) => {
+  const req = http.get({ hostname: '127.0.0.1', port, path: pathname, headers }, (res) => {
     let raw = '';
     res.on('data', (chunk) => { raw += chunk; });
     res.on('end', () => {
@@ -122,8 +122,8 @@ const requestJson = (port, pathname) => new Promise((resolve, reject) => {
   req.on('error', reject);
 });
 
-const requestText = (port, pathname) => new Promise((resolve, reject) => {
-  const req = http.get({ hostname: '127.0.0.1', port, path: pathname }, (res) => {
+const requestText = (port, pathname, headers = {}) => new Promise((resolve, reject) => {
+  const req = http.get({ hostname: '127.0.0.1', port, path: pathname, headers }, (res) => {
     let raw = '';
     res.on('data', (chunk) => { raw += chunk; });
     res.on('end', () => {
@@ -238,7 +238,8 @@ test('server exposes neutral module catalog and module assets', async () => {
   const gpsManifest = await requestJson(port, '/app/modules/gps/module.json');
   const gpsScript = await requestText(port, '/app/modules/gps/index.js');
   const traversalAttempt = await requestText(port, '/app/modules/..%2f..%2fplatform/core.js');
-  const adminAttempt = await requestJson(port, '/admin.html');
+  const adminAttempt = await requestJson(port, '/admin');
+  const developerAttempt = await requestJson(port, '/developer');
 
   assert.equal(modules.statusCode, 200);
   assert.equal(modules.body.ok, true);
@@ -250,8 +251,33 @@ test('server exposes neutral module catalog and module assets', async () => {
   assert.equal(gpsScript.statusCode, 200);
   assert.match(gpsScript.body, /window\.GpsModule/);
   assert.equal(traversalAttempt.statusCode, 404);
-  assert.equal(adminAttempt.statusCode, 403);
-  assert.equal((await requestJson(port, '/dev.html')).statusCode, 403);
+  assert.equal(adminAttempt.statusCode, 401);
+  assert.equal(developerAttempt.statusCode, 401);
+
+  await new Promise((resolve, reject) => {
+    serverInstance.close((error) => (error ? reject(error) : resolve()));
+  });
+});
+
+test('server grants protected technical routes with the configured token', async () => {
+  const { createServer } = require(path.join(root, 'server', 'server.js'));
+  const serverInstance = createServer({ adminAccessToken: 'unit-admin-token' });
+
+  await new Promise((resolve, reject) => {
+    serverInstance.listen(0, '127.0.0.1', () => resolve());
+    serverInstance.once('error', reject);
+  });
+
+  const port = serverInstance.address().port;
+  const denied = await requestJson(port, '/admin');
+  const allowedAdmin = await requestText(port, '/admin', { 'x-admin-access-token': 'unit-admin-token' });
+  const allowedDeveloper = await requestText(port, '/developer', { 'x-admin-access-token': 'unit-admin-token' });
+
+  assert.equal(denied.statusCode, 403);
+  assert.equal(allowedAdmin.statusCode, 200);
+  assert.match(allowedAdmin.body, /Platform Administration/i);
+  assert.equal(allowedDeveloper.statusCode, 200);
+  assert.match(allowedDeveloper.body, /Platform Diagnostics/i);
 
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));
