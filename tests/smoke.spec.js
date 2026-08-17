@@ -7,6 +7,11 @@ test('neutral platform web shell loads and registers the gps module', async ({ p
   await expect(page.locator('h2').first()).toContainText(/Neutral Platform|Platform/i);
   await expect(page.locator('link[rel="stylesheet"]').first()).toHaveAttribute('href', /style\.css/i);
   await page.waitForFunction(() => window.GpsModule && window.ModuleRegistry && typeof window.ModuleRegistry.has === 'function' && window.ModuleRegistry.has('gps'));
+  await expect(page.locator('#frameworkPreview')).toContainText('CatchTrack Framework');
+  await expect(page.locator('#frameworkStatus')).toHaveText('OK');
+  await expect(page.locator('#moduleDiscoveryStatus')).toHaveText('OK');
+  await expect(page.locator('#gpsModuleStatus')).toContainText('installed');
+  await expect(page.locator('#discoveredModules')).toContainText('GPS Tracker');
 
   const gpsState = await page.evaluate(() => ({
     hasGpsModule: !!window.GpsModule,

@@ -49,23 +49,23 @@ const serveStaticFile = (res, filePath) => {
   res.end(content);
 };
 
-const readAppModuleManifests = () => {
-  if (!fs.existsSync(appModulesDir)) {
+const readAppModuleManifests = (modulesDir = appModulesDir) => {
+  if (!fs.existsSync(modulesDir)) {
     return [];
   }
 
   const manifests = [];
 
   try {
-    const entries = fs.readdirSync(appModulesDir, { withFileTypes: true });
+    const entries = fs.readdirSync(modulesDir, { withFileTypes: true });
 
     for (const entry of entries) {
       if (!entry.isDirectory()) {
         continue;
       }
 
-      const manifestPath = path.join(appModulesDir, entry.name, 'module.json');
-      const fallbackPath = path.join(appModulesDir, entry.name, 'manifest.json');
+      const manifestPath = path.join(modulesDir, entry.name, 'module.json');
+      const fallbackPath = path.join(modulesDir, entry.name, 'manifest.json');
       const resolvedManifestPath = fs.existsSync(manifestPath)
         ? manifestPath
         : fs.existsSync(fallbackPath)
@@ -97,7 +97,7 @@ const readAppModuleManifests = () => {
   return manifests;
 };
 
-const routeApi = (url, res) => {
+const routeApi = (url, res, modulesDir = appModulesDir) => {
   const pathname = url.pathname;
   if (pathname === '/health' || pathname === `${apiBase}/health`) {
     sendJson(res, 200, {
@@ -125,7 +125,7 @@ const routeApi = (url, res) => {
   }
 
   if (pathname === `${apiBase}/modules`) {
-    const modules = readAppModuleManifests();
+    const modules = readAppModuleManifests(modulesDir);
     sendJson(res, 200, {
       ok: true,
       modules
@@ -136,10 +136,10 @@ const routeApi = (url, res) => {
   return false;
 };
 
-const server = http.createServer((req, res) => {
+const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer((req, res) => {
   const url = new URL(req.url, `http://${host}:${port}`);
 
-  if (routeApi(url, res)) {
+  if (routeApi(url, res, modulesDir)) {
     return;
   }
 
@@ -160,7 +160,7 @@ const server = http.createServer((req, res) => {
 
   if (requestPath.startsWith('/app/modules/')) {
     const modulePath = requestPath.slice('/app/modules/'.length);
-    serveStaticFile(res, safeResolve(appModulesDir, modulePath));
+    serveStaticFile(res, safeResolve(modulesDir, modulePath));
     return;
   }
 
@@ -181,6 +181,8 @@ const server = http.createServer((req, res) => {
   serveStaticFile(res, filePath);
 });
 
+const server = createServer();
+
 if (require.main === module) {
   server.listen(port, host, () => {
     console.log(`Neutral platform server listening on http://${host}:${port}`);
@@ -189,3 +191,4 @@ if (require.main === module) {
 
 module.exports = server;
 module.exports.config = { port, host, rootDir, webRootDir, apiBase };
+module.exports.createServer = createServer;

@@ -7,6 +7,18 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body data-page="user">
+    <section id="frameworkPreview" class="framework-preview" aria-live="polite">
+      <div class="framework-preview-heading">
+        <span class="framework-preview-kicker">CatchTrack Framework</span>
+        <h1>Framework Preview</h1>
+      </div>
+      <dl class="framework-preview-grid">
+        <div><dt>Framework Status</dt><dd id="frameworkStatus">Loading</dd></div>
+        <div><dt>Module Discovery</dt><dd id="moduleDiscoveryStatus">Loading</dd></div>
+        <div><dt>GPS</dt><dd id="gpsModuleStatus">Loading</dd></div>
+      </dl>
+      <div><span class="framework-preview-label">Discovered Modules</span><div id="discoveredModules" class="chip-list"></div></div>
+    </section>
     <div id="authPanel" class="auth-shell">
       <div class="auth-card">
         <h2>Neutral Platform</h2>

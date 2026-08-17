@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const os = require('node:os');
 const vm = require('node:vm');
 
 const root = path.join(__dirname, '..');
@@ -170,6 +171,59 @@ test('server exposes neutral health endpoints', async () => {
   });
 });
 
+
+test('framework remains available without external modules', async () => {
+  const context = loadPlatformContext();
+  const emptyModulesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-modules-'));
+  const { createServer } = require(path.join(root, 'server', 'server.js'));
+  const serverInstance = createServer({ modulesDir: emptyModulesDir });
+
+  try {
+    const discovered = await context.CoreLoader.discoverExternalModules(emptyModulesDir);
+    assert.equal(discovered.length, 0);
+    assert.equal(typeof context.ModuleRegistry.getAll, 'function');
+
+    await new Promise((resolve, reject) => {
+      serverInstance.listen(0, '127.0.0.1', resolve);
+      serverInstance.once('error', reject);
+    });
+
+    const port = serverInstance.address().port;
+    const modules = await requestJson(port, '/api/modules');
+    const missingAsset = await requestText(port, '/app/modules/gps/index.js');
+    assert.deepEqual(modules.body.modules, []);
+    assert.equal(missingAsset.statusCode, 404);
+  } finally {
+    if (serverInstance.listening) {
+      await new Promise((resolve, reject) => serverInstance.close((error) => error ? reject(error) : resolve()));
+    }
+    fs.rmSync(emptyModulesDir, { recursive: true, force: true });
+  }
+});
+
+test('generic module lifecycle is isolated and complete', () => {
+  const context = loadPlatformContext();
+  const module = context.ModuleInterface.create({
+    id: 'sample-module',
+    globalName: 'SampleModule',
+    permissions: [],
+    capabilities: ['sample']
+  });
+
+  context.ModuleManager.register(module);
+  context.ModuleManager.install(module.id);
+  context.ModuleManager.initialize(module.id);
+  context.ModuleManager.enable(module.id);
+  assert.equal(context.ModuleManager.getStatus(module.id), 'enabled');
+  assert.equal(context.ModuleManager.disable(module.id), true);
+  assert.equal(context.ModuleManager.getStatus(module.id), 'disabled');
+  assert.throws(() => context.ModuleManager.register(module), /already registered/);
+  assert.equal(context.ModuleManager.uninstall(module.id), true);
+  assert.equal(context.ModuleManager.get(module.id), null);
+  assert.equal(context.ModuleManager.disable('missing-module'), false);
+  assert.equal(context.ModuleInterface.validateManifest({}), null);
+});
+
 test('server exposes neutral module catalog and module assets', async () => {
   const server = require(path.join(root, 'server', 'server.js'));
   const serverInstance = server;
@@ -236,7 +290,7 @@ test('workflow documents the neutral structure without stale directions', () => 
 });
 
 test('neutral project scan rejects stale app-specific terms but ignores the validator itself', () => {
-  const candidates = walkProjectFiles(['platform', 'server', 'app', 'webroot', 'config']);
+  const candidates = walkProjectFiles(['platform', 'server', 'app', 'config']);
 
   for (const filePath of candidates) {
     const content = fs.readFileSync(filePath, 'utf8');

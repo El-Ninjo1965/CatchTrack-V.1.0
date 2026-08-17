@@ -54,6 +54,31 @@
     }));
   };
 
+  const renderFrameworkPreview = () => {
+    const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+      ? window.ModuleRegistry
+      : null;
+    const modules = registry ? registry.getAll().filter((module) => module && module.id) : [];
+    const frameworkStatus = document.getElementById('frameworkStatus');
+    const discoveryStatus = document.getElementById('moduleDiscoveryStatus');
+    const gpsStatus = document.getElementById('gpsModuleStatus');
+    const discoveredModules = document.getElementById('discoveredModules');
+    const optionalGpsModule = modules.find((module) => module.id === 'gps');
+
+    if (frameworkStatus) frameworkStatus.textContent = window.Core ? 'OK' : 'Unavailable';
+    if (discoveryStatus) discoveryStatus.textContent = registry ? 'OK' : 'Unavailable';
+    if (gpsStatus) {
+      gpsStatus.textContent = optionalGpsModule
+        ? 'installed (' + (optionalGpsModule.status || 'available') + ')'
+        : 'not installed';
+    }
+    if (discoveredModules) {
+      discoveredModules.innerHTML = modules.length
+        ? modules.map((module) => '<span class="chip">' + escapeHtml(module.name || module.id) + '</span>').join('')
+        : '<span class="chip">No modules installed</span>';
+    }
+  };
+
   const renderSummary = () => {
     const currentUser = getCurrentUser();
     const currentUserName = document.getElementById('currentUserName');
@@ -310,6 +335,7 @@
 
   const init = async () => {
     await ensureRuntime();
+    renderFrameworkPreview();
     renderSummary();
     renderUserMenu();
     syncShellVisibility();
