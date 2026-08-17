@@ -79,3 +79,18 @@ Run from repository root:
 - Branch wurde auf `origin/copilot/neutral-module-loader-browser-api` gepusht.
 - Pull Request `#3` ist geöffnet: `feat: load external modules from api`.
 - PR-Body wurde auf die neutralen Lade- und Testschritte korrigiert.
+
+
+## 2026-08-17 - PR #3 Sicherheitsfix und Squash-Merge
+
+- Aufgabe: PR #3 abschliessend pruefen, die Modulroute absichern und nach erfolgreicher Verifikation per Squash nach main mergen.
+- Ausgangs-HEAD: 689bbf1; PR-Head vor dem Fix: 689bbf190e80d1d1f69d06828f4f528dff9e1211.
+- Sicherheitsbefund: /app/modules/* loeste anfangs relativ zum Repository-Root auf. Traversal konnte damit zwar nicht das Repository verlassen, aber den Modulordner verlassen.
+- Fix: Die Modulroute loest jetzt ausschliesslich relativ zu app/modules auf.
+- Regressionstest: Ein kodierter Traversal-Versuch auf platform/core.js liefert 404; gueltige GPS-Assets bleiben erreichbar.
+- Fix-Commit: e524680314df9d42c55c579a373c15cfc4bce019 - fix: restrict module asset route to app modules.
+- Pull Request: #3 per Squash gemergt.
+- Merge-Commit und finaler origin/main-HEAD: 0b33db9d9f048d37a3f509801a51303907c9cc2a.
+- Testergebnisse auf origin/main: npm test 6/6 bestanden; npx playwright test --reporter=list 1/1 bestanden.
+- Ergebnis: Die Browser-Discovery bleibt kataloggetrieben und neutral; die statische Modulroute ist auf ihren kanonischen Basisordner beschraenkt.
+- Naechster sinnvoller Schritt: keiner.
