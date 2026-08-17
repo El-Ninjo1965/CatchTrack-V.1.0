@@ -145,3 +145,17 @@ Fortsetzung von WORKFLOW.md
   - `npm test`: 10/10 bestanden
   - `npx playwright test --reporter=list`: 3/3 bestanden
   - `git diff --check`: keine Fehler
+
+## 2026-08-17 - Neutrale Demo-App für die Multi-App-Validierung
+
+- Aufgabe: Eine zweite, vollständig neutrale Demo-App neben der Root-App bereitstellen, um die Multi-App-Struktur praktisch zu prüfen.
+- Umsetzung:
+  - `demo2` wurde als eigene App-Instanz mit Mount-Path `/demo2/` registriert.
+  - Die App bekommt einen eigenen Webroot unter `apps/demo2/webroot/`.
+  - Der Server erkennt den App-Kontext anhand des Mount-Paths und trennt Root- und Demo-Connections serverseitig.
+  - Ungeregelte App-Pfade liefern sauber `404`.
+- Tests:
+  - Root-App lädt weiter.
+  - `/demo2/` liefert die Demo-App.
+  - Root- und Demo2-Connections bleiben getrennt.
+  - Nicht registrierte App-Pfade werden sauber behandelt.

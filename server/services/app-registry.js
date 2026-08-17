@@ -95,15 +95,7 @@ const createAppRegistryService = (registryPath, { rootDir } = {}) => {
     const normalizedPath = pathname && pathname.startsWith('/') ? pathname : `/${pathname || ''}`;
 
     for (const app of apps) {
-      if (app.mountPath === '/') {
-        return {
-          app,
-          relativePath: normalizedPath,
-          isGlobalRoot: true
-        };
-      }
-
-      if (normalizedPath === app.mountPath || normalizedPath.startsWith(`${app.mountPath}/`)) {
+      if (app.mountPath !== '/' && (normalizedPath === app.mountPath || normalizedPath.startsWith(`${app.mountPath}/`))) {
         const relativePath = normalizedPath.slice(app.mountPath.length) || '/';
         return {
           app,
@@ -113,12 +105,16 @@ const createAppRegistryService = (registryPath, { rootDir } = {}) => {
       }
     }
 
-    const fallback = apps.find((app) => app.mountPath === '/') || defaultAppDefinitions(rootDir)[0];
-    return {
-      app: fallback,
-      relativePath: normalizedPath,
-      isGlobalRoot: true
-    };
+    if (normalizedPath === '/') {
+      const fallback = apps.find((app) => app.mountPath === '/') || defaultAppDefinitions(rootDir)[0];
+      return {
+        app: fallback,
+        relativePath: normalizedPath,
+        isGlobalRoot: true
+      };
+    }
+
+    return null;
   };
 
   return {
@@ -138,7 +134,8 @@ const createAppRegistryService = (registryPath, { rootDir } = {}) => {
     resolveRequest,
 
     getCurrentAppContext(pathname) {
-      return resolveRequest(pathname).app;
+      const resolved = resolveRequest(pathname);
+      return resolved ? resolved.app : null;
     }
   };
 };

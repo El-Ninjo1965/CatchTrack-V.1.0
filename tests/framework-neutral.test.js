@@ -308,8 +308,8 @@ test('server grants protected technical routes with the configured token', async
       : { 'Content-Type': 'application/json' },
     'POST',
     JSON.stringify({
-      appId: 'future-app',
-      appName: 'Future App',
+      appId: 'primary-web-app',
+      appName: 'Primary Web App',
       serverUrl: 'https://example.org',
       apiBasePath: '/future/api',
       connectionStatus: 'configured',
@@ -318,7 +318,7 @@ test('server grants protected technical routes with the configured token', async
   );
   const updatedConnections = cookieHeader ? await requestJson(port, '/api/connections', { cookie: cookieHeader }) : { statusCode: 0, body: {} };
   const removedConnection = cookieHeader
-    ? await requestRaw(port, '/api/connections/future-app', { cookie: cookieHeader }, 'DELETE')
+    ? await requestRaw(port, '/api/connections/primary-web-app', { cookie: cookieHeader }, 'DELETE')
     : { statusCode: 0 };
   const cleanedConnections = cookieHeader ? await requestJson(port, '/api/connections', { cookie: cookieHeader }) : { statusCode: 0, body: {} };
 
@@ -332,9 +332,9 @@ test('server grants protected technical routes with the configured token', async
   assert.ok(Array.isArray(protectedConnections.body.connections));
   assert.equal(createdConnection.statusCode, 201);
   assert.equal(updatedConnections.statusCode, 200);
-  assert.ok(updatedConnections.body.connections.some((connection) => connection.appId === 'future-app'));
+  assert.ok(updatedConnections.body.connections.some((connection) => connection.appId === 'primary-web-app'));
   assert.equal(removedConnection.statusCode, 200);
-  assert.ok(!cleanedConnections.body.connections.some((connection) => connection.appId === 'future-app'));
+  assert.ok(!cleanedConnections.body.connections.some((connection) => connection.appId === 'primary-web-app'));
 
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));
@@ -397,6 +397,20 @@ test('server resolves app context and keeps app-scoped connections isolated', as
   const appContext = await requestJson(port, '/future/api/app-context');
   const futureIndex = await requestText(port, '/future/');
   const denied = await requestJson(port, '/future/api/connections');
+  const rootCreate = await requestRaw(
+    port,
+    '/api/connections',
+    { 'x-admin-access-token': 'unit-admin-token', 'Content-Type': 'application/json' },
+    'POST',
+    JSON.stringify({
+      appId: 'primary-web-app',
+      appName: 'Primary Web App',
+      serverUrl: 'https://root.example',
+      apiBasePath: '/api',
+      connectionStatus: 'configured',
+      parameters: { tier: 'root' }
+    })
+  );
   const createdConnection = await requestRaw(
     port,
     '/future/api/connections',
@@ -420,6 +434,7 @@ test('server resolves app context and keeps app-scoped connections isolated', as
   assert.equal(futureIndex.statusCode, 200);
   assert.match(futureIndex.body, /Future App/);
   assert.equal(denied.statusCode, 403);
+  assert.equal(rootCreate.statusCode, 201);
   assert.equal(createdConnection.statusCode, 201);
   assert.equal(scopedConnections.statusCode, 200);
   assert.equal(scopedConnections.body.connections.length, 1);
@@ -427,12 +442,81 @@ test('server resolves app context and keeps app-scoped connections isolated', as
   assert.equal(crossAppLookup.statusCode, 404);
   assert.equal(globalConnections.statusCode, 200);
   assert.equal(globalConnections.body.connections.length, 1);
+  assert.equal(globalConnections.body.connections[0].appId, 'primary-web-app');
 
   await new Promise((resolve, reject) => {
     serverInstance.close((error) => (error ? reject(error) : resolve()));
   });
 
   fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test('server separates root and demo2 connections', async () => {
+  const { createServer } = require(path.join(root, 'server', 'server.js'));
+  const tempStoreDir = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-app-connections-'));
+  const connectionStorePath = path.join(tempStoreDir, 'connections.json');
+  const serverInstance = createServer({
+    adminAccessToken: 'unit-admin-token',
+    connectionStorePath
+  });
+
+  await new Promise((resolve, reject) => {
+    serverInstance.listen(0, '127.0.0.1', () => resolve());
+    serverInstance.once('error', reject);
+  });
+
+  const port = serverInstance.address().port;
+  const rootCreate = await requestRaw(
+    port,
+    '/api/connections',
+    { 'x-admin-access-token': 'unit-admin-token', 'Content-Type': 'application/json' },
+    'POST',
+    JSON.stringify({
+      appId: 'primary-web-app',
+      appName: 'Primary Web App',
+      serverUrl: 'https://root.example',
+      apiBasePath: '/api',
+      connectionStatus: 'configured',
+      parameters: { area: 'root' }
+    })
+  );
+  const demoCreate = await requestRaw(
+    port,
+    '/demo2/api/connections',
+    { 'x-admin-access-token': 'unit-admin-token', 'Content-Type': 'application/json' },
+    'POST',
+    JSON.stringify({
+      appId: 'demo2',
+      appName: 'Demo 2',
+      serverUrl: 'https://demo2.example',
+      apiBasePath: '/api',
+      connectionStatus: 'configured',
+      parameters: { area: 'demo2' }
+    })
+  );
+  const rootConnections = await requestJson(port, '/api/connections', { 'x-admin-access-token': 'unit-admin-token' });
+  const demoConnections = await requestJson(port, '/demo2/api/connections', { 'x-admin-access-token': 'unit-admin-token' });
+  const rootLookupInDemo = await requestJson(port, '/demo2/api/connections/root-app', { 'x-admin-access-token': 'unit-admin-token' });
+  const demoLookupInRoot = await requestJson(port, '/api/connections/demo2', { 'x-admin-access-token': 'unit-admin-token' });
+  const unknownRoute = await requestJson(port, '/no-such-app/');
+
+  assert.equal(rootCreate.statusCode, 201);
+  assert.equal(demoCreate.statusCode, 201);
+  assert.equal(rootConnections.statusCode, 200);
+  assert.equal(rootConnections.body.connections.length, 1);
+  assert.equal(rootConnections.body.connections[0].appId, 'primary-web-app');
+  assert.equal(demoConnections.statusCode, 200);
+  assert.equal(demoConnections.body.connections.length, 1);
+  assert.equal(demoConnections.body.connections[0].appId, 'demo2');
+  assert.equal(rootLookupInDemo.statusCode, 404);
+  assert.equal(demoLookupInRoot.statusCode, 404);
+  assert.equal(unknownRoute.statusCode, 404);
+
+  await new Promise((resolve, reject) => {
+    serverInstance.close((error) => (error ? reject(error) : resolve()));
+  });
+
+  fs.rmSync(tempStoreDir, { recursive: true, force: true });
 });
 
 test('webroot assets are present and reference real files', () => {

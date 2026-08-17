@@ -2,6 +2,9 @@
   'use strict';
 
   const content = document.getElementById('userAppContent');
+  const state = {
+    activeView: 'modules'
+  };
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -13,8 +16,16 @@
     : [];
 
   const setActiveView = (view) => document.querySelectorAll('[data-user-view]').forEach((button) => {
+    state.activeView = view;
     button.classList.toggle('active', button.dataset.userView === view);
   });
+
+  const refreshModulesIfVisible = () => {
+    if (state.activeView === 'modules') {
+      renderModules();
+      bindNavigation();
+    }
+  };
 
   const renderSettings = () => {
     setActiveView('settings');
@@ -49,6 +60,11 @@
   };
 
   const start = async () => {
+    if (window.Core && typeof window.Core.on === 'function') {
+      window.Core.on('module:activated', refreshModulesIfVisible);
+      window.Core.on('module:registered', refreshModulesIfVisible);
+      window.Core.on('module:deactivated', refreshModulesIfVisible);
+    }
     if (window.CoreStartup && typeof window.CoreStartup.start === 'function') await window.CoreStartup.start();
     if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') await window.ModuleManager.discoverModules();
     renderModules();
