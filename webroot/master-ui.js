@@ -162,10 +162,24 @@
       });
     });
 
+    if (pageType === 'user') {
+      if (adminSection) {
+        adminSection.classList.add('hidden');
+        adminSection.innerHTML = '';
+      }
+      if (adminMenu) adminMenu.innerHTML = '';
+      if (developerSection) {
+        developerSection.classList.add('hidden');
+        developerSection.innerHTML = '';
+      }
+      if (developerMenu) developerMenu.innerHTML = '';
+      return;
+    }
+
     if (canViewAdmin(currentUser)) {
       if (adminSection) adminSection.classList.remove('hidden');
       if (adminMenu) {
-        adminMenu.innerHTML = '<button type="button" class="nav-item" data-view="admin:dashboard" data-href="admin.html">Administration</button>';
+        adminMenu.innerHTML = '<button type="button" class="nav-item" data-view="admin:dashboard" data-href="/admin">Administration</button>';
       }
     } else if (adminSection) {
       adminSection.classList.add('hidden');
@@ -175,7 +189,7 @@
     if (canViewDeveloper(currentUser)) {
       if (developerSection) developerSection.classList.remove('hidden');
       if (developerMenu) {
-        developerMenu.innerHTML = '<button type="button" class="nav-item" data-view="developer:core" data-href="dev.html">Developer</button>';
+        developerMenu.innerHTML = '<button type="button" class="nav-item" data-view="developer:core" data-href="/developer">Developer</button>';
       }
     } else if (developerSection) {
       developerSection.classList.add('hidden');
@@ -249,6 +263,10 @@
   };
 
   const renderPageContent = () => {
+    if (pageType === 'user' && !['dashboard', 'profile', 'modules'].includes(state.activeView)) {
+      state.activeView = defaultView;
+    }
+
     if (state.activeView === 'profile') {
       renderProfile();
       return;

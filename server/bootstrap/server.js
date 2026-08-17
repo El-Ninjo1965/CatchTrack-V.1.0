@@ -136,7 +136,7 @@ const routeApi = (url, res, modulesDir = appModulesDir) => {
   return false;
 };
 
-const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer((req, res) => {
+const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN } = {}) => http.createServer((req, res) => {
   const url = new URL(req.url, `http://${host}:${port}`);
 
   if (routeApi(url, res, modulesDir)) {
@@ -145,13 +145,28 @@ const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer(
 
   let requestPath = decodeURIComponent(url.pathname);
 
-  if (requestPath === '/admin.html' || requestPath === '/dev.html') {
-    const adminToken = process.env.ADMIN_ACCESS_TOKEN;
+  const protectedRoutes = {
+    '/admin': '/admin.html',
+    '/admin.html': '/admin.html',
+    '/dev': '/dev.html',
+    '/developer': '/dev.html',
+    '/dev.html': '/dev.html'
+  };
+
+  if (protectedRoutes[requestPath]) {
     const suppliedToken = req.headers['x-admin-access-token'];
-    if (!adminToken || suppliedToken !== adminToken) {
-      sendJson(res, 403, { ok: false, code: 'FORBIDDEN', message: 'Administrative pages require server-side authorization.' });
+    if (!adminAccessToken || suppliedToken !== adminAccessToken) {
+      sendJson(res, adminAccessToken ? 403 : 401, {
+        ok: false,
+        code: adminAccessToken ? 'FORBIDDEN' : 'UNAUTHORIZED',
+        message: adminAccessToken
+          ? 'Administrative pages require server-side authorization.'
+          : 'Administrative access token is not configured.'
+      });
       return;
     }
+
+    requestPath = protectedRoutes[requestPath];
   }
 
   if (requestPath === '/') {

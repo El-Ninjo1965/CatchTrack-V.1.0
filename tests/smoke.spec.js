@@ -11,6 +11,8 @@ test('user app opens directly and renders the active gps module', async ({ page 
   await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
   await expect(page.locator('text=Framework Status')).toHaveCount(0);
   await expect(page.locator('text=Developer')).toHaveCount(0);
+  await expect(page.locator('[data-view="admin:dashboard"]')).toHaveCount(0);
+  await expect(page.locator('[data-view="developer:core"]')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'GPS Tracker' })).toBeVisible();
   await expect(page.locator('.user-module-card')).toContainText('Ready to use');
   await page.getByRole('button', { name: 'Settings' }).click();
@@ -28,6 +30,24 @@ test('user app opens directly and renders the active gps module', async ({ page 
 });
 
 test('administrative pages are protected server-side', async ({ request }) => {
-  const response = await request.get('/admin.html');
+  const response = await request.get('/admin');
   expect(response.status()).toBe(403);
+});
+
+test('administrative pages load with the server token', async ({ browser }) => {
+  const context = await browser.newContext({
+    baseURL: 'http://127.0.0.1:8000',
+    extraHTTPHeaders: {
+      'x-admin-access-token': 'playwright-admin'
+    }
+  });
+
+  try {
+    const adminPage = await context.newPage();
+    await adminPage.goto('/admin');
+    await expect(adminPage.getByRole('heading', { name: 'Platform Administration' })).toBeVisible();
+    await expect(adminPage.locator('#authPanel')).toBeVisible();
+  } finally {
+    await context.close();
+  }
 });
