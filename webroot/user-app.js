@@ -18,7 +18,7 @@
 
   const renderSettings = () => {
     setActiveView('settings');
-    content.innerHTML = '<section class="user-app-panel user-app-empty"><span class="user-app-eyebrow">Settings</span><h1>Your app, kept simple.</h1><p>There are no user settings available yet.</p></section>';
+    content.innerHTML = '<section class="user-app-panel user-app-empty"><span class="user-app-eyebrow">Settings</span><h1>Your workspace, kept simple.</h1><p>There are no user settings available yet.</p></section>';
   };
 
   const bindNavigation = () => document.querySelectorAll('[data-user-view]').forEach((button) => button.addEventListener('click', () => {

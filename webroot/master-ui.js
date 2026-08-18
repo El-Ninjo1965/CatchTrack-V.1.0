@@ -61,17 +61,12 @@
     const modules = registry ? registry.getAll().filter((module) => module && module.id) : [];
     const frameworkStatus = document.getElementById('frameworkStatus');
     const discoveryStatus = document.getElementById('moduleDiscoveryStatus');
-    const gpsStatus = document.getElementById('gpsModuleStatus');
     const discoveredModules = document.getElementById('discoveredModules');
-    const optionalGpsModule = modules.find((module) => module.id === 'gps');
+    const moduleCount = document.getElementById('moduleCount');
 
     if (frameworkStatus) frameworkStatus.textContent = window.Core ? 'OK' : 'Unavailable';
     if (discoveryStatus) discoveryStatus.textContent = registry ? 'OK' : 'Unavailable';
-    if (gpsStatus) {
-      gpsStatus.textContent = optionalGpsModule
-        ? 'installed (' + (optionalGpsModule.status || 'available') + ')'
-        : 'not installed';
-    }
+    if (moduleCount) moduleCount.textContent = String(modules.length);
     if (discoveredModules) {
       discoveredModules.innerHTML = modules.length
         ? modules.map((module) => '<span class="chip">' + escapeHtml(module.name || module.id) + '</span>').join('')
