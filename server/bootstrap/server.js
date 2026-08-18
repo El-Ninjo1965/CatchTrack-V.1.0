@@ -43,56 +43,15 @@ const sendJson = (res, statusCode, payload) => {
   res.end(JSON.stringify(payload, null, 2));
 };
 
-const getSetupSnapshot = () => {
-  if (MasterFramework && typeof MasterFramework.getSetupSnapshot === 'function') {
-    return MasterFramework.getSetupSnapshot();
-  }
-
-  const setup = MasterFramework.loadSetupState();
-  const installation = setup.installation || {};
-  const configuration = setup.configuration || {};
-  const database = setup.database || configuration.database || null;
-  const setupState = MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : MasterFramework.normalizeSetupStatus(setup.status, 'NOT_CONFIGURED');
-  const status = MasterFramework.normalizeSetupStatus(setup.status || setupState, 'NOT_CONFIGURED');
-
-  return {
-    ...setup,
-    status,
-    installation: {
-      ...installation,
-      active: !!installation.active,
-      state: installation.state || 'draft'
-    },
-    configuration,
-    database,
-    setupState
-  };
-};
+const getSetupSnapshot = () => MasterFramework.getSetupSnapshot();
 
 const isSetupRequired = () => {
   const snapshot = getSetupSnapshot();
-  const status = MasterFramework.normalizeSetupStatus(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
-  const installationActive = !!(snapshot.installation && snapshot.installation.active);
-  return !(installationActive || status === 'ACTIVE');
+  return !(snapshot.installation && snapshot.installation.active) && snapshot.status !== 'ACTIVE';
 };
 
 const getDatabaseStatus = () => {
-  if (MasterFramework && typeof MasterFramework.getDatabaseStatus === 'function') {
-    return MasterFramework.getDatabaseStatus();
-  }
-
-  const setup = getSetupSnapshot();
-  const database = setup.database || setup.configuration?.database || null;
-  const configured = !!(database && (database.type || database.name || database.host || database.url));
-
-  return {
-    ok: configured,
-    status: configured ? 'READY' : 'NOT_CONFIGURED',
-    configured,
-    type: database && database.type ? database.type : 'unknown',
-    name: database && database.name ? database.name : 'framework-db',
-    message: configured ? 'Database configuration present.' : 'Database not configured.'
-  };
+  return MasterFramework.getDatabaseStatus();
 };
 
 const getServerTestResult = async (payload = {}) => {
@@ -465,7 +424,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     const snapshot = getSetupSnapshot();
     sendJson(res, 200, {
       ok: true,
-      status: snapshot.status || snapshot.setupState,
+      status: snapshot.status,
       setup: snapshot
     });
     return true;
@@ -500,7 +459,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     const snapshot = getSetupSnapshot();
     sendJson(res, 200, {
       ok: true,
-      status: snapshot.status || snapshot.setupState,
+      status: snapshot.status,
       setup: snapshot
     });
     return true;
