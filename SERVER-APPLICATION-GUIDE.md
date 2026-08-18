@@ -297,6 +297,30 @@ Aktuelles Verhalten:
 
 Es gibt keinen HTML-Frontend-Router mit eigener Fallback-Seite.
 
+### 7.7 Erststart und Setup-Erkennung
+
+Wenn der Framework-Setup-Status noch nicht auf `ACTIVE` steht, dient die Root-Route `/` automatisch der Erstinstallationsseite `setup.html` statt der normalen Benutzeroberfläche. Das ist eine technische Erststart-Erkennung auf Basis des vorhandenen Framework-Setup-State,
+
+- `NOT_CONFIGURED`
+- `CONFIGURATION_REQUIRED`
+- `READY_TO_TEST`
+- `TESTING`
+- `READY`
+- `ACTIVE`
+- `ERROR`
+
+Die zentrale Statuslogik bleibt im neutralen Framework; die Server-Route nutzt sie nur als Entscheidungsgrund.
+
+### 7.8 Upload- und Laufzeitstruktur
+
+Für einen typischen Webserver werden im Grundsatz nur die Projektdateien im Webroot-/Runtime-Bereich des Node-Projekts hochgeladen. Die Startdatei ist:
+
+```bash
+node server/server.js
+```
+
+Es dürfen keine Secrets, `.env`-Dateien, Logs, temporären Dateien oder Backups im öffentlichen Webbereich liegen. Der Browser darf nur das öffentliche Frontend, die API-Endpunkte und die statischen Ressourcen sehen, die im aktuellen Server-Setup zulässig sind.
+
 ---
 
 ## 8. Modulinstallation

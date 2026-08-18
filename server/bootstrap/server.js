@@ -48,10 +48,11 @@ const getSetupSnapshot = () => {
   const installation = setup.installation || {};
   const configuration = setup.configuration || {};
   const database = setup.database || configuration.database || null;
+  const state = normalizeStatusValue(setup.status, 'NOT_CONFIGURED');
 
   return {
     ...setup,
-    status: normalizeStatusValue(setup.status, 'NOT_CONFIGURED'),
+    status: state,
     installation: {
       ...installation,
       active: !!installation.active,
@@ -59,8 +60,14 @@ const getSetupSnapshot = () => {
     },
     configuration,
     database,
-    setupState: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : 'NOT_CONFIGURED'
+    setupState: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : state
   };
+};
+
+const isSetupRequired = () => {
+  const snapshot = getSetupSnapshot();
+  const status = normalizeStatusValue(snapshot.setupState || snapshot.status, 'NOT_CONFIGURED');
+  return !['ACTIVE', 'READY'].includes(status);
 };
 
 const getDatabaseStatus = () => {
@@ -456,8 +463,18 @@ const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer(
     }
   }
 
+  if ((requestPath === '/' || requestPath === '/index.html') && isSetupRequired()) {
+    serveStaticFile(res, path.join(webRootDir, 'setup.html'));
+    return;
+  }
+
   if (requestPath === '/') {
     requestPath = '/index.html';
+  }
+
+  if (requestPath === '/setup' || requestPath === '/setup.html') {
+    serveStaticFile(res, path.join(webRootDir, 'setup.html'));
+    return;
   }
 
   if (requestPath.startsWith('/webroot/')) {

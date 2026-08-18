@@ -2,7 +2,13 @@
   'use strict';
 
   const pageType = document.body.dataset.page || 'user';
-  const defaultView = pageType === 'admin' ? 'admin:dashboard' : pageType === 'developer' ? 'developer:core' : 'dashboard';
+  const defaultView = pageType === 'admin'
+    ? 'admin:dashboard'
+    : pageType === 'developer'
+      ? 'developer:core'
+      : pageType === 'setup'
+        ? 'setup:overview'
+        : 'dashboard';
   const state = { activeView: defaultView };
 
   const escapeHtml = (value) => String(value ?? '')
@@ -216,6 +222,21 @@
             if (statusTarget) {
               statusTarget.textContent = result && result.ok ? 'Setup saved successfully.' : 'Setup could not be saved.';
               statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'setup-activate') {
+            const result = await postJson('/api/setup', {
+              status: 'ACTIVE',
+              currentStep: 'activation',
+              installation: { active: true, state: 'active', activatedAt: new Date().toISOString() }
+            }, { ok: false, setup: {} });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'System activated. Redirecting to admin workspace.' : 'Activation failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              setTimeout(() => { window.location.replace('admin.html'); }, 500);
             }
           }
         } catch (error) {
@@ -780,6 +801,48 @@
     bindActionButtons();
   };
 
+  const renderSetupPage = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const setupResult = await fetchJson('/api/setup/status', { ok: true, status: 'NOT_CONFIGURED', setup: {} });
+    const setup = setupResult.setup || {};
+    const configuration = setup.configuration || {};
+    const installation = setup.installation || {};
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">First-run setup</h2></div>
+        <div class="content-wrap">
+          <div class="message info">This installation is not active yet. Configure the server, test the connections, and activate the system before using the admin workspace.</div>
+          <div class="form-grid" style="margin-top: 18px; margin-bottom: 18px;">
+            <div class="form-field"><label>Application ID</label><input type="text" name="appId" value="${escapeHtml(setup.appId || 'neutral-app')}" /></div>
+            <div class="form-field"><label>Application name</label><input type="text" name="appName" value="${escapeHtml(setup.appName || 'Neutral App')}" /></div>
+            <div class="form-field"><label>Server URL</label><input type="text" name="serverUrl" value="${escapeHtml(configuration.serverUrl || 'https://your-domain.example')}" /></div>
+            <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="${escapeHtml(configuration.apiBase || '/api')}" /></div>
+            <div class="form-field"><label>Database type</label><input type="text" name="databaseType" value="${escapeHtml((configuration.database && configuration.database.type) || 'indexeddb')}" /></div>
+            <div class="form-field"><label>Database name</label><input type="text" name="databaseName" value="${escapeHtml((configuration.database && configuration.database.name) || 'CoreDB')}" /></div>
+          </div>
+          <div class="action-list" style="margin-bottom: 18px;">
+            <button type="button" class="primary" data-admin-action="setup-save">Save configuration</button>
+            <button type="button" class="secondary" data-admin-action="server-test">Test server</button>
+            <button type="button" class="secondary" data-admin-action="database-test">Test database</button>
+            <button type="button" class="primary" data-admin-action="setup-activate">Activate system</button>
+          </div>
+          <div id="adminActionStatus" class="message info">Setup state: ${escapeHtml(setup.status || 'NOT_CONFIGURED')} · Installation: ${escapeHtml((installation && installation.state) || 'draft')}</div>
+          <div class="grid" style="margin-top: 18px;">
+            <div class="metric"><span class="metric-label">Status</span><div class="metric-value">${escapeHtml(setup.status || 'NOT_CONFIGURED')}</div></div>
+            <div class="metric"><span class="metric-label">Current step</span><div class="metric-value">${escapeHtml(setup.currentStep || 'system-check')}</div></div>
+            <div class="metric"><span class="metric-label">Server</span><div class="metric-value">${escapeHtml(configuration.serverUrl || 'not configured')}</div></div>
+            <div class="metric"><span class="metric-label">Database</span><div class="metric-value">${escapeHtml((configuration.database && configuration.database.name) || 'not configured')}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+    bindActionButtons();
+  };
+
+
   const renderAdminSystem = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
@@ -1038,6 +1101,11 @@
         return;
       }
       await renderDeveloperOverview();
+      return;
+    }
+
+    if (pageType === 'setup') {
+      await renderSetupPage();
       return;
     }
 
