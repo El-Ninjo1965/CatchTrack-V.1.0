@@ -135,14 +135,74 @@
     }
   };
 
+  const fetchJson = async (url, fallback = { ok: false }) => {
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return { ...fallback, ok: false, status: response.status, payload };
+      }
+      return { ok: true, ...payload, status: response.status };
+    } catch (error) {
+      console.warn(`Admin fetch failed for ${url}:`, error);
+      return { ...fallback, ok: false, message: error && error.message ? error.message : 'Request failed.' };
+    }
+  };
+
+  const getModuleCatalog = () => window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+    ? window.ModuleRegistry.getAll()
+    : [];
+
+  const getFrameworkVersion = () => {
+    if (window.CoreConfig && window.CoreConfig.core && typeof window.CoreConfig.core.version === 'string') {
+      return window.CoreConfig.core.version;
+    }
+    if (window.MasterFramework && typeof window.MasterFramework.version === 'string') {
+      return window.MasterFramework.version;
+    }
+    if (window.App && typeof window.App.version === 'string') {
+      return window.App.version;
+    }
+    return '1.0.0';
+  };
+
+  const getAppVersion = () => {
+    if (window.App && typeof window.App.version === 'string') {
+      return window.App.version;
+    }
+    if (window.MasterFramework && window.MasterFramework.getApp && typeof window.MasterFramework.getApp === 'function') {
+      const app = window.MasterFramework.getApp('neutral-app');
+      if (app && app.version) return app.version;
+    }
+    return '1.0.0';
+  };
+
+  const getDatabaseStatus = () => {
+    if (window.DatabaseManager && typeof window.DatabaseManager.getStatus === 'function') {
+      return window.DatabaseManager.getStatus();
+    }
+    return 'Not configured';
+  };
+
+  const getServerStatus = async () => {
+    const [healthResult, statusResult] = await Promise.all([
+      fetchJson('/health', { ok: true, status: 'unknown' }),
+      fetchJson('/api/status', { ok: true, runtime: {}, framework: {} })
+    ]);
+    return {
+      health: healthResult && healthResult.status ? healthResult.status : 'unknown',
+      api: statusResult && statusResult.ok ? 'healthy' : 'unavailable',
+      runtime: statusResult && statusResult.runtime ? statusResult.runtime : {},
+      framework: statusResult && statusResult.framework ? statusResult.framework : {}
+    };
+  };
+
   const renderAdminDashboard = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
 
-    const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
-      ? window.ModuleRegistry.getAll()
-      : [];
-    const activeCount = registry.filter((module) => module && (module.active || module.status === 'enabled')).length;
+    const registry = getModuleCatalog();
+    const activeCount = registry.filter((module) => module && (module.active || module.status === 'enabled' || module.status === 'active')).length;
     const currentUser = getCurrentUser();
     const sessionState = window.CoreAuth && typeof window.CoreAuth.getSessionStateSnapshot === 'function'
       ? window.CoreAuth.getSessionStateSnapshot()
@@ -150,17 +210,19 @@
     const stats = window.AdminModule && typeof window.AdminModule.getSystemStats === 'function'
       ? await window.AdminModule.getSystemStats()
       : { moduleCount: registry.length, userCount: 0, uptime: 0 };
+    const serverStatus = await getServerStatus();
+    const errorCount = window.ErrorLog && typeof window.ErrorLog.getAll === 'function' ? window.ErrorLog.getAll().length : 0;
 
     const cards = [
-      { label: 'Framework version', value: window.CoreConfig && window.CoreConfig.core ? window.CoreConfig.core.version : '1.0.0' },
-      { label: 'API version', value: 'v1' },
-      { label: 'App version', value: '1.0.0' },
-      { label: 'System status', value: 'Operational' },
-      { label: 'Server status', value: 'Healthy' },
-      { label: 'Database status', value: window.DatabaseManager && typeof window.DatabaseManager.getStatus === 'function' ? window.DatabaseManager.getStatus() : 'Not configured' },
+      { label: 'Framework version', value: getFrameworkVersion() },
+      { label: 'API version', value: (serverStatus.framework && serverStatus.framework.apiVersion) || 'v1' },
+      { label: 'App version', value: getAppVersion() },
+      { label: 'System status', value: window.AdminModule && typeof window.AdminModule.healthCheck === 'function' ? (window.AdminModule.healthCheck().healthy ? 'Operational' : 'Warning') : 'Unknown' },
+      { label: 'Server status', value: serverStatus.api === 'healthy' ? 'Healthy' : 'Unavailable' },
+      { label: 'Database status', value: getDatabaseStatus() },
       { label: 'Module count', value: String(stats.moduleCount || registry.length) },
       { label: 'Active modules', value: String(activeCount) },
-      { label: 'Error count', value: '0' },
+      { label: 'Error count', value: String(errorCount) },
       { label: 'Current user', value: sessionState.username || (currentUser ? currentUser.username : 'guest') },
       { label: 'Current role', value: (sessionState.roles && sessionState.roles.length ? sessionState.roles.join(', ') : 'user') }
     ];
@@ -182,12 +244,50 @@
     `;
   };
 
+  const renderAdminApps = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const appRegistry = window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
+      ? window.MasterFramework.listApps()
+      : [];
+    const apps = appRegistry.length ? appRegistry : [{
+      appId: 'neutral-app',
+      name: 'Neutral App',
+      version: getAppVersion(),
+      status: 'active',
+      description: 'Default neutral application shell.'
+    }];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Apps</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Description</th></tr></thead>
+              <tbody>
+                ${apps.map((app) => `
+                  <tr>
+                    <td>${escapeHtml(app.appId || app.id || 'unknown')}</td>
+                    <td>${escapeHtml(app.name || app.appId || 'Unnamed app')}</td>
+                    <td>${escapeHtml(app.version || '1.0.0')}</td>
+                    <td><span class="status-badge ${app.active || app.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(app.status || (app.active ? 'active' : 'inactive'))}</span></td>
+                    <td>${escapeHtml(app.description || 'No description available')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
   const renderAdminModules = () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
-    const modules = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
-      ? window.ModuleRegistry.getAll()
-      : [];
+    const modules = getModuleCatalog();
 
     page.innerHTML = `
       <div class="card">
@@ -196,7 +296,7 @@
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Capabilities</th></tr>
+                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Dependencies</th><th>Capabilities</th></tr>
               </thead>
               <tbody>
                 ${modules.length ? modules.map((module) => `
@@ -204,13 +304,130 @@
                     <td>${escapeHtml(module.id || 'unknown')}</td>
                     <td>${escapeHtml(module.name || module.id || 'Module')}</td>
                     <td>${escapeHtml(module.version || '1.0.0')}</td>
-                    <td><span class="status-badge ${module.active || module.status === 'enabled' ? 'ok' : 'warning'}">${escapeHtml(module.status || (module.active ? 'enabled' : 'available'))}</span></td>
+                    <td><span class="status-badge ${module.active || module.status === 'enabled' || module.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(module.status || (module.active ? 'enabled' : 'available'))}</span></td>
                     <td>${escapeHtml(module.type || 'framework')}</td>
+                    <td>${escapeHtml(Array.isArray(module.dependencies) ? module.dependencies.join(', ') : '')}</td>
                     <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
                   </tr>
-                `).join('') : '<tr><td colspan="6">No modules discovered.</td></tr>'}
+                `).join('') : '<tr><td colspan="7">No modules discovered.</td></tr>'}
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminMarketplace = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const modules = getModuleCatalog();
+    const items = [
+      { type: 'module', name: 'GPS', version: modules.find((module) => module && module.id === 'gps')?.version || '1.0.0', description: 'Location services module discovered from the local framework catalog.', compatibility: 'Framework 1.0.0', status: 'local catalog' },
+      { type: 'app', name: 'Neutral App', version: getAppVersion(), description: 'Framework-neutral application shell.', compatibility: 'Framework 1.0.0', status: 'ready' }
+    ];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Marketplace</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Type</th><th>Name</th><th>Version</th><th>Description</th><th>Compatibility</th><th>Status</th></tr></thead>
+              <tbody>
+                ${items.map((item) => `
+                  <tr>
+                    <td>${escapeHtml(item.type)}</td>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td>${escapeHtml(item.version)}</td>
+                    <td>${escapeHtml(item.description)}</td>
+                    <td>${escapeHtml(item.compatibility)}</td>
+                    <td><span class="status-badge ok">${escapeHtml(item.status)}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminConnections = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const fromFramework = window.MasterFramework && typeof window.MasterFramework.listConnections === 'function'
+      ? window.MasterFramework.listConnections()
+      : [];
+    const apiResult = await fetchJson('/api/connections', { ok: true, connections: [] });
+    const connections = fromFramework.length ? fromFramework : (apiResult.connections || []);
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Connections</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Target</th><th>Service</th><th>Last test</th></tr></thead>
+              <tbody>
+                ${connections.length ? connections.map((connection) => `
+                  <tr>
+                    <td>${escapeHtml(connection.connectionId || connection.id || connection.name || 'Unknown')}</td>
+                    <td>${escapeHtml(connection.authType || connection.type || 'none')}</td>
+                    <td><span class="status-badge ${connection.active || connection.status === 'active' || connection.status === 'healthy' ? 'ok' : 'warning'}">${escapeHtml(connection.status || (connection.active ? 'active' : 'inactive'))}</span></td>
+                    <td>${escapeHtml(connection.serverUrl || connection.url || '—')}</td>
+                    <td>${escapeHtml(connection.appId || connection.service || 'framework')}</td>
+                    <td>${escapeHtml(connection.lastTestAt || connection.updatedAt || 'never')}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6">No connections configured.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminServer = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const status = await getServerStatus();
+    const health = window.AdminModule && typeof window.AdminModule.healthCheck === 'function' ? window.AdminModule.healthCheck() : { healthy: false };
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Server</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Server reachable</span><div class="metric-value">${status.health === 'healthy' ? 'Yes' : 'No'}</div></div>
+            <div class="metric"><span class="metric-label">API reachable</span><div class="metric-value">${status.api === 'healthy' ? 'Yes' : 'No'}</div></div>
+            <div class="metric"><span class="metric-label">Version</span><div class="metric-value">${escapeHtml(getFrameworkVersion())}</div></div>
+            <div class="metric"><span class="metric-label">Response time</span><div class="metric-value">${status.runtime && typeof status.runtime.uptime === 'number' ? `${status.runtime.uptime}s` : 'n/a'}</div></div>
+            <div class="metric"><span class="metric-label">Last check</span><div class="metric-value">${new Date().toLocaleTimeString()}</div></div>
+            <div class="metric"><span class="metric-label">Error state</span><div class="metric-value">${health.healthy ? 'None' : 'Warning'}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminDatabase = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const status = getDatabaseStatus();
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Database</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">State</span><div class="metric-value">${escapeHtml(status)}</div></div>
+            <div class="metric"><span class="metric-label">Configured</span><div class="metric-value">${status === 'Not configured' ? 'No' : 'Yes'}</div></div>
+            <div class="metric"><span class="metric-label">Diagnostics</span><div class="metric-value">${status === 'Not configured' ? 'No database driver configured.' : 'Connection status available through manager.'}</div></div>
           </div>
         </div>
       </div>
@@ -224,7 +441,7 @@
     let rows = [];
     if (window.UserModule && typeof window.UserModule.listUsers === 'function') {
       const result = await window.UserModule.listUsers();
-      rows = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
+      rows = result && result.data && Array.isArray(result.data.items) ? result.data.items : (Array.isArray(result) ? result : []);
     }
 
     page.innerHTML = `
@@ -256,8 +473,9 @@
     const page = document.getElementById('mainContent');
     if (!page) return;
     const roles = [
-      { role: 'admin', permissions: ['system:view', 'admin:read', 'admin:write'] },
-      { role: 'developer', permissions: ['module:read', 'module:write', 'system:view'] },
+      { role: 'admin', permissions: ['user:read', 'user:write', 'system:view', 'admin:read', 'admin:write'] },
+      { role: 'developer', permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'] },
+      { role: 'manager', permissions: ['user:read', 'user:write'] },
       { role: 'user', permissions: ['user:read'] }
     ];
 
@@ -281,7 +499,7 @@
   const renderAdminPermissions = () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
-    const permissions = ['framework:read', 'auth:read', 'auth:write', 'module:read', 'module:write', 'admin:read', 'admin:write'];
+    const permissions = ['framework:read', 'auth:read', 'auth:write', 'module:read', 'module:write', 'admin:read', 'admin:write', 'system:view', 'user:read', 'user:write'];
 
     page.innerHTML = `
       <div class="card">
@@ -290,6 +508,149 @@
           <div class="grid">
             ${permissions.map((permission) => `<div class="metric"><span class="metric-label">Permission</span><div class="metric-value">${escapeHtml(permission)}</div></div>`).join('')}
           </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminDevices = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Devices</h2></div>
+        <div class="content-wrap">
+          <div class="message info">Device management is prepared for a future backend integration. No device data is being fabricated.</div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminLicenses = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Licenses</h2></div>
+        <div class="content-wrap">
+          <div class="message info">License management is prepared for future user, device, app, and module licensing. No license data is displayed without backend support.</div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminUpdates = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const modules = getModuleCatalog();
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Updates</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Framework</span><div class="metric-value">${escapeHtml(getFrameworkVersion())}</div></div>
+            <div class="metric"><span class="metric-label">App</span><div class="metric-value">${escapeHtml(getAppVersion())}</div></div>
+            <div class="metric"><span class="metric-label">Module updates</span><div class="metric-value">${modules.length}</div></div>
+          </div>
+          <div class="small-muted" style="margin-top:12px;">Automatic installation is disabled. Update availability is displayed for review by an administrator.</div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminDiagnostics = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const errors = window.ErrorLog && typeof window.ErrorLog.getAll === 'function' ? window.ErrorLog.getAll() : [];
+    const ring = window.CoreEventRing && typeof window.CoreEventRing.get === 'function' ? window.CoreEventRing.get() : {};
+    const audit = window.CoreAudit && typeof window.CoreAudit.list === 'function' ? window.CoreAudit.list() : [];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Diagnostics</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Errors</span><div class="metric-value">${errors.length}</div></div>
+            <div class="metric"><span class="metric-label">Audit entries</span><div class="metric-value">${audit.length}</div></div>
+            <div class="metric"><span class="metric-label">Event ring keys</span><div class="metric-value">${Object.keys(ring).length}</div></div>
+          </div>
+          <div class="table-wrap" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>Time</th><th>Module</th><th>Message</th><th>Status</th></tr></thead>
+              <tbody>
+                ${errors.length ? errors.slice(0, 8).map((entry) => `
+                  <tr>
+                    <td>${escapeHtml(entry.timestamp || 'unknown')}</td>
+                    <td>${escapeHtml((entry.context && entry.context.type) || 'system')}</td>
+                    <td>${escapeHtml(entry.message || 'No message')}</td>
+                    <td><span class="status-badge warning">logged</span></td>
+                  </tr>
+                `).join('') : '<tr><td colspan="4">No errors recorded.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminAudit = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const entries = window.CoreAudit && typeof window.CoreAudit.list === 'function' ? window.CoreAudit.list() : [];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Audit</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>Category</th><th>Action</th><th>Result</th></tr></thead>
+              <tbody>
+                ${entries.length ? entries.slice(0, 12).map((entry) => `
+                  <tr>
+                    <td>${escapeHtml(entry.timestamp || entry.createdAt || 'unknown')}</td>
+                    <td>${escapeHtml(entry.category || 'system')}</td>
+                    <td>${escapeHtml(entry.event || entry.action || 'unknown')}</td>
+                    <td><span class="status-badge ok">${escapeHtml(entry.result || 'ok')}</span></td>
+                  </tr>
+                `).join('') : '<tr><td colspan="4">No audit entries available.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminSettings = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const setupResult = await fetchJson('/api/setup', { ok: true, setup: {} });
+    const setup = setupResult.setup || {};
+    const entries = Object.entries(setup).filter(([key, value]) => key !== 'configuration' && key !== 'installation');
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Settings</h2></div>
+        <div class="content-wrap">
+          ${entries.length ? `
+            <div class="grid">
+              ${entries.map(([key, value]) => `
+                <div class="metric">
+                  <span class="metric-label">${escapeHtml(key)}</span>
+                  <div class="metric-value">${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<div class="message info">No framework settings are persisted yet. Settings can be added when backend configuration is present.</div>' }
         </div>
       </div>
     `;
@@ -313,7 +674,7 @@
           <div class="grid">
             <div class="metric"><span class="metric-label">Healthy</span><div class="metric-value">${health.healthy ? 'Yes' : 'No'}</div></div>
             <div class="metric"><span class="metric-label">Auth state</span><div class="metric-value">${sessionState.authenticated ? 'authenticated' : 'anonymous'}</div></div>
-            <div class="metric"><span class="metric-label">Core</span><div class="metric-value">${health.coreLoaded ? 'Loaded' : 'Missing'}</div></div>
+            <div class="metric"><span class="metric-label">Core</span><div class="metric-value">${window.Core ? 'Available' : 'Unavailable'}</div></div>
             <div class="metric"><span class="metric-label">Modules</span><div class="metric-value">${window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function' ? window.ModuleRegistry.getAll().length : 0}</div></div>
           </div>
         </div>
@@ -479,8 +840,28 @@
         await renderAdminDashboard();
         return;
       }
+      if (state.activeView === 'admin:apps') {
+        renderAdminApps();
+        return;
+      }
       if (state.activeView === 'admin:modules') {
         renderAdminModules();
+        return;
+      }
+      if (state.activeView === 'admin:marketplace') {
+        await renderAdminMarketplace();
+        return;
+      }
+      if (state.activeView === 'admin:connections') {
+        await renderAdminConnections();
+        return;
+      }
+      if (state.activeView === 'admin:server') {
+        await renderAdminServer();
+        return;
+      }
+      if (state.activeView === 'admin:database') {
+        renderAdminDatabase();
         return;
       }
       if (state.activeView === 'admin:users') {
@@ -493,6 +874,30 @@
       }
       if (state.activeView === 'admin:permissions') {
         renderAdminPermissions();
+        return;
+      }
+      if (state.activeView === 'admin:devices') {
+        renderAdminDevices();
+        return;
+      }
+      if (state.activeView === 'admin:licenses') {
+        renderAdminLicenses();
+        return;
+      }
+      if (state.activeView === 'admin:updates') {
+        renderAdminUpdates();
+        return;
+      }
+      if (state.activeView === 'admin:diagnostics') {
+        renderAdminDiagnostics();
+        return;
+      }
+      if (state.activeView === 'admin:audit') {
+        renderAdminAudit();
+        return;
+      }
+      if (state.activeView === 'admin:settings') {
+        await renderAdminSettings();
         return;
       }
       if (state.activeView === 'admin:system') {
