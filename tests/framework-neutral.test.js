@@ -451,6 +451,199 @@ test('server resolves app context and keeps app-scoped connections isolated', as
   fs.rmSync(tempRoot, { recursive: true, force: true });
 });
 
+test('app registry rejects duplicate ids, duplicate mounts, and invalid entries', () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-registry-'));
+  const rootWebRoot = path.join(tempRoot, 'webroot');
+  const demoWebRoot = path.join(tempRoot, 'apps', 'demo2', 'webroot');
+  const catchtrackWebRoot = path.join(tempRoot, 'apps', 'catchtrack', 'webroot');
+  const zukunftWebRoot = path.join(tempRoot, 'apps', 'zukunft', 'webroot');
+  fs.mkdirSync(rootWebRoot, { recursive: true });
+  fs.mkdirSync(demoWebRoot, { recursive: true });
+  fs.mkdirSync(catchtrackWebRoot, { recursive: true });
+  fs.mkdirSync(zukunftWebRoot, { recursive: true });
+
+  const writeRegistry = (apps) => {
+    const registryPath = path.join(tempRoot, 'apps.json');
+    fs.writeFileSync(registryPath, JSON.stringify({ schemaVersion: 1, apps }, null, 2));
+    return registryPath;
+  };
+
+  const validRegistry = writeRegistry([
+    {
+      appId: 'primary-web-app',
+      appName: 'Primary Web App',
+      mountPath: '/',
+      webRootDir: 'webroot',
+      dataRootDir: 'server/state/apps/primary-web-app',
+      apiBasePath: '/api',
+      connectionScope: 'primary-web-app',
+      active: true,
+      metadata: {}
+    },
+    {
+      appId: 'demo2',
+      appName: 'Demo 2',
+      mountPath: '/demo2',
+      webRootDir: 'apps/demo2/webroot',
+      dataRootDir: 'server/state/apps/demo2',
+      apiBasePath: '/api',
+      connectionScope: 'demo2',
+      active: true,
+      metadata: {}
+    },
+    {
+      appId: 'catchtrack',
+      appName: 'CatchTrack',
+      mountPath: '/catchtrack',
+      webRootDir: 'apps/catchtrack/webroot',
+      dataRootDir: 'server/state/apps/catchtrack',
+      apiBasePath: '/api',
+      connectionScope: 'catchtrack',
+      active: true,
+      metadata: {}
+    },
+    {
+      appId: 'zukunft',
+      appName: 'Zukunft',
+      mountPath: '/zukunft',
+      webRootDir: 'apps/zukunft/webroot',
+      dataRootDir: 'server/state/apps/zukunft',
+      apiBasePath: '/api',
+      connectionScope: 'zukunft',
+      active: true,
+      metadata: {}
+    }
+  ]);
+
+  const registry = require(path.join(root, 'server', 'services', 'app-registry.js'));
+  const loadedRegistry = registry.createAppRegistryService(validRegistry, { rootDir: tempRoot });
+  assert.equal(loadedRegistry.getApp('demo2').mountPath, '/demo2');
+  assert.equal(loadedRegistry.resolveRequest('/catchtrack/settings').app.appId, 'catchtrack');
+  assert.equal(loadedRegistry.resolveRequest('/zukunft/').app.appId, 'zukunft');
+
+  assert.throws(() => {
+    writeRegistry([
+      { appId: 'demo2', mountPath: '/demo2', webRootDir: 'webroot' },
+      { appId: 'demo2', mountPath: '/demo3', webRootDir: 'webroot' }
+    ]);
+    registry.createAppRegistryService(path.join(tempRoot, 'apps.json'), { rootDir: tempRoot });
+  }, /duplicate appId/i);
+
+  assert.throws(() => {
+    writeRegistry([
+      { appId: 'demo-a', mountPath: '/demo2', webRootDir: 'webroot' },
+      { appId: 'demo-b', mountPath: '/demo2', webRootDir: 'apps/demo2/webroot' }
+    ]);
+    registry.createAppRegistryService(path.join(tempRoot, 'apps.json'), { rootDir: tempRoot });
+  }, /duplicate mountPath/i);
+
+  assert.throws(() => {
+    writeRegistry([
+      { appId: '', mountPath: '/demo-invalid', webRootDir: 'webroot' }
+    ]);
+    registry.createAppRegistryService(path.join(tempRoot, 'apps.json'), { rootDir: tempRoot });
+  }, /missing appId|invalid/i);
+
+  assert.throws(() => {
+    writeRegistry([
+      { appId: 'invalid-root', mountPath: '', webRootDir: 'webroot' }
+    ]);
+    registry.createAppRegistryService(path.join(tempRoot, 'apps.json'), { rootDir: tempRoot });
+  }, /missing mountPath|invalid/i);
+
+  assert.throws(() => {
+    writeRegistry([
+      { appId: 'invalid-webroot', mountPath: '/invalid', webRootDir: 'missing/path' }
+    ]);
+    registry.createAppRegistryService(path.join(tempRoot, 'apps.json'), { rootDir: tempRoot });
+  }, /webRootDir/i);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
+test('connection service rejects unknown apps and cross-app access', () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-connections-'));
+  const rootWebRoot = path.join(tempRoot, 'webroot');
+  const demoWebRoot = path.join(tempRoot, 'apps', 'demo2', 'webroot');
+  fs.mkdirSync(rootWebRoot, { recursive: true });
+  fs.mkdirSync(demoWebRoot, { recursive: true });
+
+  const appRegistryPath = path.join(tempRoot, 'apps.json');
+  fs.writeFileSync(appRegistryPath, JSON.stringify({
+    schemaVersion: 1,
+    apps: [
+      {
+        appId: 'primary-web-app',
+        appName: 'Primary Web App',
+        mountPath: '/',
+        webRootDir: 'webroot',
+        dataRootDir: 'server/state/apps/primary-web-app',
+        apiBasePath: '/api',
+        connectionScope: 'primary-web-app',
+        active: true,
+        metadata: {}
+      },
+      {
+        appId: 'demo2',
+        appName: 'Demo 2',
+        mountPath: '/demo2',
+        webRootDir: 'apps/demo2/webroot',
+        dataRootDir: 'server/state/apps/demo2',
+        apiBasePath: '/api',
+        connectionScope: 'demo2',
+        active: true,
+        metadata: {}
+      }
+    ]
+  }, null, 2));
+
+  const appRegistry = require(path.join(root, 'server', 'services', 'app-registry.js'));
+  const connectionServiceModule = require(path.join(root, 'server', 'services', 'connection-service.js'));
+  const registry = appRegistry.createAppRegistryService(appRegistryPath, { rootDir: tempRoot });
+  const connectionService = connectionServiceModule.createConnectionService(path.join(tempRoot, 'connections.json'), { appRegistry: registry });
+
+  const validRoot = connectionService.upsertConnection({
+    appId: 'primary-web-app',
+    appName: 'Primary Web App',
+    serverUrl: 'https://root.example',
+    apiBasePath: '/api',
+    connectionStatus: 'configured',
+    parameters: { area: 'root' }
+  }, 'primary-web-app');
+  assert.equal(validRoot.ok, true);
+
+  const wrongScope = connectionService.upsertConnection({
+    appId: 'demo2',
+    appName: 'Demo 2',
+    serverUrl: 'https://demo2.example',
+    apiBasePath: '/api',
+    connectionStatus: 'configured',
+    parameters: { area: 'demo2' }
+  }, 'primary-web-app');
+  assert.equal(wrongScope.ok, false);
+  assert.equal(wrongScope.code, 'ACCESS_DENIED');
+
+  const unknownApp = connectionService.upsertConnection({
+    appId: 'ghost-app',
+    appName: 'Ghost App',
+    serverUrl: 'https://ghost.example',
+    apiBasePath: '/api',
+    connectionStatus: 'configured',
+    parameters: { area: 'ghost' }
+  }, 'ghost-app');
+  assert.equal(unknownApp.ok, false);
+  assert.equal(unknownApp.code, 'APP_NOT_REGISTERED');
+
+  const rootConnections = connectionService.listConnections('primary-web-app');
+  assert.equal(rootConnections.length, 1);
+  assert.equal(rootConnections[0].appId, 'primary-web-app');
+
+  const crossAppLookup = connectionService.getConnection(validRoot.data.id, 'demo2');
+  assert.equal(crossAppLookup, null);
+
+  fs.rmSync(tempRoot, { recursive: true, force: true });
+});
+
 test('server separates root and demo2 connections', async () => {
   const { createServer } = require(path.join(root, 'server', 'server.js'));
   const tempStoreDir = fs.mkdtempSync(path.join(os.tmpdir(), 'neutral-app-connections-'));
@@ -498,6 +691,8 @@ test('server separates root and demo2 connections', async () => {
   const demoConnections = await requestJson(port, '/demo2/api/connections', { 'x-admin-access-token': 'unit-admin-token' });
   const rootLookupInDemo = await requestJson(port, '/demo2/api/connections/root-app', { 'x-admin-access-token': 'unit-admin-token' });
   const demoLookupInRoot = await requestJson(port, '/api/connections/demo2', { 'x-admin-access-token': 'unit-admin-token' });
+  const rootAppContext = await requestJson(port, '/api/app-context', { 'x-admin-access-token': 'unit-admin-token' });
+  const demoAppContext = await requestJson(port, '/demo2/api/app-context', { 'x-admin-access-token': 'unit-admin-token' });
   const unknownRoute = await requestJson(port, '/no-such-app/');
 
   assert.equal(rootCreate.statusCode, 201);
@@ -510,6 +705,10 @@ test('server separates root and demo2 connections', async () => {
   assert.equal(demoConnections.body.connections[0].appId, 'demo2');
   assert.equal(rootLookupInDemo.statusCode, 404);
   assert.equal(demoLookupInRoot.statusCode, 404);
+  assert.equal(rootAppContext.statusCode, 200);
+  assert.equal(rootAppContext.body.app.appId, 'primary-web-app');
+  assert.equal(demoAppContext.statusCode, 200);
+  assert.equal(demoAppContext.body.app.appId, 'demo2');
   assert.equal(unknownRoute.statusCode, 404);
 
   await new Promise((resolve, reject) => {

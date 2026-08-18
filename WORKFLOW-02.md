@@ -34,6 +34,23 @@ Fortsetzung von WORKFLOW.md
 - Result: the user route has a refined responsive app presentation while module discovery, GPS functionality, and administrative route protection are unchanged.
 - Next planned phase: server deployment and authenticated administrative entry; no additional modules or user features were implemented in this UI phase.
 
+## 2026-08-18 - Neutral multi-app hardening and legacy demo cleanup
+
+- Repository state aligned with the GitHub workflow: PR #8 on branch `copilot/neutral-connection-management` was reviewed against the local repository state before work began.
+- The legacy demo shell files `app/app-demo.js` and `app/index.js` were removed because they were unused demo-only scaffolding and no active user-app, admin, developer, or GPS flow depended on them.
+- The `app/modules/gps` module remains in place as the active module implementation and was not converted into a CatchTrack-specific app.
+- `apps/demo2/` remains as a temporary neutral architecture test app. It is intentionally isolated with its own `appId`, mount path, webroot, connection scope, and app-scoped API context; it does not become a CatchTrack-branded application.
+- The app registry (`server/services/app-registry.js`) was hardened to fail fast on invalid registry payloads, missing app IDs, missing mount paths, duplicate app IDs, duplicate mount paths, and invalid `webRootDir` values. It no longer silently falls back to defaults when the registry is malformed.
+- The connection service (`server/services/connection-service.js`) now isolates app-scoped connections, rejects unknown apps, prevents cross-app reads or writes, and enforces valid app context boundaries while preserving the neutral architecture.
+- Additional test coverage was added in `tests/framework-neutral.test.js` for duplicate IDs, duplicate mounts, invalid registry entries, root-vs-app context resolution, `/demo2` isolation, and parallel mounts such as `/catchtrack/` and `/zukunft/`.
+- Validation executed successfully:
+  - `node --check` for all edited JavaScript files
+  - `npm test` -> 13/13 passed
+  - `npx playwright test --reporter=list` -> 4/4 passed
+  - `git diff --check` -> clean
+- Runtime/test artifact review did not reveal active app servers or hanging test processes; the repository remains in a clean validation state aside from the intentional code changes.
+- Final branch state at completion: working branch `copilot/neutral-connection-management` with the changes for PR #8 and the local repo aligned to the GitHub workflow state.
+
 
 ## 2026-08-17 - Serverseitige Produktionsgrundlage und technischer Admin-Einstieg
 

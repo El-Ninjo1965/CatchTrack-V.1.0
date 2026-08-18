@@ -346,8 +346,8 @@ const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccess
 };
 
 const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionStorePath: storePath = connectionStorePath, appRegistryPath: registryPath = appRegistryPath } = {}) => {
-  const connectionApi = createConnectionService(storePath);
   const appRegistry = createAppRegistryService(registryPath, { rootDir });
+  const connectionApi = createConnectionService(storePath, { appRegistry });
   const rootApp = appRegistry.getApp('primary-web-app') || appRegistry.listApps().find((app) => app.mountPath === '/') || null;
 
   return http.createServer(async (req, res) => {

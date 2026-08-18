@@ -92,13 +92,34 @@ const normalizeConnection = (input, existing = null) => {
   return { ok: true, data: normalized };
 };
 
-const createConnectionService = (storePath) => {
+const createConnectionService = (storePath, { appRegistry } = {}) => {
   if (!storePath || typeof storePath !== 'string') {
     throw new Error('Connection store path is required.');
   }
 
   const ensureDirectory = () => {
     fs.mkdirSync(path.dirname(storePath), { recursive: true });
+  };
+
+  const validateRegisteredApp = (appId) => {
+    const normalizedAppId = normalizeText(appId);
+    if (!normalizedAppId) {
+      return {
+        ok: false,
+        code: 'INVALID_APP',
+        message: 'App ID is required.'
+      };
+    }
+
+    if (appRegistry && typeof appRegistry.getApp === 'function' && !appRegistry.getApp(normalizedAppId)) {
+      return {
+        ok: false,
+        code: 'APP_NOT_REGISTERED',
+        message: `App "${normalizedAppId}" is not registered.`
+      };
+    }
+
+    return { ok: true, appId: normalizedAppId };
   };
 
   const readStore = () => {
@@ -128,11 +149,21 @@ const createConnectionService = (storePath) => {
       return connections;
     }
 
+    if (appRegistry && typeof appRegistry.getApp === 'function' && !appRegistry.getApp(normalizedAppId)) {
+      return [];
+    }
+
     return connections.filter((entry) => entry.appId === normalizedAppId);
   };
 
   const upsertConnection = (input, scopeAppId = null) => {
     const currentStore = readStore();
+    const normalizedScope = normalizeText(scopeAppId);
+    const appCheck = validateRegisteredApp(input && input.appId ? input.appId : normalizedScope);
+    if (!appCheck.ok) {
+      return appCheck;
+    }
+
     const existing = currentStore.connections.find((entry) => entry.id === slugify(input && (input.id || input.appId)));
     const normalized = normalizeConnection(input, existing);
 
@@ -140,8 +171,12 @@ const createConnectionService = (storePath) => {
       return normalized;
     }
 
-    const scopedAppId = normalizeText(scopeAppId);
-    if (scopedAppId && normalized.data.appId !== scopedAppId) {
+    const appContextCheck = validateRegisteredApp(normalized.data.appId);
+    if (!appContextCheck.ok) {
+      return appContextCheck;
+    }
+
+    if (normalizedScope && normalized.data.appId !== normalizedScope) {
       return {
         ok: false,
         code: 'ACCESS_DENIED',
@@ -176,9 +211,17 @@ const createConnectionService = (storePath) => {
     }
 
     const currentStore = readStore();
-    const scopedAppId = normalizeText(scopeAppId);
+    const normalizedScope = normalizeText(scopeAppId);
+    if (normalizedScope && appRegistry && typeof appRegistry.getApp === 'function' && !appRegistry.getApp(normalizedScope)) {
+      return {
+        ok: false,
+        code: 'APP_NOT_REGISTERED',
+        message: `App "${normalizedScope}" is not registered.`
+      };
+    }
+
     const existing = currentStore.connections.find((entry) => entry.id === id);
-    if (scopedAppId && existing && existing.appId !== scopedAppId) {
+    if (normalizedScope && existing && existing.appId !== normalizedScope) {
       return {
         ok: false,
         code: 'ACCESS_DENIED',
@@ -219,13 +262,17 @@ const createConnectionService = (storePath) => {
         return null;
       }
 
+      const normalizedAppId = normalizeText(appId);
+      if (normalizedAppId && appRegistry && typeof appRegistry.getApp === 'function' && !appRegistry.getApp(normalizedAppId)) {
+        return null;
+      }
+
       const connection = readStore().connections.find((entry) => entry.id === id) || null;
       if (!connection) {
         return null;
       }
 
-      const scopedAppId = normalizeText(appId);
-      if (scopedAppId && connection.appId !== scopedAppId) {
+      if (normalizedAppId && connection.appId !== normalizedAppId) {
         return null;
       }
 
