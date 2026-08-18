@@ -27,6 +27,60 @@ Important exclusions:
 - Demo2 and Legacy-Demo are not part of the project and must not be restored.
 - The current technical module reference inside the repository is the GPS module in [app/modules/gps/](/workspaces/CatchTrack-V.1.0/app/modules/gps).
 
+#### 1.1 What a module is in the current framework
+
+In the current codebase, a module is a browser-loaded runtime unit that is:
+
+- discovered from [app/modules/](/workspaces/CatchTrack-V.1.0/app/modules)
+- described by `module.json` or `manifest.json`
+- loaded by [platform/core-loader.js](/workspaces/CatchTrack-V.1.0/platform/core-loader.js)
+- registered in [platform/module-registry.js](/workspaces/CatchTrack-V.1.0/platform/module-registry.js)
+- lifecycle-managed by [platform/module-manager.js](/workspaces/CatchTrack-V.1.0/platform/module-manager.js)
+- optionally rendered into the user shell through `renderUserInterface(container)` from [webroot/user-app.js](/workspaces/CatchTrack-V.1.0/webroot/user-app.js)
+
+A module is responsible only for its own:
+
+- manifest
+- runtime object
+- lifecycle methods
+- private state
+- events
+- storage/database records
+- optional user UI fragment
+- cleanup
+
+A module is **not** the owner of:
+
+- core startup
+- server routing
+- root HTML shells
+- framework-wide auth/session truth
+- framework-wide storage/database schemas
+- framework-wide styling infrastructure
+
+#### 1.2 Technical separation of responsibilities
+
+| Layer | Current technical owner | Responsibility | What a standalone module must not do |
+| --- | --- | --- | --- |
+| Core | [platform/](/workspaces/CatchTrack-V.1.0/platform) | runtime, lifecycle, auth, access, storage, database, eventing | replace or fork core subsystems |
+| Server | [server/](/workspaces/CatchTrack-V.1.0/server) | HTTP server, static serving, `/api/modules`, health/status endpoints | inject own routes without framework changes |
+| Framework shell | [webroot/](/workspaces/CatchTrack-V.1.0/webroot) | root HTML, user/admin/developer shells, shared CSS | assume automatic module page or CSS mounting |
+| App context | [app/](/workspaces/CatchTrack-V.1.0/app) plus `ApplicationCore` values in [platform/core-config.js](/workspaces/CatchTrack-V.1.0/platform/core-config.js) and [platform/core-context.js](/workspaces/CatchTrack-V.1.0/platform/core-context.js) | single current application shell | assume multi-app abstractions such as `appId` or per-app routing context |
+| Module | `app/modules/<module-id>/` | isolated feature unit inside shared runtime | edit framework-owned files as part of plain module work |
+| UI | root shells plus `renderUserInterface(container)` | visible user interaction | bypass shell and mount arbitrary standalone pages |
+| Domain logic | module code only | feature-specific behavior | move app/domain logic into core/framework without explicit framework work |
+
+#### 1.3 Missing abstractions that must not be assumed
+
+The current framework does **not** implement these abstractions for standalone modules:
+
+- no `appId`
+- no module `mountPath`
+- no application router abstraction
+- no connection manager or connection registry
+- no module backend contract
+- no module stylesheet registration contract
+
 ---
 
 ### 2. Module ground structure
@@ -1549,6 +1603,16 @@ Current handling:
 - manifests with no matching global implementation are skipped
 - duplicate ids are not re-registered
 
+#### 11.6 Routing error behavior
+
+Actual current server behavior in [server/bootstrap/server.js](/workspaces/CatchTrack-V.1.0/server/bootstrap/server.js):
+
+- unknown or missing static file -> JSON `404` with `NOT_FOUND`
+- directory traversal attempt -> JSON `403` with `FORBIDDEN`
+- direct request to `/admin.html` or `/dev.html` without matching `x-admin-access-token` header and `ADMIN_ACCESS_TOKEN` environment variable -> JSON `403` with `FORBIDDEN`
+
+There is no module-specific 404 handler or module routing fallback.
+
 ---
 
 ### 12. UI / webroot rules
@@ -2525,6 +2589,203 @@ If a requested feature needs those changes, it is a framework task, not a plain 
 
 ---
 
+### 28. Module registry and manager truth
+
+#### 28.1 Actual registry behavior
+
+Current module registration truth:
+
+- `CoreLoader` discovers manifests and scripts
+- `ModuleManager.discoverModules()` normalizes and registers candidates
+- `ModuleRegistry.register(module)` stores them in an in-memory `Map`
+
+#### 28.2 Validation reality
+
+Actual validation that exists:
+
+- manifest must parse as JSON
+- manifest `id` must be a non-empty string
+- entry file must exist and be readable
+- entry script must evaluate without fatal exception
+- a global implementation must be discoverable on `window`
+- duplicate ids are rejected by `ModuleRegistry.register`
+
+What does **not** exist:
+
+- no `appId` validation
+- no `mountPath` validation
+- no schema validation beyond manual field normalization
+- no structured diagnostics channel for manifest authoring errors
+
+#### 28.3 Silent fallback reality
+
+The current framework still contains silent skips/fallbacks:
+
+- invalid manifest JSON is skipped
+- unreadable manifests are skipped
+- missing entry files are skipped
+- unmatched global implementations are skipped
+- `/api/modules` skips manifest parse failures
+
+Therefore the authoring rule is:
+
+- future module work must not rely on these silent skips
+- module deliverables must be manually validated so that discovery succeeds without fallback behavior
+
+#### 28.4 Module manager responsibilities
+
+Current `ModuleManager` responsibilities are:
+
+- normalize module objects
+- validate dependencies
+- register/unregister modules
+- call lifecycle methods
+- expose read methods such as `get`, `getAll`, `getStatus`
+- set `Core.state.activeModule`
+- emit `module:registered`, `module:activated`, `module:deactivated`, `module:unregistered`
+
+`ModuleManager` does **not**:
+
+- await lifecycle promises
+- rollback failed lifecycle sequences
+- enforce permissions automatically
+- mount APIs
+- mount HTML routes
+- mount CSS
+
+---
+
+### 29. App context, `appId`, `mountPath`, and connection-system truth
+
+#### 29.1 Core context
+
+The actual shared context is [platform/core-context.js](/workspaces/CatchTrack-V.1.0/platform/core-context.js). It exposes:
+
+- `application.name`
+- `application.version`
+- `runtime`
+- `environment`
+
+#### 29.2 App context reality
+
+The current application is effectively a single app shell:
+
+- `ApplicationCore` in [platform/core-config.js](/workspaces/CatchTrack-V.1.0/platform/core-config.js)
+- `ApplicationCore` in [platform/core-context.js](/workspaces/CatchTrack-V.1.0/platform/core-context.js)
+- [app/index.js](/workspaces/CatchTrack-V.1.0/app/index.js) exports a small `appShell`
+
+There is no richer standalone "App Context" API for modules.
+
+#### 29.3 `appId`
+
+`appId` is not implemented anywhere in the current framework as a module contract field, routing key, storage namespace, or registry key.
+
+#### 29.4 `mountPath`
+
+`mountPath` is not implemented anywhere in the current framework as a manifest field, router rule, or UI mount contract.
+
+The only current HTTP exposure for module files is:
+
+- `/app/modules/<folder>/...`
+
+#### 29.5 Connection system
+
+There is no dedicated connection system in the current codebase.
+
+Not present:
+
+- no `ConnectionManager`
+- no connection manifest fields
+- no connection persistence API
+- no connection ownership model
+- no connection security layer
+- no connection registry
+
+Therefore a future module must not invent a "framework connection" abstraction inside standalone module work.
+
+If a feature truly requires managed external connections, that is a framework extension task and must be designed explicitly in core/server code first.
+
+---
+
+### 30. GPS module as a real reference
+
+The GPS module in [app/modules/gps/](/workspaces/CatchTrack-V.1.0/app/modules/gps) is a **reference example**, not a mandatory template.
+
+It demonstrates current-framework facts:
+
+- folder-based discovery
+- `module.json` + `index.js`
+- global module object via `window.GpsModule`
+- manual lifecycle methods
+- event emission
+- storage/database usage
+- `renderUserInterface(container)`
+
+It does **not** prove that every module must:
+
+- use geolocation
+- persist into the `sync` store
+- add GPS-specific CSS
+- follow its exact audit helper pattern
+
+Use it as evidence of what the current runtime can load, not as a one-size-fits-all design.
+
+---
+
+### 31. Anti-patterns
+
+Forbidden or incorrect patterns for this framework:
+
+- moving domain logic into [platform/](/workspaces/CatchTrack-V.1.0/platform)
+- creating parallel auth/session systems
+- creating a private lifecycle system disconnected from `ModuleManager`
+- using unprefixed global storage keys
+- using unprefixed shared database ids
+- clearing shared storage/database/event/audit state
+- bypassing registry discovery by mutating framework internals
+- assuming `appId` or `mountPath` exists
+- inventing a connection framework that the codebase does not have
+- adding hidden fallback behavior inside module integration docs
+- hardcoding branding into neutral core files
+- depending on demo assets, demo architecture, or backup archives
+- adding unnecessary external dependencies
+
+---
+
+### 32. Completion checklist for a finished module
+
+Before a module is considered finished, verify all of the following:
+
+- module folder exists under [app/modules/](/workspaces/CatchTrack-V.1.0/app/modules)
+- exactly one valid manifest exists (`module.json` or `manifest.json`)
+- manifest uses only actually supported fields
+- entry file exists and exposes the expected global object
+- lifecycle methods match current framework behavior
+- dependency ids match real registered module ids
+- storage keys are module-prefixed
+- database records are removable without clearing shared stores
+- event listeners are unsubscribed on disable/uninstall
+- browser handles/timers/watchers are stopped on disable/uninstall
+- `renderUserInterface(container)` stays inside the provided container
+- no unsupported API routing or CSS mounting assumptions were introduced
+- no core/framework files were changed unless the task explicitly required framework work
+
+---
+
+### 33. Backup rule
+
+Backup ZIPs are not part of:
+
+- the framework
+- a module
+- the runtime contract
+- module discovery
+- server startup
+
+Backups must be created only outside the Git repository and may be deleted completely after download or external retention.
+
+---
+
 ## Deutsch
 
 ### 1. Zweck, Umfang und technische Wahrheit
@@ -2551,6 +2812,60 @@ Wichtige Ausschluesse:
 - Backup-ZIP-Inhalte sind kein Projektbestandteil.
 - Demo2 und Legacy-Demo sind kein Projektbestandteil und duerfen nicht wiederhergestellt werden.
 - Das aktuelle technische Modul-Referenzbeispiel im Repository ist das GPS-Modul in [app/modules/gps/](/workspaces/CatchTrack-V.1.0/app/modules/gps).
+
+#### 1.1 Was ein Modul im aktuellen Framework ist
+
+Im aktuellen Codebestand ist ein Modul eine browsergeladene Runtime-Einheit, die:
+
+- unter [app/modules/](/workspaces/CatchTrack-V.1.0/app/modules) entdeckt wird
+- durch `module.json` oder `manifest.json` beschrieben wird
+- von [platform/core-loader.js](/workspaces/CatchTrack-V.1.0/platform/core-loader.js) geladen wird
+- in [platform/module-registry.js](/workspaces/CatchTrack-V.1.0/platform/module-registry.js) registriert wird
+- in [platform/module-manager.js](/workspaces/CatchTrack-V.1.0/platform/module-manager.js) lifecycle-seitig gesteuert wird
+- optional ueber `renderUserInterface(container)` aus [webroot/user-app.js](/workspaces/CatchTrack-V.1.0/webroot/user-app.js) in die User-Shell gerendert wird
+
+Ein Modul ist nur fuer Folgendes selbst verantwortlich:
+
+- eigenes Manifest
+- eigenes Runtime-Objekt
+- eigene Lifecycle-Methoden
+- eigenen privaten Zustand
+- eigene Events
+- eigene Storage-/Database-Records
+- optionales User-UI-Fragment
+- eigenes Cleanup
+
+Ein Modul ist **nicht** der Eigentuemer von:
+
+- Core-Startup
+- Server-Routing
+- Root-HTML-Shells
+- frameworkweiter Auth-/Session-Truth
+- frameworkweiten Storage-/Database-Schemata
+- frameworkweiter Styling-Infrastruktur
+
+#### 1.2 Technische Trennung der Verantwortungen
+
+| Ebene | Aktueller technischer Owner | Verantwortung | Was ein eigenstaendiges Modul nicht tun darf |
+| --- | --- | --- | --- |
+| Core | [platform/](/workspaces/CatchTrack-V.1.0/platform) | Runtime, Lifecycle, Auth, Access, Storage, Database, Eventing | Core-Subsysteme ersetzen oder parallel nachbauen |
+| Server | [server/](/workspaces/CatchTrack-V.1.0/server) | HTTP-Server, statisches Serving, `/api/modules`, Health-/Status-Endpunkte | eigene Routen ohne Framework-Aenderung einschleusen |
+| Framework-Shell | [webroot/](/workspaces/CatchTrack-V.1.0/webroot) | Root-HTML, User-/Admin-/Developer-Shells, Shared CSS | automatisches Mounten eigener Seiten oder CSS voraussetzen |
+| App-Kontext | [app/](/workspaces/CatchTrack-V.1.0/app) plus `ApplicationCore`-Werte in [platform/core-config.js](/workspaces/CatchTrack-V.1.0/platform/core-config.js) und [platform/core-context.js](/workspaces/CatchTrack-V.1.0/platform/core-context.js) | aktuelle einzelne Anwendungsshell | Multi-App-Abstraktionen wie `appId` oder per-App-Routing-Kontext annehmen |
+| Modul | `app/modules/<module-id>/` | gekapselte Feature-Einheit in geteilter Runtime | frameworkeigene Dateien als Teil normaler Modul-Arbeit aendern |
+| UI | Root-Shells plus `renderUserInterface(container)` | sichtbare Interaktion fuer Benutzer | die Shell umgehen und beliebige Standalone-Seiten mounten |
+| Fachlogik | nur Modulcode | featurespezifisches Verhalten | App-/Fachlogik ohne explizite Framework-Arbeit in den Core verschieben |
+
+#### 1.3 Fehlende Abstraktionen, die nicht vorausgesetzt werden duerfen
+
+Das aktuelle Framework implementiert diese Abstraktionen fuer eigenstaendige Module **nicht**:
+
+- kein `appId`
+- kein Modul-`mountPath`
+- keine App-Router-Abstraktion
+- keinen Connection Manager und keine Connection Registry
+- keinen Modul-Backend-Vertrag
+- keinen Vertrag fuer die Registrierung modul-lokaler Stylesheets
 
 ---
 
@@ -4074,6 +4389,16 @@ Aktuelle Behandlung:
 - Manifeste ohne passendes globales Modulobjekt werden uebersprungen
 - doppelte IDs werden nicht erneut registriert
 
+#### 11.6 Routing-Fehlerverhalten
+
+Tatsaechliches aktuelles Server-Verhalten in [server/bootstrap/server.js](/workspaces/CatchTrack-V.1.0/server/bootstrap/server.js):
+
+- unbekannte oder fehlende statische Datei -> JSON-`404` mit `NOT_FOUND`
+- Directory-Traversal-Versuch -> JSON-`403` mit `FORBIDDEN`
+- direkte Anfrage an `/admin.html` oder `/dev.html` ohne passenden `x-admin-access-token`-Header und ohne `ADMIN_ACCESS_TOKEN`-Umgebungsvariable -> JSON-`403` mit `FORBIDDEN`
+
+Es gibt keinen modulspezifischen 404-Handler und keinen Modul-Routing-Fallback.
+
 ---
 
 ### 12. UI- / Webroot-Regeln
@@ -5047,3 +5372,200 @@ Diese Spezifikation erlaubt einem eigenstaendigen Modul **nicht**:
 - neue harte Core-Design-Annahmen in Modulcode zu verdrahten
 
 Wenn eine angeforderte Funktion solche Aenderungen benoetigt, ist sie eine Framework-Aufgabe und keine reine eigenstaendige Modul-Aufgabe.
+
+---
+
+### 28. Wahrheit zu Module Registry und Module Manager
+
+#### 28.1 Tatsaechliches Registry-Verhalten
+
+Aktuelle Registrierungs-Wahrheit:
+
+- `CoreLoader` entdeckt Manifeste und Skripte
+- `ModuleManager.discoverModules()` normalisiert und registriert Kandidaten
+- `ModuleRegistry.register(module)` speichert sie in einer In-Memory-`Map`
+
+#### 28.2 Validierungsrealitaet
+
+Tatsaechlich vorhandene Validierung:
+
+- Manifest muss als JSON parsebar sein
+- Manifest-`id` muss ein nicht-leerer String sein
+- Entry-Datei muss existieren und lesbar sein
+- Entry-Skript muss ohne fatalen Fehler auswertbar sein
+- eine globale Implementierung muss auf `window` auffindbar sein
+- doppelte IDs werden von `ModuleRegistry.register` abgewiesen
+
+Was **nicht** existiert:
+
+- keine `appId`-Validierung
+- keine `mountPath`-Validierung
+- keine Schema-Validierung ueber die manuelle Feld-Normalisierung hinaus
+- kein strukturierter Diagnosekanal fuer Manifest-Authoring-Fehler
+
+#### 28.3 Realitaet stiller Fallbacks
+
+Das aktuelle Framework enthaelt weiterhin stille Skips/Fallbacks:
+
+- ungueltiges Manifest-JSON wird uebersprungen
+- nicht lesbare Manifeste werden uebersprungen
+- fehlende Entry-Dateien werden uebersprungen
+- nicht zuordenbare globale Implementierungen werden uebersprungen
+- `/api/modules` ueberspringt Manifest-Parse-Fehler
+
+Deshalb gilt als Authoring-Regel:
+
+- zukuenftige Modul-Arbeit darf sich nicht auf diese stillen Skips verlassen
+- Modul-Deliverables muessen manuell so validiert werden, dass Discovery ohne Fallback-Verhalten erfolgreich ist
+
+#### 28.4 Aufgaben des Module Managers
+
+Aktuelle Verantwortungen des `ModuleManager`:
+
+- Modulobjekte normalisieren
+- Dependencies validieren
+- Module registrieren/deregistrieren
+- Lifecycle-Methoden aufrufen
+- Lesemethoden wie `get`, `getAll`, `getStatus` bereitstellen
+- `Core.state.activeModule` setzen
+- `module:registered`, `module:activated`, `module:deactivated`, `module:unregistered` emittieren
+
+`ModuleManager` tut **nicht**:
+
+- Lifecycle-Promises awaiten
+- fehlgeschlagene Lifecycle-Sequenzen zurueckrollen
+- Permissions automatisch erzwingen
+- APIs mounten
+- HTML-Routen mounten
+- CSS mounten
+
+---
+
+### 29. Wahrheit zu App-Kontext, `appId`, `mountPath` und Connection-System
+
+#### 29.1 Core Context
+
+Der tatsaechliche gemeinsame Kontext ist [platform/core-context.js](/workspaces/CatchTrack-V.1.0/platform/core-context.js). Er stellt bereit:
+
+- `application.name`
+- `application.version`
+- `runtime`
+- `environment`
+
+#### 29.2 App-Kontext-Realitaet
+
+Die aktuelle Anwendung ist effektiv eine einzelne App-Shell:
+
+- `ApplicationCore` in [platform/core-config.js](/workspaces/CatchTrack-V.1.0/platform/core-config.js)
+- `ApplicationCore` in [platform/core-context.js](/workspaces/CatchTrack-V.1.0/platform/core-context.js)
+- [app/index.js](/workspaces/CatchTrack-V.1.0/app/index.js) exportiert ein kleines `appShell`
+
+Es gibt keine reichere eigenstaendige "App Context"-API fuer Module.
+
+#### 29.3 `appId`
+
+`appId` ist im aktuellen Framework nirgends als Modul-Vertragsfeld, Routing-Key, Storage-Namensraum oder Registry-Key implementiert.
+
+#### 29.4 `mountPath`
+
+`mountPath` ist im aktuellen Framework nirgends als Manifest-Feld, Router-Regel oder UI-Mount-Vertrag implementiert.
+
+Die einzige aktuelle HTTP-Sichtbarkeit fuer Modul-Dateien ist:
+
+- `/app/modules/<folder>/...`
+
+#### 29.5 Connection-System
+
+Im aktuellen Codebestand existiert kein dediziertes Connection-System.
+
+Nicht vorhanden:
+
+- kein `ConnectionManager`
+- keine Connection-Manifest-Felder
+- keine Connection-Persistenz-API
+- kein Connection-Ownership-Modell
+- keine Connection-Security-Schicht
+- keine Connection-Registry
+
+Deshalb darf ein zukuenftiges Modul keine eigene "Framework Connection"-Abstraktion im Rahmen normaler Standalone-Modul-Arbeit erfinden.
+
+Wenn eine Funktion wirklich verwaltete externe Verbindungen benoetigt, ist das zuerst eine Framework-Erweiterungsaufgabe und muss explizit in Core-/Server-Code entworfen werden.
+
+---
+
+### 30. GPS-Modul als reale Referenz
+
+Das GPS-Modul in [app/modules/gps/](/workspaces/CatchTrack-V.1.0/app/modules/gps) ist ein **Referenzbeispiel**, keine verpflichtende Vorlage.
+
+Es demonstriert aktuelle Framework-Fakten:
+
+- folderbasierte Discovery
+- `module.json` + `index.js`
+- globales Modulobjekt ueber `window.GpsModule`
+- manuelle Lifecycle-Methoden
+- Event-Emission
+- Storage-/Database-Nutzung
+- `renderUserInterface(container)`
+
+Es beweist **nicht**, dass jedes Modul:
+
+- Geolocation verwenden muss
+- in den `sync`-Store persistieren muss
+- GPS-spezifisches CSS hinzufuegen muss
+- genau demselben Audit-Helper-Muster folgen muss
+
+Es ist als Beleg dafuer zu verwenden, was die aktuelle Runtime laden kann, nicht als One-size-fits-all-Design.
+
+---
+
+### 31. Anti-Patterns
+
+Verbotene oder fehlerhafte Muster fuer dieses Framework:
+
+- Fachlogik in [platform/](/workspaces/CatchTrack-V.1.0/platform) verschieben
+- parallele Auth-/Session-Systeme aufbauen
+- ein privates Lifecycle-System neben `ModuleManager` aufbauen
+- nicht praefixte globale Storage-Keys verwenden
+- nicht praefixte Shared-Database-IDs verwenden
+- gemeinsamen Storage-/Database-/Event-/Audit-State global leeren
+- Registry-Discovery durch Manipulation von Framework-Interna umgehen
+- voraussetzen, dass `appId` oder `mountPath` existieren
+- ein Connection-Framework erfinden, das der Codebestand nicht hat
+- verstecktes Fallback-Verhalten in Integrationsdokumentation einbauen
+- Branding im neutralen Core hart verdrahten
+- von Demo-Assets, Demo-Architektur oder Backup-Archiven abhaengen
+- unnoetige externe Dependencies einfuehren
+
+---
+
+### 32. Abschluss-Checkliste fuer fertige Module
+
+Bevor ein Modul als fertig gilt, muss Folgendes geprueft sein:
+
+- Modulordner existiert unter [app/modules/](/workspaces/CatchTrack-V.1.0/app/modules)
+- genau ein gueltiges Manifest existiert (`module.json` oder `manifest.json`)
+- das Manifest verwendet nur tatsaechlich unterstuetzte Felder
+- die Entry-Datei existiert und exponiert das erwartete globale Objekt
+- die Lifecycle-Methoden passen zum aktuellen Framework-Verhalten
+- Dependency-IDs passen zu realen registrierten Modul-IDs
+- Storage-Keys sind mit der Modul-ID gepraefixt
+- Database-Records sind entfernbar, ohne Shared Stores zu leeren
+- Event-Listener werden bei `disable/uninstall` abgemeldet
+- Browser-Handles/Timer/Watcher werden bei `disable/uninstall` gestoppt
+- `renderUserInterface(container)` bleibt im uebergebenen Container
+- es wurden keine ununterstuetzten Annahmen ueber API-Routing oder CSS-Mounting eingefuehrt
+- es wurden keine Core-/Framework-Dateien veraendert, ausser die Aufgabe verlangte explizit Framework-Arbeit
+
+---
+
+### 33. Backup-Regel
+
+Backup-ZIPs sind kein Bestandteil von:
+
+- dem Framework
+- einem Modul
+- dem Runtime-Vertrag
+- der Modul-Discovery
+- dem Server-Startup
+
+Backups duerfen nur ausserhalb des Git-Repositories erzeugt werden und koennen nach Download oder externer Aufbewahrung vollstaendig geloescht werden.
