@@ -13,23 +13,111 @@
         initialized: false,
         db: null,
         stores: [],
+        status: 'NOT_CONFIGURED',
+        lastError: null,
+        config: null,
+
+        getDefaultConfig() {
+            return {
+                type: 'indexeddb',
+                name: 'CoreDB',
+                version: 1,
+                stores: [
+                    'users',
+                    'modules',
+                    'logs',
+                    'sessions',
+                    'settings',
+                    'cache',
+                    'sync'
+                ]
+            };
+        },
+
+        resolveConfig(config = null) {
+            const source = config && typeof config === 'object'
+                ? config
+                : (window.ConfigManager && typeof window.ConfigManager.get === 'function'
+                    ? window.ConfigManager.get('database', {})
+                    : {});
+            const resolved = { ...this.getDefaultConfig(), ...(source || {}) };
+            resolved.type = typeof resolved.type === 'string' && resolved.type.trim() ? resolved.type.trim().toLowerCase() : 'indexeddb';
+            resolved.name = typeof resolved.name === 'string' && resolved.name.trim() ? resolved.name.trim() : 'CoreDB';
+            resolved.version = Number.isFinite(Number(resolved.version)) ? Number(resolved.version) : 1;
+            resolved.stores = Array.isArray(resolved.stores) && resolved.stores.length ? resolved.stores.filter(Boolean) : [...this.getDefaultConfig().stores];
+            return resolved;
+        },
+
+        setStatus(status, message = '', error = null) {
+            this.status = status;
+            this.lastError = error || null;
+            this.message = message || '';
+            return this.getStatus();
+        },
+
+        getStatus() {
+            const configured = !!(this.config && this.config.type && this.config.type !== 'disabled');
+            return {
+                ok: this.status === 'READY' || this.status === 'CONFIGURED' || this.status === 'NOT_CONFIGURED',
+                status: this.status,
+                configured,
+                initialized: this.initialized,
+                type: this.config ? this.config.type : null,
+                name: this.config ? this.config.name : null,
+                version: this.config ? this.config.version : null,
+                stores: [...this.stores],
+                message: this.message || (this.lastError ? this.lastError.message : (configured ? 'Database configured.' : 'Database not configured.')),
+                lastError: this.lastError ? this.lastError.message : null
+            };
+        },
+
+        isConfigured() {
+            return !!(this.config && this.config.type && this.config.type !== 'disabled');
+        },
+
+        isReady() {
+            return this.initialized && this.status === 'READY';
+        },
+
+        configure(config = null) {
+            this.config = this.resolveConfig(config);
+            this.setStatus('CONFIGURED', 'Database configuration loaded.');
+            return this.getStatus();
+        },
 
         /**
          * Initialisiert die Datenbankverbindung
          */
-        init() {
+        init(config = null) {
             if (this.initialized) {
-                return;
+                return this.getStatus();
+            }
+
+            this.configure(config);
+
+            if (!this.isConfigured()) {
+                return this.setStatus('NOT_CONFIGURED', 'Database not configured.');
+            }
+
+            if (this.config.type !== 'indexeddb') {
+                return this.setStatus('ERROR', `Database type not supported: ${this.config.type}`);
             }
 
             return this.openDatabase().then(() => {
                 this.initialized = true;
+                this.setStatus('READY', 'Database ready.');
 
                 if (window.Core) {
                     window.Core.emit('database:initialized', {
                         timestamp: new Date().toISOString()
                     });
                 }
+
+                return this.getStatus();
+            }).catch((error) => {
+                this.initialized = false;
+                this.setStatus('ERROR', error.message || 'Database initialization failed.', error);
+                throw error;
             });
         },
 
@@ -40,23 +128,23 @@
         openDatabase() {
             return new Promise((resolve, reject) => {
                 if (!('indexedDB' in window)) {
-                    reject(new Error('IndexedDB not available'));
+                    const error = new Error('IndexedDB not available');
+                    this.setStatus('ERROR', error.message, error);
+                    reject(error);
                     return;
                 }
 
-                const dbName = 'CoreDB';
-                const dbVersion = 1;
+                const config = this.config || this.resolveConfig();
+                const dbName = config.name;
+                const dbVersion = config.version;
 
                 const request = indexedDB.open(dbName, dbVersion);
-
-                request.onerror = () => {
-                    reject(new Error(`Failed to open database: ${request.error}`));
-                };
 
                 request.onsuccess = () => {
                     this.db = request.result;
                     // Store-Liste aus tatsächlich vorhandenen Stores befüllen
                     this.stores = Array.from(this.db.objectStoreNames);
+                    this.setStatus('READY', 'Database ready.');
                     resolve();
                 };
 
@@ -66,7 +154,9 @@
                 };
 
                 request.onerror = () => {
-                    reject(new Error(`Failed to open database: ${request.error}`));
+                    const error = new Error(`Failed to open database: ${request.error}`);
+                    this.setStatus('ERROR', error.message, error);
+                    reject(error);
                 };
             });
         },
@@ -207,7 +297,7 @@
         transaction(storeName, mode, callback) {
             return new Promise((resolve, reject) => {
                 if (!this.db) {
-                    reject(new Error('Database not initialized'));
+                    reject(new Error(this.isConfigured() ? 'Database not initialized' : 'Database not configured.'));
                     return;
                 }
 
@@ -240,6 +330,7 @@
          */
         async getStats() {
             const stats = {
+                status: this.getStatus(),
                 storeStats: {}
             };
 
@@ -267,7 +358,7 @@
         deleteDatabase() {
             return new Promise((resolve, reject) => {
                 if (!this.db) {
-                    reject(new Error('Database not initialized'));
+                    reject(new Error(this.isConfigured() ? 'Database not initialized' : 'Database not configured.'));
                     return;
                 }
 
@@ -279,13 +370,22 @@
                 request.onsuccess = () => {
                     this.db = null;
                     this.initialized = false;
+                    this.config = null;
+                    this.stores = [];
+                    this.setStatus('NOT_CONFIGURED', 'Database deleted.');
                     resolve();
                 };
 
                 request.onerror = () => {
-                    reject(new Error(`Failed to delete database: ${request.error}`));
+                    const error = new Error(`Failed to delete database: ${request.error}`);
+                    this.setStatus('ERROR', error.message, error);
+                    reject(error);
                 };
             });
+        },
+
+        async test(config = null) {
+            return this.init(config);
         }
     };
 

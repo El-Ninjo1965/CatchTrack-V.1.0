@@ -76,6 +76,8 @@ Then inspect the matching code paths.
 - Central setup state lives in `MasterFramework`.
 - `/` serves `setup.html` while setup is not active/ready.
 - `/api/setup/status` reflects the central setup snapshot.
+- `/api/setup`, `/api/server/test`, `/api/database/test`, and `/api/setup/activate` update the same setup runtime.
+- Setup state tracks server, database, framework, bootstrap, and installation progress in one canonical record.
 - `server/runtime/` is transient runtime state only and must not be committed.
 
 ### Auth / session
@@ -99,7 +101,7 @@ Then inspect the matching code paths.
 
 ### Database / connections
 
-- `DatabaseManager` is the local browser-side store abstraction.
+- `DatabaseManager` is the local browser-side store abstraction with configuration/status helpers.
 - `MasterFramework` owns neutral app/connection state.
 - No second database abstraction or connection registry should be added.
 

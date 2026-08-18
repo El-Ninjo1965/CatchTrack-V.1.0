@@ -42,6 +42,13 @@
     status: value ? 'enabled' : 'disabled'
   });
 
+  const cloneObject = (value, fallback = {}) => (isPlainObject(value) ? { ...value } : { ...fallback });
+
+  const normalizeSectionState = (value, defaults) => ({
+    ...defaults,
+    ...(isPlainObject(value) ? value : {})
+  });
+
   const ADMIN_STATE_STORAGE_KEY = 'master-framework.admin-state';
   const ADMIN_STATE_FILE_NAME = 'admin-state.json';
 
@@ -282,13 +289,50 @@
 
     getDefaultSetupState() {
       return {
-        status: 'not-started',
+        status: 'NOT_CONFIGURED',
         currentStep: 'system-check',
         completedSteps: [],
         appId: 'neutral-app',
         appName: 'Neutral App',
         selectedApp: null,
         configuration: {},
+        serverState: {
+          configured: false,
+          testedAt: null,
+          status: 'NOT_CONFIGURED',
+          reachable: false,
+          responseTimeMs: null,
+          message: 'Server not configured.',
+          url: '',
+          apiBase: '/api'
+        },
+        databaseState: {
+          configured: false,
+          testedAt: null,
+          status: 'NOT_CONFIGURED',
+          reachable: false,
+          responseTimeMs: null,
+          message: 'Database not configured.',
+          type: 'indexeddb',
+          name: 'CoreDB',
+          host: '',
+          url: ''
+        },
+        frameworkState: {
+          initialized: false,
+          initializedAt: null,
+          status: 'NOT_INITIALIZED',
+          message: 'Framework not initialized.'
+        },
+        bootstrapState: {
+          configured: false,
+          enabled: true,
+          username: 'developer',
+          displayId: 'USR-000001',
+          role: 'developer',
+          status: 'NOT_CONFIGURED',
+          message: 'Bootstrap not configured.'
+        },
         connections: [],
         database: null,
         adminAccount: null,
@@ -297,7 +341,7 @@
           active: false,
           installedAt: null,
           activatedAt: null,
-          state: 'draft'
+          state: 'NOT_CONFIGURED'
         },
         updatedAt: new Date().toISOString(),
         createdAt: new Date().toISOString()
@@ -342,33 +386,115 @@
       return null;
     },
 
-    getInstallationStatus() {
-      const state = this.loadSetupState();
-      const installation = state.installation || {};
-      const config = state.configuration || {};
-      const database = state.database || config.database || null;
-      const connections = Array.isArray(state.connections) ? state.connections.length : 0;
-      const rawStatus = normalizeSetupStatus(state.status || installation.state || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
+    getInstallationStatus(state = null) {
+      const source = state && isPlainObject(state) ? state : this.loadSetupState();
+      const installation = source.installation || {};
+      const serverState = source.serverState || {};
+      const databaseState = source.databaseState || {};
+      const frameworkState = source.frameworkState || {};
+      const bootstrapState = source.bootstrapState || {};
+      const config = source.configuration || {};
+      const databaseConfig = source.database || config.database || null;
+      const connections = Array.isArray(source.connections) ? source.connections.length : 0;
+      const rawStatus = normalizeSetupStatus(source.status || installation.state || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
+      const hasConfiguration = !!(
+        serverState.configured ||
+        databaseState.configured ||
+        databaseConfig ||
+        config.serverUrl ||
+        config.appId ||
+        bootstrapState.configured ||
+        (isPlainObject(config) && Object.keys(config).length > 0)
+      );
+      const hasTesting = !!(serverState.testedAt || databaseState.testedAt);
 
       if (installation.active === true || rawStatus === 'ACTIVE') {
         return 'ACTIVE';
       }
+      if (rawStatus === 'ERROR' || serverState.status === 'ERROR' || databaseState.status === 'ERROR' || frameworkState.status === 'ERROR' || bootstrapState.status === 'ERROR') {
+        return 'ERROR';
+      }
       if (rawStatus === 'READY') {
         return 'READY';
+      }
+      if (frameworkState.initialized && serverState.testedAt && databaseState.testedAt) {
+        return 'READY';
+      }
+      if (hasConfiguration && hasTesting) {
+        return 'READY_TO_TEST';
       }
       if (rawStatus === 'READY_TO_TEST' || rawStatus === 'TESTING') {
         return rawStatus;
       }
-      if (rawStatus === 'ERROR') {
-        return 'ERROR';
-      }
-      if (rawStatus === 'CONFIGURATION_REQUIRED' || state.currentStep === 'configuration') {
+      if (hasConfiguration || connections > 0 || source.currentStep === 'configuration') {
         return 'CONFIGURATION_REQUIRED';
       }
-      if (database || connections > 0 || config.serverUrl || config.appId) {
-        return 'READY_TO_TEST';
-      }
       return 'NOT_CONFIGURED';
+    },
+
+    normalizeSetupState(state = {}) {
+      const baseState = this.getDefaultSetupState();
+      const merged = {
+        ...baseState,
+        ...(isPlainObject(state) ? state : {}),
+        configuration: cloneObject(state.configuration, baseState.configuration),
+        serverState: normalizeSectionState(state.serverState, baseState.serverState),
+        databaseState: normalizeSectionState(state.databaseState, baseState.databaseState),
+        frameworkState: normalizeSectionState(state.frameworkState, baseState.frameworkState),
+        bootstrapState: normalizeSectionState(state.bootstrapState, baseState.bootstrapState),
+        installation: normalizeSectionState(state.installation, baseState.installation),
+        connections: Array.isArray(state.connections) ? [...state.connections] : [...baseState.connections]
+      };
+
+      const status = this.getInstallationStatus(merged);
+      merged.status = status;
+      merged.installation.state = status;
+      if (status === 'ACTIVE') {
+        merged.installation.active = true;
+        merged.installation.activatedAt = merged.installation.activatedAt || new Date().toISOString();
+      }
+      if (merged.frameworkState.initialized && !merged.frameworkState.initializedAt) {
+        merged.frameworkState.initializedAt = new Date().toISOString();
+      }
+      return merged;
+    },
+
+    getSetupSnapshot() {
+      return this.normalizeSetupState(this.loadSetupState());
+    },
+
+    getServerState() {
+      return cloneObject(this.getSetupSnapshot().serverState, this.getDefaultSetupState().serverState);
+    },
+
+    getDatabaseState() {
+      return cloneObject(this.getSetupSnapshot().databaseState, this.getDefaultSetupState().databaseState);
+    },
+
+    getFrameworkState() {
+      return cloneObject(this.getSetupSnapshot().frameworkState, this.getDefaultSetupState().frameworkState);
+    },
+
+    getBootstrapState() {
+      return cloneObject(this.getSetupSnapshot().bootstrapState, this.getDefaultSetupState().bootstrapState);
+    },
+
+    getServerStatus() {
+      const state = this.getServerState();
+      return {
+        ...state,
+        ok: state.status !== 'ERROR',
+        configured: !!state.configured
+      };
+    },
+
+    getDatabaseStatus() {
+      const state = this.getDatabaseState();
+      return {
+        ...state,
+        ok: state.status !== 'ERROR' && state.status !== 'NOT_CONFIGURED' ? true : !!state.configured,
+        configured: !!state.configured
+      };
     },
 
     loadSetupState() {
@@ -379,18 +505,14 @@
         : (this.setupState && isPlainObject(this.setupState) ? this.setupState : null);
 
       if (!source) {
-        this.setupState = { ...baseState };
+        this.setupState = this.normalizeSetupState(baseState);
         return this.setupState;
       }
 
-      const merged = {
+      const merged = this.normalizeSetupState({
         ...baseState,
-        ...source,
-        installation: {
-          ...baseState.installation,
-          ...(source.installation || {})
-        }
-      };
+        ...source
+      });
 
       this.setupState = merged;
       return merged;
@@ -398,16 +520,11 @@
 
     saveSetupState(nextState = null) {
       const state = isPlainObject(nextState) ? nextState : this.loadSetupState();
-      const normalized = {
+      const normalized = this.normalizeSetupState({
         ...this.getDefaultSetupState(),
         ...state,
-        status: typeof state.status === 'string' ? state.status : this.getDefaultSetupState().status,
-        installation: {
-          ...this.getDefaultSetupState().installation,
-          ...(state.installation || {})
-        },
         updatedAt: new Date().toISOString()
-      };
+      });
       this.setupState = normalized;
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('master-framework.setup-state', JSON.stringify(normalized));
@@ -424,6 +541,102 @@
         }
       }
       return this.setupState;
+    },
+
+    updateSetupProgress(progress = {}) {
+      const state = this.loadSetupState();
+      const next = {
+        ...state,
+        ...progress,
+        updatedAt: new Date().toISOString()
+      };
+      return this.saveSetupState(next);
+    },
+
+    markFrameworkInitialized(metadata = {}) {
+      const state = this.loadSetupState();
+      state.frameworkState = {
+        ...this.getDefaultSetupState().frameworkState,
+        ...state.frameworkState,
+        initialized: true,
+        initializedAt: new Date().toISOString(),
+        status: 'READY',
+        message: metadata.message || 'Framework initialized.'
+      };
+      if (metadata.currentStep) {
+        state.currentStep = metadata.currentStep;
+      }
+      return this.saveSetupState(state);
+    },
+
+    updateServerState(serverState = {}) {
+      const state = this.loadSetupState();
+      state.serverState = normalizeSectionState(serverState, this.getDefaultSetupState().serverState);
+      if (Object.keys(serverState || {}).length > 0) {
+        state.serverState.configured = true;
+      }
+      if (serverState && Object.prototype.hasOwnProperty.call(serverState, 'configured')) {
+        state.serverState.configured = !!serverState.configured;
+      }
+      return this.saveSetupState(state);
+    },
+
+    updateDatabaseState(databaseState = {}) {
+      const state = this.loadSetupState();
+      state.databaseState = normalizeSectionState(databaseState, this.getDefaultSetupState().databaseState);
+      if (Object.keys(databaseState || {}).length > 0) {
+        state.databaseState.configured = true;
+      }
+      if (databaseState && Object.prototype.hasOwnProperty.call(databaseState, 'configured')) {
+        state.databaseState.configured = !!databaseState.configured;
+      }
+      return this.saveSetupState(state);
+    },
+
+    updateBootstrapState(bootstrapState = {}) {
+      const state = this.loadSetupState();
+      state.bootstrapState = normalizeSectionState(bootstrapState, this.getDefaultSetupState().bootstrapState);
+      if (Object.keys(bootstrapState || {}).length > 0) {
+        state.bootstrapState.configured = true;
+      }
+      if (bootstrapState && Object.prototype.hasOwnProperty.call(bootstrapState, 'enabled')) {
+        state.bootstrapState.enabled = !!bootstrapState.enabled;
+      }
+      return this.saveSetupState(state);
+    },
+
+    activateInstallation(metadata = {}) {
+      const state = this.loadSetupState();
+      const currentStatus = this.getInstallationStatus(state);
+
+      if (currentStatus !== 'READY') {
+        return {
+          ok: false,
+          code: 'SETUP_NOT_READY',
+          status: currentStatus,
+          message: 'Installation cannot be activated before server, database and framework are ready.'
+        };
+      }
+
+      const nextState = {
+        ...state,
+        status: 'ACTIVE',
+        installation: {
+          ...state.installation,
+          active: true,
+          installedAt: state.installation.installedAt || new Date().toISOString(),
+          activatedAt: new Date().toISOString(),
+          state: 'ACTIVE'
+        },
+        currentStep: metadata.currentStep || 'runtime',
+        updatedAt: new Date().toISOString()
+      };
+
+      if (metadata.message) {
+        nextState.installation.message = metadata.message;
+      }
+
+      return this.saveSetupState(nextState);
     },
 
     getDefaultAdminState() {
@@ -886,6 +1099,7 @@
           updates: this.getUpdateState(),
           marketplace: this.getMarketplaceState()
         },
+        setup: this.getSetupSnapshot(),
         timestamp: new Date().toISOString()
       };
     }

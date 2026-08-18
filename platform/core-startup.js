@@ -100,6 +100,13 @@
                         await window.ModuleManager.discoverModules();
                     }
 
+                    if (window.MasterFramework && typeof window.MasterFramework.markFrameworkInitialized === 'function') {
+                        window.MasterFramework.markFrameworkInitialized({
+                            currentStep: 'runtime',
+                            message: 'Framework initialized by browser runtime.'
+                        });
+                    }
+
                     window.CoreContext.setRuntimeValue(
                         'initialized',
                         true

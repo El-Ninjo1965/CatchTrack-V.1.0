@@ -1,9 +1,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const Framework = require('../platform/master-framework');
+const ServerBootstrap = require('../server/bootstrap/server');
 
 const cleanupRuntimeState = () => {
   Framework.setupState = null;
@@ -89,10 +91,9 @@ test('supports persisted setup state and connection updates', () => {
   const runtime = Framework;
 
   const initial = runtime.loadSetupState();
-  assert.equal(initial.status, 'not-started');
+  assert.equal(initial.status, 'NOT_CONFIGURED');
 
   const saved = runtime.saveSetupState({
-    status: 'in-progress',
     currentStep: 'connection-config',
     appId: 'weather',
     configuration: { defaultRegion: 'de' }
@@ -100,6 +101,7 @@ test('supports persisted setup state and connection updates', () => {
 
   assert.equal(saved.currentStep, 'connection-config');
   assert.equal(saved.configuration.defaultRegion, 'de');
+  assert.equal(saved.status, 'CONFIGURATION_REQUIRED');
 
   const connection = runtime.registerConnection({
     connectionId: 'weather-api',
@@ -169,4 +171,108 @@ test('supports admin devices, licenses, updates, and marketplace state', () => {
     }
   ]);
   assert.equal(runtime.getMarketplaceEntries().length, 1);
+});
+
+test('supports setup, database, and activation flow', async () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.setupState = null;
+
+  const app = ServerBootstrap.createServer();
+
+  const requestJson = (port, method, pathname, payload = null) => new Promise((resolve, reject) => {
+    const body = payload ? JSON.stringify(payload) : '';
+    const req = http.request({
+      host: '127.0.0.1',
+      port,
+      path: pathname,
+      method,
+      headers: body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {}
+    }, (res) => {
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        try {
+          resolve({ statusCode: res.statusCode, body: data ? JSON.parse(data) : {} });
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    if (body) {
+      req.write(body);
+    }
+    req.end();
+  });
+
+  const requestText = (port, method, pathname) => new Promise((resolve, reject) => {
+    const req = http.request({
+      host: '127.0.0.1',
+      port,
+      path: pathname,
+      method
+    }, (res) => {
+      let data = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));
+    });
+
+    req.on('error', reject);
+    req.end();
+  });
+
+  await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+  const port = app.address().port;
+
+  try {
+    const initial = await requestJson(port, 'GET', '/api/setup/status');
+    assert.equal(initial.body.status, 'NOT_CONFIGURED');
+
+    const configured = await requestJson(port, 'POST', '/api/setup', {
+      configuration: {
+        serverUrl: `http://127.0.0.1:${port}`,
+        apiBase: '/api',
+        database: {
+          type: 'indexeddb',
+          name: 'CoreDB'
+        }
+      },
+      bootstrapState: {
+        configured: true,
+        username: 'developer',
+        displayId: 'USR-000001',
+        role: 'developer'
+      }
+    });
+    assert.equal(configured.body.status, 'CONFIGURATION_REQUIRED');
+
+    const serverTest = await requestJson(port, 'POST', '/api/server/test', {
+      serverUrl: `http://127.0.0.1:${port}`,
+      apiBase: '/api'
+    });
+    assert.equal(serverTest.body.ok, true);
+
+    const databaseTest = await requestJson(port, 'POST', '/api/database/test', {
+      type: 'indexeddb',
+      name: 'CoreDB'
+    });
+    assert.equal(databaseTest.body.ok, true);
+    assert.equal(databaseTest.body.status, 'READY');
+
+    const activated = await requestJson(port, 'POST', '/api/setup/activate', {
+      currentStep: 'runtime'
+    });
+    assert.equal(activated.body.ok, true);
+    assert.equal(activated.body.status, 'ACTIVE');
+
+    const runtimeAfterActivation = await requestText(port, 'GET', '/');
+    assert.equal(runtimeAfterActivation.statusCode, 200);
+    assert.match(runtimeAfterActivation.body, /<!DOCTYPE html>/);
+  } finally {
+    await new Promise((resolve) => app.close(resolve));
+  }
 });

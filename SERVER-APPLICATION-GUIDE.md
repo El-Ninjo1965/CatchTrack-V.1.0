@@ -262,6 +262,11 @@ Vorhandene API-Pfade:
 - `/api/health`
 - `/api/status`
 - `/api/modules`
+- `/api/setup/status`
+- `/api/server/test`
+- `/api/database/status`
+- `/api/database/test`
+- `/api/setup/activate`
 
 ### 7.3 Module-Dateien
 
@@ -310,6 +315,7 @@ Wenn der Framework-Setup-Status noch nicht auf `ACTIVE` steht, dient die Root-Ro
 - `ERROR`
 
 Die zentrale Statuslogik bleibt im neutralen Framework; die Server-Route nutzt sie nur als Entscheidungsgrund.
+Der Aktivierungsweg laeuft ueber `/api/setup/activate`, nachdem Server- und Datenbanktest sowie Framework-Initialisierung abgeschlossen sind.
 
 ### 7.8 Upload- und Laufzeitstruktur
 

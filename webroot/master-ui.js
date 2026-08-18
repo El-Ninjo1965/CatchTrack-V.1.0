@@ -296,6 +296,13 @@
                   type: form.querySelector('[name="databaseType"]') ? form.querySelector('[name="databaseType"]').value : 'indexeddb',
                   name: form.querySelector('[name="databaseName"]') ? form.querySelector('[name="databaseName"]').value : ''
                 }
+              },
+              bootstrapState: {
+                configured: true,
+                enabled: true,
+                username: 'developer',
+                displayId: 'USR-000001',
+                role: 'developer'
               }
             };
             const result = await postJson('/api/setup', payload, { ok: false, setup: {} });
@@ -306,10 +313,9 @@
           }
 
           if (action === 'setup-activate') {
-            const result = await postJson('/api/setup', {
-              status: 'ACTIVE',
-              currentStep: 'activation',
-              installation: { active: true, state: 'active', activatedAt: new Date().toISOString() }
+            const result = await postJson('/api/setup/activate', {
+              currentStep: 'runtime',
+              message: 'Installation activated.'
             }, { ok: false, setup: {} });
             if (statusTarget) {
               statusTarget.textContent = result && result.ok ? 'System activated. Redirecting to admin workspace.' : 'Activation failed.';
@@ -359,9 +365,23 @@
 
   const getDatabaseStatus = () => {
     if (window.DatabaseManager && typeof window.DatabaseManager.getStatus === 'function') {
-      return window.DatabaseManager.getStatus();
+      const status = window.DatabaseManager.getStatus();
+      if (status && typeof status === 'object') {
+        return status;
+      }
     }
-    return 'Not configured';
+    return {
+      status: 'NOT_CONFIGURED',
+      configured: false,
+      initialized: false,
+      message: 'Database not configured.'
+    };
+  };
+
+  const describeDatabaseStatus = (status) => {
+    if (!status) return 'Database not configured';
+    if (typeof status === 'string') return status;
+    return status.message || status.status || 'Database not configured';
   };
 
   const getServerStatus = async () => {
@@ -400,7 +420,8 @@
       { label: 'App version', value: getAppVersion() },
       { label: 'System status', value: window.AdminModule && typeof window.AdminModule.healthCheck === 'function' ? (window.AdminModule.healthCheck().healthy ? 'Operational' : 'Warning') : 'Unknown' },
       { label: 'Server status', value: serverStatus.api === 'healthy' ? 'Healthy' : 'Unavailable' },
-      { label: 'Database status', value: getDatabaseStatus() },
+      { label: 'Database status', value: describeDatabaseStatus(getDatabaseStatus()) },
+      { label: 'Connection status', value: typeof serverStatus.framework.connections === 'number' ? `${serverStatus.framework.connections} configured` : 'Unknown' },
       { label: 'Module count', value: String(stats.moduleCount || registry.length) },
       { label: 'Active modules', value: String(activeCount) },
       { label: 'Device count', value: String(typeof frameworkStats.devices === 'number' ? frameworkStats.devices : 0) },
@@ -1062,12 +1083,14 @@
             <button type="button" class="secondary" data-admin-action="database-test">Test database</button>
             <button type="button" class="primary" data-admin-action="setup-activate">Activate system</button>
           </div>
-          <div id="adminActionStatus" class="message info">Setup state: ${escapeHtml(setup.status || 'NOT_CONFIGURED')} · Installation: ${escapeHtml((installation && installation.state) || 'draft')}</div>
+          <div id="adminActionStatus" class="message info">Setup state: ${escapeHtml(setup.status || 'NOT_CONFIGURED')} · Server: ${escapeHtml((setup.serverState && setup.serverState.status) || 'NOT_CONFIGURED')} · Database: ${escapeHtml((setup.databaseState && setup.databaseState.status) || 'NOT_CONFIGURED')}</div>
           <div class="grid" style="margin-top: 18px;">
             <div class="metric"><span class="metric-label">Status</span><div class="metric-value">${escapeHtml(setup.status || 'NOT_CONFIGURED')}</div></div>
             <div class="metric"><span class="metric-label">Current step</span><div class="metric-value">${escapeHtml(setup.currentStep || 'system-check')}</div></div>
             <div class="metric"><span class="metric-label">Server</span><div class="metric-value">${escapeHtml(configuration.serverUrl || 'not configured')}</div></div>
             <div class="metric"><span class="metric-label">Database</span><div class="metric-value">${escapeHtml((configuration.database && configuration.database.name) || 'not configured')}</div></div>
+            <div class="metric"><span class="metric-label">Framework</span><div class="metric-value">${escapeHtml((setup.frameworkState && setup.frameworkState.status) || 'NOT_INITIALIZED')}</div></div>
+            <div class="metric"><span class="metric-label">Bootstrap</span><div class="metric-value">${escapeHtml((setup.bootstrapState && setup.bootstrapState.status) || 'NOT_CONFIGURED')}</div></div>
           </div>
         </div>
       </div>

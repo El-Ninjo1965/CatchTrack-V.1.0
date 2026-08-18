@@ -52,6 +52,7 @@ The framework now includes a neutral app and connection abstraction that remains
   - namespaced localStorage adapter (`core:*`)
 - [`database-manager.js`](/workspaces/CatchTrack-V.1.0/platform/database-manager.js):
   - IndexedDB abstraction
+  - configuration and status helpers
   - stores: users, modules, logs, sessions, settings, cache, sync
 - [`core-state.js`](/workspaces/CatchTrack-V.1.0/platform/core-state.js):
   - generic runtime key-value state
@@ -84,6 +85,7 @@ The framework now includes a neutral app and connection abstraction that remains
   - `/health`, `/api/health`
   - `/api/status`
   - `/api/modules` (module manifest list)
+  - `/api/setup/status`, `/api/setup/activate`, `/api/server/test`, `/api/database/status`, `/api/database/test`
 - Static routing serves:
   - [`webroot/`](/workspaces/CatchTrack-V.1.0/webroot)
   - [`platform/`](/workspaces/CatchTrack-V.1.0/platform)
@@ -302,4 +304,3 @@ The framework now includes a neutral app and connection abstraction that remains
 - Bestehende Core-Schnittstellen vor neuen Globals wiederverwenden.
 - Abhängigkeiten immer explizit deklarieren.
 - Lifecycle-/State-/Event-Garantien der aktuellen Architektur erhalten.
-

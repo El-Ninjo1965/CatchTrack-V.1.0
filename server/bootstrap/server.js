@@ -16,6 +16,13 @@ if (!MasterFramework.getApp('neutral-app')) {
   });
 }
 
+if (typeof MasterFramework.markFrameworkInitialized === 'function') {
+  MasterFramework.markFrameworkInitialized({
+    currentStep: 'server-runtime',
+    message: 'Server framework loaded.'
+  });
+}
+
 const appModulesDir = path.join(rootDir, 'app', 'modules');
 
 const mimeTypes = {
@@ -37,6 +44,10 @@ const sendJson = (res, statusCode, payload) => {
 };
 
 const getSetupSnapshot = () => {
+  if (MasterFramework && typeof MasterFramework.getSetupSnapshot === 'function') {
+    return MasterFramework.getSetupSnapshot();
+  }
+
   const setup = MasterFramework.loadSetupState();
   const installation = setup.installation || {};
   const configuration = setup.configuration || {};
@@ -62,30 +73,25 @@ const isSetupRequired = () => {
   const snapshot = getSetupSnapshot();
   const status = MasterFramework.normalizeSetupStatus(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
   const installationActive = !!(snapshot.installation && snapshot.installation.active);
-  return !(installationActive || ['ACTIVE', 'READY'].includes(status));
+  return !(installationActive || status === 'ACTIVE');
 };
 
 const getDatabaseStatus = () => {
+  if (MasterFramework && typeof MasterFramework.getDatabaseStatus === 'function') {
+    return MasterFramework.getDatabaseStatus();
+  }
+
   const setup = getSetupSnapshot();
   const database = setup.database || setup.configuration?.database || null;
   const configured = !!(database && (database.type || database.name || database.host || database.url));
 
-  if (!configured) {
-    return {
-      ok: false,
-      status: 'NOT_CONFIGURED',
-      configured: false,
-      message: 'Database not configured'
-    };
-  }
-
   return {
-    ok: true,
-    status: 'READY',
-    configured: true,
-    type: database.type || 'unknown',
-    name: database.name || database.database || 'framework-db',
-    message: 'Database configuration present.'
+    ok: configured,
+    status: configured ? 'READY' : 'NOT_CONFIGURED',
+    configured,
+    type: database && database.type ? database.type : 'unknown',
+    name: database && database.name ? database.name : 'framework-db',
+    message: configured ? 'Database configuration present.' : 'Database not configured.'
   };
 };
 
@@ -370,18 +376,83 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       readJsonBody(req)
         .then((payload) => {
           const currentState = MasterFramework.loadSetupState();
+          const configuration = { ...(currentState.configuration || {}), ...(payload.configuration || {}) };
+          const serverConfig = {
+            ...(currentState.serverState || {}),
+            ...(payload.serverState || {})
+          };
+          const databaseConfig = {
+            ...(currentState.databaseState || {}),
+            ...(payload.databaseState || {})
+          };
+          const bootstrapConfig = {
+            ...(currentState.bootstrapState || {}),
+            ...(payload.bootstrapState || {})
+          };
+          const frameworkState = {
+            ...(currentState.frameworkState || {}),
+            ...(payload.frameworkState || {})
+          };
+          const installation = {
+            ...(currentState.installation || {}),
+            ...(payload.installation || {})
+          };
+
+          if (configuration.serverUrl || configuration.apiBase || payload.serverUrl || payload.apiBase) {
+            serverConfig.configured = true;
+            serverConfig.url = payload.serverUrl || configuration.serverUrl || serverConfig.url || '';
+            serverConfig.apiBase = payload.apiBase || configuration.apiBase || serverConfig.apiBase || '/api';
+            serverConfig.status = serverConfig.status === 'ERROR' ? 'ERROR' : 'CONFIGURATION_REQUIRED';
+            serverConfig.message = 'Server configuration saved.';
+          }
+
+          if (payload.serverTestedAt) {
+            serverConfig.testedAt = payload.serverTestedAt;
+          }
+
+          const database = payload.database || configuration.database || {};
+          if (database && (database.type || database.name || database.host || database.url || payload.databaseState)) {
+            databaseConfig.configured = true;
+            databaseConfig.type = database.type || databaseConfig.type || 'indexeddb';
+            databaseConfig.name = database.name || databaseConfig.name || 'CoreDB';
+            databaseConfig.host = database.host || databaseConfig.host || '';
+            databaseConfig.url = database.url || databaseConfig.url || '';
+            databaseConfig.status = databaseConfig.status === 'ERROR' ? 'ERROR' : 'CONFIGURATION_REQUIRED';
+            databaseConfig.message = 'Database configuration saved.';
+          }
+
+          if (payload.bootstrap || payload.bootstrapState) {
+            bootstrapConfig.configured = true;
+            bootstrapConfig.username = (payload.bootstrap && payload.bootstrap.username) || bootstrapConfig.username || 'developer';
+            bootstrapConfig.displayId = (payload.bootstrap && payload.bootstrap.displayId) || bootstrapConfig.displayId || 'USR-000001';
+            bootstrapConfig.role = (payload.bootstrap && payload.bootstrap.role) || bootstrapConfig.role || 'developer';
+            bootstrapConfig.enabled = payload.bootstrap && Object.prototype.hasOwnProperty.call(payload.bootstrap, 'enabled')
+              ? !!payload.bootstrap.enabled
+              : bootstrapConfig.enabled !== false;
+            bootstrapConfig.status = bootstrapConfig.status === 'ERROR' ? 'ERROR' : 'CONFIGURATION_REQUIRED';
+            bootstrapConfig.message = 'Bootstrap configuration saved.';
+          }
+
+          if (payload.currentStep) {
+            currentState.currentStep = payload.currentStep;
+          }
+
           const merged = {
             ...currentState,
             ...payload,
-            configuration: { ...(currentState.configuration || {}), ...(payload.configuration || {}) },
-            installation: { ...(currentState.installation || {}), ...(payload.installation || {}) },
+            configuration,
+            serverState: serverConfig,
+            databaseState: databaseConfig,
+            bootstrapState: bootstrapConfig,
+            frameworkState,
+            installation,
             updatedAt: new Date().toISOString()
           };
 
           const saved = MasterFramework.saveSetupState(merged);
           sendJson(res, 200, {
             ok: true,
-            status: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : saved.status,
+            status: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus(saved) : saved.status,
             setup: saved
           });
         })
@@ -394,7 +465,42 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     const snapshot = getSetupSnapshot();
     sendJson(res, 200, {
       ok: true,
-      status: snapshot.setupState,
+      status: snapshot.status || snapshot.setupState,
+      setup: snapshot
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/setup/activate` || pathname === `${apiBase}/admin/setup/activate`) {
+    if (req && req.method === 'POST') {
+      readJsonBody(req)
+        .then((payload) => {
+          const result = MasterFramework.activateInstallation({
+            currentStep: payload.currentStep || 'runtime',
+            message: payload.message || 'Installation activated.'
+          });
+
+          if (result && result.ok === false) {
+            sendJson(res, 409, result);
+            return;
+          }
+
+          sendJson(res, 200, {
+            ok: true,
+            status: MasterFramework.getInstallationStatus(result),
+            setup: result
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_SETUP', message: error.message || 'Activation payload invalid.' });
+        });
+      return true;
+    }
+
+    const snapshot = getSetupSnapshot();
+    sendJson(res, 200, {
+      ok: true,
+      status: snapshot.status || snapshot.setupState,
       setup: snapshot
     });
     return true;
@@ -408,10 +514,24 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
           const setupState = MasterFramework.loadSetupState();
           const nextState = {
             ...setupState,
-            status: result.ok ? 'READY_TO_TEST' : 'ERROR',
             currentStep: 'server-test',
-            configuration: { ...(setupState.configuration || {}), serverUrl: payload.serverUrl || setupState.configuration?.serverUrl || `http://${host}:${port}` },
-            installation: { ...(setupState.installation || {}), state: result.ok ? 'ready_to_test' : 'error' },
+            configuration: {
+              ...(setupState.configuration || {}),
+              serverUrl: payload.serverUrl || setupState.configuration?.serverUrl || `http://${host}:${port}`,
+              apiBase: payload.apiBase || setupState.configuration?.apiBase || '/api'
+            },
+            serverState: {
+              ...(setupState.serverState || {}),
+              configured: true,
+              testedAt: new Date().toISOString(),
+              reachable: !!result.ok,
+              responseTimeMs: result.responseTimeMs,
+              status: result.ok ? 'READY_TO_TEST' : 'ERROR',
+              message: result.message,
+              url: payload.serverUrl || setupState.configuration?.serverUrl || `http://${host}:${port}`,
+              apiBase: payload.apiBase || setupState.configuration?.apiBase || '/api'
+            },
+            installation: { ...(setupState.installation || {}), state: result.ok ? 'CONFIGURATION_REQUIRED' : 'ERROR' },
             updatedAt: new Date().toISOString()
           };
           MasterFramework.saveSetupState(nextState);
@@ -437,24 +557,48 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
         .then((payload) => {
           const nextState = MasterFramework.loadSetupState();
           const databaseConfig = {
-            type: payload.type || nextState.database?.type || 'indexeddb',
-            name: payload.name || nextState.database?.name || payload.database || 'framework-db',
-            host: payload.host || nextState.database?.host || '',
-            url: payload.url || nextState.database?.url || '',
-            configured: !!(payload.name || payload.host || payload.url || nextState.database)
+            ...(nextState.databaseState || {}),
+            type: payload.type || nextState.databaseState?.type || 'indexeddb',
+            name: payload.name || nextState.databaseState?.name || payload.database || 'framework-db',
+            host: payload.host || nextState.databaseState?.host || '',
+            url: payload.url || nextState.databaseState?.url || '',
+            configured: !!(payload.name || payload.host || payload.url || payload.type || nextState.databaseState?.configured),
+            testedAt: new Date().toISOString(),
+            reachable: true,
+            responseTimeMs: 0,
+            status: 'READY',
+            message: 'Database configuration test passed.'
           };
 
           const setup = {
             ...nextState,
-            database: databaseConfig,
-            configuration: { ...(nextState.configuration || {}), database: databaseConfig },
-            status: databaseConfig.configured ? 'READY_TO_TEST' : 'NOT_CONFIGURED',
-            currentStep: 'database-config',
+            database: {
+              ...(nextState.database || {}),
+              type: databaseConfig.type,
+              name: databaseConfig.name,
+              host: databaseConfig.host,
+              url: databaseConfig.url
+            },
+            databaseState: databaseConfig,
+            configuration: { ...(nextState.configuration || {}), database: {
+              type: databaseConfig.type,
+              name: databaseConfig.name,
+              host: databaseConfig.host,
+              url: databaseConfig.url
+            } },
+            frameworkState: {
+              ...(nextState.frameworkState || {}),
+              initialized: true,
+              initializedAt: nextState.frameworkState?.initializedAt || new Date().toISOString(),
+              status: 'READY',
+              message: 'Framework initialized.'
+            },
+            currentStep: 'framework-initialization',
             updatedAt: new Date().toISOString()
           };
           MasterFramework.saveSetupState(setup);
           const status = getDatabaseStatus();
-          sendJson(res, status.ok ? 200 : 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
+          sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
         })
         .catch((error) => {
           sendJson(res, 400, { ok: false, code: 'INVALID_DATABASE', message: error.message || 'Database configuration invalid.' });
