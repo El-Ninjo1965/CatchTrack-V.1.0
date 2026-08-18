@@ -1,51 +1,29 @@
 # CatchTrack Development Workflow
 
-This document is the binding operating workflow for the CatchTrack project in repository `El-Ninjo1965/CatchTrack-V.1.0`.
+Binding workflow for repository `El-Ninjo1965/CatchTrack-V.1.0`.
 
-It defines the required process for every AI agent and developer working in this repository.
-It does not replace the project specification documents; it defines how to use them and how to work safely within the existing architecture.
-
-## 1. Repository and branch rules
+## 1. Repository rules
 
 - Repository: `El-Ninjo1965/CatchTrack-V.1.0`
-- Standard branch: `main`
-- Do not work in any other repository.
-- Do not switch accounts automatically.
-- Do not create new repositories while working on this project.
-- Do not assume a different remote or fork is the active project unless the repository state clearly confirms it.
+- Branch: `main`
+- Remote: `origin/main`
+- Do not work in other repositories.
+- Do not create parallel auth, setup, module, database, user, role, permission, or config systems.
 
-## 2. Required pre-task checks
+## 2. Required start checks
 
-Before starting any task, check the current repository state and confirm the work is being done on the correct branch and commit.
-
-Required steps:
+Before changes:
 
 - `git status`
 - `git branch`
 - `git log -1 --oneline`
 - `git remote -v`
-- confirm repo root and active branch
-- confirm working tree state
-- confirm remote is the expected repository and branch
 
-If the status is dirty or branch/remote state is unexpected, the task must be reviewed before making changes.
+If branch/remote/worktree is unexpected, stop and review first.
 
-## 3. Required analysis before implementation
+## 3. Required document order
 
-Before changing code, confirm the actual state of the repository.
-
-Required checks:
-
-- read the relevant project documentation
-- inspect the relevant implementation files
-- determine the current runtime behavior
-- determine the target behavior required by the task
-- identify the precise mismatch between IST and SOLL
-- do not assume a feature exists just because a document mentions it
-
-## 4. Documentation order
-
-When a task requires implementation guidance, read the relevant materials in order and use them as the required project reference:
+Read in this order when implementing or reviewing framework changes:
 
 1. `AI-FRAMEWORK-SPEC.md`
 2. `MODULE-INTEGRATION-SPEC.md`
@@ -53,143 +31,156 @@ When a task requires implementation guidance, read the relevant materials in ord
 4. `DEVELOPER-GUIDE.md`
 5. `SERVER-APPLICATION-GUIDE.md`
 
-Additional project files may be read only if they directly support the current task.
+Then inspect the matching code paths.
 
-The documentation describes the target state. The code describes the current state. The code must be checked before implementation begins.
+## 4. Actual architecture
 
-## 5. Architecture rules
+### Layers
 
-CatchTrack is the application. The neutral framework/core remains the underlying generic runtime and must not be unnecessarily expanded with CatchTrack-specific business logic.
+- `platform/` - neutral core/runtime
+- `server/` - Node HTTP server and API layer
+- `webroot/` - browser shells and shared UI runtime
+- `app/` - application shell and feature modules
 
-Core principles:
+### Master files
 
-- preserve the existing architecture whenever possible
-- do not create parallel systems for authentication, routing, storage, configuration, server connection handling, or module lifecycle
-- reuse the existing framework components and canonical flows
-- do not add fake APIs or fake module layers
-- do not invent a second admin or auth system when a framework system already exists
-- keep app-specific logic in the application layer, not in neutral core files
+- [platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js)
+  - neutral app, connection, setup, admin runtime, diagnostics, and feature flags
+- [platform/core-auth.js](/workspaces/CatchTrack-V.1.0/platform/core-auth.js)
+  - central session and auth truth
+- [platform/core-user.js](/workspaces/CatchTrack-V.1.0/platform/core-user.js)
+  - user identity facade on top of CoreAuth
+- [platform/core-access.js](/workspaces/CatchTrack-V.1.0/platform/core-access.js)
+  - role and permission evaluation
+- [platform/core-admin.js](/workspaces/CatchTrack-V.1.0/platform/core-admin.js)
+  - admin governance facade over the core modules
+- [platform/module-registry.js](/workspaces/CatchTrack-V.1.0/platform/module-registry.js)
+  - canonical module registry
+- [platform/module-manager.js](/workspaces/CatchTrack-V.1.0/platform/module-manager.js)
+  - module lifecycle and activation orchestration
+- [platform/core-loader.js](/workspaces/CatchTrack-V.1.0/platform/core-loader.js)
+  - module discovery/bootstrap loader
+- [platform/database-manager.js](/workspaces/CatchTrack-V.1.0/platform/database-manager.js)
+  - local IndexedDB abstraction
+- [server/bootstrap/server.js](/workspaces/CatchTrack-V.1.0/server/bootstrap/server.js)
+  - HTTP API, static routing, setup gating, admin shell protection
+- [webroot/master-ui.js](/workspaces/CatchTrack-V.1.0/webroot/master-ui.js)
+  - shared admin/developer/setup UI logic
+- [app/index.js](/workspaces/CatchTrack-V.1.0/app/index.js)
+  - neutral app shell bootstrap
 
-If a feature already exists in the framework, use that implementation instead of creating an equivalent system elsewhere.
+## 5. Data flow
 
-## 6. Development workflow
+### Setup
 
-For larger tasks, the required flow is:
+- Central setup state lives in `MasterFramework`.
+- `/` serves `setup.html` while setup is not active/ready.
+- `/api/setup/status` reflects the central setup snapshot.
+- `server/runtime/` is transient runtime state only and must not be committed.
 
-1. analysis
-2. technical plan
-3. implementation
-4. validation
-5. final verification
+### Auth / session
 
-When multiple changes are related, work in one coherent block when possible.
+- `CoreAuth` is the only auth/session source.
+- `UserModule` delegates to `CoreAuth`.
+- Developer/Admin/User redirect decisions are made from the current user roles.
+- Logout clears the active session.
 
-Do not perform large unrelated refactors. Prefer precise, direct fixes.
+### Modules
 
-## 7. File and code rules
+- Discovery starts in `CoreLoader` and `ModuleRegistry`.
+- `ModuleManager` owns install/initialize/enable/disable/update/uninstall flow.
+- GPS in `app/modules/gps/` is the reference module and must remain discoverable through the normal path.
 
-- read the relevant existing file before making changes
-- do not duplicate files that already exist for the same responsibility
-- do not create new systems alongside existing ones unless the task clearly requires it
-- do not leave unused or temporary files behind
-- do not commit runtime artifacts or generated state files
-- do not write secrets, passwords, API keys, credentials, or production tokens into the repository
-- do not hardcode localhost or production credentials into code for deployment use
-- keep the repository clean and deployment-safe
+### Admin
 
-## 8. Server and setup rules
+- Admin UI reads live data from server APIs and runtime modules.
+- Devices, Licenses, Updates, and Marketplace are backed by neutral runtime state in `MasterFramework`.
+- Users, Roles, Permissions, Connections, Server, and Database use the existing core/runtime and server APIs.
 
-The server must remain uploadable and runnable as a normal Node-based application.
+### Database / connections
 
-Rules:
+- `DatabaseManager` is the local browser-side store abstraction.
+- `MasterFramework` owns neutral app/connection state.
+- No second database abstraction or connection registry should be added.
 
-- runtime configuration stays outside Git where secrets or environment-specific values are involved
-- setup and runtime state must not remain as accidental repository files
-- server, database, and connection logic must remain connected to the existing architecture instead of becoming a parallel implementation
-- setup and install status must use the project’s existing status model rather than creating a second status engine
-- server-dependent functions remain optional unless the current task explicitly requires them
+## 6. Forbidden duplication
+
+Do not create parallel systems for:
+
+- auth/session
+- setup state
+- module discovery or lifecycle
+- user/role/permission logic
+- connection management
+- database management
+- config loading
+
+If a central implementation already exists, extend or correct that one.
+
+## 7. Runtime and secrets
+
+- Do not commit `.env` or secrets.
+- Keep `server/runtime/` out of Git.
+- Remove temporary runtime files after tests.
+- Keep production credentials and host-specific values outside the repository.
+
+## 8. Security rules
+
+- Protect administrative write operations with the existing admin/runtime role flow.
+- Do not add a second login/token/session mechanism.
+- Do not expose secrets in UI or repository files.
 
 ## 9. Testing rules
 
-After changes, at minimum:
+After code changes:
 
-- `node --check` for all changed JavaScript files
+- `node --check` for changed JS files
 - `npm test`
 - `git diff --check`
 
-For server work, additionally:
+For server changes, also verify:
 
-- start the local server
-- check `/health`
-- check `/api/status`
-- check `/api/modules`
-- check all relevant modified or newly used APIs
+- `/health`
+- `/api/status`
+- `/api/setup/status`
+- `/api/modules`
+- any new or changed admin API endpoints
 
-For UI work:
+Do not claim browser validation unless an actual browser was used.
 
-- verify the existing routing/auth logic still works
-- do not introduce a parallel UI or auth structure
-- verify that admin/developer routes still use the existing framework flow
+## 10. Open / prepared areas
 
-## 10. Git rules
+These are currently prepared or local-only, not external services:
+
+- offline sync and conflict handling
+- external marketplace
+- automatic internet-based update installation
+- production database integration beyond the local abstractions
+
+Do not fake these as complete backend features.
+
+## 11. Completion rules
+
+After a larger task, report:
+
+- IMPLEMENTIERT
+- GEÄNDERT
+- GETESTET
+- BEWUSST OFFEN
+- GIT
+
+Only list what was actually implemented and verified.
+
+## 12. Commit rules
 
 Before commit:
 
-- `git diff`
-- `git diff --check`
-- `git status`
-- only stage the intended files
+- review `git diff`
+- run `git diff --check`
+- confirm intended files only
 
 After commit:
 
-- `git push origin main`
-- `git status`
-- confirm the working tree is clean
-- confirm the local branch matches the remote branch state
-
-Use meaningful commit messages that reflect the actual change.
-
-## 11. Completion report rules
-
-After each larger task, provide a short completion report containing:
-
-- IMPLEMENTIERT: what was implemented
-- GEÄNDERT: what files or systems changed
-- GETESTET: what was validated
-- NOCH OFFEN: remaining items only, if any
-- GIT: commit, branch, remote, working tree status
-
-This report must only list functions that were actually implemented and validated.
-
-## 12. Error handling rules
-
-When an error occurs, do not guess.
-
-The exact issue must be identified with:
-
-- the command used
-- the file involved
-- the endpoint or route involved
-- the error message or observable failure
-- the current project state
-
-Only after this diagnosis should the code be changed.
-
-## 13. Scope rules
-
-This workflow file is a process standard only.
-It must not invent a new architecture.
-It must only define the required working method for the existing CatchTrack project and its neutral framework runtime.
-
-## 14. Final workflow requirement
-
-After any task that changes the repository state:
-
-- verify the change with the applicable checks
-- run `git diff --check`
-- ensure no accidental functional changes were introduced
-- commit only the intended files
 - push to `origin main`
-- confirm the working tree is clean
-
-No unrelated functional work is allowed in the same change unless the task explicitly requires it.
+- confirm `git status` is clean
+- confirm the latest commit is the expected one
