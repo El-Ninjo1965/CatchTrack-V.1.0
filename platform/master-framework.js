@@ -278,6 +278,31 @@
       };
     },
 
+    getInstallationStatus() {
+      const state = this.loadSetupState();
+      const installation = state.installation || {};
+      const config = state.configuration || {};
+      const database = state.database || config.database || null;
+      const connections = Array.isArray(state.connections) ? state.connections.length : 0;
+
+      if (installation.active === true || state.status === 'active') {
+        return 'ACTIVE';
+      }
+      if (state.status === 'ready' || state.status === 'READY') {
+        return 'READY';
+      }
+      if (state.status === 'testing' || state.currentStep === 'connection-test' || state.currentStep === 'database-test') {
+        return 'TESTING';
+      }
+      if (state.status === 'in-progress' || state.status === 'CONFIGURATION_REQUIRED' || state.currentStep === 'configuration') {
+        return 'CONFIGURATION_REQUIRED';
+      }
+      if (database || connections > 0 || config.serverUrl || config.appId) {
+        return 'READY_TO_TEST';
+      }
+      return 'NOT_CONFIGURED';
+    },
+
     loadSetupState() {
       const baseState = this.getDefaultSetupState();
       if (this.setupState && isPlainObject(this.setupState)) {

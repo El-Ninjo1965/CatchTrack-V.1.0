@@ -36,6 +36,119 @@ const sendJson = (res, statusCode, payload) => {
   res.end(JSON.stringify(payload, null, 2));
 };
 
+const normalizeStatusValue = (value, fallback = 'NOT_CONFIGURED') => {
+  const normalized = String(value || fallback).trim().toUpperCase();
+  return ['NOT_CONFIGURED', 'CONFIGURATION_REQUIRED', 'READY_TO_TEST', 'TESTING', 'READY', 'ACTIVE', 'ERROR'].includes(normalized)
+    ? normalized
+    : fallback;
+};
+
+const getSetupSnapshot = () => {
+  const setup = MasterFramework.loadSetupState();
+  const installation = setup.installation || {};
+  const configuration = setup.configuration || {};
+  const database = setup.database || configuration.database || null;
+
+  return {
+    ...setup,
+    status: normalizeStatusValue(setup.status, 'NOT_CONFIGURED'),
+    installation: {
+      ...installation,
+      active: !!installation.active,
+      state: installation.state || 'draft'
+    },
+    configuration,
+    database,
+    setupState: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : 'NOT_CONFIGURED'
+  };
+};
+
+const getDatabaseStatus = () => {
+  const setup = getSetupSnapshot();
+  const database = setup.database || setup.configuration?.database || null;
+  const configured = !!(database && (database.type || database.name || database.host || database.url));
+
+  if (!configured) {
+    return {
+      ok: false,
+      status: 'NOT_CONFIGURED',
+      configured: false,
+      message: 'Database not configured'
+    };
+  }
+
+  return {
+    ok: true,
+    status: 'READY',
+    configured: true,
+    type: database.type || 'unknown',
+    name: database.name || database.database || 'framework-db',
+    message: 'Database configuration present.'
+  };
+};
+
+const getServerTestResult = async (payload = {}) => {
+  const targetBase = normalizeStringValue(payload.serverUrl || process.env.SERVER_URL || `http://${host}:${port}`, `http://${host}:${port}`);
+  const apiBase = payload.apiBase || '/api';
+  const targetUrl = new URL(`${targetBase.replace(/\/$/, '')}${apiBase}/status`);
+  const start = Date.now();
+
+  return new Promise((resolve) => {
+    const client = targetUrl.protocol === 'https:' ? require('node:https') : require('node:http');
+    const request = client.get(targetUrl, (response) => {
+      let body = '';
+      response.on('data', (chunk) => { body += chunk; });
+      response.on('end', () => {
+        const parsed = (() => {
+          try { return JSON.parse(body || '{}'); } catch { return {}; }
+        })();
+
+        resolve({
+          ok: response.statusCode >= 200 && response.statusCode < 400,
+          reachable: true,
+          statusCode: response.statusCode,
+          status: response.statusCode >= 200 && response.statusCode < 400 ? 'READY' : 'ERROR',
+          responseTimeMs: Date.now() - start,
+          version: parsed.framework?.framework?.version || parsed.version || 'unknown',
+          message: response.statusCode >= 200 && response.statusCode < 400 ? 'Server reachable.' : `HTTP ${response.statusCode}`,
+          endpoint: targetUrl.toString()
+        });
+      });
+    });
+
+    request.on('error', () => {
+      resolve({
+        ok: false,
+        reachable: false,
+        status: 'ERROR',
+        responseTimeMs: Date.now() - start,
+        message: 'Server is not reachable.',
+        endpoint: targetUrl.toString()
+      });
+    });
+
+    request.setTimeout(5000, () => {
+      request.destroy();
+      resolve({
+        ok: false,
+        reachable: false,
+        status: 'ERROR',
+        responseTimeMs: Date.now() - start,
+        message: 'Server test timed out.',
+        endpoint: targetUrl.toString()
+      });
+    });
+  });
+};
+
+const normalizeStringValue = (value, fallback = '') => {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+  const normalized = value.trim();
+  return normalized || fallback;
+};
+
 const readJsonBody = (req) => new Promise((resolve, reject) => {
   const chunks = [];
   let body = '';
@@ -211,7 +324,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     return true;
   }
 
-  if (pathname === `${apiBase}/setup` || pathname === `${apiBase}/admin/setup`) {
+  if (pathname === `${apiBase}/setup` || pathname === `${apiBase}/admin/setup` || pathname === `${apiBase}/setup/status` || pathname === `${apiBase}/admin/setup/status` || pathname === `${apiBase}/install/status`) {
     if (req && req.method === 'POST') {
       readJsonBody(req)
         .then((payload) => {
@@ -225,7 +338,11 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
           };
 
           const saved = MasterFramework.saveSetupState(merged);
-          sendJson(res, 200, { ok: true, setup: saved });
+          sendJson(res, 200, {
+            ok: true,
+            status: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : saved.status,
+            setup: saved
+          });
         })
         .catch((error) => {
           sendJson(res, 400, { ok: false, code: 'INVALID_SETUP', message: error.message || 'Setup payload invalid.' });
@@ -233,10 +350,79 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       return true;
     }
 
+    const snapshot = getSetupSnapshot();
     sendJson(res, 200, {
       ok: true,
-      setup: MasterFramework.loadSetupState()
+      status: snapshot.setupState,
+      setup: snapshot
     });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/server/test` || pathname === `${apiBase}/admin/server/test`) {
+    if (req && req.method === 'POST') {
+      readJsonBody(req)
+        .then(async (payload) => {
+          const result = await getServerTestResult(payload);
+          const setupState = MasterFramework.loadSetupState();
+          const nextState = {
+            ...setupState,
+            status: result.ok ? 'READY_TO_TEST' : 'ERROR',
+            currentStep: 'server-test',
+            configuration: { ...(setupState.configuration || {}), serverUrl: payload.serverUrl || setupState.configuration?.serverUrl || `http://${host}:${port}` },
+            installation: { ...(setupState.installation || {}), state: result.ok ? 'ready_to_test' : 'error' },
+            updatedAt: new Date().toISOString()
+          };
+          MasterFramework.saveSetupState(nextState);
+          sendJson(res, 200, { ok: result.ok, result });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'SERVER_TEST_FAILED', message: error.message || 'Server test failed.' });
+        });
+      return true;
+    }
+
+    getServerTestResult({ serverUrl: process.env.SERVER_URL || `http://${host}:${port}`, apiBase }).then((result) => {
+      sendJson(res, 200, { ok: result.ok, result });
+    }).catch((error) => {
+      sendJson(res, 500, { ok: false, code: 'SERVER_TEST_FAILED', message: error.message || 'Server test failed.' });
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/database/status` || pathname === `${apiBase}/admin/database/status` || pathname === `${apiBase}/database/test` || pathname === `${apiBase}/admin/database/test`) {
+    if (req && req.method === 'POST') {
+      readJsonBody(req)
+        .then((payload) => {
+          const nextState = MasterFramework.loadSetupState();
+          const databaseConfig = {
+            type: payload.type || nextState.database?.type || 'indexeddb',
+            name: payload.name || nextState.database?.name || payload.database || 'framework-db',
+            host: payload.host || nextState.database?.host || '',
+            url: payload.url || nextState.database?.url || '',
+            configured: !!(payload.name || payload.host || payload.url || nextState.database)
+          };
+
+          const setup = {
+            ...nextState,
+            database: databaseConfig,
+            configuration: { ...(nextState.configuration || {}), database: databaseConfig },
+            status: databaseConfig.configured ? 'READY_TO_TEST' : 'NOT_CONFIGURED',
+            currentStep: 'database-config',
+            updatedAt: new Date().toISOString()
+          };
+          MasterFramework.saveSetupState(setup);
+          const status = getDatabaseStatus();
+          sendJson(res, status.ok ? 200 : 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_DATABASE', message: error.message || 'Database configuration invalid.' });
+        });
+      return true;
+    }
+
+    const status = getDatabaseStatus();
+    sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
     return true;
   }
 

@@ -135,9 +135,9 @@
     }
   };
 
-  const fetchJson = async (url, fallback = { ok: false }) => {
+  const fetchJson = async (url, fallback = { ok: false }, options = {}) => {
     try {
-      const response = await fetch(url, { cache: 'no-store' });
+      const response = await fetch(url, { cache: 'no-store', ...options });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         return { ...fallback, ok: false, status: response.status, payload };
@@ -147,6 +147,85 @@
       console.warn(`Admin fetch failed for ${url}:`, error);
       return { ...fallback, ok: false, message: error && error.message ? error.message : 'Request failed.' };
     }
+  };
+
+  const postJson = async (url, payload, fallback = { ok: false }) => fetchJson(url, fallback, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const bindActionButtons = () => {
+    document.querySelectorAll('[data-admin-action]').forEach((button) => {
+      button.onclick = async (event) => {
+        event.preventDefault();
+        const action = button.dataset.adminAction;
+        const statusTarget = document.getElementById('adminActionStatus');
+
+        try {
+          if (action === 'server-test') {
+            const payload = { serverUrl: document.getElementById('serverUrlInput') ? document.getElementById('serverUrlInput').value : '', apiBase: document.getElementById('serverApiBaseInput') ? document.getElementById('serverApiBaseInput').value : '/api' };
+            const result = await postJson('/api/server/test', payload, { ok: false, result: { status: 'ERROR', message: 'Server test failed.' } });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.result && result.result.message ? result.result.message : 'Server test failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'database-test') {
+            const payload = {
+              type: document.getElementById('dbTypeInput') ? document.getElementById('dbTypeInput').value : 'indexeddb',
+              name: document.getElementById('dbNameInput') ? document.getElementById('dbNameInput').value : '',
+              host: document.getElementById('dbHostInput') ? document.getElementById('dbHostInput').value : '',
+              url: document.getElementById('dbUrlInput') ? document.getElementById('dbUrlInput').value : ''
+            };
+            const result = await postJson('/api/database/test', payload, { ok: false, status: 'NOT_CONFIGURED', database: { message: 'Database not configured.' } });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.database && result.database.message ? result.database.message : 'Database test unavailable.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message warning';
+            }
+          }
+
+          if (action === 'connection-save') {
+            const form = button.closest('form');
+            if (!form) return;
+            const payload = Object.fromEntries(new FormData(form).entries());
+            const result = await postJson('/api/connections', payload, { ok: false, connection: null });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'Connection saved.' : (result && result.message ? result.message : 'Connection save failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'setup-save') {
+            const form = button.closest('form');
+            if (!form) return;
+            const payload = {
+              appId: form.querySelector('[name="appId"]') ? form.querySelector('[name="appId"]').value : 'neutral-app',
+              appName: form.querySelector('[name="appName"]') ? form.querySelector('[name="appName"]').value : 'Neutral App',
+              configuration: {
+                serverUrl: form.querySelector('[name="serverUrl"]') ? form.querySelector('[name="serverUrl"]').value : '',
+                apiBase: form.querySelector('[name="apiBase"]') ? form.querySelector('[name="apiBase"]').value : '/api',
+                database: {
+                  type: form.querySelector('[name="databaseType"]') ? form.querySelector('[name="databaseType"]').value : 'indexeddb',
+                  name: form.querySelector('[name="databaseName"]') ? form.querySelector('[name="databaseName"]').value : ''
+                }
+              }
+            };
+            const result = await postJson('/api/setup', payload, { ok: false, setup: {} });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'Setup saved successfully.' : 'Setup could not be saved.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+        } catch (error) {
+          if (statusTarget) {
+            statusTarget.className = 'message error';
+            statusTarget.textContent = error && error.message ? error.message : 'Action failed.';
+          }
+        }
+      };
+    });
   };
 
   const getModuleCatalog = () => window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
@@ -368,7 +447,19 @@
       <div class="card">
         <div class="card-header"><h2 class="card-title">Connections</h2></div>
         <div class="content-wrap">
-          <div class="table-wrap">
+          <form class="form-grid" style="margin-bottom: 18px;">
+            <div class="form-field"><label>Name</label><input type="text" name="connectionId" value="default-connection" /></div>
+            <div class="form-field"><label>App</label><input type="text" name="appId" value="neutral-app" /></div>
+            <div class="form-field"><label>Server URL</label><input id="connectionServerUrl" type="text" name="serverUrl" value="http://127.0.0.1:3000" /></div>
+            <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="/api" /></div>
+            <div class="form-field"><label>Type</label><input type="text" name="authType" value="none" /></div>
+            <div class="form-field"><label>Status</label><input type="text" name="status" value="inactive" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="connection-save">Save connection</button>
+            </div>
+          </form>
+          <div id="adminActionStatus" class="message info">Connection settings are saved to the framework runtime, not stored in the repository.</div>
+          <div class="table-wrap" style="margin-top: 20px;">
             <table>
               <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Target</th><th>Service</th><th>Last test</th></tr></thead>
               <tbody>
@@ -388,6 +479,7 @@
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
   const renderAdminServer = async () => {
@@ -396,11 +488,20 @@
 
     const status = await getServerStatus();
     const health = window.AdminModule && typeof window.AdminModule.healthCheck === 'function' ? window.AdminModule.healthCheck() : { healthy: false };
+    const setupStatus = await fetchJson('/api/setup/status', { ok: true, status: 'NOT_CONFIGURED', setup: {} });
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Server</h2></div>
         <div class="content-wrap">
+          <div class="form-grid" style="margin-bottom: 18px;">
+            <div class="form-field"><label>Server URL</label><input id="serverUrlInput" type="text" value="http://127.0.0.1:3000" /></div>
+            <div class="form-field"><label>API base</label><input id="serverApiBaseInput" type="text" value="/api" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="server-test">Test server connection</button>
+            </div>
+          </div>
+          <div id="adminActionStatus" class="message info">${escapeHtml((setupStatus && setupStatus.status) || 'NOT_CONFIGURED')}</div>
           <div class="grid">
             <div class="metric"><span class="metric-label">Server reachable</span><div class="metric-value">${status.health === 'healthy' ? 'Yes' : 'No'}</div></div>
             <div class="metric"><span class="metric-label">API reachable</span><div class="metric-value">${status.api === 'healthy' ? 'Yes' : 'No'}</div></div>
@@ -412,26 +513,39 @@
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
-  const renderAdminDatabase = () => {
+  const renderAdminDatabase = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
 
-    const status = getDatabaseStatus();
+    const statusResponse = await fetchJson('/api/database/status', { ok: false, status: 'NOT_CONFIGURED', database: { configured: false, message: 'Database not configured' } });
+    const status = statusResponse && statusResponse.database ? statusResponse.database : { configured: false, status: 'NOT_CONFIGURED', message: 'Database not configured' };
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Database</h2></div>
         <div class="content-wrap">
+          <div class="form-grid" style="margin-bottom: 18px;">
+            <div class="form-field"><label>Database type</label><input id="dbTypeInput" type="text" value="indexeddb" /></div>
+            <div class="form-field"><label>Database name</label><input id="dbNameInput" type="text" value="CoreDB" /></div>
+            <div class="form-field"><label>Host</label><input id="dbHostInput" type="text" value="" /></div>
+            <div class="form-field"><label>URL</label><input id="dbUrlInput" type="text" value="" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="database-test">Test database configuration</button>
+            </div>
+          </div>
+          <div id="adminActionStatus" class="message ${status.configured ? 'success' : 'warning'}">${escapeHtml(status.message || 'Database not configured')}</div>
           <div class="grid">
-            <div class="metric"><span class="metric-label">State</span><div class="metric-value">${escapeHtml(status)}</div></div>
-            <div class="metric"><span class="metric-label">Configured</span><div class="metric-value">${status === 'Not configured' ? 'No' : 'Yes'}</div></div>
-            <div class="metric"><span class="metric-label">Diagnostics</span><div class="metric-value">${status === 'Not configured' ? 'No database driver configured.' : 'Connection status available through manager.'}</div></div>
+            <div class="metric"><span class="metric-label">State</span><div class="metric-value">${escapeHtml(status.status || 'NOT_CONFIGURED')}</div></div>
+            <div class="metric"><span class="metric-label">Configured</span><div class="metric-value">${status.configured ? 'Yes' : 'No'}</div></div>
+            <div class="metric"><span class="metric-label">Diagnostics</span><div class="metric-value">${escapeHtml(status.message || 'No database driver configured.')}</div></div>
           </div>
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
   const renderAdminUsers = async () => {
@@ -633,27 +747,37 @@
     const page = document.getElementById('mainContent');
     if (!page) return;
 
-    const setupResult = await fetchJson('/api/setup', { ok: true, setup: {} });
+    const setupResult = await fetchJson('/api/setup/status', { ok: true, status: 'NOT_CONFIGURED', setup: {} });
     const setup = setupResult.setup || {};
-    const entries = Object.entries(setup).filter(([key, value]) => key !== 'configuration' && key !== 'installation');
+    const configuration = setup.configuration || {};
+    const installation = setup.installation || {};
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Settings</h2></div>
         <div class="content-wrap">
-          ${entries.length ? `
-            <div class="grid">
-              ${entries.map(([key, value]) => `
-                <div class="metric">
-                  <span class="metric-label">${escapeHtml(key)}</span>
-                  <div class="metric-value">${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</div>
-                </div>
-              `).join('')}
+          <form class="form-grid" style="margin-bottom: 18px;">
+            <div class="form-field"><label>App ID</label><input type="text" name="appId" value="${escapeHtml(setup.appId || 'neutral-app')}" /></div>
+            <div class="form-field"><label>App name</label><input type="text" name="appName" value="${escapeHtml(setup.appName || 'Neutral App')}" /></div>
+            <div class="form-field"><label>Server URL</label><input type="text" name="serverUrl" value="${escapeHtml(configuration.serverUrl || 'http://127.0.0.1:3000')}" /></div>
+            <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="${escapeHtml(configuration.apiBase || '/api')}" /></div>
+            <div class="form-field"><label>Database type</label><input type="text" name="databaseType" value="${escapeHtml((configuration.database && configuration.database.type) || 'indexeddb')}" /></div>
+            <div class="form-field"><label>Database name</label><input type="text" name="databaseName" value="${escapeHtml((configuration.database && configuration.database.name) || 'CoreDB')}" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="setup-save">Save framework settings</button>
             </div>
-          ` : '<div class="message info">No framework settings are persisted yet. Settings can be added when backend configuration is present.</div>' }
+          </form>
+          <div id="adminActionStatus" class="message info">Setup status: ${escapeHtml(setup.status || 'NOT_CONFIGURED')} · installation: ${escapeHtml((installation && installation.state) || 'draft')}</div>
+          <div class="grid" style="margin-top: 18px;">
+            <div class="metric"><span class="metric-label">Status</span><div class="metric-value">${escapeHtml(setup.status || 'NOT_CONFIGURED')}</div></div>
+            <div class="metric"><span class="metric-label">Current step</span><div class="metric-value">${escapeHtml(setup.currentStep || 'system-check')}</div></div>
+            <div class="metric"><span class="metric-label">Installation active</span><div class="metric-value">${installation && installation.active ? 'Yes' : 'No'}</div></div>
+            <div class="metric"><span class="metric-label">Updated at</span><div class="metric-value">${escapeHtml(setup.updatedAt || 'n/a')}</div></div>
+          </div>
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
   const renderAdminSystem = async () => {
@@ -861,7 +985,7 @@
         return;
       }
       if (state.activeView === 'admin:database') {
-        renderAdminDatabase();
+        await renderAdminDatabase();
         return;
       }
       if (state.activeView === 'admin:users') {
