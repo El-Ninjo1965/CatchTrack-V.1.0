@@ -66,6 +66,37 @@ test('supports feature flags, permissions, and migrations', async () => {
   assert.equal(result.applied, 1);
 });
 
+test('supports persisted setup state and connection updates', () => {
+  const runtime = Framework;
+
+  const initial = runtime.loadSetupState();
+  assert.equal(initial.status, 'not-started');
+
+  const saved = runtime.saveSetupState({
+    status: 'in-progress',
+    currentStep: 'connection-config',
+    appId: 'weather',
+    configuration: { defaultRegion: 'de' }
+  });
+
+  assert.equal(saved.currentStep, 'connection-config');
+  assert.equal(saved.configuration.defaultRegion, 'de');
+
+  const connection = runtime.registerConnection({
+    connectionId: 'weather-api',
+    appId: 'weather',
+    serverUrl: 'https://weather.example.com',
+    apiBase: '/weather-api',
+    authType: 'token',
+    status: 'inactive',
+    active: false
+  });
+
+  assert.equal(connection.serverUrl, 'https://weather.example.com');
+  const updated = runtime.updateConnection('weather-api', { status: 'active', active: true });
+  assert.equal(updated.status, 'active');
+});
+
 test('provides diagnostic summary', () => {
   const runtime = Framework;
   const diagnostics = runtime.getDiagnostics();

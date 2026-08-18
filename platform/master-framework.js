@@ -254,6 +254,80 @@
       };
     },
 
+    getDefaultSetupState() {
+      return {
+        status: 'not-started',
+        currentStep: 'system-check',
+        completedSteps: [],
+        appId: 'neutral-app',
+        appName: 'Neutral App',
+        selectedApp: null,
+        configuration: {},
+        connections: [],
+        database: null,
+        adminAccount: null,
+        license: null,
+        installation: {
+          active: false,
+          installedAt: null,
+          activatedAt: null,
+          state: 'draft'
+        },
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+    },
+
+    loadSetupState() {
+      const baseState = this.getDefaultSetupState();
+      if (this.setupState && isPlainObject(this.setupState)) {
+        return { ...baseState, ...this.setupState, installation: { ...baseState.installation, ...(this.setupState.installation || {}) } };
+      }
+      this.setupState = { ...baseState };
+      return this.setupState;
+    },
+
+    saveSetupState(nextState = null) {
+      const state = isPlainObject(nextState) ? nextState : this.loadSetupState();
+      const normalized = {
+        ...this.getDefaultSetupState(),
+        ...state,
+        installation: {
+          ...this.getDefaultSetupState().installation,
+          ...(state.installation || {})
+        },
+        updatedAt: new Date().toISOString()
+      };
+      this.setupState = normalized;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('master-framework.setup-state', JSON.stringify(normalized));
+      }
+      if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        try {
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const stateDir = path.resolve(process.cwd(), 'server', 'runtime');
+          fs.mkdirSync(stateDir, { recursive: true });
+          fs.writeFileSync(path.join(stateDir, 'setup-state.json'), JSON.stringify(normalized, null, 2));
+        } catch (error) {
+          // best effort filesystem persistence; runtime state remains available in memory.
+        }
+      }
+      return this.setupState;
+    },
+
+    updateSetupStep(stepName, value) {
+      const state = this.loadSetupState();
+      const nextState = { ...state, currentStep: stepName, updatedAt: new Date().toISOString() };
+      if (Array.isArray(nextState.completedSteps) && !nextState.completedSteps.includes(stepName)) {
+        nextState.completedSteps.push(stepName);
+      }
+      if (value && typeof value === 'object') {
+        nextState.configuration = { ...(nextState.configuration || {}), ...value };
+      }
+      return this.saveSetupState(nextState);
+    },
+
     registerMigration(migration) {
       if (!isPlainObject(migration)) {
         throw new TypeError('Migration must be an object.');

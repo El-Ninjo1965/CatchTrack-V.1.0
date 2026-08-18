@@ -36,6 +36,31 @@ const sendJson = (res, statusCode, payload) => {
   res.end(JSON.stringify(payload, null, 2));
 };
 
+const readJsonBody = (req) => new Promise((resolve, reject) => {
+  const chunks = [];
+  let body = '';
+
+  req.on('data', (chunk) => {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+  });
+
+  req.on('end', () => {
+    body = Buffer.concat(chunks).toString('utf8').trim();
+    if (!body) {
+      resolve({});
+      return;
+    }
+
+    try {
+      resolve(JSON.parse(body));
+    } catch (error) {
+      reject(new Error('Invalid JSON payload.'));
+    }
+  });
+
+  req.on('error', () => reject(new Error('Request body could not be read.')));
+});
+
 const safeResolve = (baseDir, requestPath) => {
   const normalized = path.normalize(requestPath).replace(/^\/+/, '');
   const resolved = path.resolve(baseDir, normalized);
@@ -110,7 +135,7 @@ const readAppModuleManifests = (modulesDir = appModulesDir) => {
   return manifests;
 };
 
-const routeApi = (url, res, modulesDir = appModulesDir) => {
+const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
   const pathname = url.pathname;
   if (pathname === '/health' || pathname === `${apiBase}/health`) {
     sendJson(res, 200, {
@@ -146,10 +171,71 @@ const routeApi = (url, res, modulesDir = appModulesDir) => {
     return true;
   }
 
-  if (pathname === `${apiBase}/connections`) {
+  if (pathname === `${apiBase}/connections` || pathname === `${apiBase}/admin/connections`) {
+    if (req && req.method === 'POST') {
+      readJsonBody(req)
+        .then((payload) => {
+          const connectionId = payload.connectionId || payload.id || payload.name || 'default-connection';
+          const appId = payload.appId || payload.app || 'neutral-app';
+          const existing = MasterFramework.getConnection(connectionId);
+
+          const normalized = {
+            connectionId,
+            appId,
+            serverUrl: payload.serverUrl || payload.url || 'http://localhost',
+            apiBase: payload.apiBase || '/api',
+            authType: payload.authType || 'none',
+            credentialsRef: payload.credentialsRef || '',
+            active: !!payload.active,
+            status: payload.status || (payload.active ? 'active' : 'inactive'),
+            endpoints: payload.endpoints || {},
+            health: payload.health || { status: 'unknown' }
+          };
+
+          const result = existing
+            ? MasterFramework.updateConnection(connectionId, normalized)
+            : MasterFramework.registerConnection(normalized);
+
+          sendJson(res, 200, { ok: true, connection: result, mode: existing ? 'updated' : 'created' });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', message: error.message || 'Connection payload invalid.' });
+        });
+      return true;
+    }
+
     sendJson(res, 200, {
       ok: true,
       connections: Array.from(MasterFramework.connections.values())
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/setup` || pathname === `${apiBase}/admin/setup`) {
+    if (req && req.method === 'POST') {
+      readJsonBody(req)
+        .then((payload) => {
+          const currentState = MasterFramework.loadSetupState();
+          const merged = {
+            ...currentState,
+            ...payload,
+            configuration: { ...(currentState.configuration || {}), ...(payload.configuration || {}) },
+            installation: { ...(currentState.installation || {}), ...(payload.installation || {}) },
+            updatedAt: new Date().toISOString()
+          };
+
+          const saved = MasterFramework.saveSetupState(merged);
+          sendJson(res, 200, { ok: true, setup: saved });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_SETUP', message: error.message || 'Setup payload invalid.' });
+        });
+      return true;
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      setup: MasterFramework.loadSetupState()
     });
     return true;
   }
@@ -169,7 +255,7 @@ const routeApi = (url, res, modulesDir = appModulesDir) => {
 const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer((req, res) => {
   const url = new URL(req.url, `http://${host}:${port}`);
 
-  if (routeApi(url, res, modulesDir)) {
+  if (routeApi(url, res, modulesDir, req)) {
     return;
   }
 
