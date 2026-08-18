@@ -35,12 +35,18 @@
 
             return {
                 id,
+                appId: typeof manifest.appId === 'string' && manifest.appId.trim()
+                    ? manifest.appId.trim()
+                    : null,
                 name: typeof manifest.name === 'string' && manifest.name.trim()
                     ? manifest.name.trim()
                     : id,
                 version: typeof manifest.version === 'string' && manifest.version.trim()
                     ? manifest.version.trim()
                     : '1.0.0',
+                apiVersion: typeof manifest.apiVersion === 'string' && manifest.apiVersion.trim()
+                    ? manifest.apiVersion.trim()
+                    : null,
                 type: manifest.type || 'framework',
                 description: typeof manifest.description === 'string'
                     ? manifest.description
@@ -58,11 +64,15 @@
                 entry: typeof manifest.entry === 'string' ? manifest.entry : null,
                 main: typeof manifest.main === 'string' ? manifest.main : null,
                 modulePath: typeof manifest.modulePath === 'string' ? manifest.modulePath : null,
+                mountPath: typeof manifest.mountPath === 'string' ? manifest.mountPath : null,
                 manifestPath: typeof manifest.manifestPath === 'string' ? manifest.manifestPath : null,
                 autoload: manifest.autoload !== false,
                 lifecycle: manifest.lifecycle && typeof manifest.lifecycle === 'object'
                     ? manifest.lifecycle
-                    : {}
+                    : {},
+                requirements: Array.isArray(manifest.requirements)
+                    ? manifest.requirements.filter(Boolean).map(String)
+                    : []
             };
         },
 

@@ -4,7 +4,8 @@
   "description": "Neutral reusable web application platform with core, server, webroot, administration, and module scaffolding.",
   "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js"
+    "start": "node server/server.js",
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [
     "platform",

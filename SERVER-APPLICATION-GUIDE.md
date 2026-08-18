@@ -44,14 +44,24 @@ Der aktuelle Code nutzt Defaults aus:
 
 - [config/index.js](/workspaces/CatchTrack-V.1.0/config/index.js)
 - [server/config/index.js](/workspaces/CatchTrack-V.1.0/server/config/index.js)
+- [.env.example](/workspaces/CatchTrack-V.1.0/.env.example)
 
 Relevante Umgebungsvariablen:
 
 - `PORT`
 - `HOST`
 - `NODE_ENV`
+- `DEFAULT_APP_ID`
 - `ADMIN_ACCESS_TOKEN` fuer direkten Zugriff auf [webroot/admin.html](/workspaces/CatchTrack-V.1.0/webroot/admin.html) und [webroot/dev.html](/workspaces/CatchTrack-V.1.0/webroot/dev.html)
 - `CORE_BOOTSTRAP_PASSWORD` als moegliche Quelle fuer das Developer-Login in [platform/core-auth.js](/workspaces/CatchTrack-V.1.0/platform/core-auth.js)
+- `FEATURE_FLAG_NEW_SYNC_ENGINE`, `FEATURE_FLAG_BETA_ADMIN`
+
+### 2.4 Neutrales Master-Framework
+Das Framework stellt ebenfalls grundsaetzliche, app-neutrale Strukturen bereit:
+- `MasterFramework` registriert Apps, Connections, Feature Flags und Migrations.
+- `AppRegistry` und `ConnectionManager` werden durch den Server als diagnostische Endpunkte bereitgestellt.
+- `GET /api/framework` und `GET /api/diagnostics` liefern die laufenden Framework-Statuswerte.
+- `GET /api/connections` listet alle definierbaren Verbindungen nach `appId` und `connectionId`.
 
 ---
 

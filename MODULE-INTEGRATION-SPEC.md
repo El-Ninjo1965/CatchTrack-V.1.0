@@ -27,6 +27,15 @@ Important exclusions:
 - Demo2 and Legacy-Demo are not part of the project and must not be restored.
 - The current technical module reference inside the repository is the GPS module in [app/modules/gps/](/workspaces/CatchTrack-V.1.0/app/modules/gps).
 
+#### 1.0 Neutral framework additions in the current repository
+
+The current repository now includes a neutral app and connection abstraction implemented in [platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js):
+
+- `MasterFramework` provides `registerApp()`, `activateApp()`, `registerConnection()`, `testConnection()`, `setFeatureFlag()`, `registerMigration()`, and `getDiagnostics()`.
+- `AppRegistry`, `ConnectionManager`, and `FeatureFlags` are also exposed as global aliases for neutral multi-app use.
+- Module manifests may declare `appId`, `apiVersion`, `mountPath`, and `requirements` when app-aware modules are needed.
+- This neutral layer is intentionally domain-neutral and does not import CatchTrack-specific logic.
+
 #### 1.1 What a module is in the current framework
 
 In the current codebase, a module is a browser-loaded runtime unit that is:

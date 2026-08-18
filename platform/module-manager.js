@@ -88,11 +88,21 @@
                 module.capabilities = [];
             }
 
+            if (!module.appId && typeof module.manifest?.appId === 'string') {
+                module.appId = module.manifest.appId;
+            }
+
+            if (!module.apiVersion && typeof module.manifest?.apiVersion === 'string') {
+                module.apiVersion = module.manifest.apiVersion;
+            }
+
             if (!module.manifest) {
                 module.manifest = {
                     id: module.id,
+                    appId: module.appId || null,
                     name: module.name,
                     version: module.version || '1.0.0',
+                    apiVersion: module.apiVersion || null,
                     type: 'framework',
                     description: module.description || '',
                     dependencies: [...module.dependencies],
@@ -257,6 +267,11 @@
         getAll() {
             this.ensureInitialized();
             return this.registry.getAll();
+        },
+
+        getByApp(appId) {
+            this.ensureInitialized();
+            return this.registry.getByApp(appId);
         },
 
         getStatus(moduleId) {

@@ -14,7 +14,8 @@ Important framework truth:
 - standalone modules live under [app/modules/](/workspaces/CatchTrack-V.1.0/app/modules)
 - the real module contract is `module.json` + `index.js`
 - the real lifecycle is managed by [platform/module-manager.js](/workspaces/CatchTrack-V.1.0/platform/module-manager.js)
-- unsupported concepts such as `appId`, module `mountPath`, module-local backend routing, module CSS auto-registration, and connection manager abstractions must be marked as **not supported** unless explicit framework work is requested
+- the neutral framework now supports `appId`, `apiVersion`, `mountPath`, and connection-aware runtime metadata when they are part of the app/module contract
+- module-local backend routing, CSS auto-registration, and implicit multi-app routing are still not part of the default standalone module contract without explicit framework changes
 
 If a section below is not needed, fill it with one of:
 

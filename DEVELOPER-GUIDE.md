@@ -11,6 +11,14 @@ This guide is the practical workflow for developers and AI agents extending this
 3. Identify existing core interfaces to reuse.
 4. Decide UI needs (user/admin/developer or no UI).
 5. Decide storage/database needs and lifecycle behavior.
+6. If the project is app-aware, declare the target `appId` and the required `apiVersion` explicitly.
+
+### 2.1 Neutral framework additions
+The framework now provides a reusable neutral foundation for multi-app usage:
+- `AppRegistry` and `ConnectionManager` are available globally via `window.MasterFramework` and the `AppRegistry`/`ConnectionManager` aliases.
+- Feature flags are supported via `FeatureFlags` and `MasterFramework.setFeatureFlag()`.
+- Module manifests may declare `appId`, `apiVersion`, `mountPath`, and `requirements` when needed.
+- Migrations can be registered and executed in a versioned, observable way.
 
 ### 3) Required module files
 Create under [`app/modules/<module-id>/`](/workspaces/CatchTrack-V.1.0/app/modules):

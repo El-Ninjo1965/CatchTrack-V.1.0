@@ -19,6 +19,15 @@
 - [`core-context.js`](/workspaces/CatchTrack-V.1.0/platform/core-context.js): runtime/environment context.
 - [`core-lifecycle.js`](/workspaces/CatchTrack-V.1.0/platform/core-lifecycle.js): strict lifecycle state machine.
 - [`core-startup.js`](/workspaces/CatchTrack-V.1.0/platform/core-startup.js), [`core-runtime.js`](/workspaces/CatchTrack-V.1.0/platform/core-runtime.js), [`core-shutdown.js`](/workspaces/CatchTrack-V.1.0/platform/core-shutdown.js), [`core-entry.js`](/workspaces/CatchTrack-V.1.0/platform/core-entry.js): startup/runtime/shutdown orchestration.
+- [`master-framework.js`](/workspaces/CatchTrack-V.1.0/platform/master-framework.js): neutral master framework primitives for app registration, connection management, feature flags, permission checks, migration tracking, and diagnostics.
+
+### 3.1 Implemented neutral master framework layer
+The framework now includes a neutral app and connection abstraction that remains domain-neutral and reusable across different products:
+- `AppRegistry` manages app identity, app lifecycle state, and app-level configuration.
+- `ConnectionManager` manages connection ID, app association, server URL, API base, authentication type, credentials reference, and health status.
+- `FeatureFlags` support gradual rollout and neutral capability toggles.
+- `Permission` and `Diagnostics` helpers provide simple neutral checks and system health summaries.
+- Versioned migrations can be tracked and executed through `registerMigration` / `applyMigrations` without destructive in-place schema changes.
 
 ### 4) Module system
 - [`module-interface.js`](/workspaces/CatchTrack-V.1.0/platform/module-interface.js):

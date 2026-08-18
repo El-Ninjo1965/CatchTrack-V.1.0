@@ -7,5 +7,23 @@ module.exports = {
   platformPath: 'platform',
   appPath: 'app',
   webrootPath: 'webroot',
-  testsPath: 'tests'
+  testsPath: 'tests',
+  defaultAppId: process.env.DEFAULT_APP_ID || 'neutral-app',
+  featureFlags: {
+    'offline-first': true,
+    'new-sync-engine': false,
+    'beta-admin': false
+  },
+  runtime: {
+    source: 'config',
+    environment: process.env.NODE_ENV || 'development',
+    mode: 'neutral-framework'
+  },
+  secrets: {
+    adminAccessToken: process.env.ADMIN_ACCESS_TOKEN || '',
+    bootstrapPassword: process.env.CORE_BOOTSTRAP_PASSWORD || ''
+  },
+  storage: {
+    namespace: 'core:'
+  }
 };

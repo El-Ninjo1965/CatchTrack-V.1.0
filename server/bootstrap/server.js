@@ -2,6 +2,19 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { port, host, rootDir, webRootDir, apiBase } = require('../config');
+const MasterFramework = require('../../platform/master-framework');
+
+if (!MasterFramework.getApp('neutral-app')) {
+  MasterFramework.registerApp({
+    appId: 'neutral-app',
+    name: 'Neutral App',
+    version: '1.0.0',
+    description: 'Default neutral application shell for the framework runtime.',
+    status: 'active',
+    active: true,
+    config: { framework: 'neutral-master-framework' }
+  });
+}
 
 const appModulesDir = path.join(rootDir, 'app', 'modules');
 
@@ -119,7 +132,24 @@ const routeApi = (url, res, modulesDir = appModulesDir) => {
         platform: process.platform,
         arch: process.arch,
         uptime: Math.round(process.uptime())
-      }
+      },
+      framework: MasterFramework.getDiagnostics()
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/framework` || pathname === `${apiBase}/diagnostics`) {
+    sendJson(res, 200, {
+      ok: true,
+      framework: MasterFramework.getDiagnostics()
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/connections`) {
+    sendJson(res, 200, {
+      ok: true,
+      connections: Array.from(MasterFramework.connections.values())
     });
     return true;
   }

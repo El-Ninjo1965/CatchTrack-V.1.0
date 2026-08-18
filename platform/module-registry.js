@@ -78,11 +78,21 @@
                 module.capabilities = [];
             }
 
+            if (!module.appId && typeof module.manifest?.appId === 'string') {
+                module.appId = module.manifest.appId;
+            }
+
+            if (!module.apiVersion && typeof module.manifest?.apiVersion === 'string') {
+                module.apiVersion = module.manifest.apiVersion;
+            }
+
             if (!module.manifest) {
                 module.manifest = {
                     id: module.id,
+                    appId: module.appId || null,
                     name: module.name,
                     version: module.version || '1.0.0',
+                    apiVersion: module.apiVersion || null,
                     type: 'framework',
                     description: module.description || '',
                     dependencies: [...module.dependencies],
@@ -118,6 +128,14 @@
 
         getAll() {
             return Array.from(registry.values());
+        },
+
+        getByApp(appId) {
+            if (!appId || typeof appId !== 'string') {
+                return [];
+            }
+
+            return Array.from(registry.values()).filter((module) => module.appId === appId || module.manifest?.appId === appId);
         },
 
         has(moduleId) {
