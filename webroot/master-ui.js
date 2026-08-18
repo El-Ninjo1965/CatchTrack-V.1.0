@@ -162,10 +162,24 @@
       });
     });
 
+    if (pageType === 'user') {
+      if (adminSection) {
+        adminSection.classList.add('hidden');
+        adminSection.innerHTML = '';
+      }
+      if (adminMenu) adminMenu.innerHTML = '';
+      if (developerSection) {
+        developerSection.classList.add('hidden');
+        developerSection.innerHTML = '';
+      }
+      if (developerMenu) developerMenu.innerHTML = '';
+      return;
+    }
+
     if (canViewAdmin(currentUser)) {
       if (adminSection) adminSection.classList.remove('hidden');
       if (adminMenu) {
-        adminMenu.innerHTML = '<button type="button" class="nav-item" data-view="admin:dashboard" data-href="admin.html">Administration</button>';
+        adminMenu.innerHTML = '<button type="button" class="nav-item" data-view="admin:dashboard" data-href="/admin">Administration</button>';
       }
     } else if (adminSection) {
       adminSection.classList.add('hidden');
@@ -175,7 +189,7 @@
     if (canViewDeveloper(currentUser)) {
       if (developerSection) developerSection.classList.remove('hidden');
       if (developerMenu) {
-        developerMenu.innerHTML = '<button type="button" class="nav-item" data-view="developer:core" data-href="dev.html">Developer</button>';
+        developerMenu.innerHTML = '<button type="button" class="nav-item" data-view="developer:core" data-href="/developer">Developer</button>';
       }
     } else if (developerSection) {
       developerSection.classList.add('hidden');
@@ -188,6 +202,12 @@
     if (!page) return;
     const currentUser = getCurrentUser();
     const modules = getVisibleModules();
+    const adminPanel = pageType === 'admin' ? renderConnectionPanel() : '';
+    const roleLabel = pageType === 'admin'
+      ? 'admin'
+      : pageType === 'developer'
+        ? 'developer'
+        : (currentUser && Array.isArray(currentUser.roles) ? currentUser.roles.join(', ') : 'user');
 
     page.innerHTML = `
       <div class="card">
@@ -198,10 +218,11 @@
           <div class="grid" style="margin-top:16px;">
             <div class="metric"><span class="metric-label">Available modules</span><div class="metric-value">${modules.length}</div></div>
             <div class="metric"><span class="metric-label">Status</span><div class="metric-value">${escapeHtml(currentUser ? currentUser.status || 'active' : 'logged-out')}</div></div>
-            <div class="metric"><span class="metric-label">Access</span><div class="metric-value">${escapeHtml(currentUser && Array.isArray(currentUser.roles) ? currentUser.roles.join(', ') : 'user')}</div></div>
+            <div class="metric"><span class="metric-label">Access</span><div class="metric-value">${escapeHtml(roleLabel)}</div></div>
           </div>
         </div>
       </div>
+      ${adminPanel}
     `;
   };
 
@@ -248,7 +269,240 @@
     ` : '<div class="card"><div class="card-header"><h2 class="card-title">Modules</h2></div><div class="content-wrap">No modules are active for the current user context.</div></div>';
   };
 
+  const getConnectionManager = () => window.ConnectionManager && typeof window.ConnectionManager.getConnections === 'function'
+    ? window.ConnectionManager
+    : null;
+
+  const renderConnectionPanel = () => {
+    const connectionManager = getConnectionManager();
+    const connections = connectionManager ? connectionManager.getConnections() : [];
+    const primaryConnection = connectionManager && typeof connectionManager.getPrimaryConnection === 'function'
+      ? connectionManager.getPrimaryConnection()
+      : null;
+    const defaultConnection = connections[0] || {
+      id: '',
+      appId: '',
+      appName: '',
+      serverUrl: '',
+      apiBasePath: '/api',
+      connectionStatus: 'unconfigured',
+      parameters: {}
+    };
+
+    const statusOptions = ['unconfigured', 'configured', 'connected', 'offline', 'error']
+      .map((status) => `<option value="${escapeHtml(status)}"${defaultConnection.connectionStatus === status ? ' selected' : ''}>${escapeHtml(status)}</option>`)
+      .join('');
+
+    const connectionCards = connections.length
+      ? connections.map((connection) => `
+        <div class="metric" data-connection-id="${escapeHtml(connection.id)}">
+          <span class="metric-label">${escapeHtml(connection.appName || connection.appId)}</span>
+          <div class="metric-value" style="font-size: 0.85rem;">${escapeHtml(connection.serverUrl || 'No server URL')}</div>
+          <div class="small-muted">${escapeHtml(connection.apiBasePath || '/api')} · ${escapeHtml(connection.connectionStatus || 'unconfigured')}</div>
+          <div class="action-list" style="margin-top: 8px;">
+            <button type="button" class="secondary connection-edit-btn" data-connection-edit="${escapeHtml(connection.id)}">Edit</button>
+            <button type="button" class="secondary connection-delete-btn" data-connection-delete="${escapeHtml(connection.id)}">Delete</button>
+          </div>
+        </div>
+      `).join('')
+      : '<div class="metric"><span class="metric-label">No connections</span><div class="metric-value">No app connection profiles configured yet.</div></div>';
+
+    return `
+      <div class="card" id="connectionManagerCard">
+        <div class="card-header">
+          <h2 class="card-title">App connections</h2>
+          <div class="small-muted">Neutral app/server configuration managed on the admin side.</div>
+        </div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric">
+              <span class="metric-label">Configured apps</span>
+              <div class="metric-value">${connections.length}</div>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Primary status</span>
+              <div class="metric-value">${escapeHtml(primaryConnection ? primaryConnection.connectionStatus : 'unconfigured')}</div>
+            </div>
+          </div>
+          <div class="grid" style="margin-top: 16px;">
+            ${connectionCards}
+          </div>
+          <form id="connectionForm" class="form-grid" style="margin-top: 20px;">
+            <input id="connectionId" type="hidden" value="${escapeHtml(defaultConnection.id || '')}" />
+            <div class="form-field">
+              <label for="connectionAppId">App ID</label>
+              <input id="connectionAppId" type="text" value="${escapeHtml(defaultConnection.appId || '')}" placeholder="future-app" />
+            </div>
+            <div class="form-field">
+              <label for="connectionAppName">App name</label>
+              <input id="connectionAppName" type="text" value="${escapeHtml(defaultConnection.appName || '')}" placeholder="Future App" />
+            </div>
+            <div class="form-field">
+              <label for="connectionServerUrl">Server/API address</label>
+              <input id="connectionServerUrl" type="text" value="${escapeHtml(defaultConnection.serverUrl || '')}" placeholder="https://example.org" />
+            </div>
+            <div class="form-field">
+              <label for="connectionApiBasePath">API base path</label>
+              <input id="connectionApiBasePath" type="text" value="${escapeHtml(defaultConnection.apiBasePath || '/api')}" placeholder="/api" />
+            </div>
+            <div class="form-field">
+              <label for="connectionStatus">Connection status</label>
+              <select id="connectionStatus">${statusOptions}</select>
+            </div>
+            <div class="form-field">
+              <label for="connectionParameters">Parameters (JSON)</label>
+              <textarea id="connectionParameters" rows="5" placeholder='{"region":"eu"}'>${escapeHtml(JSON.stringify(defaultConnection.parameters || {}, null, 2))}</textarea>
+            </div>
+            <div class="action-list">
+              <button id="connectionSaveBtn" class="primary" type="submit">Save connection</button>
+              <button id="connectionClearBtn" class="secondary" type="button">Clear form</button>
+              <button id="connectionRefreshBtn" class="secondary" type="button">Refresh</button>
+            </div>
+            <div id="connectionMessage" class="message info">Connections are app-neutral and contain no credentials.</div>
+          </form>
+        </div>
+      </div>
+    `;
+  };
+
+  const bindConnectionPanel = () => {
+    if (pageType !== 'admin') {
+      return;
+    }
+
+    const connectionManager = getConnectionManager();
+    const form = document.getElementById('connectionForm');
+    const message = document.getElementById('connectionMessage');
+    const clearBtn = document.getElementById('connectionClearBtn');
+    const refreshBtn = document.getElementById('connectionRefreshBtn');
+    const cards = document.querySelectorAll('[data-connection-edit], [data-connection-delete]');
+
+    const setMessage = (text, type = 'info') => {
+      if (!message) return;
+      message.textContent = text;
+      message.className = `message ${type}`;
+    };
+
+    const populateForm = (connection) => {
+      const connectionId = document.getElementById('connectionId');
+      const connectionAppId = document.getElementById('connectionAppId');
+      const connectionAppName = document.getElementById('connectionAppName');
+      const connectionServerUrl = document.getElementById('connectionServerUrl');
+      const connectionApiBasePath = document.getElementById('connectionApiBasePath');
+      const connectionStatus = document.getElementById('connectionStatus');
+      const connectionParameters = document.getElementById('connectionParameters');
+
+      if (connectionId) connectionId.value = connection ? connection.id || '' : '';
+      if (connectionAppId) connectionAppId.value = connection ? connection.appId || '' : '';
+      if (connectionAppName) connectionAppName.value = connection ? connection.appName || '' : '';
+      if (connectionServerUrl) connectionServerUrl.value = connection ? connection.serverUrl || '' : '';
+      if (connectionApiBasePath) connectionApiBasePath.value = connection ? connection.apiBasePath || '/api' : '/api';
+      if (connectionStatus) connectionStatus.value = connection ? connection.connectionStatus || 'unconfigured' : 'unconfigured';
+      if (connectionParameters) connectionParameters.value = JSON.stringify(connection ? connection.parameters || {} : {}, null, 2);
+    };
+
+    cards.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const editId = button.dataset.connectionEdit;
+        const deleteId = button.dataset.connectionDelete;
+
+        if (editId && connectionManager) {
+          const connection = connectionManager.getConnection(editId);
+          populateForm(connection);
+          setMessage(`Editing ${connection ? connection.appName || connection.appId : editId}.`, 'info');
+          return;
+        }
+
+        if (deleteId && connectionManager) {
+          const result = await connectionManager.deleteConnection(deleteId);
+          if (result && result.ok) {
+            setMessage('Connection removed.', 'ok');
+            renderSummary();
+            renderPageContent();
+            bindConnectionPanel();
+          } else {
+            setMessage((result && result.message) || 'Unable to remove connection.', 'error');
+          }
+        }
+      });
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        populateForm(null);
+        setMessage('Form cleared.', 'info');
+      });
+    }
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        if (!connectionManager) {
+          setMessage('Connection manager is unavailable.', 'error');
+          return;
+        }
+
+        await connectionManager.refresh();
+        renderSummary();
+        renderPageContent();
+        bindConnectionPanel();
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!connectionManager) {
+          setMessage('Connection manager is unavailable.', 'error');
+          return;
+        }
+
+        const connectionId = document.getElementById('connectionId');
+        const connectionAppId = document.getElementById('connectionAppId');
+        const connectionAppName = document.getElementById('connectionAppName');
+        const connectionServerUrl = document.getElementById('connectionServerUrl');
+        const connectionApiBasePath = document.getElementById('connectionApiBasePath');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const connectionParameters = document.getElementById('connectionParameters');
+
+        let parameters = {};
+        if (connectionParameters && connectionParameters.value.trim()) {
+          try {
+            parameters = JSON.parse(connectionParameters.value);
+          } catch {
+            setMessage('Parameters must be valid JSON.', 'error');
+            return;
+          }
+        }
+
+        const payload = {
+          id: connectionId ? connectionId.value.trim() : '',
+          appId: connectionAppId ? connectionAppId.value.trim() : '',
+          appName: connectionAppName ? connectionAppName.value.trim() : '',
+          serverUrl: connectionServerUrl ? connectionServerUrl.value.trim() : '',
+          apiBasePath: connectionApiBasePath ? connectionApiBasePath.value.trim() : '/api',
+          connectionStatus: connectionStatus ? connectionStatus.value : 'unconfigured',
+          parameters
+        };
+
+        const result = await connectionManager.saveConnection(payload);
+        if (!result || !result.ok) {
+          setMessage((result && result.message) || 'Unable to save connection.', 'error');
+          return;
+        }
+
+        setMessage('Connection saved.', 'ok');
+        renderSummary();
+        renderPageContent();
+        bindConnectionPanel();
+      });
+    }
+  };
+
   const renderPageContent = () => {
+    if (pageType === 'user' && !['dashboard', 'profile', 'modules'].includes(state.activeView)) {
+      state.activeView = defaultView;
+    }
+
     if (state.activeView === 'profile') {
       renderProfile();
       return;
@@ -284,6 +538,8 @@
         renderSummary();
         renderUserMenu();
         renderPageContent();
+        bindConnectionPanel();
+        syncShellVisibility();
       });
     }
 
@@ -331,6 +587,9 @@
     if (window.ModuleManager && typeof window.ModuleManager.discoverModules === 'function') {
       await window.ModuleManager.discoverModules();
     }
+    if (window.ConnectionManager && typeof window.ConnectionManager.init === 'function') {
+      await window.ConnectionManager.init();
+    }
   };
 
   const init = async () => {
@@ -341,6 +600,7 @@
     syncShellVisibility();
     renderPageContent();
     bindAuth();
+    bindConnectionPanel();
   };
 
   init();

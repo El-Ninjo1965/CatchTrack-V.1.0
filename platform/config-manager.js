@@ -79,13 +79,19 @@
 
             // API Config
             this.set('api', {
-                baseUrl: 'http://localhost:3000/api',
+                baseUrl: '/api',
                 timeout: 30000,
                 retries: 3,
                 retryDelay: 1000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
+            });
+
+            this.set('connections', {
+                endpoint: '/api/connections',
+                storageKey: 'platform.connections.registry',
+                defaultStatus: 'unconfigured'
             });
 
             // Module Config

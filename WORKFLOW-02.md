@@ -33,3 +33,165 @@ Fortsetzung von WORKFLOW.md
 - Final verification on origin/main: npm test 8/8 passed; npx playwright test --reporter=list 2/2 passed.
 - Result: the user route has a refined responsive app presentation while module discovery, GPS functionality, and administrative route protection are unchanged.
 - Next planned phase: server deployment and authenticated administrative entry; no additional modules or user features were implemented in this UI phase.
+
+## 2026-08-18 - Neutral multi-app hardening and legacy demo cleanup
+
+- Repository state aligned with the GitHub workflow: PR #8 on branch `copilot/neutral-connection-management` was reviewed against the local repository state before work began.
+- The legacy demo shell files `app/app-demo.js` and `app/index.js` were removed because they were unused demo-only scaffolding and no active user-app, admin, developer, or GPS flow depended on them.
+- The `app/modules/gps` module remains in place as the active module implementation and was not converted into a CatchTrack-specific app.
+- The neutral framework intentionally excludes demo-specific app folders. Future app mounts are registered dynamically via the app registry without embedding a demo instance into the neutral core.
+- The app registry (`server/services/app-registry.js`) was hardened to fail fast on invalid registry payloads, missing app IDs, missing mount paths, duplicate app IDs, duplicate mount paths, and invalid `webRootDir` values. It no longer silently falls back to defaults when the registry is malformed.
+- The connection service (`server/services/connection-service.js`) now isolates app-scoped connections, rejects unknown apps, prevents cross-app reads or writes, and enforces valid app context boundaries while preserving the neutral architecture.
+- Additional test coverage was added in `tests/framework-neutral.test.js` for duplicate IDs, duplicate mounts, invalid registry entries, root-vs-app context resolution, and parallel mounts such as `/catchtrack/` and `/zukunft/`.
+- Validation executed successfully:
+  - `node --check` for all edited JavaScript files
+  - `npm test` -> 13/13 passed
+  - `npx playwright test --reporter=list` -> 4/4 passed
+  - `git diff --check` -> clean
+- Runtime/test artifact review did not reveal active app servers or hanging test processes; the repository remains in a clean validation state aside from the intentional code changes.
+- Final branch state at completion: working branch `copilot/neutral-connection-management` with the changes for PR #8 and the local repo aligned to the GitHub workflow state.
+
+## 2026-08-18 - Neutral design layer and framework readiness
+
+- The current branch state was reviewed against the GitHub PR #8 and the local repository before continuing work.
+- The neutral platform was kept generic and app-neutral: root branding was updated from the old app-specific identity to a neutral `Primary Web App` shell, and the browser assets now load from a dedicated `design/` layer rather than from app-specific or legacy page styling.
+- The architecture now supports a clean design separation:
+  - `design/neutral.css` is the shared neutral base stylesheet.
+  - The neutral core exposes a shared design layer, while app-specific themes are expected to be provided by each app configuration rather than by a bundled demo app.
+  - The server serves `/design/*` assets explicitly, which keeps the design layer decoupled from the app registry and routing core.
+- The app registry was extended so app entries can declare neutral design metadata such as `design` and `designPath` without forcing a silent fallback when a registry is partial or malformed.
+- The public app context now exposes the active app design metadata, which keeps future app selection and design mapping explicit and testable.
+- Tests were updated to validate the design layer and neutral app naming:
+  - `tests/framework-neutral.test.js` includes explicit checks for the design layer and app-aware configuration.
+  - `tests/smoke.spec.js` confirms the neutral browser shell remains stable without any demo-specific branding or app-specific mount assumptions.
+- Validation executed successfully:
+  - `node --check` for the changed server files
+  - `npm test` -> 14/14 passed
+  - `npx playwright test --reporter=list` -> 4/4 passed
+  - `git diff --check` -> clean
+- Final repository state at the end of this validation pass: no uncommitted runtime artifacts or stray logs remained; the working tree was kept to the intended neutral framework changes only.
+
+## 2026-08-17 - Serverseitige Produktionsgrundlage und technischer Admin-Einstieg
+
+- Aufgabe: Die echte Serverbasis so schärfen, dass die User-App separat bleibt, technische Bereiche serverseitig abgesichert sind und der Betrieb auf einem echten Server bzw. hinter einem Reverse Proxy vorbereitet ist.
+- Ausgangszustand: Der Node-Server lief bereits, `/api/modules` und die GPS-Referenz waren vorhanden, aber der Serverstart war noch an localhost orientiert und der technische Browser-Einstieg war nicht sauber als kanonische Route abgesetzt.
+- Architekturentscheidung:
+  - `server/server.js` nutzt jetzt die zentrale Konfiguration für Port und Host.
+  - `server/config/index.js` bindet standardmäßig an `0.0.0.0`, damit Reverse-Proxy- und Serverbetrieb möglich sind.
+  - `server/bootstrap/server.js` behandelt `/admin` und `/developer` als kanonische technische Einstiege und schützt sie serverseitig über `ADMIN_ACCESS_TOKEN` + `x-admin-access-token`.
+  - Die Browseroberfläche für den User-Bereich bleibt getrennt; die User-App zeigt keine Admin- oder Developer-Navigation.
+  - Admin/Developer bleiben technische Oberflächen mit nachgelagertem Login innerhalb der jeweiligen Seite.
+- Tatsächlich durchgeführt:
+  - Canonische technische Routen `/admin` und `/developer` ergänzt, inklusive Schutz auf dem HTTP-Server.
+  - Serverfehlercodes für fehlende bzw. falsche technische Zugriffe sauber getrennt (401/403).
+  - `webroot/master-ui.js` so angepasst, dass die User-App keine technischen Navigationspunkte anzeigt.
+  - Playwright auf einen serverseitig gesetzten Admin-Token vorbereitet.
+  - Tests erweitert, damit User-App, technische Routes, API, GPS-Discovery und sichere Admin-Zugriffe abgesichert sind.
+- Geänderte Dateien:
+  - `server/bootstrap/server.js`
+  - `server/config/index.js`
+  - `server/server.js`
+  - `webroot/master-ui.js`
+  - `tests/framework-neutral.test.js`
+  - `tests/smoke.spec.js`
+  - `playwright.config.js`
+- Branch: `copilot/server-production-admin-entry`
+- Commit: `dda169e` - `feat: add server admin entry routes`
+- Testergebnisse:
+  - `npm test`: 9/9 bestanden
+  - `npx playwright test --reporter=list`: 3/3 bestanden
+  - `git diff --check`: keine Fehler
+  - Produktionsnaher Start: `PORT=3100 HOST=127.0.0.1 ADMIN_ACCESS_TOKEN=prod-admin node server/server.js`
+  - HTTP-Prüfungen: `/` ok, `/api/modules` ok, `/admin` ohne Token 403, `/admin` mit Token erreichbar
+- Produktivserver-Kopierumfang:
+  - `server/`
+  - `platform/`
+  - `webroot/`
+  - `app/modules/`
+  - `package.json`
+  - `package-lock.json`
+  - optional: `.env` bzw. die Laufzeit-Umgebungsvariablen für Port, Host und Admin-Token
+- Verbleibende Punkte:
+  - Langfristig sollte die technische Admin-Authentifizierung in ein echtes Rollen-/Session-Modell überführt werden.
+  - Reverse-Proxy-Header für den Admin-Token müssen im Deployment sauber gesetzt werden.
+  - Weitere Verwaltungsfunktionen wie Benutzerverwaltung, Updates und Backups bleiben bewusst offen.
+- Aktueller Stand: Die Plattform kann als separater User- und Admin-Bereich auf einem echten Server betrieben werden, ohne GPS oder andere Module fest in den Core zu verdrahten.
+
+## 2026-08-17 - Neutrale Connection-Verwaltung als App-Grundlage
+
+- Aufgabe: Eine app-neutrale Connection-Struktur schaffen, damit mehrere unabhängige Apps später auf demselben Server mit eigenen API-Basispfaden betrieben werden können.
+- Architekturentscheidung:
+  - Connection-Profile sind bewusst neutral modelliert: `appId`, `appName`, `serverUrl`, `apiBasePath`, `connectionStatus`, `parameters` und `metadata`.
+  - Die Serverquelle für Connections liegt in `server/state/connections.json`; es werden keine Zugangsdaten im Frontend gespeichert.
+  - Der Admin-Bereich erhält eine neutrale Verwaltungskarte mit Liste, Formular, Bearbeiten-, Löschen- und Aktualisieren-Aktionen.
+  - Der Server schützt die Connection-API serverseitig und erlaubt Browserzugriff über ein HttpOnly-Cookie, das aus dem bereits geprüften Admin-Token abgeleitet wird.
+  - Die User-App bleibt technisch vorbereitet, lädt den Connection-Manager aber ohne eigene CatchTrack-Verbindung oder fachliche Kopplung.
+- Tatsächlich durchgeführt:
+  - Neue neutrale Connection-Registry im Browser ergänzt.
+  - `server/bootstrap/server.js` um `/api/connections` erweitert und auf cookie-basierte Folgezugriffe vorbereitet.
+  - Admin-/User-/Developer-Seiten laden den Connection-Manager, ohne technische Navigation in der User-App sichtbar zu machen.
+  - Tests ergänzt, damit Connection-API, Cookie-geschützte Admin-Zugriffe und die adminseitige Oberfläche verifiziert werden.
+- Geänderte Dateien:
+  - `platform/connection-manager.js`
+  - `platform/config-manager.js`
+  - `server/bootstrap/server.js`
+  - `server/config/index.js`
+  - `server/services/connection-service.js`
+  - `webroot/admin.html`
+  - `webroot/index.html`
+  - `webroot/dev.html`
+  - `webroot/master-ui.js`
+  - `tests/framework-neutral.test.js`
+  - `tests/smoke.spec.js`
+- Verbleibende Punkte:
+  - Die Connection-Verwaltung ist bewusst app-neutral; konkrete App-Instanzen oder CatchTrack-spezifische Verbindungen werden noch nicht fest verdrahtet.
+  - Weitere Lifecycle-Themen wie Deployments, Backups oder Benutzerverwaltung bleiben separat.
+
+## 2026-08-17 - Neutrale Multi-App-Serverstruktur
+
+- Aufgabe: Die Plattform so vorbereiten, dass mehrere voneinander getrennte Apps auf derselben Serverbasis laufen können, ohne den Core app-spezifisch zu machen.
+- Architekturentscheidung:
+  - Eine App wird jetzt über einen neutralen Registry-Eintrag identifiziert (`appId`, `appName`, `mountPath`, `webRootDir`, `dataRootDir`, `apiBasePath`, `connectionScope`).
+  - Der Server löst Requests gegen die App-Registry auf und trennt globale Root-Zugriffe von app-gebundenen Pfaden.
+  - App-spezifische Connection-Zugriffe sind an die jeweilige App-ID gebunden; globaler Admin-Zugriff bleibt davon getrennt.
+  - Die primäre Web-App bleibt auf `/`, spätere Apps können unter eigenen Mount-Paths wie `/catchtrack/` oder `/zukunft/` ergänzt werden.
+  - Gemeinsame Plattform-Bausteine bleiben unter `platform/` und werden nicht in app-spezifische Bereiche verschoben.
+- Neue Struktur:
+  - `server/state/apps.json` enthält die neutrale App-Registry.
+  - `server/services/app-registry.js` löst App-Kontexte und Mount-Paths auf.
+  - `server/services/connection-service.js` unterstützt app-gebundene Listen, Lese- und Schreibzugriffe.
+  - Der Server kann app-gebundene APIs unter dem jeweiligen Mount-Path bereitstellen, ohne die bestehende User-App zu verändern.
+- Wie eine App identifiziert wird:
+  - Über `appId` in der Registry und im Connection-Record.
+  - Über den Mount-Path der Request-URL, der auf den passenden Registry-Eintrag aufgelöst wird.
+  - Über `api/app-context`, das den aktuellen App-Kontext zurückgibt.
+- Wie Isolation funktioniert:
+  - App-gebundene Connection-Zugriffe werden serverseitig auf die aktuelle App-ID begrenzt.
+  - Der globale Admin-Bereich bleibt neutral und kann weiterhin appübergreifend verwalten.
+  - Daten-/Konfigurationspfade sind pro App getrennt vorgesehen.
+- Wie später `/catchtrack/` daraus entstehen kann:
+  - Durch einen weiteren Registry-Eintrag mit eigenem Mount-Path und eigenen Daten-/Webroot-Pfaden.
+  - Ohne Änderung an der neutralen Core-, Connection- oder Admin-Logik.
+- Bewusst offen:
+  - Keine konkrete zweite App implementiert.
+  - Kein Deployment auf `/catchtrack/`.
+  - Keine Benutzerverwaltung, Backups oder Update-Verwaltung.
+  - Kein App-spezifisches Frontend-Routing jenseits der Registry-Grundlage.
+- Tests:
+  - `npm test`: 10/10 bestanden
+  - `npx playwright test --reporter=list`: 3/3 bestanden
+  - `git diff --check`: keine Fehler
+
+## 2026-08-17 - Neutrale Demo-App für die Multi-App-Validierung
+
+- Aufgabe: Eine zweite, vollständig neutrale Demo-App neben der Root-App bereitstellen, um die Multi-App-Struktur praktisch zu prüfen.
+- Umsetzung:
+  - Ein zukünftiger App-Mount wird über die Registry konfiguriert; es gibt keine feste Demo2-Instanz mehr im neutralen Core.
+  - Der Webroot einer App wird durch die Registry als eigener App-Kontext konfiguriert und bleibt app-neutral.
+  - Der Server erkennt den App-Kontext anhand des Mount-Paths und trennt Root- und Demo-Connections serverseitig.
+  - Ungeregelte App-Pfade liefern sauber `404`.
+- Tests:
+  - Root-App lädt weiter.
+  - Ein späterer Mount wie `/catchtrack/` oder `/zukunft/` kann auf dieselbe Weise registriert werden.
+  - Root- und Demo2-Connections bleiben getrennt.
+  - Nicht registrierte App-Pfade werden sauber behandelt.
