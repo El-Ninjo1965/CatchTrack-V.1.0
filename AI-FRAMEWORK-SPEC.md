@@ -81,9 +81,12 @@ The framework now includes a neutral app and connection abstraction that remains
 - Config: [`server/config/index.js`](/workspaces/CatchTrack-V.1.0/server/config/index.js)
 - Health/status service: [`server/services/health-service.js`](/workspaces/CatchTrack-V.1.0/server/services/health-service.js)
 - Exposed endpoints:
-  - `/health`, `/api/health`
-  - `/api/status`
-  - `/api/modules` (module manifest list)
+  - `/health`, `/api/health` — health status (IMPLEMENTIERT)
+  - `/api/status` — runtime status including process and framework diagnostics (IMPLEMENTIERT)
+  - `/api/framework`, `/api/diagnostics` — `MasterFramework.getDiagnostics()` output (IMPLEMENTIERT)
+  - `/api/connections` / `/api/admin/connections` — list or register/update connections (GET + POST, IMPLEMENTIERT)
+  - `/api/setup` / `/api/admin/setup` — read or write setup state (GET + POST, IMPLEMENTIERT)
+  - `/api/modules` — module manifest list from `app/modules/` (IMPLEMENTIERT)
 - Static routing serves:
   - [`webroot/`](/workspaces/CatchTrack-V.1.0/webroot)
   - [`platform/`](/workspaces/CatchTrack-V.1.0/platform)
@@ -229,9 +232,12 @@ The framework now includes a neutral app and connection abstraction that remains
 - Konfiguration: [`server/config/index.js`](/workspaces/CatchTrack-V.1.0/server/config/index.js)
 - Health/Status-Service: [`server/services/health-service.js`](/workspaces/CatchTrack-V.1.0/server/services/health-service.js)
 - Exponierte Endpunkte:
-  - `/health`, `/api/health`
-  - `/api/status`
-  - `/api/modules` (Modul-Manifestliste)
+  - `/health`, `/api/health` — Health-Status (IMPLEMENTIERT)
+  - `/api/status` — Laufzeit-Status mit Prozess- und Framework-Diagnostik (IMPLEMENTIERT)
+  - `/api/framework`, `/api/diagnostics` — `MasterFramework.getDiagnostics()`-Ausgabe (IMPLEMENTIERT)
+  - `/api/connections` / `/api/admin/connections` — Connections auflisten oder anlegen/aktualisieren (GET + POST, IMPLEMENTIERT)
+  - `/api/setup` / `/api/admin/setup` — Setup-State lesen oder schreiben (GET + POST, IMPLEMENTIERT)
+  - `/api/modules` — Modul-Manifestliste aus `app/modules/` (IMPLEMENTIERT)
 - Statisches Routing liefert aus:
   - [`webroot/`](/workspaces/CatchTrack-V.1.0/webroot)
   - [`platform/`](/workspaces/CatchTrack-V.1.0/platform)

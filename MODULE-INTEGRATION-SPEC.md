@@ -79,16 +79,15 @@ A module is **not** the owner of:
 | UI | root shells plus `renderUserInterface(container)` | visible user interaction | bypass shell and mount arbitrary standalone pages |
 | Domain logic | module code only | feature-specific behavior | move app/domain logic into core/framework without explicit framework work |
 
-#### 1.3 Missing abstractions that must not be assumed
+#### 1.3 Standalone-module abstractions that are not enforced by the current contract
 
-The current framework does **not** implement these abstractions for standalone modules:
+The following abstractions are **not enforced** by the current standalone module contract (i.e., the module manifest and loader do not consume them for routing, mounting, or discovery):
 
-- no `appId`
-- no module `mountPath`
-- no application router abstraction
-- no connection manager or connection registry
-- no module backend contract
-- no module stylesheet registration contract
+- no application router abstraction — URL routing is not scoped per module or per app
+- no module backend contract — modules cannot register server-side routes through a manifest field
+- no module stylesheet registration contract — CSS is not automatically loaded per module
+
+Important distinction: `AppRegistry` and `ConnectionManager` **are** part of the implemented framework runtime (see section 1.0). `appId` and `mountPath` **are** normalized by `ModuleInterface.validateManifest` and stored in the manifest. However, no server-side routing or browser-side URL mounting is driven by these fields in the current codebase. Module code that uses `window.ConnectionManager` or `window.AppRegistry` is operating on an implemented API. Module code that assumes HTTP routing based on `mountPath` is assuming something not implemented.
 
 ---
 
@@ -219,16 +218,19 @@ The current framework reads and/or normalizes the following manifest fields:
 | `modulePath` | string | runtime/internal | Added during discovery; not author-required |
 | `manifestPath` | string | runtime/internal | Added during discovery; not author-required |
 
-#### 3.2 Unsupported manifest fields
+#### 3.2 Manifest fields that are normalized but not enforced for routing
 
-The following fields are **not supported by the current framework** as module contract fields:
+The following fields are recognized and normalized by `ModuleInterface.validateManifest` and stored in the manifest object, but their intended routing or scoping behavior is **not enforced** by the current framework:
 
-- `appId`
+- `appId` — normalized and stored; `ModuleRegistry.getByApp(appId)` is implemented; however, app-scoped routing or isolation is not enforced
+- `apiVersion` — normalized and stored; no version enforcement or negotiation is performed
+- `mountPath` — normalized and stored; no HTTP routing is driven by it
+
+The following fields are **not consumed** at all in the current code:
+
 - `moduleId` as a separate field distinct from `id`
-- `mountPath`
-- `webRoot`
-- `webroot`
-- `services` declaration block
+- `webRoot` / `webroot`
+- `services` declaration blocks
 - API route declaration blocks
 - UI route declaration blocks
 - theme declaration blocks
@@ -2621,8 +2623,8 @@ Actual validation that exists:
 
 What does **not** exist:
 
-- no `appId` validation
-- no `mountPath` validation
+- no `appId` routing or isolation enforcement (the field is normalized and stored but not verified against the AppRegistry)
+- no `mountPath` routing enforcement (the field is normalized and stored but no HTTP route is driven by it)
 - no schema validation beyond manual field normalization
 - no structured diagnostics channel for manifest authoring errors
 
@@ -2699,20 +2701,25 @@ The only current HTTP exposure for module files is:
 
 #### 29.5 Connection system
 
-There is no dedicated connection system in the current codebase.
+`ConnectionManager` is implemented in [platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js) and exposed globally as `window.ConnectionManager`.
 
-Not present:
+Implemented:
 
-- no `ConnectionManager`
-- no connection manifest fields
-- no connection persistence API
-- no connection ownership model
-- no connection security layer
-- no connection registry
+- `ConnectionManager.register(definition)` — register a connection with `connectionId`, `appId`, `serverUrl`, `apiBase`, `authType`, `credentialsRef`
+- `ConnectionManager.get(connectionId)` — retrieve a connection
+- `ConnectionManager.list(appId)` — list all or per-app connections
+- `ConnectionManager.update(connectionId, updates)` — update a connection
+- `ConnectionManager.setStatus(connectionId, status)` — set connection status
+- `ConnectionManager.test(connectionId, handler)` — run a health test
 
-Therefore a future module must not invent a "framework connection" abstraction inside standalone module work.
+Not implemented (APP-SPEZIFISCH / SERVER-SEITIG):
 
-If a feature truly requires managed external connections, that is a framework extension task and must be designed explicitly in core/server code first.
+- no connection ownership enforcement per module
+- no server-side connection proxying
+- no connection security enforcement layer beyond what the application layer provides
+- no automatic module-owned connection routing
+
+Therefore a standalone module must not invent a parallel connection ownership model. If a module needs to register a server-side proxy or dedicated backend route, that is a framework extension task.
 
 ---
 
@@ -2865,16 +2872,15 @@ Ein Modul ist **nicht** der Eigentuemer von:
 | UI | Root-Shells plus `renderUserInterface(container)` | sichtbare Interaktion fuer Benutzer | die Shell umgehen und beliebige Standalone-Seiten mounten |
 | Fachlogik | nur Modulcode | featurespezifisches Verhalten | App-/Fachlogik ohne explizite Framework-Arbeit in den Core verschieben |
 
-#### 1.3 Fehlende Abstraktionen, die nicht vorausgesetzt werden duerfen
+#### 1.3 Standalone-Abstraktionen, die nicht durch den aktuellen Vertrag erzwungen werden
 
-Das aktuelle Framework implementiert diese Abstraktionen fuer eigenstaendige Module **nicht**:
+Die folgenden Abstraktionen werden durch den aktuellen eigenstaendigen Modul-Vertrag **nicht erzwungen** (d. h. Manifest und Loader nutzen sie nicht fuer Routing, Mounting oder Discovery):
 
-- kein `appId`
-- kein Modul-`mountPath`
-- keine App-Router-Abstraktion
-- keinen Connection Manager und keine Connection Registry
-- keinen Modul-Backend-Vertrag
+- keine App-Router-Abstraktion — URL-Routing wird nicht pro Modul oder App aufgeteilt
+- keinen Modul-Backend-Vertrag — Module koennen ueber Manifest-Felder keine Server-seitigen Routen registrieren
 - keinen Vertrag fuer die Registrierung modul-lokaler Stylesheets
+
+Wichtige Unterscheidung: `AppRegistry` und `ConnectionManager` **sind** Teil der implementierten Framework-Runtime (siehe Abschnitt 1.0). `appId` und `mountPath` **werden** von `ModuleInterface.validateManifest` normalisiert und im Manifest gespeichert. Weder serverseitiges Routing noch browserseitiges URL-Mounting wird durch diese Felder im aktuellen Code gesteuert. Modulcode, der `window.ConnectionManager` oder `window.AppRegistry` nutzt, verwendet eine implementierte API. Modulcode, der HTTP-Routing auf Basis von `mountPath` voraussetzt, setzt etwas voraus, das nicht implementiert ist.
 
 ---
 
@@ -3005,15 +3011,18 @@ Das aktuelle Framework liest und/oder normalisiert die folgenden Manifest-Felder
 | `modulePath` | string | runtime/intern | Wird waehrend der Discovery hinzugefuegt; nicht manuell erforderlich |
 | `manifestPath` | string | runtime/intern | Wird waehrend der Discovery hinzugefuegt; nicht manuell erforderlich |
 
-#### 3.2 Nicht unterstuetzte Manifest-Felder
+#### 3.2 Manifest-Felder, die normalisiert, aber nicht fuer Routing erzwungen werden
 
-Die folgenden Felder sind **vom aktuellen Framework nicht als Modul-Vertragsfelder unterstuetzt**:
+Die folgenden Felder werden von `ModuleInterface.validateManifest` erkannt und normalisiert sowie im Manifest gespeichert, jedoch wird ihr beabsichtigtes Routing- oder Scoping-Verhalten durch das aktuelle Framework **nicht erzwungen**:
 
-- `appId`
+- `appId` — normalisiert und gespeichert; `ModuleRegistry.getByApp(appId)` ist implementiert; App-spezifisches Routing oder Isolation wird jedoch nicht erzwungen
+- `apiVersion` — normalisiert und gespeichert; keine Versions-Erzwingung oder -Verhandlung findet statt
+- `mountPath` — normalisiert und gespeichert; kein HTTP-Routing wird dadurch gesteuert
+
+Die folgenden Felder werden im aktuellen Code **gar nicht ausgewertet**:
+
 - `moduleId` als separates Feld neben `id`
-- `mountPath`
-- `webRoot`
-- `webroot`
+- `webRoot` / `webroot`
 - `services`-Deklarationsblock
 - API-Route-Deklarationen
 - UI-Route-Deklarationen
@@ -5407,8 +5416,8 @@ Tatsaechlich vorhandene Validierung:
 
 Was **nicht** existiert:
 
-- keine `appId`-Validierung
-- keine `mountPath`-Validierung
+- keine `appId`-Routing-Erzwingung (das Feld wird normalisiert und gespeichert, aber nicht gegen die AppRegistry verifiziert)
+- keine `mountPath`-Routing-Erzwingung (das Feld wird normalisiert und gespeichert, aber kein HTTP-Route wird dadurch gesteuert)
 - keine Schema-Validierung ueber die manuelle Feld-Normalisierung hinaus
 - kein strukturierter Diagnosekanal fuer Manifest-Authoring-Fehler
 
@@ -5485,20 +5494,25 @@ Die einzige aktuelle HTTP-Sichtbarkeit fuer Modul-Dateien ist:
 
 #### 29.5 Connection-System
 
-Im aktuellen Codebestand existiert kein dediziertes Connection-System.
+`ConnectionManager` ist in [platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js) implementiert und global als `window.ConnectionManager` bereitgestellt.
 
-Nicht vorhanden:
+Implementiert:
 
-- kein `ConnectionManager`
-- keine Connection-Manifest-Felder
-- keine Connection-Persistenz-API
-- kein Connection-Ownership-Modell
-- keine Connection-Security-Schicht
-- keine Connection-Registry
+- `ConnectionManager.register(definition)` — Connection mit `connectionId`, `appId`, `serverUrl`, `apiBase`, `authType`, `credentialsRef` registrieren
+- `ConnectionManager.get(connectionId)` — Connection abfragen
+- `ConnectionManager.list(appId)` — alle oder per-App-Connections auflisten
+- `ConnectionManager.update(connectionId, updates)` — Connection aktualisieren
+- `ConnectionManager.setStatus(connectionId, status)` — Status setzen
+- `ConnectionManager.test(connectionId, handler)` — Health-Test ausfuehren
 
-Deshalb darf ein zukuenftiges Modul keine eigene "Framework Connection"-Abstraktion im Rahmen normaler Standalone-Modul-Arbeit erfinden.
+Nicht implementiert (APP-SPEZIFISCH / SERVER-SEITIG):
 
-Wenn eine Funktion wirklich verwaltete externe Verbindungen benoetigt, ist das zuerst eine Framework-Erweiterungsaufgabe und muss explizit in Core-/Server-Code entworfen werden.
+- kein Connection-Ownership-Enforcement pro Modul
+- kein Server-seitiges Connection-Proxying
+- keine Connection-Security-Enforcement-Schicht ueber die Anwendungsschicht hinaus
+- kein automatisches Modul-eigenes Connection-Routing
+
+Deshalb darf ein eigenstaendiges Modul kein paralleles Connection-Ownership-Modell erfinden. Wenn ein Modul einen Server-seitigen Proxy oder eine eigene Backend-Route benoetigt, ist das zuerst eine Framework-Erweiterungsaufgabe.
 
 ---
 

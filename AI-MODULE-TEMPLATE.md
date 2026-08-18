@@ -268,8 +268,11 @@ Notes for AI:
 
 Notes for AI:
 
-- the current framework has no dedicated connection system, no connection manager, and no connection registry
-- if this module truly needs managed external connections, the template entry should explicitly say `Requires explicit framework change` unless the requirement can be handled with existing browser APIs or existing core APIs
+- the current framework has `ConnectionManager` implemented in [platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js)
+- `window.ConnectionManager` is available globally in the browser runtime
+- connection registration (`ConnectionManager.register`) and status management (`ConnectionManager.setStatus`, `ConnectionManager.test`) can be used by a module
+- however, standalone modules have no dedicated server-side connection routing contract
+- if this module requires server-side connection proxying or module-owned backend connection routes, mark as `Requires explicit framework change`
 
 ---
 

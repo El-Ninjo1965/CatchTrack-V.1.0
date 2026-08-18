@@ -163,6 +163,14 @@ Diese Anleitung ist der praktische Arbeitsablauf für Entwickler und AI-Agenten,
 3. Vorhandene Core-Schnittstellen zur Wiederverwendung identifizieren.
 4. UI-Bedarf festlegen (User/Admin/Developer oder keine UI).
 5. Storage-/Datenbankbedarf und Lifecycle-Verhalten festlegen.
+6. Falls das Projekt app-bewusst ist, `appId` und `apiVersion` explizit deklarieren.
+
+### 2.1 Neutrale Framework-Erweiterungen
+Das Framework bietet eine neutrale Grundlage fuer Multi-App-Nutzung:
+- `AppRegistry` und `ConnectionManager` sind global ueber `window.MasterFramework` und die Aliase `AppRegistry`/`ConnectionManager` verfuegbar.
+- Feature Flags werden ueber `FeatureFlags` und `MasterFramework.setFeatureFlag()` unterstuetzt.
+- Modul-Manifeste duerfen `appId`, `apiVersion`, `mountPath` und `requirements` bei Bedarf deklarieren.
+- Migrationen koennen versioniert registriert und ausgefuehrt werden.
 
 ### 3) Benötigte Moduldateien
 Unter [`app/modules/<module-id>/`](/workspaces/CatchTrack-V.1.0/app/modules) anlegen:

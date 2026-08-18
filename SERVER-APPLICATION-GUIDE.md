@@ -258,10 +258,13 @@ Implementierung:
 
 Vorhandene API-Pfade:
 
-- `/health`
-- `/api/health`
-- `/api/status`
-- `/api/modules`
+- `/health` — Health-Status
+- `/api/health` — Health-Status (alternativ)
+- `/api/status` — Laufzeit-Status mit Prozess-Metadaten
+- `/api/framework` / `/api/diagnostics` — `MasterFramework.getDiagnostics()`-Ausgabe
+- `/api/connections` / `/api/admin/connections` — Connections auflisten (GET) oder anlegen/aktualisieren (POST)
+- `/api/setup` / `/api/admin/setup` — Setup-State lesen (GET) oder schreiben (POST)
+- `/api/modules` — Modul-Manifestliste aus `app/modules/`
 
 ### 7.3 Module-Dateien
 
@@ -340,8 +343,8 @@ Tatsaechlich geprueft werden:
 
 Nicht vorhanden:
 
-- kein `appId`
-- kein `mountPath`
+- kein `appId`-Routing-Enforcement (das Feld wird normalisiert und gespeichert, aber nicht gegen die AppRegistry verifiziert)
+- kein `mountPath`-Routing-Enforcement (das Feld wird normalisiert und gespeichert, aber kein HTTP-Route wird dadurch gesteuert)
 - keine Modul-API-Registrierung
 
 ### 8.5 Lifecycle beim Start
@@ -363,14 +366,17 @@ Manifest-`dependencies` werden gegen registrierte Modul-IDs geprueft. Fehlende D
 
 ### 9.1 Aktuelle Architekturgrenze
 
-Der aktuelle Codezustand ist technisch eine einzelne Anwendungsshell mit neutralem Core.
+Das Framework stellt in [platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js) eine neutrale App-Registry und einen Connection Manager bereit:
 
-Nicht vorhanden sind:
+- `AppRegistry` verwaltet App-Identitaet (`appId`), Lifecycle-Status und App-Konfiguration
+- `ConnectionManager` verwaltet Connection-ID, App-Zuordnung, Server-URL, API-Basis, Auth-Typ, Credentials-Referenz und Health-Status
+- beide werden global als `window.MasterFramework`, `window.AppRegistry` und `window.ConnectionManager` bereitgestellt
 
-- kein Multi-App-System
-- kein `appId`
-- kein App-Mount-Path-System
-- keine App-Registry
+Nicht vorhanden sind im aktuellen Stand:
+
+- kein Multi-App-Routing-System (URL-Routing wird nicht pro `appId` aufgeteilt)
+- kein App-Mount-Path-System (kein HTTP-Routing auf Basis von `mountPath`)
+- keine automatische App-Isolation (alle Module laufen im selben Browser-Kontext)
 
 ### 9.2 Was fuer eine neue Anwendung typischerweise angepasst wird
 
@@ -458,7 +464,18 @@ Aktuelle Pfade sind fest:
 
 ### 10.7 Connections
 
-Ein separates Connection-System ist im aktuellen Code **nicht vorhanden**.
+[platform/master-framework.js](/workspaces/CatchTrack-V.1.0/platform/master-framework.js) stellt `ConnectionManager` bereit:
+
+- `ConnectionManager.register(definition)` — neue Connection registrieren
+- `ConnectionManager.get(connectionId)` — Connection abfragen
+- `ConnectionManager.list(appId)` — alle oder per-App-Connections auflisten
+- `ConnectionManager.update(connectionId, updates)` — Connection aktualisieren
+- `ConnectionManager.setStatus(connectionId, status)` — Status setzen
+- `ConnectionManager.test(connectionId, handler)` — Health-Test ausfuehren
+
+Serverseitig exponiert als `GET /api/connections` (auflisten) und `POST /api/connections` (anlegen/aktualisieren).
+
+Eine modul-eigene Netzwerkverbindung (z. B. WebSocket, eigene REST-API) ist kein Teil dieses neutralen Connection-Registrys und erfordert explizite Framework-Erweiterung.
 
 ---
 
@@ -627,7 +644,8 @@ Fuer die Uebergabe werden mindestens benoetigt:
   - optional `CORE_BOOTSTRAP_PASSWORD`
 - Beschreibung vorhandener Module unter [app/modules/](/workspaces/CatchTrack-V.1.0/app/modules)
 - Hinweis, dass Admin-/Developer-Seiten serverseitig zusaetzlich abgesichert sind
-- Hinweis, dass es kein `appId`-, `mountPath`- oder Connection-System gibt
+- Hinweis, dass `AppRegistry` und `ConnectionManager` implementiert sind, aber kein URL-Routing oder automatische App-Isolation erzwungen wird
+- Hinweis, dass `mountPath` im Manifest normalisiert, aber kein HTTP-Routing dadurch gesteuert wird
 
 ---
 
