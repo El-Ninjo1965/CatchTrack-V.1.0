@@ -36,22 +36,13 @@ const sendJson = (res, statusCode, payload) => {
   res.end(JSON.stringify(payload, null, 2));
 };
 
-const normalizeStatusValue = (value, fallback = 'NOT_CONFIGURED') => {
-  const normalized = String(value || fallback).trim().toUpperCase();
-  return ['NOT_CONFIGURED', 'CONFIGURATION_REQUIRED', 'READY_TO_TEST', 'TESTING', 'READY', 'ACTIVE', 'ERROR'].includes(normalized)
-    ? normalized
-    : fallback;
-};
-
 const getSetupSnapshot = () => {
   const setup = MasterFramework.loadSetupState();
   const installation = setup.installation || {};
   const configuration = setup.configuration || {};
   const database = setup.database || configuration.database || null;
-  const setupState = MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : normalizeStatusValue(setup.status, 'NOT_CONFIGURED');
-  const status = MasterFramework.normalizeSetupStatus
-    ? MasterFramework.normalizeSetupStatus(setup.status || setupState, 'NOT_CONFIGURED')
-    : normalizeStatusValue(setup.status || setupState, 'NOT_CONFIGURED');
+  const setupState = MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : MasterFramework.normalizeSetupStatus(setup.status, 'NOT_CONFIGURED');
+  const status = MasterFramework.normalizeSetupStatus(setup.status || setupState, 'NOT_CONFIGURED');
 
   return {
     ...setup,
@@ -69,9 +60,7 @@ const getSetupSnapshot = () => {
 
 const isSetupRequired = () => {
   const snapshot = getSetupSnapshot();
-  const status = MasterFramework.normalizeSetupStatus
-    ? MasterFramework.normalizeSetupStatus(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED')
-    : normalizeStatusValue(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
+  const status = MasterFramework.normalizeSetupStatus(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
   const installationActive = !!(snapshot.installation && snapshot.installation.active);
   return !(installationActive || ['ACTIVE', 'READY'].includes(status));
 };

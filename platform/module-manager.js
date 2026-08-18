@@ -9,37 +9,6 @@
 (() => {
     'use strict';
 
-    const resolveGlobalName = (manifest, entry) => {
-        if (entry && typeof entry.globalName === 'string' && entry.globalName.trim()) {
-            return entry.globalName.trim();
-        }
-
-        if (manifest && typeof manifest.globalName === 'string' && manifest.globalName.trim()) {
-            return manifest.globalName.trim();
-        }
-
-        const primaryName = (manifest && manifest.name) || (entry && entry.name) || (manifest && manifest.id) || '';
-        const nameCandidates = [
-            primaryName,
-            (manifest && manifest.id) || '',
-            (entry && entry.id) || ''
-        ].filter(Boolean);
-
-        const normalized = nameCandidates
-            .map((name) => name
-                .replace(/[^A-Za-z0-9]+/g, ' ')
-                .trim()
-                .split(/\s+/)
-                .filter(Boolean))
-            .flat()
-            .map((part, index) => index === 0
-                ? part.charAt(0).toUpperCase() + part.slice(1)
-                : part.charAt(0).toUpperCase() + part.slice(1))
-            .join('');
-
-        return normalized || 'Module';
-    };
-
     const ModuleManager = {
         registry: null,
 
@@ -121,75 +90,12 @@
                 return [];
             }
 
-            const catalog = Array.isArray(window.FrameworkModuleCatalog)
-                ? window.FrameworkModuleCatalog
-                : [];
+            const discovered = await window.ModuleRegistry.discover();
 
-            const discovered = [];
-
-            const externalModules = window.CoreLoader && typeof window.CoreLoader.discoverExternalModules === 'function'
-                ? await window.CoreLoader.discoverExternalModules()
-                : [];
-
-            const combinedCatalog = [...catalog, ...externalModules.map((module) => ({
-                id: module.id,
-                name: module.name,
-                version: module.version,
-                description: module.description || '',
-                dependencies: Array.isArray(module.dependencies) ? module.dependencies : [],
-                permissions: Array.isArray(module.permissions) ? module.permissions : [],
-                capabilities: Array.isArray(module.capabilities) ? module.capabilities : [],
-                source: module.source || module.modulePath,
-                entry: module.source || module.modulePath,
-                globalName: module.globalName || module.name || module.id,
-                instance: module
-            }))];
-
-            for (const entry of combinedCatalog) {
-                if (!entry || typeof entry !== 'object') {
+            for (const registered of discovered) {
+                if (!registered || !registered.id) {
                     continue;
                 }
-
-                const manifest = window.ModuleInterface && typeof window.ModuleInterface.validateManifest === 'function'
-                    ? window.ModuleInterface.validateManifest(entry)
-                    : null;
-
-                if (!manifest) {
-                    continue;
-                }
-
-                const globalName = resolveGlobalName(manifest, entry);
-                const candidate = entry.instance || window[globalName] || null;
-                if (!candidate) {
-                    continue;
-                }
-
-                const moduleId = candidate.id || manifest.id;
-                if (this.registry.has(moduleId)) {
-                    discovered.push(this.get(moduleId));
-                    continue;
-                }
-
-                const normalized = this.normalizeModule({
-                    ...candidate,
-                    id: moduleId,
-                    name: candidate.name || manifest.name,
-                    version: candidate.version || manifest.version,
-                    description: candidate.description || manifest.description,
-                    dependencies: Array.isArray(candidate.dependencies)
-                        ? candidate.dependencies
-                        : [...(manifest.dependencies || [])],
-                    permissions: Array.isArray(candidate.permissions)
-                        ? candidate.permissions
-                        : [...(manifest.permissions || [])],
-                    capabilities: Array.isArray(candidate.capabilities)
-                        ? candidate.capabilities
-                        : [...(manifest.capabilities || [])],
-                    manifest
-                });
-
-                const registered = this.register(normalized);
-                discovered.push(registered);
 
                 try {
                     this.install(registered.id);

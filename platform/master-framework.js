@@ -45,10 +45,6 @@
   const ADMIN_STATE_STORAGE_KEY = 'master-framework.admin-state';
   const ADMIN_STATE_FILE_NAME = 'admin-state.json';
 
-  const cloneValue = (value) => JSON.parse(JSON.stringify(value));
-
-  const isValidVersionString = (value) => typeof value === 'string' && /^\d+\.\d+\.\d+/.test(value.trim());
-
   const FrameworkRuntime = {
     version: '1.0.0',
     apps: new Map(),
