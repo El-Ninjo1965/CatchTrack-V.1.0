@@ -62,12 +62,25 @@
             return candidate;
         }
 
-        return `${basePath.replace(/\/$/, '')}/${candidate.replace(/^\.\//, '')}`;
+        const normalizedBase = (typeof basePath === 'string' && basePath.trim()) ? basePath.trim() : '/';
+
+        if (typeof window !== 'undefined' && window.location && window.location.origin) {
+            const baseUrl = /^(https?:)?\/\//i.test(normalizedBase)
+                ? normalizedBase
+                : `${window.location.origin}${normalizedBase.startsWith('/') ? normalizedBase : `/${normalizedBase}`}`;
+            const safeBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+            const resolved = new URL(candidate.replace(/^\.\//, ''), safeBaseUrl);
+            return resolved.pathname + resolved.search;
+        }
+
+        const plainBase = normalizedBase.endsWith('/') ? normalizedBase : `${normalizedBase}/`;
+        return `${plainBase.replace(/\/$/, '')}/${candidate.replace(/^\.\//, '')}`;
     };
 
     const readTextFile = async (filePath) => {
         if (typeof fetch === 'function') {
-            const response = await fetch(filePath, { cache: 'no-store' });
+            const absolutePath = toAbsolutePath('/', filePath);
+            const response = await fetch(absolutePath, { cache: 'no-store' });
 
             if (!response.ok) {
                 return null;

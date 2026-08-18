@@ -35,6 +35,22 @@
   const canViewAdmin = (user) => !!user && (hasRole(user, 'admin') || hasPermission(user, 'system:view'));
   const canViewDeveloper = (user) => !!user && (hasRole(user, 'developer') || hasPermission(user, 'module:read'));
 
+  const resolveRoleRoute = (user) => {
+    if (!user) {
+      return null;
+    }
+
+    if (hasRole(user, 'developer')) {
+      return 'dev.html';
+    }
+
+    if (hasRole(user, 'admin') || hasPermission(user, 'system:view')) {
+      return 'admin.html';
+    }
+
+    return 'index.html';
+  };
+
   const getVisibleModules = () => {
     const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function' ? window.ModuleRegistry.getAll() : [];
     const currentUser = getCurrentUser();
@@ -117,6 +133,220 @@
         ? modules.map((module) => `<span class="chip">${escapeHtml(module.name)}</span>`).join('')
         : '<span class="chip">No active modules</span>';
     }
+  };
+
+  const renderAdminDashboard = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+      ? window.ModuleRegistry.getAll()
+      : [];
+    const activeCount = registry.filter((module) => module && (module.active || module.status === 'enabled')).length;
+    const currentUser = getCurrentUser();
+    const sessionState = window.CoreAuth && typeof window.CoreAuth.getSessionStateSnapshot === 'function'
+      ? window.CoreAuth.getSessionStateSnapshot()
+      : { authenticated: !!currentUser, username: currentUser ? currentUser.username : null, roles: currentUser ? currentUser.roles || [] : [] };
+    const stats = window.AdminModule && typeof window.AdminModule.getSystemStats === 'function'
+      ? await window.AdminModule.getSystemStats()
+      : { moduleCount: registry.length, userCount: 0, uptime: 0 };
+
+    const cards = [
+      { label: 'Framework version', value: window.CoreConfig && window.CoreConfig.core ? window.CoreConfig.core.version : '1.0.0' },
+      { label: 'API version', value: 'v1' },
+      { label: 'App version', value: '1.0.0' },
+      { label: 'System status', value: 'Operational' },
+      { label: 'Server status', value: 'Healthy' },
+      { label: 'Database status', value: window.DatabaseManager && typeof window.DatabaseManager.getStatus === 'function' ? window.DatabaseManager.getStatus() : 'Not configured' },
+      { label: 'Module count', value: String(stats.moduleCount || registry.length) },
+      { label: 'Active modules', value: String(activeCount) },
+      { label: 'Error count', value: '0' },
+      { label: 'Current user', value: sessionState.username || (currentUser ? currentUser.username : 'guest') },
+      { label: 'Current role', value: (sessionState.roles && sessionState.roles.length ? sessionState.roles.join(', ') : 'user') }
+    ];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Framework dashboard</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            ${cards.map((card) => `
+              <div class="metric">
+                <span class="metric-label">${escapeHtml(card.label)}</span>
+                <div class="metric-value">${escapeHtml(card.value)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminModules = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+    const modules = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+      ? window.ModuleRegistry.getAll()
+      : [];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Modules</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Capabilities</th></tr>
+              </thead>
+              <tbody>
+                ${modules.length ? modules.map((module) => `
+                  <tr>
+                    <td>${escapeHtml(module.id || 'unknown')}</td>
+                    <td>${escapeHtml(module.name || module.id || 'Module')}</td>
+                    <td>${escapeHtml(module.version || '1.0.0')}</td>
+                    <td><span class="status-badge ${module.active || module.status === 'enabled' ? 'ok' : 'warning'}">${escapeHtml(module.status || (module.active ? 'enabled' : 'available'))}</span></td>
+                    <td>${escapeHtml(module.type || 'framework')}</td>
+                    <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6">No modules discovered.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminUsers = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    let rows = [];
+    if (window.UserModule && typeof window.UserModule.listUsers === 'function') {
+      const result = await window.UserModule.listUsers();
+      rows = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
+    }
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Users</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User ID</th><th>Username</th><th>Name</th><th>Status</th><th>Roles</th></tr></thead>
+              <tbody>
+                ${rows.length ? rows.map((user) => `
+                  <tr>
+                    <td>${escapeHtml(user.displayId || user.id || '—')}</td>
+                    <td>${escapeHtml(user.username || '—')}</td>
+                    <td>${escapeHtml(user.displayName || user.username || '—')}</td>
+                    <td><span class="status-badge ${user.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(user.status || 'active')}</span></td>
+                    <td>${escapeHtml(Array.isArray(user.roles) ? user.roles.join(', ') : '')}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="5">No users available.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminRoles = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+    const roles = [
+      { role: 'admin', permissions: ['system:view', 'admin:read', 'admin:write'] },
+      { role: 'developer', permissions: ['module:read', 'module:write', 'system:view'] },
+      { role: 'user', permissions: ['user:read'] }
+    ];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Roles</h2></div>
+        <div class="content-wrap">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+              <tbody>
+                ${roles.map((entry) => `<tr><td>${escapeHtml(entry.role)}</td><td>${escapeHtml(entry.permissions.join(', '))}</td></tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminPermissions = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+    const permissions = ['framework:read', 'auth:read', 'auth:write', 'module:read', 'module:write', 'admin:read', 'admin:write'];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Permissions</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            ${permissions.map((permission) => `<div class="metric"><span class="metric-label">Permission</span><div class="metric-value">${escapeHtml(permission)}</div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderAdminSystem = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const health = window.AdminModule && typeof window.AdminModule.healthCheck === 'function'
+      ? window.AdminModule.healthCheck()
+      : { healthy: false };
+    const sessionState = window.CoreAuth && typeof window.CoreAuth.getSessionStateSnapshot === 'function'
+      ? window.CoreAuth.getSessionStateSnapshot()
+      : { authenticated: false };
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">System status</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Healthy</span><div class="metric-value">${health.healthy ? 'Yes' : 'No'}</div></div>
+            <div class="metric"><span class="metric-label">Auth state</span><div class="metric-value">${sessionState.authenticated ? 'authenticated' : 'anonymous'}</div></div>
+            <div class="metric"><span class="metric-label">Core</span><div class="metric-value">${health.coreLoaded ? 'Loaded' : 'Missing'}</div></div>
+            <div class="metric"><span class="metric-label">Modules</span><div class="metric-value">${window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function' ? window.ModuleRegistry.getAll().length : 0}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const renderDeveloperOverview = async () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const registry = window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+      ? window.ModuleRegistry.getAll()
+      : [];
+    const health = window.AdminModule && typeof window.AdminModule.healthCheck === 'function'
+      ? window.AdminModule.healthCheck()
+      : { healthy: false };
+    const audit = window.AdminModule && typeof window.AdminModule.getAuditLog === 'function'
+      ? window.AdminModule.getAuditLog()
+      : [];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Developer overview</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Runtime health</span><div class="metric-value">${health.healthy ? 'Healthy' : 'Warning'}</div></div>
+            <div class="metric"><span class="metric-label">Discovered modules</span><div class="metric-value">${registry.length}</div></div>
+            <div class="metric"><span class="metric-label">Audit entries</span><div class="metric-value">${Array.isArray(audit) ? audit.length : 0}</div></div>
+          </div>
+        </div>
+      </div>
+    `;
   };
 
   const renderUserMenu = () => {
@@ -243,7 +473,45 @@
     ` : '<div class="card"><div class="card-header"><h2 class="card-title">Modules</h2></div><div class="content-wrap">No modules are active for the current user context.</div></div>';
   };
 
-  const renderPageContent = () => {
+  const renderPageContent = async () => {
+    if (pageType === 'admin') {
+      if (state.activeView === 'admin:dashboard') {
+        await renderAdminDashboard();
+        return;
+      }
+      if (state.activeView === 'admin:modules') {
+        renderAdminModules();
+        return;
+      }
+      if (state.activeView === 'admin:users') {
+        await renderAdminUsers();
+        return;
+      }
+      if (state.activeView === 'admin:roles') {
+        renderAdminRoles();
+        return;
+      }
+      if (state.activeView === 'admin:permissions') {
+        renderAdminPermissions();
+        return;
+      }
+      if (state.activeView === 'admin:system') {
+        await renderAdminSystem();
+        return;
+      }
+      await renderAdminDashboard();
+      return;
+    }
+
+    if (pageType === 'developer') {
+      if (state.activeView === 'developer:core') {
+        await renderDeveloperOverview();
+        return;
+      }
+      await renderDeveloperOverview();
+      return;
+    }
+
     if (state.activeView === 'profile') {
       renderProfile();
       return;
@@ -273,6 +541,18 @@
 
         const result = await window.UserModule.login({ username, password });
         if (!result || !result.ok) {
+          const authMessage = document.getElementById('authMessage');
+          if (authMessage) {
+            authMessage.className = 'message error';
+            authMessage.textContent = result && result.message ? result.message : 'Authentication failed.';
+          }
+          return;
+        }
+
+        const user = result.data && result.data.user ? result.data.user : null;
+        const target = resolveRoleRoute(user);
+        if (target && target !== window.location.pathname.replace(/^\//, '')) {
+          window.location.replace(target);
           return;
         }
 
@@ -289,24 +569,24 @@
         if (!window.CoreAuth || typeof window.CoreAuth.setDeveloperPassword !== 'function') {
           return;
         }
-        window.CoreAuth.setDeveloperPassword(value);
+        const result = window.CoreAuth.setDeveloperPassword(value);
+        const authMessage = document.getElementById('authMessage');
+        if (authMessage) {
+          authMessage.className = result && result.ok ? 'message success' : 'message error';
+          authMessage.textContent = result && result.message ? result.message : (result && result.ok ? 'Developer password configured.' : 'Password is required.');
+        }
       });
     }
 
     if (logoutBtn) {
-      logoutBtn.addEventListener('click', () => {
+      logoutBtn.addEventListener('click', async () => {
         if (window.UserModule && typeof window.UserModule.logout === 'function') {
-          window.UserModule.logout();
+          await window.UserModule.logout();
         } else if (window.CoreAuth && typeof window.CoreAuth.logout === 'function') {
-          window.CoreAuth.logout();
+          await window.CoreAuth.logout();
         }
-        renderSummary();
-        renderUserMenu();
-        renderPageContent();
-        const authPanel = document.getElementById('authPanel');
-        const appShell = document.getElementById('appShell');
-        if (authPanel) authPanel.classList.remove('hidden');
-        if (appShell) appShell.classList.add('hidden');
+        const target = pageType === 'developer' ? 'dev.html' : pageType === 'admin' ? 'admin.html' : 'index.html';
+        window.location.replace(target);
       });
     }
   };
@@ -314,7 +594,20 @@
   const syncShellVisibility = () => {
     const authPanel = document.getElementById('authPanel');
     const appShell = document.getElementById('appShell');
+    const accessDenied = document.getElementById('accessDenied');
     const currentUser = getCurrentUser();
+
+    if (pageType === 'admin' || pageType === 'developer') {
+      const pageAllowed = pageType === 'admin'
+        ? !!currentUser && (hasRole(currentUser, 'admin') || hasPermission(currentUser, 'system:view'))
+        : !!currentUser && (hasRole(currentUser, 'developer') || hasPermission(currentUser, 'module:read'));
+
+      if (authPanel) authPanel.classList.toggle('hidden', !!currentUser && pageAllowed);
+      if (appShell) appShell.classList.toggle('hidden', !currentUser || !pageAllowed);
+      if (accessDenied) accessDenied.classList.toggle('hidden', !!currentUser && pageAllowed);
+      return;
+    }
+
     if (authPanel) authPanel.classList.toggle('hidden', !!currentUser);
     if (appShell) appShell.classList.toggle('hidden', !currentUser);
   };
@@ -330,11 +623,32 @@
 
   const init = async () => {
     await ensureRuntime();
+    const currentUser = getCurrentUser();
+    const targetPage = resolveRoleRoute(currentUser);
+    const currentPath = window.location.pathname.replace(/^\//, '');
+
+    if (pageType === 'admin' || pageType === 'developer') {
+      const pageAllowed = pageType === 'admin'
+        ? !!currentUser && (hasRole(currentUser, 'admin') || hasPermission(currentUser, 'system:view'))
+        : !!currentUser && (hasRole(currentUser, 'developer') || hasPermission(currentUser, 'module:read'));
+      if (currentUser && !pageAllowed && targetPage && targetPage !== currentPath) {
+        window.location.replace(targetPage);
+        return;
+      }
+      if (currentUser && pageAllowed && targetPage && targetPage !== currentPath && targetPage !== (pageType === 'admin' ? 'admin.html' : 'dev.html')) {
+        window.location.replace(targetPage);
+        return;
+      }
+    } else if (currentUser && targetPage && targetPage !== currentPath) {
+      window.location.replace(targetPage);
+      return;
+    }
+
     renderFrameworkPreview();
     renderSummary();
     renderUserMenu();
     syncShellVisibility();
-    renderPageContent();
+    await renderPageContent();
     bindAuth();
   };
 
