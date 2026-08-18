@@ -14,6 +14,28 @@
 
   const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
 
+  const normalizeSetupStatus = (value, fallback = 'NOT_CONFIGURED') => {
+    if (value === null || value === undefined || value === '') {
+      return fallback;
+    }
+
+    const normalized = String(value).trim().toUpperCase().replace(/[\s_-]+/g, '_');
+    const aliases = {
+      NOT_STARTED: 'NOT_CONFIGURED',
+      DRAFT: 'NOT_CONFIGURED',
+      IN_PROGRESS: 'CONFIGURATION_REQUIRED',
+      CONFIGURATION_REQUIRED: 'CONFIGURATION_REQUIRED',
+      READY_TO_TEST: 'READY_TO_TEST',
+      TESTING: 'TESTING',
+      READY: 'READY',
+      ACTIVE: 'ACTIVE',
+      ERROR: 'ERROR',
+      NOT_CONFIGURED: 'NOT_CONFIGURED'
+    };
+
+    return aliases[normalized] || fallback;
+  };
+
   const createStatusSnapshot = (name, value) => ({
     name,
     value,
@@ -25,6 +47,7 @@
     apps: new Map(),
     connections: new Map(),
     featureFlags: new Map(),
+    normalizeSetupStatus,
     permissions: new Map(),
     migrations: [],
     createdAt: new Date().toISOString(),
@@ -278,23 +301,65 @@
       };
     },
 
+    readPersistedSetupState() {
+      const candidates = [];
+
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('master-framework.setup-state');
+          if (raw) {
+            candidates.push(JSON.parse(raw));
+          }
+        } catch (error) {
+          // Ignore invalid persisted state in localStorage.
+        }
+      }
+
+      if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        try {
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const stateFile = path.resolve(process.cwd(), 'server', 'runtime', 'setup-state.json');
+          if (fs.existsSync(stateFile)) {
+            const raw = fs.readFileSync(stateFile, 'utf8');
+            if (raw && raw.trim()) {
+              candidates.push(JSON.parse(raw));
+            }
+          }
+        } catch (error) {
+          // Ignore invalid persisted state on disk.
+        }
+      }
+
+      for (const candidate of candidates) {
+        if (isPlainObject(candidate)) {
+          return candidate;
+        }
+      }
+      return null;
+    },
+
     getInstallationStatus() {
       const state = this.loadSetupState();
       const installation = state.installation || {};
       const config = state.configuration || {};
       const database = state.database || config.database || null;
       const connections = Array.isArray(state.connections) ? state.connections.length : 0;
+      const rawStatus = normalizeSetupStatus(state.status || installation.state || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
 
-      if (installation.active === true || state.status === 'active') {
+      if (installation.active === true || rawStatus === 'ACTIVE') {
         return 'ACTIVE';
       }
-      if (state.status === 'ready' || state.status === 'READY') {
+      if (rawStatus === 'READY') {
         return 'READY';
       }
-      if (state.status === 'testing' || state.currentStep === 'connection-test' || state.currentStep === 'database-test') {
-        return 'TESTING';
+      if (rawStatus === 'READY_TO_TEST' || rawStatus === 'TESTING') {
+        return rawStatus;
       }
-      if (state.status === 'in-progress' || state.status === 'CONFIGURATION_REQUIRED' || state.currentStep === 'configuration') {
+      if (rawStatus === 'ERROR') {
+        return 'ERROR';
+      }
+      if (rawStatus === 'CONFIGURATION_REQUIRED' || state.currentStep === 'configuration') {
         return 'CONFIGURATION_REQUIRED';
       }
       if (database || connections > 0 || config.serverUrl || config.appId) {
@@ -305,11 +370,27 @@
 
     loadSetupState() {
       const baseState = this.getDefaultSetupState();
-      if (this.setupState && isPlainObject(this.setupState)) {
-        return { ...baseState, ...this.setupState, installation: { ...baseState.installation, ...(this.setupState.installation || {}) } };
+      const persisted = this.readPersistedSetupState();
+      const source = persisted && isPlainObject(persisted)
+        ? persisted
+        : (this.setupState && isPlainObject(this.setupState) ? this.setupState : null);
+
+      if (!source) {
+        this.setupState = { ...baseState };
+        return this.setupState;
       }
-      this.setupState = { ...baseState };
-      return this.setupState;
+
+      const merged = {
+        ...baseState,
+        ...source,
+        installation: {
+          ...baseState.installation,
+          ...(source.installation || {})
+        }
+      };
+
+      this.setupState = merged;
+      return merged;
     },
 
     saveSetupState(nextState = null) {
@@ -317,6 +398,7 @@
       const normalized = {
         ...this.getDefaultSetupState(),
         ...state,
+        status: typeof state.status === 'string' ? state.status : this.getDefaultSetupState().status,
         installation: {
           ...this.getDefaultSetupState().installation,
           ...(state.installation || {})

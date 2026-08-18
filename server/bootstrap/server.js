@@ -48,11 +48,14 @@ const getSetupSnapshot = () => {
   const installation = setup.installation || {};
   const configuration = setup.configuration || {};
   const database = setup.database || configuration.database || null;
-  const state = normalizeStatusValue(setup.status, 'NOT_CONFIGURED');
+  const setupState = MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : normalizeStatusValue(setup.status, 'NOT_CONFIGURED');
+  const status = MasterFramework.normalizeSetupStatus
+    ? MasterFramework.normalizeSetupStatus(setup.status || setupState, 'NOT_CONFIGURED')
+    : normalizeStatusValue(setup.status || setupState, 'NOT_CONFIGURED');
 
   return {
     ...setup,
-    status: state,
+    status,
     installation: {
       ...installation,
       active: !!installation.active,
@@ -60,14 +63,17 @@ const getSetupSnapshot = () => {
     },
     configuration,
     database,
-    setupState: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus() : state
+    setupState
   };
 };
 
 const isSetupRequired = () => {
   const snapshot = getSetupSnapshot();
-  const status = normalizeStatusValue(snapshot.setupState || snapshot.status, 'NOT_CONFIGURED');
-  return !['ACTIVE', 'READY'].includes(status);
+  const status = MasterFramework.normalizeSetupStatus
+    ? MasterFramework.normalizeSetupStatus(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED')
+    : normalizeStatusValue(snapshot.setupState || snapshot.status || 'NOT_CONFIGURED', 'NOT_CONFIGURED');
+  const installationActive = !!(snapshot.installation && snapshot.installation.active);
+  return !(installationActive || ['ACTIVE', 'READY'].includes(status));
 };
 
 const getDatabaseStatus = () => {

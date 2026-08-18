@@ -59,6 +59,9 @@ terminal.md
 # Local Development Data
 *.local
 
+# Runtime setup state
+server/runtime/
+
 # Runtime Database Files
 # Schema, migrations and seed files remain tracked.
 # Only SQLite runtime sidecar files are ignored.
