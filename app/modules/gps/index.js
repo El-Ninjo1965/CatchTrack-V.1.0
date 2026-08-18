@@ -19,6 +19,8 @@
     let watchId = null;
     let tracking = false;
     let status = 'available'; // available | installed | enabled | disabled
+    let permissionState = 'unknown'; // unknown | granted | prompt | denied | unsupported
+    let lastError = null;
     let lastPosition = null;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -35,16 +37,23 @@
         }
     };
 
+    const hasGeolocation = () => typeof navigator !== 'undefined' && !!navigator.geolocation;
+
+    const getGeolocation = () => (hasGeolocation() ? navigator.geolocation : null);
+
     const persistPosition = (position) => {
+        const coords = position && position.coords ? position.coords : {};
         const record = {
             id: `gps-${Date.now()}`,
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            altitude: position.coords.altitude,
-            speed: position.coords.speed,
-            heading: position.coords.heading,
-            timestamp: new Date(position.timestamp).toISOString()
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            lat: coords.latitude,
+            lng: coords.longitude,
+            accuracy: coords.accuracy,
+            altitude: coords.altitude,
+            speed: coords.speed,
+            heading: coords.heading,
+            timestamp: new Date(position.timestamp || Date.now()).toISOString()
         };
 
         // Prefer DatabaseManager sync store when available.
@@ -62,16 +71,55 @@
         return record;
     };
 
+    const normalizeError = (error) => {
+        const code = error && typeof error.code === 'number' ? error.code : null;
+        const normalized = {
+            code: 'UNKNOWN_ERROR',
+            message: error && error.message ? error.message : 'An unknown GPS error occurred.'
+        };
+
+        if (code === 1) {
+            normalized.code = 'PERMISSION_DENIED';
+            permissionState = 'denied';
+        } else if (code === 2) {
+            normalized.code = 'POSITION_UNAVAILABLE';
+        } else if (code === 3) {
+            normalized.code = 'TIMEOUT';
+        }
+
+        lastError = normalized;
+        return normalized;
+    };
+
+    const refreshPermissionState = async () => {
+        if (typeof navigator === 'undefined' || !navigator.permissions || typeof navigator.permissions.query !== 'function') {
+            permissionState = hasGeolocation() ? 'prompt' : 'unsupported';
+            return permissionState;
+        }
+
+        try {
+            const result = navigator.permissions.query({ name: 'geolocation' });
+            const permission = result && typeof result.then === 'function' ? await result : result;
+            const state = permission && typeof permission.state === 'string' ? permission.state : 'unknown';
+            permissionState = state;
+            return permissionState;
+        } catch (error) {
+            permissionState = hasGeolocation() ? 'prompt' : 'unsupported';
+            return permissionState;
+        }
+    };
+
     // ── Geolocation handlers ──────────────────────────────────────────────────
 
     const onPosition = (position) => {
         const record = persistPosition(position);
         lastPosition = record;
+        lastError = null;
         emit('gps:position', record);
     };
 
     const onError = (error) => {
-        const detail = { code: error.code, message: error.message };
+        const detail = normalizeError(error);
         emit('gps:error', detail);
         audit('gps:error', detail);
     };
@@ -105,12 +153,15 @@
         },
 
         initialize() {
-            if (!navigator || !navigator.geolocation) {
+            if (!hasGeolocation()) {
+                permissionState = 'unsupported';
                 return { ok: false, code: 'GEOLOCATION_UNAVAILABLE', status };
             }
+
+            refreshPermissionState().catch(() => {});
             audit('gps:initialize', { moduleId: this.id });
-            emit('gps:initialized', { moduleId: this.id });
-            return { ok: true, status };
+            emit('gps:initialized', { moduleId: this.id, permissionState });
+            return { ok: true, status, permissionState };
         },
 
         enable() {
@@ -118,8 +169,9 @@
             this.status = status;
             this.active = true;
             audit('gps:enable', { moduleId: this.id });
-            emit('gps:enabled', { moduleId: this.id });
-            return { ok: true, status };
+            const trackingResult = this.startTracking();
+            emit('gps:enabled', { moduleId: this.id, permissionState, tracking: trackingResult.ok });
+            return { ok: true, status, tracking: trackingResult.ok, permissionState };
         },
 
         disable() {
@@ -137,6 +189,8 @@
             status = 'available';
             this.status = status;
             this.active = false;
+            permissionState = 'unknown';
+            lastError = null;
             lastPosition = null;
             audit('gps:uninstall', { moduleId: this.id });
             emit('gps:uninstalled', { moduleId: this.id });
@@ -145,6 +199,21 @@
 
         getStatus() {
             return status;
+        },
+
+        getPermissionState() {
+            return permissionState;
+        },
+
+        getRuntimeState() {
+            return {
+                status,
+                active: this.active,
+                tracking,
+                permissionState,
+                lastError: lastError ? { ...lastError } : null,
+                lastPosition: lastPosition ? { ...lastPosition } : null
+            };
         },
 
         // ── Tracking ──────────────────────────────────────────────────────────
@@ -158,17 +227,34 @@
                 return { ok: false, code: 'MODULE_NOT_ENABLED', status };
             }
 
-            if (!navigator || !navigator.geolocation) {
+            const geolocation = getGeolocation();
+            if (!geolocation) {
                 return { ok: false, code: 'GEOLOCATION_UNAVAILABLE' };
             }
 
-            watchId = navigator.geolocation.watchPosition(
-                onPosition,
-                onError,
-                geolocationOptions
-            );
+            if (permissionState === 'denied') {
+                const detail = { code: 'PERMISSION_DENIED', message: 'Geolocation permission was denied.' };
+                lastError = detail;
+                emit('gps:error', detail);
+                audit('gps:error', detail);
+                return { ok: false, code: 'PERMISSION_DENIED' };
+            }
+
+            try {
+                watchId = geolocation.watchPosition(
+                    onPosition,
+                    onError,
+                    geolocationOptions
+                );
+            } catch (error) {
+                const detail = normalizeError(error);
+                emit('gps:error', detail);
+                audit('gps:error', detail);
+                return { ok: false, code: detail.code, message: detail.message };
+            }
 
             tracking = true;
+            permissionState = permissionState === 'unknown' ? 'prompt' : permissionState;
             audit('gps:startTracking', { watchId });
             emit('gps:trackingStarted', { watchId });
             return { ok: true, watchId };
@@ -179,8 +265,9 @@
                 return { ok: false, code: 'NOT_TRACKING' };
             }
 
-            if (navigator && navigator.geolocation) {
-                navigator.geolocation.clearWatch(watchId);
+            const geolocation = getGeolocation();
+            if (geolocation && typeof geolocation.clearWatch === 'function') {
+                geolocation.clearWatch(watchId);
             }
 
             tracking = false;
@@ -198,21 +285,30 @@
 
         getCurrentPosition() {
             return new Promise((resolve, reject) => {
-                if (!navigator || !navigator.geolocation) {
-                    reject(new Error('Geolocation API not available.'));
+                const geolocation = getGeolocation();
+                if (!geolocation) {
+                    reject(Object.assign(new Error('Geolocation API not available.'), { code: 'GEOLOCATION_UNAVAILABLE' }));
                     return;
                 }
 
-                navigator.geolocation.getCurrentPosition(
+                if (permissionState === 'denied') {
+                    const error = Object.assign(new Error('Geolocation permission was denied.'), { code: 'PERMISSION_DENIED' });
+                    reject(error);
+                    return;
+                }
+
+                geolocation.getCurrentPosition(
                     (position) => {
                         const record = persistPosition(position);
                         lastPosition = record;
+                        lastError = null;
                         emit('gps:position', record);
                         resolve(record);
                     },
                     (error) => {
+                        const detail = normalizeError(error);
                         onError(error);
-                        reject(error);
+                        reject(Object.assign(new Error(detail.message), { code: detail.code }));
                     },
                     geolocationOptions
                 );
@@ -239,12 +335,14 @@
     GpsModule.renderUserInterface = (container) => {
         if (!container) return;
         const render = (message = '', isError = false) => {
-            const position = GpsModule.getLastPosition();
+            const state = GpsModule.getRuntimeState();
+            const position = state.lastPosition || GpsModule.getLastPosition();
             const trackingNow = GpsModule.isTracking();
-            const label = trackingNow ? 'Tracking active' : status === 'enabled' ? 'Ready' : 'Not active';
-            container.innerHTML = `<div class="gps-user-module"><div class="gps-heading"><div><span class="user-app-eyebrow">Location</span><h1>GPS</h1></div><span id="gpsUserStatus" class="gps-status ${isError ? 'error' : ''}">${label}</span></div><div class="gps-location-card"><span class="gps-location-label">Current position</span><dl id="gpsPosition" class="gps-position">${position ? `<div><dt>Latitude</dt><dd>${position.lat}</dd></div><div><dt>Longitude</dt><dd>${position.lng}</dd></div>` : '<div><dt>Position</dt><dd>Not available</dd></div>'}</dl></div><div class="gps-actions"><button type="button" class="gps-primary-action" data-gps-action="current">Get current position</button><button type="button" data-gps-action="start" ${trackingNow ? 'disabled' : ''}>Start tracking</button><button type="button" data-gps-action="stop" ${trackingNow ? '' : 'disabled'}>Stop tracking</button></div><p id="gpsUserMessage" class="gps-message">${message}</p></div>`;
-            container.querySelector('[data-gps-action="current"]').addEventListener('click', async () => { render('Requesting location...'); try { await GpsModule.getCurrentPosition(); render('Location updated.'); } catch (error) { render(error && error.code === 1 ? 'Location permission was denied.' : 'Location could not be retrieved.', true); } });
-            container.querySelector('[data-gps-action="start"]').addEventListener('click', () => { const result = GpsModule.startTracking(); render(result.ok ? 'Tracking started.' : 'Location tracking is unavailable.', !result.ok); });
+            const label = trackingNow ? 'Tracking active' : state.permissionState === 'denied' ? 'Permission denied' : state.status === 'enabled' ? 'Ready' : 'Not active';
+            const positionHtml = position ? `<div><dt>Latitude</dt><dd>${position.latitude ?? position.lat ?? '—'}</dd></div><div><dt>Longitude</dt><dd>${position.longitude ?? position.lng ?? '—'}</dd></div><div><dt>Accuracy</dt><dd>${position.accuracy ?? '—'}</dd></div><div><dt>Timestamp</dt><dd>${position.timestamp ?? '—'}</dd></div>` : '<div><dt>Position</dt><dd>Not available</dd></div>';
+            container.innerHTML = `<div class="gps-user-module"><div class="gps-heading"><div><span class="user-app-eyebrow">Location</span><h1>GPS</h1></div><span id="gpsUserStatus" class="gps-status ${isError ? 'error' : ''}">${label}</span></div><div class="gps-location-card"><span class="gps-location-label">Current position</span><dl id="gpsPosition" class="gps-position">${positionHtml}</dl><div class="gps-state-line">Permission: ${state.permissionState}</div></div><div class="gps-actions"><button type="button" class="gps-primary-action" data-gps-action="current">Get current position</button><button type="button" data-gps-action="start" ${trackingNow ? 'disabled' : ''}>Start tracking</button><button type="button" data-gps-action="stop" ${trackingNow ? '' : 'disabled'}>Stop tracking</button></div><p id="gpsUserMessage" class="gps-message">${message}</p></div>`;
+            container.querySelector('[data-gps-action="current"]').addEventListener('click', async () => { render('Requesting location...'); try { await GpsModule.getCurrentPosition(); render('Location updated.'); } catch (error) { render(error && error.code === 'PERMISSION_DENIED' ? 'Location permission was denied.' : error && error.code === 'POSITION_UNAVAILABLE' ? 'Position could not be determined.' : error && error.code === 'TIMEOUT' ? 'Location request timed out.' : 'Location could not be retrieved.', true); } });
+            container.querySelector('[data-gps-action="start"]').addEventListener('click', () => { const result = GpsModule.startTracking(); render(result.ok ? 'Tracking started.' : result.code === 'PERMISSION_DENIED' ? 'Location permission was denied.' : 'Location tracking is unavailable.', !result.ok); });
             container.querySelector('[data-gps-action="stop"]').addEventListener('click', () => { GpsModule.stopTracking(); render('Tracking stopped.'); });
         };
         render();

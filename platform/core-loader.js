@@ -78,17 +78,6 @@
     };
 
     const readTextFile = async (filePath) => {
-        if (typeof fetch === 'function') {
-            const absolutePath = toAbsolutePath('/', filePath);
-            const response = await fetch(absolutePath, { cache: 'no-store' });
-
-            if (!response.ok) {
-                return null;
-            }
-
-            return response.text();
-        }
-
         if (typeof require === 'function' && typeof process !== 'undefined') {
             const fs = require('fs');
             const path = require('path');
@@ -101,10 +90,37 @@
             return fs.readFileSync(normalized, 'utf8');
         }
 
+        if (typeof fetch === 'function') {
+            const absolutePath = toAbsolutePath('/', filePath);
+            const response = await fetch(absolutePath, { cache: 'no-store' });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            return response.text();
+        }
+
         return null;
     };
 
     const readJsonFile = async (filePath) => {
+        if (typeof require === 'function' && typeof process !== 'undefined') {
+            const fs = require('fs');
+            const path = require('path');
+            const normalized = path.resolve(filePath);
+
+            if (!fs.existsSync(normalized)) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(fs.readFileSync(normalized, 'utf8'));
+            } catch (error) {
+                return null;
+            }
+        }
+
         const text = await readTextFile(filePath);
 
         if (!text) {
@@ -254,6 +270,7 @@
                 name: implementation.name || normalizedManifest.name || normalizedManifest.id,
                 version: implementation.version || normalizedManifest.version || '1.0.0',
                 description: implementation.description || normalizedManifest.description || '',
+                globalName: implementation.globalName || normalizedManifest.globalName || null,
                 manifest: normalizedManifest,
                 modulePath: moduleRootPath,
                 source: entryPath

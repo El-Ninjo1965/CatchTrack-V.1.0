@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const Framework = require('../platform/master-framework');
 const ServerBootstrap = require('../server/bootstrap/server');
@@ -18,6 +19,122 @@ const cleanupRuntimeState = () => {
       fs.unlinkSync(filePath);
     }
   }
+};
+
+const loadScriptIntoContext = (context, filePath) => {
+  const source = fs.readFileSync(filePath, 'utf8');
+  vm.runInContext(source, context, { filename: filePath });
+};
+
+const createGpsModuleContext = ({ permissionState = 'granted' } = {}) => {
+  const geolocationState = {
+    permissionState,
+    watchCalls: 0,
+    activeWatches: new Map(),
+    nextCurrentPositionError: null,
+    position: {
+      coords: {
+        latitude: 52.52,
+        longitude: 13.405,
+        accuracy: 7.5
+      },
+      timestamp: 1710000000000
+    }
+  };
+
+  const sandbox = {
+    window: null,
+    document: {
+      readyState: 'complete',
+      addEventListener() {}
+    },
+    navigator: {
+      permissions: {
+        query: () => ({ state: geolocationState.permissionState })
+      },
+      geolocation: {
+        watchPosition(success, error) {
+          const watchId = ++geolocationState.watchCalls;
+          geolocationState.activeWatches.set(watchId, { success, error });
+          return watchId;
+        },
+        clearWatch(watchId) {
+          geolocationState.activeWatches.delete(watchId);
+        },
+        getCurrentPosition(success, error) {
+          if (geolocationState.nextCurrentPositionError) {
+            const currentError = geolocationState.nextCurrentPositionError;
+            geolocationState.nextCurrentPositionError = null;
+            error(currentError);
+            return;
+          }
+
+          success(geolocationState.position);
+        }
+      }
+    },
+    Core: {
+      state: {},
+      emit() {}
+    },
+    CoreEventBus: {
+      emit() {}
+    },
+    CoreErrorHandler: {
+      handle() {}
+    },
+    CoreAudit: {
+      record() {}
+    },
+    CoreStorage: (() => {
+      const storage = new Map();
+      return {
+        get(key) {
+          return storage.get(key);
+        },
+        set(key, value) {
+          storage.set(key, value);
+        }
+      };
+    })(),
+    DatabaseManager: {
+      save() {
+        return Promise.resolve({ ok: true });
+      }
+    },
+    ModuleInterface: null,
+    ModuleRegistry: null,
+    ModuleManager: null,
+    CoreLoader: null,
+    FrameworkModuleCatalog: [],
+    ErrorLog: {},
+    CoreConfig: {},
+    CoreContext: {},
+    CoreState: {},
+    CoreLifecycle: {},
+    CoreAuth: {},
+    CoreAccess: {},
+    CoreEventRing: {},
+    require,
+    process,
+    console
+  };
+
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+
+  const base = path.resolve(__dirname, '..');
+  for (const scriptPath of [
+    'platform/module-interface.js',
+    'platform/module-registry.js',
+    'platform/module-manager.js',
+    'platform/core-loader.js',
+    'app/modules/gps/index.js'
+  ]) {
+    loadScriptIntoContext(sandbox, path.join(base, scriptPath));
+  }
+
+  return { sandbox, geolocationState };
 };
 
 test('registers and activates apps', () => {
@@ -171,6 +288,61 @@ test('supports admin devices, licenses, updates, and marketplace state', () => {
     }
   ]);
   assert.equal(runtime.getMarketplaceEntries().length, 1);
+});
+
+test('loads and cycles the gps module lifecycle without duplicate watchers', async () => {
+  cleanupRuntimeState();
+
+  const { sandbox, geolocationState } = createGpsModuleContext();
+  const discovered = await sandbox.ModuleManager.discoverModules();
+
+  assert.ok(discovered.some((module) => module.id === 'gps'));
+  const gps = sandbox.ModuleManager.get('gps');
+  assert.ok(gps);
+  assert.equal(gps.status, 'enabled');
+  assert.equal(gps.active, true);
+  assert.equal(gps.isTracking(), true);
+  assert.equal(geolocationState.watchCalls, 1);
+  assert.equal(geolocationState.activeWatches.size, 1);
+
+  const firstWatchId = [...geolocationState.activeWatches.keys()][0];
+
+  sandbox.ModuleManager.disable('gps');
+  assert.equal(gps.status, 'disabled');
+  assert.equal(gps.active, false);
+  assert.equal(gps.isTracking(), false);
+  assert.equal(geolocationState.activeWatches.size, 0);
+
+  sandbox.ModuleManager.enable('gps');
+  assert.equal(gps.status, 'enabled');
+  assert.equal(gps.isTracking(), true);
+  assert.equal(geolocationState.watchCalls, 2);
+  assert.equal(geolocationState.activeWatches.size, 1);
+  assert.notEqual([...geolocationState.activeWatches.keys()][0], firstWatchId);
+
+  geolocationState.nextCurrentPositionError = { code: 2, message: 'Position unavailable' };
+  await assert.rejects(gps.getCurrentPosition(), (error) => error.code === 'POSITION_UNAVAILABLE');
+
+  geolocationState.nextCurrentPositionError = { code: 3, message: 'Timeout' };
+  await assert.rejects(gps.getCurrentPosition(), (error) => error.code === 'TIMEOUT');
+
+  sandbox.ModuleManager.disable('gps');
+});
+
+test('marks gps permission denied without starting a watcher', async () => {
+  cleanupRuntimeState();
+
+  const { sandbox, geolocationState } = createGpsModuleContext({ permissionState: 'denied' });
+  const discovered = await sandbox.ModuleManager.discoverModules();
+
+  assert.ok(discovered.some((module) => module.id === 'gps'));
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const gps = sandbox.ModuleManager.get('gps');
+  assert.ok(gps);
+  assert.equal(gps.getPermissionState(), 'denied');
+  assert.equal(gps.isTracking(), false);
+  assert.equal(geolocationState.watchCalls, 0);
 });
 
 test('supports setup, database, and activation flow', async () => {

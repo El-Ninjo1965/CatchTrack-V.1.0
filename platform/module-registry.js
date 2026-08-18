@@ -171,7 +171,7 @@
                 capabilities: Array.isArray(module.capabilities) ? module.capabilities : [],
                 source: module.source || module.modulePath,
                 entry: module.source || module.modulePath,
-                globalName: module.globalName || module.name || module.id
+                globalName: module.globalName || module.manifest?.globalName || module.name || module.id
             }))];
 
             combinedCatalog.forEach((entry) => {
