@@ -63,6 +63,9 @@
                 source: typeof manifest.source === 'string' ? manifest.source : null,
                 entry: typeof manifest.entry === 'string' ? manifest.entry : null,
                 main: typeof manifest.main === 'string' ? manifest.main : null,
+                globalName: typeof manifest.globalName === 'string' && manifest.globalName.trim()
+                    ? manifest.globalName.trim()
+                    : null,
                 modulePath: typeof manifest.modulePath === 'string' ? manifest.modulePath : null,
                 mountPath: typeof manifest.mountPath === 'string' ? manifest.mountPath : null,
                 manifestPath: typeof manifest.manifestPath === 'string' ? manifest.manifestPath : null,
