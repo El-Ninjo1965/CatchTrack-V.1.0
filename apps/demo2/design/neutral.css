@@ -1,0 +1,33 @@
+body.demo-app {
+  background: linear-gradient(180deg, #f3f6fb 0%, #edf1ff 100%);
+}
+
+.demo-app-shell {
+  min-height: 100vh;
+  padding: 32px 20px;
+  display: grid;
+  place-items: center;
+}
+
+.demo-app .card {
+  width: min(720px, 100%);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #dfe7f3;
+  border-radius: 18px;
+  box-shadow: 0 16px 36px rgba(31, 52, 84, 0.12);
+}
+
+.demo-app .card-header {
+  padding: 18px 20px 0;
+}
+
+.demo-app .card-title {
+  margin: 0;
+  font-size: 2rem;
+  color: #1c2432;
+}
+
+.demo-app .content-wrap {
+  padding: 20px;
+  color: #1c2432;
+}

@@ -51,6 +51,25 @@ Fortsetzung von WORKFLOW.md
 - Runtime/test artifact review did not reveal active app servers or hanging test processes; the repository remains in a clean validation state aside from the intentional code changes.
 - Final branch state at completion: working branch `copilot/neutral-connection-management` with the changes for PR #8 and the local repo aligned to the GitHub workflow state.
 
+## 2026-08-18 - Neutral design layer and framework readiness
+
+- The current branch state was reviewed against the GitHub PR #8 and the local repository before continuing work.
+- The neutral platform was kept generic and app-neutral: root branding was updated from the old app-specific identity to a neutral `Primary Web App` shell, and the browser assets now load from a dedicated `design/` layer rather than from app-specific or legacy page styling.
+- The architecture now supports a clean design separation:
+  - `design/neutral.css` is the shared neutral base stylesheet.
+  - `apps/demo2/design/neutral.css` remains available as an app-specific visual override while preserving the neutral core.
+  - The server serves `/design/*` assets explicitly, which keeps the design layer decoupled from the app registry and routing core.
+- The app registry was extended so app entries can declare neutral design metadata such as `design` and `designPath` without forcing a silent fallback when a registry is partial or malformed.
+- The public app context now exposes the active app design metadata, which keeps future app selection and design mapping explicit and testable.
+- Tests were updated to validate the design layer and neutral app naming:
+  - `tests/framework-neutral.test.js` includes explicit checks for the design layer and app-aware configuration.
+  - `tests/smoke.spec.js` confirms the neutral browser shell and the demo2 mount are both working without app-specific branding leakage.
+- Validation executed successfully:
+  - `node --check` for the changed server files
+  - `npm test` -> 14/14 passed
+  - `npx playwright test --reporter=list` -> 4/4 passed
+  - `git diff --check` -> clean
+- Final repository state at the end of this validation pass: no uncommitted runtime artifacts or stray logs remained; the working tree was kept to the intended neutral framework changes only.
 
 ## 2026-08-17 - Serverseitige Produktionsgrundlage und technischer Admin-Einstieg
 

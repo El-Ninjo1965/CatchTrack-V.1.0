@@ -741,6 +741,33 @@ test('webroot assets are present and reference real files', () => {
   }
 });
 
+test('design layer is separated and app-aware', async () => {
+  const { createServer } = require(path.join(root, 'server', 'server.js'));
+  const serverInstance = createServer({ adminAccessToken: 'unit-admin-token' });
+
+  await new Promise((resolve, reject) => {
+    serverInstance.listen(0, '127.0.0.1', () => resolve());
+    serverInstance.once('error', reject);
+  });
+
+  const port = serverInstance.address().port;
+  const rootDesign = await requestText(port, '/design/neutral.css');
+  const rootContext = await requestJson(port, '/api/app-context', { 'x-admin-access-token': 'unit-admin-token' });
+  const demoContext = await requestJson(port, '/demo2/api/app-context', { 'x-admin-access-token': 'unit-admin-token' });
+
+  assert.equal(rootDesign.statusCode, 200);
+  assert.match(rootDesign.body, /--bg|background/i);
+  assert.equal(rootContext.statusCode, 200);
+  assert.equal(rootContext.body.app.design, 'neutral');
+  assert.equal(demoContext.statusCode, 200);
+  assert.equal(demoContext.body.app.design, 'demo2-neutral');
+  assert.match(demoContext.body.app.designPath, /apps\/demo2\/design\/neutral\.css/i);
+
+  await new Promise((resolve, reject) => {
+    serverInstance.close((error) => (error ? reject(error) : resolve()));
+  });
+});
+
 test('workflow documents the neutral structure without stale directions', () => {
   const workflow = readText('WORKFLOW.md');
 

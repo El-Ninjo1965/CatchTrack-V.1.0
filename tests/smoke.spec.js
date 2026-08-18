@@ -5,8 +5,8 @@ test('user app opens directly and renders the active gps module', async ({ page 
   await page.context().setGeolocation({ latitude: 52.52, longitude: 13.405 });
   await page.goto('/');
 
-  await expect(page).toHaveTitle('CatchTrack');
-  await expect(page.locator('.user-app-brand')).toHaveText('CatchTrack');
+  await expect(page).toHaveTitle('Neutral Platform');
+  await expect(page.locator('.user-app-brand')).toHaveText('Primary Web App');
   await expect(page.getByRole('button', { name: 'Modules' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
   await expect(page.locator('text=Framework Status')).toHaveCount(0);

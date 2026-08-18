@@ -168,6 +168,8 @@ const toPublicAppContext = (appContext) => {
     appId: appContext.appId,
     appName: appContext.appName,
     mountPath: appContext.mountPath,
+    design: appContext.design || 'neutral',
+    designPath: appContext.designPath || null,
     apiBasePath: appContext.apiBasePath,
     connectionScope: appContext.connectionScope,
     active: appContext.active,
@@ -182,7 +184,8 @@ const isGlobalRoute = (pathname) => {
     || pathname.startsWith('/api/')
     || pathname.startsWith('/platform/')
     || pathname.startsWith('/app/modules/')
-    || pathname.startsWith('/webroot/');
+    || pathname.startsWith('/webroot/')
+    || pathname.startsWith('/design/');
 };
 
 const routeApi = async (req, url, res, { modulesDir = appModulesDir, adminAccessToken = process.env.ADMIN_ACCESS_TOKEN, connectionService, appRegistryService, appContext } = {}) => {
@@ -408,6 +411,11 @@ const createServer = ({ modulesDir = appModulesDir, adminAccessToken = process.e
 
     if (requestPath.startsWith('/webroot/')) {
       requestPath = requestPath.replace(/^\/webroot\//, '/');
+    }
+
+    if (requestPath.startsWith('/design/')) {
+      serveStaticFile(res, safeResolve(rootDir, requestPath.replace(/^\/+/u, '')));
+      return;
     }
 
     if (requestPath.startsWith('/platform/')) {

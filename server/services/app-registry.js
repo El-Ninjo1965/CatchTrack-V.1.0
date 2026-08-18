@@ -18,6 +18,20 @@ const normalizeMountPath = (value) => {
 
 const resolveRelativePath = (rootDir, value, fallback) => path.resolve(rootDir, value || fallback);
 
+const validateExistingFilePath = (rootDir, value, label, appId) => {
+  const text = normalizeText(value);
+  if (!text) {
+    throw new Error(`App "${appId}" has an invalid ${label}: missing value.`);
+  }
+
+  const resolved = path.isAbsolute(text) ? path.resolve(text) : path.resolve(rootDir, text);
+  if (!fs.existsSync(resolved)) {
+    throw new Error(`App "${appId}" has an invalid ${label}: "${text}" does not exist.`);
+  }
+
+  return resolved;
+};
+
 const readJsonFile = (filePath) => {
   if (!fs.existsSync(filePath)) {
     throw new Error(`App registry file does not exist: ${filePath}`);
@@ -79,14 +93,22 @@ const normalizeApp = (input, rootDir) => {
   }
 
   const defaultWebRootDir = mountPath === '/' ? 'webroot' : path.join('apps', appId, 'webroot');
+  const defaultDesignPath = mountPath === '/' ? 'design/neutral.css' : path.join('apps', appId, 'design', 'neutral.css');
   const defaultDataRootDir = path.join('server', 'state', 'apps', appId);
+  const designName = normalizeText(input.design || input.theme || 'neutral');
   const webRootDir = validateWebRootDir(input.webRootDir || defaultWebRootDir, rootDir, appId);
+  const explicitDesignPath = normalizeText(input.designPath);
+  const designPath = explicitDesignPath
+    ? validateExistingFilePath(rootDir, explicitDesignPath, 'designPath', appId)
+    : (fs.existsSync(path.resolve(rootDir, defaultDesignPath)) ? path.resolve(rootDir, defaultDesignPath) : null);
 
   return {
     appId,
     appName: normalizeText(input.appName || appId),
     mountPath,
     webRootDir,
+    design: designName || 'neutral',
+    designPath,
     dataRootDir: resolveRelativePath(rootDir, input.dataRootDir || defaultDataRootDir, defaultDataRootDir),
     apiBasePath: normalizeMountPath(input.apiBasePath || '/api'),
     active: input.active !== false,
