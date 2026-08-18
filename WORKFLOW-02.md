@@ -39,10 +39,10 @@ Fortsetzung von WORKFLOW.md
 - Repository state aligned with the GitHub workflow: PR #8 on branch `copilot/neutral-connection-management` was reviewed against the local repository state before work began.
 - The legacy demo shell files `app/app-demo.js` and `app/index.js` were removed because they were unused demo-only scaffolding and no active user-app, admin, developer, or GPS flow depended on them.
 - The `app/modules/gps` module remains in place as the active module implementation and was not converted into a CatchTrack-specific app.
-- `apps/demo2/` remains as a temporary neutral architecture test app. It is intentionally isolated with its own `appId`, mount path, webroot, connection scope, and app-scoped API context; it does not become a CatchTrack-branded application.
+- The neutral framework intentionally excludes demo-specific app folders. Future app mounts are registered dynamically via the app registry without embedding a demo instance into the neutral core.
 - The app registry (`server/services/app-registry.js`) was hardened to fail fast on invalid registry payloads, missing app IDs, missing mount paths, duplicate app IDs, duplicate mount paths, and invalid `webRootDir` values. It no longer silently falls back to defaults when the registry is malformed.
 - The connection service (`server/services/connection-service.js`) now isolates app-scoped connections, rejects unknown apps, prevents cross-app reads or writes, and enforces valid app context boundaries while preserving the neutral architecture.
-- Additional test coverage was added in `tests/framework-neutral.test.js` for duplicate IDs, duplicate mounts, invalid registry entries, root-vs-app context resolution, `/demo2` isolation, and parallel mounts such as `/catchtrack/` and `/zukunft/`.
+- Additional test coverage was added in `tests/framework-neutral.test.js` for duplicate IDs, duplicate mounts, invalid registry entries, root-vs-app context resolution, and parallel mounts such as `/catchtrack/` and `/zukunft/`.
 - Validation executed successfully:
   - `node --check` for all edited JavaScript files
   - `npm test` -> 13/13 passed
@@ -57,13 +57,13 @@ Fortsetzung von WORKFLOW.md
 - The neutral platform was kept generic and app-neutral: root branding was updated from the old app-specific identity to a neutral `Primary Web App` shell, and the browser assets now load from a dedicated `design/` layer rather than from app-specific or legacy page styling.
 - The architecture now supports a clean design separation:
   - `design/neutral.css` is the shared neutral base stylesheet.
-  - `apps/demo2/design/neutral.css` remains available as an app-specific visual override while preserving the neutral core.
+  - The neutral core exposes a shared design layer, while app-specific themes are expected to be provided by each app configuration rather than by a bundled demo app.
   - The server serves `/design/*` assets explicitly, which keeps the design layer decoupled from the app registry and routing core.
 - The app registry was extended so app entries can declare neutral design metadata such as `design` and `designPath` without forcing a silent fallback when a registry is partial or malformed.
 - The public app context now exposes the active app design metadata, which keeps future app selection and design mapping explicit and testable.
 - Tests were updated to validate the design layer and neutral app naming:
   - `tests/framework-neutral.test.js` includes explicit checks for the design layer and app-aware configuration.
-  - `tests/smoke.spec.js` confirms the neutral browser shell and the demo2 mount are both working without app-specific branding leakage.
+  - `tests/smoke.spec.js` confirms the neutral browser shell remains stable without any demo-specific branding or app-specific mount assumptions.
 - Validation executed successfully:
   - `node --check` for the changed server files
   - `npm test` -> 14/14 passed
@@ -186,12 +186,12 @@ Fortsetzung von WORKFLOW.md
 
 - Aufgabe: Eine zweite, vollständig neutrale Demo-App neben der Root-App bereitstellen, um die Multi-App-Struktur praktisch zu prüfen.
 - Umsetzung:
-  - `demo2` wurde als eigene App-Instanz mit Mount-Path `/demo2/` registriert.
-  - Die App bekommt einen eigenen Webroot unter `apps/demo2/webroot/`.
+  - Ein zukünftiger App-Mount wird über die Registry konfiguriert; es gibt keine feste Demo2-Instanz mehr im neutralen Core.
+  - Der Webroot einer App wird durch die Registry als eigener App-Kontext konfiguriert und bleibt app-neutral.
   - Der Server erkennt den App-Kontext anhand des Mount-Paths und trennt Root- und Demo-Connections serverseitig.
   - Ungeregelte App-Pfade liefern sauber `404`.
 - Tests:
   - Root-App lädt weiter.
-  - `/demo2/` liefert die Demo-App.
+  - Ein späterer Mount wie `/catchtrack/` oder `/zukunft/` kann auf dieselbe Weise registriert werden.
   - Root- und Demo2-Connections bleiben getrennt.
   - Nicht registrierte App-Pfade werden sauber behandelt.

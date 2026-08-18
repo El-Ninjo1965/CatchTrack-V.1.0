@@ -13,19 +13,6 @@
       "connectionScope": "primary-web-app",
       "active": true,
       "metadata": {}
-    },
-    {
-      "appId": "demo2",
-      "appName": "Demo 2",
-      "mountPath": "/demo2",
-      "webRootDir": "apps/demo2/webroot",
-      "design": "demo2-neutral",
-      "designPath": "apps/demo2/design/neutral.css",
-      "dataRootDir": "server/state/apps/demo2",
-      "apiBasePath": "/api",
-      "connectionScope": "demo2",
-      "active": true,
-      "metadata": {}
     }
   ]
 }

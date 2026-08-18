@@ -36,18 +36,14 @@ test('user app opens directly and renders the active gps module', async ({ page 
   });
 });
 
-test('demo2 app opens as a separate neutral instance', async ({ page, request }) => {
-  await page.goto('/demo2/');
+test('root app remains neutral and independent of legacy demo mounts', async ({ page }) => {
+  await page.goto('/');
 
-  await expect(page).toHaveTitle('Demo 2');
-  await expect(page.getByRole('heading', { name: 'Demo 2' })).toBeVisible();
-  await expect(page.locator('text=separate neutral app instance')).toBeVisible();
-  await expect(page.locator('#demo2AppId')).toHaveText('demo2');
-  await expect(page.locator('#demo2MountPath')).toHaveText('/demo2');
-
-  const contextResponse = await request.get('/demo2/api/app-context');
-  expect(contextResponse.status()).toBe(200);
-  await expect(page.locator('text=App ID:')).toBeVisible();
+  await expect(page).toHaveTitle('Neutral Platform');
+  await expect(page.locator('.user-app-brand')).toHaveText('Primary Web App');
+  await expect(page.getByRole('button', { name: 'Modules' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
+  await expect(page.locator('text=Framework Status')).toHaveCount(0);
 });
 
 test('administrative pages are protected server-side', async ({ request }) => {
