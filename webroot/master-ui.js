@@ -155,9 +155,23 @@
     }
   };
 
+  const getCurrentRoleHeaders = () => {
+    const user = getCurrentUser();
+    const roles = user && Array.isArray(user.roles) ? user.roles.filter(Boolean).map(String) : [];
+    const primaryRole = roles.length ? roles[0] : 'user';
+
+    return {
+      'x-framework-user-id': user && user.id ? String(user.id) : '',
+      'x-framework-role': roles.join(','),
+      'x-user-role': primaryRole,
+      'x-admin-role': roles.join(','),
+      'x-framework-permissions': user && Array.isArray(user.permissions) ? user.permissions.filter(Boolean).map(String).join(',') : ''
+    };
+  };
+
   const postJson = async (url, payload, fallback = { ok: false }) => fetchJson(url, fallback, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getCurrentRoleHeaders() },
     body: JSON.stringify(payload)
   });
 
@@ -199,6 +213,72 @@
             const result = await postJson('/api/connections', payload, { ok: false, connection: null });
             if (statusTarget) {
               statusTarget.textContent = result && result.ok ? 'Connection saved.' : (result && result.message ? result.message : 'Connection save failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'device-save') {
+            const payload = {
+              deviceId: document.getElementById('deviceIdInput') ? document.getElementById('deviceIdInput').value : '',
+              name: document.getElementById('deviceNameInput') ? document.getElementById('deviceNameInput').value : '',
+              type: document.getElementById('deviceTypeInput') ? document.getElementById('deviceTypeInput').value : 'generic',
+              status: document.getElementById('deviceStatusInput') ? document.getElementById('deviceStatusInput').value : 'inactive',
+              userId: document.getElementById('deviceUserIdInput') ? document.getElementById('deviceUserIdInput').value : '',
+              lastContactAt: document.getElementById('deviceContactInput') ? document.getElementById('deviceContactInput').value : ''
+            };
+            const result = await postJson('/api/devices', payload, { ok: false, device: null });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'Device saved.' : (result && result.message ? result.message : 'Device save failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'license-save') {
+            const payload = {
+              licenseId: document.getElementById('licenseIdInput') ? document.getElementById('licenseIdInput').value : '',
+              type: document.getElementById('licenseTypeInput') ? document.getElementById('licenseTypeInput').value : 'standard',
+              status: document.getElementById('licenseStatusInput') ? document.getElementById('licenseStatusInput').value : 'inactive',
+              validUntil: document.getElementById('licenseValidUntilInput') ? document.getElementById('licenseValidUntilInput').value : '',
+              userId: document.getElementById('licenseUserIdInput') ? document.getElementById('licenseUserIdInput').value : '',
+              deviceId: document.getElementById('licenseDeviceIdInput') ? document.getElementById('licenseDeviceIdInput').value : ''
+            };
+            const result = await postJson('/api/licenses', payload, { ok: false, license: null });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'License saved.' : (result && result.message ? result.message : 'License save failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'user-save') {
+            const actor = getCurrentUser();
+            if (!actor) {
+              throw new Error('User management requires an authenticated admin or developer.');
+            }
+            const payload = {
+              username: document.getElementById('newUserUsernameInput') ? document.getElementById('newUserUsernameInput').value : '',
+              displayName: document.getElementById('newUserDisplayNameInput') ? document.getElementById('newUserDisplayNameInput').value : '',
+              email: document.getElementById('newUserEmailInput') ? document.getElementById('newUserEmailInput').value : '',
+              roles: [document.getElementById('newUserRoleInput') ? document.getElementById('newUserRoleInput').value : 'user'].filter(Boolean)
+            };
+            if (!window.AdminModule || typeof window.AdminModule.createUser !== 'function') {
+              throw new Error('User management is unavailable.');
+            }
+            const result = await window.AdminModule.createUser(payload, actor);
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'User created.' : (result && result.message ? result.message : 'User creation failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+          }
+
+          if (action === 'updates-check') {
+            const payload = {
+              currentVersion: document.getElementById('updateCurrentVersionInput') ? document.getElementById('updateCurrentVersionInput').value : '',
+              availableVersion: document.getElementById('updateAvailableVersionInput') ? document.getElementById('updateAvailableVersionInput').value : '',
+              source: document.getElementById('updateSourceInput') ? document.getElementById('updateSourceInput').value : 'local'
+            };
+            const result = await postJson('/api/updates/check', payload, { ok: false, updates: {} });
+            if (statusTarget) {
+              statusTarget.textContent = result && result.updates && result.updates.message ? result.updates.message : 'Update check failed.';
               statusTarget.className = result && result.ok ? 'message success' : 'message error';
             }
           }
@@ -312,6 +392,7 @@
       : { moduleCount: registry.length, userCount: 0, uptime: 0 };
     const serverStatus = await getServerStatus();
     const errorCount = window.ErrorLog && typeof window.ErrorLog.getAll === 'function' ? window.ErrorLog.getAll().length : 0;
+    const frameworkStats = serverStatus.framework && serverStatus.framework.framework ? serverStatus.framework.framework : {};
 
     const cards = [
       { label: 'Framework version', value: getFrameworkVersion() },
@@ -322,6 +403,9 @@
       { label: 'Database status', value: getDatabaseStatus() },
       { label: 'Module count', value: String(stats.moduleCount || registry.length) },
       { label: 'Active modules', value: String(activeCount) },
+      { label: 'Device count', value: String(typeof frameworkStats.devices === 'number' ? frameworkStats.devices : 0) },
+      { label: 'License count', value: String(typeof frameworkStats.licenses === 'number' ? frameworkStats.licenses : 0) },
+      { label: 'Update status', value: frameworkStats.updateStatus || 'NOT_CONFIGURED' },
       { label: 'Error count', value: String(errorCount) },
       { label: 'Current user', value: sessionState.username || (currentUser ? currentUser.username : 'guest') },
       { label: 'Current role', value: (sessionState.roles && sessionState.roles.length ? sessionState.roles.join(', ') : 'user') }
@@ -422,30 +506,57 @@
     const page = document.getElementById('mainContent');
     if (!page) return;
 
-    const modules = getModuleCatalog();
-    const items = [
-      { type: 'module', name: 'GPS', version: modules.find((module) => module && module.id === 'gps')?.version || '1.0.0', description: 'Location services module discovered from the local framework catalog.', compatibility: 'Framework 1.0.0', status: 'local catalog' },
-      { type: 'app', name: 'Neutral App', version: getAppVersion(), description: 'Framework-neutral application shell.', compatibility: 'Framework 1.0.0', status: 'ready' }
-    ];
+    const [marketplaceResult, moduleResult] = await Promise.all([
+      fetchJson('/api/marketplace', { ok: true, marketplace: { catalog: [] }, modules: [] }),
+      fetchJson('/api/marketplace/modules', { ok: true, modules: [] })
+    ]);
+
+    const catalog = Array.isArray(marketplaceResult.marketplace && marketplaceResult.marketplace.catalog)
+      ? marketplaceResult.marketplace.catalog
+      : [];
+    const modules = Array.isArray(moduleResult.modules) ? moduleResult.modules : [];
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Marketplace</h2></div>
         <div class="content-wrap">
+          <div id="adminActionStatus" class="message ${catalog.length || modules.length ? 'success' : 'warning'}">
+            ${escapeHtml(catalog.length || modules.length ? 'Local catalog loaded.' : 'No marketplace entries configured.')}
+          </div>
+          <div class="small-muted" style="margin: 12px 0 18px;">Only local and discovered entries are displayed. No external marketplace or automatic installation is used.</div>
+          <h3 style="margin: 0 0 10px;">Configured catalog</h3>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Type</th><th>Name</th><th>Version</th><th>Description</th><th>Compatibility</th><th>Status</th></tr></thead>
+              <thead><tr><th>Type</th><th>Name</th><th>Version</th><th>Status</th><th>Source</th><th>Description</th></tr></thead>
               <tbody>
-                ${items.map((item) => `
+                ${catalog.length ? catalog.map((item) => `
                   <tr>
-                    <td>${escapeHtml(item.type)}</td>
-                    <td>${escapeHtml(item.name)}</td>
-                    <td>${escapeHtml(item.version)}</td>
-                    <td>${escapeHtml(item.description)}</td>
-                    <td>${escapeHtml(item.compatibility)}</td>
-                    <td><span class="status-badge ok">${escapeHtml(item.status)}</span></td>
+                    <td>${escapeHtml(item.type || 'module')}</td>
+                    <td>${escapeHtml(item.name || item.id || 'Unknown')}</td>
+                    <td>${escapeHtml(item.version || '1.0.0')}</td>
+                    <td><span class="status-badge ${item.status === 'enabled' || item.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(item.status || 'available')}</span></td>
+                    <td>${escapeHtml(item.source || 'local')}</td>
+                    <td>${escapeHtml(item.description || 'No description available')}</td>
                   </tr>
-                `).join('')}
+                `).join('') : '<tr><td colspan="6">No catalog entries configured.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+          <h3 style="margin: 20px 0 10px;">Discovered modules</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Source</th><th>Capabilities</th></tr></thead>
+              <tbody>
+                ${modules.length ? modules.map((item) => `
+                  <tr>
+                    <td>${escapeHtml(item.id || item.moduleId || 'unknown')}</td>
+                    <td>${escapeHtml(item.name || item.id || 'Unknown')}</td>
+                    <td>${escapeHtml(item.version || '1.0.0')}</td>
+                    <td><span class="status-badge ${item.status === 'enabled' || item.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(item.status || 'available')}</span></td>
+                    <td>${escapeHtml(item.modulePath || item.source || 'local')}</td>
+                    <td>${escapeHtml(Array.isArray(item.capabilities) && item.capabilities.length ? item.capabilities.join(', ') : '—')}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6">No modules discovered in the local catalog.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -583,6 +694,16 @@
       <div class="card">
         <div class="card-header"><h2 class="card-title">Users</h2></div>
         <div class="content-wrap">
+          <div class="form-grid" style="margin-bottom: 18px;">
+            <div class="form-field"><label>Username</label><input id="newUserUsernameInput" type="text" placeholder="new.user" /></div>
+            <div class="form-field"><label>Display name</label><input id="newUserDisplayNameInput" type="text" placeholder="New User" /></div>
+            <div class="form-field"><label>Email</label><input id="newUserEmailInput" type="email" placeholder="user@example.com" /></div>
+            <div class="form-field"><label>Role</label><input id="newUserRoleInput" type="text" placeholder="user" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="user-save">Create user</button>
+            </div>
+          </div>
+          <div id="adminActionStatus" class="message info">User management uses the central framework identity layer.</div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>User ID</th><th>Username</th><th>Name</th><th>Status</th><th>Roles</th></tr></thead>
@@ -602,17 +723,32 @@
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
-  const renderAdminRoles = () => {
+  const renderAdminRoles = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
-    const roles = [
-      { role: 'admin', permissions: ['user:read', 'user:write', 'system:view', 'admin:read', 'admin:write'] },
-      { role: 'developer', permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'] },
-      { role: 'manager', permissions: ['user:read', 'user:write'] },
-      { role: 'user', permissions: ['user:read'] }
-    ];
+
+    let users = [];
+    if (window.UserModule && typeof window.UserModule.listUsers === 'function') {
+      const result = await window.UserModule.listUsers();
+      users = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
+    }
+
+    const defaultRoles = {
+      admin: ['user:read', 'user:write', 'system:view'],
+      developer: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'],
+      manager: ['user:read', 'user:write'],
+      member: ['user:read'],
+      user: ['user:read']
+    };
+
+    const roles = Object.entries(defaultRoles).map(([role, permissions]) => ({
+      role,
+      permissions,
+      userCount: users.filter((user) => Array.isArray(user.roles) && user.roles.includes(role)).length
+    }));
 
     page.innerHTML = `
       <div class="card">
@@ -620,9 +756,9 @@
         <div class="content-wrap">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+              <thead><tr><th>Role</th><th>Users</th><th>Permissions</th></tr></thead>
               <tbody>
-                ${roles.map((entry) => `<tr><td>${escapeHtml(entry.role)}</td><td>${escapeHtml(entry.permissions.join(', '))}</td></tr>`).join('')}
+                ${roles.map((entry) => `<tr><td>${escapeHtml(entry.role)}</td><td>${escapeHtml(String(entry.userCount))}</td><td>${escapeHtml(entry.permissions.join(', '))}</td></tr>`).join('')}
               </tbody>
             </table>
           </div>
@@ -634,67 +770,164 @@
   const renderAdminPermissions = () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
-    const permissions = ['framework:read', 'auth:read', 'auth:write', 'module:read', 'module:write', 'admin:read', 'admin:write', 'system:view', 'user:read', 'user:write'];
+    const permissions = [
+      { permission: 'framework:read', source: 'Core framework diagnostics' },
+      { permission: 'auth:read', source: 'Core auth' },
+      { permission: 'auth:write', source: 'Core auth' },
+      { permission: 'module:read', source: 'Core access / module registry' },
+      { permission: 'module:update', source: 'Developer access' },
+      { permission: 'system:view', source: 'Admin access' },
+      { permission: 'user:read', source: 'Core user module' },
+      { permission: 'user:write', source: 'Core user module' },
+      { permission: 'connection:read', source: 'Master framework' },
+      { permission: 'connection:write', source: 'Master framework' }
+    ];
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Permissions</h2></div>
         <div class="content-wrap">
           <div class="grid">
-            ${permissions.map((permission) => `<div class="metric"><span class="metric-label">Permission</span><div class="metric-value">${escapeHtml(permission)}</div></div>`).join('')}
+            ${permissions.map((entry) => `<div class="metric"><span class="metric-label">${escapeHtml(entry.permission)}</span><div class="metric-value" style="font-size:0.85rem;">${escapeHtml(entry.source)}</div></div>`).join('')}
           </div>
         </div>
       </div>
     `;
   };
 
-  const renderAdminDevices = () => {
+  const renderAdminDevices = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
+
+    const result = await fetchJson('/api/devices', { ok: true, devices: [] });
+    const devices = Array.isArray(result.devices) ? result.devices : [];
+    const statusText = result.ok
+      ? (devices.length ? 'Device registry loaded from the framework runtime.' : 'No devices registered yet.')
+      : (result.message || 'Device registry unavailable.');
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Devices</h2></div>
         <div class="content-wrap">
-          <div class="message info">Device management is prepared for a future backend integration. No device data is being fabricated.</div>
+          <div class="message info">${escapeHtml(statusText)}</div>
+          <div class="form-grid" style="margin: 18px 0;">
+            <div class="form-field"><label>Device ID</label><input id="deviceIdInput" type="text" placeholder="device-001" /></div>
+            <div class="form-field"><label>Name</label><input id="deviceNameInput" type="text" placeholder="Scanner" /></div>
+            <div class="form-field"><label>Type</label><input id="deviceTypeInput" type="text" placeholder="generic" /></div>
+            <div class="form-field"><label>Status</label><input id="deviceStatusInput" type="text" placeholder="inactive" /></div>
+            <div class="form-field"><label>User ID</label><input id="deviceUserIdInput" type="text" placeholder="optional user" /></div>
+            <div class="form-field"><label>Last contact</label><input id="deviceContactInput" type="text" placeholder="2026-01-01T00:00:00.000Z" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="device-save">Save device</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Status</th><th>User</th><th>Last contact</th></tr></thead>
+              <tbody>
+                ${devices.length ? devices.map((device) => `
+                  <tr>
+                    <td>${escapeHtml(device.deviceId || device.id || '—')}</td>
+                    <td>${escapeHtml(device.name || 'Unnamed device')}</td>
+                    <td>${escapeHtml(device.type || 'generic')}</td>
+                    <td><span class="status-badge ${device.status === 'active' || device.status === 'online' ? 'ok' : 'warning'}">${escapeHtml(device.status || 'inactive')}</span></td>
+                    <td>${escapeHtml(device.userDisplayId || device.userId || '—')}</td>
+                    <td>${escapeHtml(device.lastContactAt || device.updatedAt || 'never')}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6">No devices registered.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
-  const renderAdminLicenses = () => {
+  const renderAdminLicenses = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
+
+    const result = await fetchJson('/api/licenses', { ok: true, licenses: [] });
+    const licenses = Array.isArray(result.licenses) ? result.licenses : [];
+    const statusText = result.ok
+      ? (licenses.length ? 'License registry loaded from the framework runtime.' : 'No licenses registered yet.')
+      : (result.message || 'License registry unavailable.');
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Licenses</h2></div>
         <div class="content-wrap">
-          <div class="message info">License management is prepared for future user, device, app, and module licensing. No license data is displayed without backend support.</div>
+          <div class="message info">${escapeHtml(statusText)}</div>
+          <div class="form-grid" style="margin: 18px 0;">
+            <div class="form-field"><label>License ID</label><input id="licenseIdInput" type="text" placeholder="lic-001" /></div>
+            <div class="form-field"><label>Type</label><input id="licenseTypeInput" type="text" placeholder="standard" /></div>
+            <div class="form-field"><label>Status</label><input id="licenseStatusInput" type="text" placeholder="inactive" /></div>
+            <div class="form-field"><label>Valid until</label><input id="licenseValidUntilInput" type="text" placeholder="2027-01-01" /></div>
+            <div class="form-field"><label>User ID</label><input id="licenseUserIdInput" type="text" placeholder="optional user" /></div>
+            <div class="form-field"><label>Device ID</label><input id="licenseDeviceIdInput" type="text" placeholder="optional device" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="license-save">Save license</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Type</th><th>Status</th><th>Valid from</th><th>Valid until</th><th>Assignment</th></tr></thead>
+              <tbody>
+                ${licenses.length ? licenses.map((license) => `
+                  <tr>
+                    <td>${escapeHtml(license.licenseId || license.id || '—')}</td>
+                    <td>${escapeHtml(license.type || 'standard')}</td>
+                    <td><span class="status-badge ${license.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(license.status || 'inactive')}</span></td>
+                    <td>${escapeHtml(license.validFrom || '—')}</td>
+                    <td>${escapeHtml(license.validUntil || '—')}</td>
+                    <td>${escapeHtml([license.userId, license.deviceId, license.appId, license.moduleId].filter(Boolean).join(' · ') || '—')}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6">No licenses registered.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
-  const renderAdminUpdates = () => {
+  const renderAdminUpdates = async () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
 
-    const modules = getModuleCatalog();
+    const [updatesResult, statusResult] = await Promise.all([
+      fetchJson('/api/updates', { ok: true, updates: {} }),
+      fetchJson('/api/status', { ok: true, framework: { framework: {} } })
+    ]);
+    const updates = updatesResult && updatesResult.updates ? updatesResult.updates : {};
+    const frameworkVersion = statusResult && statusResult.framework && statusResult.framework.framework ? statusResult.framework.framework.version : getFrameworkVersion();
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Updates</h2></div>
         <div class="content-wrap">
-          <div class="grid">
-            <div class="metric"><span class="metric-label">Framework</span><div class="metric-value">${escapeHtml(getFrameworkVersion())}</div></div>
-            <div class="metric"><span class="metric-label">App</span><div class="metric-value">${escapeHtml(getAppVersion())}</div></div>
-            <div class="metric"><span class="metric-label">Module updates</span><div class="metric-value">${modules.length}</div></div>
+          <div class="form-grid" style="margin-bottom: 18px;">
+            <div class="form-field"><label>Current version</label><input id="updateCurrentVersionInput" type="text" value="${escapeHtml(updates.currentVersion || frameworkVersion)}" /></div>
+            <div class="form-field"><label>Available version</label><input id="updateAvailableVersionInput" type="text" value="${escapeHtml(updates.availableVersion || '')}" placeholder="optional" /></div>
+            <div class="form-field"><label>Source</label><input id="updateSourceInput" type="text" value="${escapeHtml(updates.source || 'local')}" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="updates-check">Check updates</button>
+            </div>
           </div>
-          <div class="small-muted" style="margin-top:12px;">Automatic installation is disabled. Update availability is displayed for review by an administrator.</div>
+          <div id="adminActionStatus" class="message ${updates.status === 'AVAILABLE' ? 'warning' : updates.status === 'ERROR' ? 'error' : 'info'}">${escapeHtml(updates.message || 'Update state is ready.')}</div>
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Current version</span><div class="metric-value">${escapeHtml(updates.currentVersion || frameworkVersion)}</div></div>
+            <div class="metric"><span class="metric-label">Available version</span><div class="metric-value">${escapeHtml(updates.availableVersion || 'n/a')}</div></div>
+            <div class="metric"><span class="metric-label">Status</span><div class="metric-value">${escapeHtml(updates.status || 'NOT_CONFIGURED')}</div></div>
+            <div class="metric"><span class="metric-label">Last checked</span><div class="metric-value">${escapeHtml(updates.lastCheckedAt || 'never')}</div></div>
+          </div>
+          <div class="small-muted" style="margin-top:12px;">Automatic internet installation is not enabled. The API only checks locally configured update metadata.</div>
         </div>
       </div>
     `;
+    bindActionButtons();
   };
 
   const renderAdminDiagnostics = () => {
@@ -1056,7 +1289,7 @@
         return;
       }
       if (state.activeView === 'admin:roles') {
-        renderAdminRoles();
+        await renderAdminRoles();
         return;
       }
       if (state.activeView === 'admin:permissions') {
@@ -1064,11 +1297,11 @@
         return;
       }
       if (state.activeView === 'admin:devices') {
-        renderAdminDevices();
+        await renderAdminDevices();
         return;
       }
       if (state.activeView === 'admin:licenses') {
-        renderAdminLicenses();
+        await renderAdminLicenses();
         return;
       }
       if (state.activeView === 'admin:updates') {

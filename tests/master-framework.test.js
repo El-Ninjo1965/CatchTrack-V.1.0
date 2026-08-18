@@ -1,9 +1,25 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const Framework = require('../platform/master-framework');
 
+const cleanupRuntimeState = () => {
+  Framework.setupState = null;
+  Framework.adminState = null;
+
+  const runtimeDir = path.resolve(__dirname, '../server/runtime');
+  for (const filename of ['setup-state.json', 'admin-state.json']) {
+    const filePath = path.join(runtimeDir, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+};
+
 test('registers and activates apps', () => {
+  cleanupRuntimeState();
   const runtime = Framework;
   runtime.apps.clear();
 
@@ -23,6 +39,7 @@ test('registers and activates apps', () => {
 });
 
 test('registers and tests connections', async () => {
+  cleanupRuntimeState();
   const runtime = Framework;
   runtime.connections.clear();
 
@@ -44,6 +61,7 @@ test('registers and tests connections', async () => {
 });
 
 test('supports feature flags, permissions, and migrations', async () => {
+  cleanupRuntimeState();
   const runtime = Framework;
 
   runtime.setFeatureFlag('new-sync-engine', true);
@@ -67,6 +85,7 @@ test('supports feature flags, permissions, and migrations', async () => {
 });
 
 test('supports persisted setup state and connection updates', () => {
+  cleanupRuntimeState();
   const runtime = Framework;
 
   const initial = runtime.loadSetupState();
@@ -98,9 +117,56 @@ test('supports persisted setup state and connection updates', () => {
 });
 
 test('provides diagnostic summary', () => {
+  cleanupRuntimeState();
   const runtime = Framework;
   const diagnostics = runtime.getDiagnostics();
   assert.ok(diagnostics.framework);
   assert.ok(Array.isArray(diagnostics.connections));
   assert.ok(Array.isArray(diagnostics.applications));
+});
+
+test('supports admin devices, licenses, updates, and marketplace state', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+
+  const device = runtime.upsertDevice({
+    deviceId: 'device-1',
+    name: 'Scanner',
+    type: 'scanner',
+    status: 'active',
+    userId: 'user-1',
+    lastContactAt: '2026-08-18T00:00:00.000Z'
+  });
+  assert.equal(device.deviceId, 'device-1');
+  assert.equal(runtime.getDevice('device-1').status, 'active');
+
+  const license = runtime.upsertLicense({
+    licenseId: 'license-1',
+    type: 'trial',
+    status: 'active',
+    validUntil: '2027-01-01',
+    userId: 'user-1'
+  });
+  assert.equal(license.licenseId, 'license-1');
+  assert.equal(runtime.getLicense('license-1').type, 'trial');
+
+  const updateState = runtime.checkForUpdates({
+    currentVersion: '1.0.0',
+    availableVersion: '1.1.0',
+    source: 'local'
+  });
+  assert.equal(updateState.status, 'AVAILABLE');
+  assert.equal(runtime.getUpdateState().availableVersion, '1.1.0');
+
+  runtime.setMarketplaceCatalog([
+    {
+      id: 'gps',
+      name: 'GPS Tracker',
+      type: 'module',
+      version: '1.0.0',
+      status: 'available',
+      source: 'local'
+    }
+  ]);
+  assert.equal(runtime.getMarketplaceEntries().length, 1);
 });

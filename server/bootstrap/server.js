@@ -187,6 +187,42 @@ const readJsonBody = (req) => new Promise((resolve, reject) => {
   req.on('error', () => reject(new Error('Request body could not be read.')));
 });
 
+const getRequestRoles = (req) => {
+  if (!req || !req.headers) {
+    return [];
+  }
+
+  const raw = req.headers['x-framework-role'] || req.headers['x-user-role'] || req.headers['x-admin-role'] || '';
+  return String(raw)
+    .split(',')
+    .map((role) => role.trim().toLowerCase())
+    .filter(Boolean);
+};
+
+const isAdminWriteAuthorized = (req) => {
+  const adminToken = process.env.ADMIN_ACCESS_TOKEN;
+  const suppliedToken = req && req.headers ? req.headers['x-admin-access-token'] : null;
+  if (adminToken && suppliedToken === adminToken) {
+    return true;
+  }
+
+  const roles = getRequestRoles(req);
+  return roles.some((role) => role === 'admin' || role === 'developer');
+};
+
+const requireAdminWriteAccess = (req, res) => {
+  if (isAdminWriteAuthorized(req)) {
+    return true;
+  }
+
+  sendJson(res, 403, {
+    ok: false,
+    code: 'FORBIDDEN',
+    message: 'Administrative write access requires an authorized admin or developer role.'
+  });
+  return false;
+};
+
 const safeResolve = (baseDir, requestPath) => {
   const normalized = path.normalize(requestPath).replace(/^\/+/, '');
   const resolved = path.resolve(baseDir, normalized);
@@ -299,6 +335,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
   if (pathname === `${apiBase}/connections` || pathname === `${apiBase}/admin/connections`) {
     if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
       readJsonBody(req)
         .then((payload) => {
           const connectionId = payload.connectionId || payload.id || payload.name || 'default-connection';
@@ -436,6 +475,144 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
     const status = getDatabaseStatus();
     sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/devices` || pathname === `${apiBase}/admin/devices`) {
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+      readJsonBody(req)
+        .then((payload) => {
+          const device = MasterFramework.upsertDevice({
+            id: payload.id || payload.deviceId,
+            deviceId: payload.deviceId || payload.id,
+            name: payload.name || payload.deviceName,
+            type: payload.type,
+            status: payload.status,
+            userId: payload.userId || payload.assignedUserId,
+            userDisplayId: payload.userDisplayId || payload.assignedDisplayId,
+            appId: payload.appId,
+            moduleId: payload.moduleId,
+            lastContactAt: payload.lastContactAt || payload.lastSeenAt,
+            metadata: payload.metadata || {}
+          });
+
+          sendJson(res, 200, { ok: true, device });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_DEVICE', message: error.message || 'Device payload invalid.' });
+        });
+      return true;
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      devices: MasterFramework.listDevices(),
+      status: MasterFramework.listDevices().length ? 'AVAILABLE' : 'EMPTY'
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/licenses` || pathname === `${apiBase}/admin/licenses`) {
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+      readJsonBody(req)
+        .then((payload) => {
+          const license = MasterFramework.upsertLicense({
+            id: payload.id || payload.licenseId,
+            licenseId: payload.licenseId || payload.id,
+            type: payload.type,
+            status: payload.status,
+            validFrom: payload.validFrom,
+            validUntil: payload.validUntil,
+            userId: payload.userId,
+            deviceId: payload.deviceId,
+            appId: payload.appId,
+            moduleId: payload.moduleId,
+            metadata: payload.metadata || {}
+          });
+
+          sendJson(res, 200, { ok: true, license });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_LICENSE', message: error.message || 'License payload invalid.' });
+        });
+      return true;
+    }
+
+    sendJson(res, 200, {
+      ok: true,
+      licenses: MasterFramework.listLicenses(),
+      status: MasterFramework.listLicenses().length ? 'AVAILABLE' : 'EMPTY'
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/updates` || pathname === `${apiBase}/admin/updates`) {
+    const updates = MasterFramework.getUpdateState();
+    sendJson(res, 200, {
+      ok: true,
+      updates,
+      status: updates.status || 'NOT_CONFIGURED'
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/updates/check` || pathname === `${apiBase}/admin/updates/check`) {
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+      readJsonBody(req)
+        .then((payload) => {
+          const updates = MasterFramework.checkForUpdates(payload);
+          sendJson(res, 200, { ok: true, updates, status: updates.status });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_UPDATES', message: error.message || 'Update check payload invalid.' });
+        });
+      return true;
+    }
+
+    const updates = MasterFramework.getUpdateState();
+    sendJson(res, 200, { ok: true, updates, status: updates.status });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/marketplace` || pathname === `${apiBase}/admin/marketplace`) {
+    const state = MasterFramework.getMarketplaceState();
+    const modules = readAppModuleManifests(modulesDir);
+    const installedModules = Array.isArray(modules)
+      ? modules.map((module) => ({
+        ...module,
+        status: module.status || 'available',
+        installed: true,
+        active: !!module.active
+      }))
+      : [];
+
+    sendJson(res, 200, {
+      ok: true,
+      marketplace: {
+        ...state,
+        catalog: Array.isArray(state.catalog) ? state.catalog : []
+      },
+      modules: installedModules,
+      status: installedModules.length ? 'AVAILABLE' : 'EMPTY'
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/marketplace/modules` || pathname === `${apiBase}/admin/marketplace/modules`) {
+    sendJson(res, 200, {
+      ok: true,
+      modules: readAppModuleManifests(modulesDir),
+      status: 'AVAILABLE'
+    });
     return true;
   }
 

@@ -42,6 +42,13 @@
     status: value ? 'enabled' : 'disabled'
   });
 
+  const ADMIN_STATE_STORAGE_KEY = 'master-framework.admin-state';
+  const ADMIN_STATE_FILE_NAME = 'admin-state.json';
+
+  const cloneValue = (value) => JSON.parse(JSON.stringify(value));
+
+  const isValidVersionString = (value) => typeof value === 'string' && /^\d+\.\d+\.\d+/.test(value.trim());
+
   const FrameworkRuntime = {
     version: '1.0.0',
     apps: new Map(),
@@ -423,6 +430,383 @@
       return this.setupState;
     },
 
+    getDefaultAdminState() {
+      const now = new Date().toISOString();
+      return {
+        devices: [],
+        licenses: [],
+        updates: {
+          currentVersion: this.version,
+          availableVersion: null,
+          status: 'NOT_CONFIGURED',
+          lastCheckedAt: null,
+          source: 'local',
+          message: 'Update source not configured.'
+        },
+        marketplace: {
+          catalog: [],
+          lastRefreshedAt: null,
+          source: 'local'
+        },
+        createdAt: now,
+        updatedAt: now
+      };
+    },
+
+    readPersistedAdminState() {
+      const candidates = [];
+
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const raw = localStorage.getItem(ADMIN_STATE_STORAGE_KEY);
+          if (raw) {
+            candidates.push(JSON.parse(raw));
+          }
+        } catch (error) {
+          // Ignore malformed admin state in browser storage.
+        }
+      }
+
+      if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        try {
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const stateFile = path.resolve(process.cwd(), 'server', 'runtime', ADMIN_STATE_FILE_NAME);
+          if (fs.existsSync(stateFile)) {
+            const raw = fs.readFileSync(stateFile, 'utf8');
+            if (raw && raw.trim()) {
+              candidates.push(JSON.parse(raw));
+            }
+          }
+        } catch (error) {
+          // Ignore malformed admin state on disk.
+        }
+      }
+
+      for (const candidate of candidates) {
+        if (isPlainObject(candidate)) {
+          return candidate;
+        }
+      }
+
+      return null;
+    },
+
+    loadAdminState() {
+      const baseState = this.getDefaultAdminState();
+      const persisted = this.readPersistedAdminState();
+      const source = persisted && isPlainObject(persisted)
+        ? persisted
+        : (this.adminState && isPlainObject(this.adminState) ? this.adminState : null);
+
+      if (!source) {
+        this.adminState = { ...baseState };
+        return this.adminState;
+      }
+
+      const state = {
+        ...baseState,
+        ...source,
+        devices: Array.isArray(source.devices) ? source.devices.map((device) => this.normalizeDevice(device)).filter(Boolean) : [],
+        licenses: Array.isArray(source.licenses) ? source.licenses.map((license) => this.normalizeLicense(license)).filter(Boolean) : [],
+        updates: this.normalizeUpdateState(source.updates || baseState.updates),
+        marketplace: {
+          ...baseState.marketplace,
+          ...(source.marketplace || {}),
+          catalog: Array.isArray(source.marketplace && source.marketplace.catalog)
+            ? source.marketplace.catalog.map((entry) => this.normalizeMarketplaceEntry(entry)).filter(Boolean)
+            : []
+        }
+      };
+
+      this.adminState = state;
+      return state;
+    },
+
+    saveAdminState(nextState = null) {
+      const state = isPlainObject(nextState) ? nextState : this.loadAdminState();
+      const normalized = {
+        ...this.getDefaultAdminState(),
+        ...state,
+        devices: Array.isArray(state.devices) ? state.devices.map((device) => this.normalizeDevice(device)).filter(Boolean) : [],
+        licenses: Array.isArray(state.licenses) ? state.licenses.map((license) => this.normalizeLicense(license)).filter(Boolean) : [],
+        updates: this.normalizeUpdateState(state.updates || {}),
+        marketplace: {
+          ...this.getDefaultAdminState().marketplace,
+          ...(state.marketplace || {}),
+          catalog: Array.isArray(state.marketplace && state.marketplace.catalog)
+            ? state.marketplace.catalog.map((entry) => this.normalizeMarketplaceEntry(entry)).filter(Boolean)
+            : []
+        },
+        updatedAt: new Date().toISOString()
+      };
+
+      this.adminState = normalized;
+
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(ADMIN_STATE_STORAGE_KEY, JSON.stringify(normalized));
+      }
+
+      if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+        try {
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const stateDir = path.resolve(process.cwd(), 'server', 'runtime');
+          fs.mkdirSync(stateDir, { recursive: true });
+          fs.writeFileSync(path.join(stateDir, ADMIN_STATE_FILE_NAME), JSON.stringify(normalized, null, 2));
+        } catch (error) {
+          // best effort filesystem persistence; runtime state remains available in memory.
+        }
+      }
+
+      return this.adminState;
+    },
+
+    normalizeDevice(device = {}) {
+      if (!isPlainObject(device)) {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+      const id = normalizeString(device.id || device.deviceId || device.identifier, '');
+      const deviceId = id || `device-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+      return {
+        id: deviceId,
+        deviceId,
+        name: normalizeString(device.name || device.label || device.deviceName, deviceId),
+        type: normalizeString(device.type || device.category, 'generic'),
+        status: normalizeString(device.status, 'inactive'),
+        userId: normalizeString(device.userId || device.assignedUserId, ''),
+        userDisplayId: normalizeString(device.userDisplayId || device.assignedDisplayId, ''),
+        appId: normalizeString(device.appId || '', ''),
+        moduleId: normalizeString(device.moduleId || '', ''),
+        lastContactAt: normalizeString(device.lastContactAt || device.lastSeenAt, ''),
+        registeredAt: normalizeString(device.registeredAt, now),
+        updatedAt: now,
+        metadata: isPlainObject(device.metadata) ? { ...device.metadata } : {}
+      };
+    },
+
+    normalizeLicense(license = {}) {
+      if (!isPlainObject(license)) {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+      const licenseId = normalizeString(license.licenseId || license.id, '');
+      const normalizedId = licenseId || `license-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+      return {
+        id: normalizedId,
+        licenseId: normalizedId,
+        type: normalizeString(license.type || license.kind, 'standard'),
+        status: normalizeString(license.status, 'inactive'),
+        validFrom: normalizeString(license.validFrom || license.issuedAt, ''),
+        validUntil: normalizeString(license.validUntil || license.expiresAt, ''),
+        userId: normalizeString(license.userId || license.assignedUserId, ''),
+        deviceId: normalizeString(license.deviceId || license.assignedDeviceId, ''),
+        appId: normalizeString(license.appId || '', ''),
+        moduleId: normalizeString(license.moduleId || '', ''),
+        createdAt: normalizeString(license.createdAt, now),
+        updatedAt: now,
+        metadata: isPlainObject(license.metadata) ? { ...license.metadata } : {}
+      };
+    },
+
+    normalizeUpdateState(update = {}) {
+      if (!isPlainObject(update)) {
+        return this.getDefaultAdminState().updates;
+      }
+
+      const currentVersion = normalizeString(update.currentVersion, this.version);
+      const availableVersion = normalizeString(update.availableVersion, '');
+      const status = normalizeString(update.status, availableVersion && availableVersion !== currentVersion ? 'AVAILABLE' : 'NOT_CONFIGURED').toUpperCase();
+      const allowedStatuses = ['NOT_CONFIGURED', 'CHECKING', 'AVAILABLE', 'UP_TO_DATE', 'ERROR', 'UNKNOWN'];
+
+      return {
+        currentVersion,
+        availableVersion: availableVersion || null,
+        status: allowedStatuses.includes(status) ? status : 'UNKNOWN',
+        lastCheckedAt: normalizeString(update.lastCheckedAt, null),
+        source: normalizeString(update.source, 'local'),
+        message: normalizeString(update.message, availableVersion && availableVersion !== currentVersion ? `Update ${availableVersion} available.` : 'Update source not configured.')
+      };
+    },
+
+    normalizeMarketplaceEntry(entry = {}) {
+      if (!isPlainObject(entry)) {
+        return null;
+      }
+
+      const now = new Date().toISOString();
+      const id = normalizeString(entry.id || entry.moduleId || entry.name, '');
+      const normalizedId = id || `catalog-${Math.random().toString(16).slice(2, 10)}`;
+      return {
+        id: normalizedId,
+        name: normalizeString(entry.name, normalizedId),
+        type: normalizeString(entry.type || (entry.capabilities && entry.capabilities.includes('gps') ? 'module' : ''), 'module'),
+        version: normalizeString(entry.version, '1.0.0'),
+        status: normalizeString(entry.status, 'available'),
+        description: normalizeString(entry.description, ''),
+        source: normalizeString(entry.source || entry.modulePath, 'local'),
+        appId: normalizeString(entry.appId || '', ''),
+        moduleId: normalizeString(entry.moduleId || entry.id || '', ''),
+        capabilities: Array.isArray(entry.capabilities) ? [...entry.capabilities] : [],
+        permissions: Array.isArray(entry.permissions) ? [...entry.permissions] : [],
+        installed: !!entry.installed,
+        active: !!entry.active,
+        lastSeenAt: normalizeString(entry.lastSeenAt, now),
+        actions: Array.isArray(entry.actions) ? [...entry.actions] : ['view'],
+        metadata: isPlainObject(entry.metadata) ? { ...entry.metadata } : {}
+      };
+    },
+
+    listDevices() {
+      return Array.from(this.loadAdminState().devices || []).map((device) => ({ ...device, metadata: { ...(device.metadata || {}) } }));
+    },
+
+    getDevice(deviceId) {
+      const normalized = normalizeString(deviceId, '');
+      if (!normalized) {
+        return null;
+      }
+
+      return this.listDevices().find((device) => device.deviceId === normalized || device.id === normalized) || null;
+    },
+
+    upsertDevice(device = {}) {
+      const state = this.loadAdminState();
+      const normalized = this.normalizeDevice(device);
+      if (!normalized) {
+        throw new TypeError('Device definition must be an object.');
+      }
+
+      const index = state.devices.findIndex((entry) => entry.deviceId === normalized.deviceId);
+      if (index >= 0) {
+        state.devices[index] = { ...state.devices[index], ...normalized, updatedAt: new Date().toISOString() };
+      } else {
+        state.devices.push(normalized);
+      }
+
+      return this.saveAdminState(state).devices.find((entry) => entry.deviceId === normalized.deviceId);
+    },
+
+    removeDevice(deviceId) {
+      const state = this.loadAdminState();
+      const normalized = normalizeString(deviceId, '');
+      const nextDevices = state.devices.filter((entry) => entry.deviceId !== normalized && entry.id !== normalized);
+      state.devices = nextDevices;
+      this.saveAdminState(state);
+      return true;
+    },
+
+    listLicenses() {
+      return Array.from(this.loadAdminState().licenses || []).map((license) => ({ ...license, metadata: { ...(license.metadata || {}) } }));
+    },
+
+    getLicense(licenseId) {
+      const normalized = normalizeString(licenseId, '');
+      if (!normalized) {
+        return null;
+      }
+
+      return this.listLicenses().find((license) => license.licenseId === normalized || license.id === normalized) || null;
+    },
+
+    upsertLicense(license = {}) {
+      const state = this.loadAdminState();
+      const normalized = this.normalizeLicense(license);
+      if (!normalized) {
+        throw new TypeError('License definition must be an object.');
+      }
+
+      const index = state.licenses.findIndex((entry) => entry.licenseId === normalized.licenseId);
+      if (index >= 0) {
+        state.licenses[index] = { ...state.licenses[index], ...normalized, updatedAt: new Date().toISOString() };
+      } else {
+        state.licenses.push(normalized);
+      }
+
+      return this.saveAdminState(state).licenses.find((entry) => entry.licenseId === normalized.licenseId);
+    },
+
+    removeLicense(licenseId) {
+      const state = this.loadAdminState();
+      const normalized = normalizeString(licenseId, '');
+      state.licenses = state.licenses.filter((entry) => entry.licenseId !== normalized && entry.id !== normalized);
+      this.saveAdminState(state);
+      return true;
+    },
+
+    getUpdateState() {
+      return { ...this.loadAdminState().updates };
+    },
+
+    setUpdateState(updateState = {}) {
+      const state = this.loadAdminState();
+      state.updates = this.normalizeUpdateState({ ...state.updates, ...updateState });
+      return this.saveAdminState(state).updates;
+    },
+
+    checkForUpdates(payload = {}) {
+      const state = this.loadAdminState();
+      const currentVersion = normalizeString(payload.currentVersion, state.updates.currentVersion || this.version);
+      const availableVersion = normalizeString(
+        payload.availableVersion || (typeof process !== 'undefined' && process.env ? process.env.UPDATE_AVAILABLE_VERSION : '') || state.updates.availableVersion || '',
+        ''
+      );
+      const source = normalizeString(payload.source || state.updates.source, 'local');
+      const hasUpdate = !!availableVersion && availableVersion !== currentVersion;
+      const next = this.normalizeUpdateState({
+        ...state.updates,
+        currentVersion,
+        availableVersion: availableVersion || null,
+        status: hasUpdate ? 'AVAILABLE' : 'UP_TO_DATE',
+        lastCheckedAt: new Date().toISOString(),
+        source,
+        message: hasUpdate ? `Update ${availableVersion} available.` : 'No updates available.'
+      });
+      state.updates = next;
+      this.saveAdminState(state);
+      return next;
+    },
+
+    getMarketplaceState() {
+      const state = this.loadAdminState();
+      return {
+        ...state.marketplace,
+        catalog: Array.isArray(state.marketplace.catalog)
+          ? state.marketplace.catalog.map((entry) => ({ ...entry, metadata: { ...(entry.metadata || {}) } }))
+          : []
+      };
+    },
+
+    setMarketplaceCatalog(catalog = []) {
+      const state = this.loadAdminState();
+      state.marketplace = {
+        ...state.marketplace,
+        catalog: Array.isArray(catalog) ? catalog.map((entry) => this.normalizeMarketplaceEntry(entry)).filter(Boolean) : [],
+        lastRefreshedAt: new Date().toISOString(),
+        source: 'local'
+      };
+      return this.saveAdminState(state).marketplace;
+    },
+
+    appendMarketplaceEntries(entries = []) {
+      const state = this.loadAdminState();
+      const current = Array.isArray(state.marketplace.catalog) ? state.marketplace.catalog : [];
+      const additional = Array.isArray(entries) ? entries.map((entry) => this.normalizeMarketplaceEntry(entry)).filter(Boolean) : [];
+      state.marketplace = {
+        ...state.marketplace,
+        catalog: [...current, ...additional],
+        lastRefreshedAt: new Date().toISOString()
+      };
+      return this.saveAdminState(state).marketplace;
+    },
+
+    getMarketplaceEntries() {
+      return this.getMarketplaceState().catalog;
+    },
+
     updateSetupStep(stepName, value) {
       const state = this.loadSetupState();
       const nextState = { ...state, currentStep: stepName, updatedAt: new Date().toISOString() };
@@ -475,15 +859,20 @@
         health: connection.health,
         active: !!connection.active
       }));
+      const adminState = this.loadAdminState();
 
       return {
         framework: {
           name: 'neutral-master-framework',
           version: this.version,
+          apiVersion: 'v1',
           apps: this.apps.size,
           connections: this.connections.size,
           featureFlags: this.featureFlags.size,
-          migrations: this.migrations.length
+          migrations: this.migrations.length,
+          devices: Array.isArray(adminState.devices) ? adminState.devices.length : 0,
+          licenses: Array.isArray(adminState.licenses) ? adminState.licenses.length : 0,
+          updateStatus: adminState.updates ? adminState.updates.status : 'NOT_CONFIGURED'
         },
         applications: this.listApps().map((app) => ({
           id: app.appId,
@@ -495,6 +884,12 @@
         connections: connectionStates,
         featureFlags: this.listFeatureFlags(),
         permissions: Array.from(this.permissions.entries()).map(([permission, description]) => ({ permission, description })),
+        admin: {
+          devices: this.listDevices(),
+          licenses: this.listLicenses(),
+          updates: this.getUpdateState(),
+          marketplace: this.getMarketplaceState()
+        },
         timestamp: new Date().toISOString()
       };
     }
