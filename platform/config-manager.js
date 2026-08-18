@@ -118,7 +118,7 @@
 
             // UI Config
             this.set('ui', {
-                theme: 'light',
+                theme: 'neutral',
                 language: navigator.language || 'de',
                 responsive: true,
                 animationsEnabled: true,
