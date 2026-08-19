@@ -8,7 +8,13 @@
   </head>
   <body class="user-app">
     <div class="user-app-shell">
-      <header class="user-app-header"><div class="user-app-identity"><span class="user-app-mark" aria-hidden="true">N</span><span class="user-app-brand">Neutral Platform</span></div></header>
+      <header class="user-app-header">
+        <div class="user-app-identity"><span class="user-app-mark" aria-hidden="true">N</span><span class="user-app-brand">Neutral Platform</span></div>
+        <div class="user-app-actions">
+          <a class="user-app-link" href="../developer-setup.html">Developer setup</a>
+          <button id="userLoginButton" class="user-app-action" type="button">Login</button>
+        </div>
+      </header>
       <nav class="user-app-nav" aria-label="User menu">
         <button type="button" class="user-app-nav-item active" data-user-view="modules">Modules</button>
         <button type="button" class="user-app-nav-item" data-user-view="settings">Settings</button>
@@ -43,6 +49,7 @@
     <script src="../platform/core-entry.js"></script>
     <script src="../platform/theme-engine.js"></script>
     <script src="../platform/media-manager.js"></script>
+    <script src="../platform/local-auth.js"></script>
     <script src="../platform/app.js"></script>
     <script src="user-app.js"></script>
   </body>

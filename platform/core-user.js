@@ -251,7 +251,8 @@
             return {
                 enabled: bootstrapConfig.enabled !== false,
                 developerUsername: username,
-                developerDisplayId: displayId
+                developerDisplayId: displayId,
+                developerUsernameKey: String(username || 'developer').trim().toLowerCase()
             };
         },
 
@@ -266,7 +267,12 @@
                 };
             }
 
-            const existingDeveloper = Array.from(this.users.values()).find((user) => user.username === config.developerUsername || user.roles.includes('developer'));
+            const targetUsername = String(config.developerUsername || 'developer').trim();
+            const existingDeveloper = Array.from(this.users.values()).find((user) => {
+                const userName = user && typeof user.username === 'string' ? user.username.trim().toLowerCase() : '';
+                const hasDeveloperRole = Array.isArray(user.roles) && user.roles.some((role) => String(role || '').trim().toLowerCase() === 'developer');
+                return userName === String(targetUsername).trim().toLowerCase() || hasDeveloperRole;
+            });
             if (existingDeveloper) {
                 return {
                     ok: true,
@@ -286,7 +292,11 @@
                 };
             }
 
-            const usernameExists = Array.from(this.users.values()).some((user) => user.username === config.developerUsername);
+            const normalizedTargetUser = String(config.developerUsername || 'developer').trim();
+            const usernameExists = Array.from(this.users.values()).some((user) => {
+                const existingUsername = user && typeof user.username === 'string' ? user.username.trim().toLowerCase() : '';
+                return existingUsername === normalizedTargetUser.toLowerCase();
+            });
             if (usernameExists) {
                 return {
                     ok: false,
@@ -300,7 +310,7 @@
             const developer = ensureUserLayout({
                 id: generateUuid(),
                 displayId: config.developerDisplayId,
-                username: config.developerUsername,
+                username: normalizedTargetUser,
                 displayName: 'Developer User',
                 email: '',
                 status: 'active',
@@ -414,8 +424,9 @@
                 };
             }
 
+            const expected = normalized.toLowerCase();
             for (const user of this.users.values()) {
-                if (user.username === normalized) {
+                if (String(user.username || '').trim().toLowerCase() === expected) {
                     return {
                         ok: true,
                         code: 'USER_FOUND',

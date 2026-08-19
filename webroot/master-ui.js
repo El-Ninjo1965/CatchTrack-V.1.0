@@ -46,11 +46,7 @@
       return null;
     }
 
-    if (hasRole(user, 'developer')) {
-      return 'dev.html';
-    }
-
-    if (hasRole(user, 'admin') || hasPermission(user, 'system:view')) {
+    if (hasRole(user, 'developer') || hasRole(user, 'admin') || hasPermission(user, 'system:view')) {
       return 'admin.html';
     }
 
@@ -1452,8 +1448,8 @@
 
     if (pageType === 'admin' || pageType === 'developer') {
       const pageAllowed = pageType === 'admin'
-        ? !!currentUser && (hasRole(currentUser, 'admin') || hasPermission(currentUser, 'system:view'))
-        : !!currentUser && (hasRole(currentUser, 'developer') || hasPermission(currentUser, 'module:read'));
+        ? !!currentUser && (hasRole(currentUser, 'admin') || hasRole(currentUser, 'developer') || hasPermission(currentUser, 'system:view'))
+        : !!currentUser && (hasRole(currentUser, 'developer') || hasRole(currentUser, 'admin') || hasPermission(currentUser, 'module:read'));
 
       if (authPanel) authPanel.classList.toggle('hidden', !!currentUser && pageAllowed);
       if (appShell) appShell.classList.toggle('hidden', !currentUser || !pageAllowed);
@@ -1482,13 +1478,13 @@
 
     if (pageType === 'admin' || pageType === 'developer') {
       const pageAllowed = pageType === 'admin'
-        ? !!currentUser && (hasRole(currentUser, 'admin') || hasPermission(currentUser, 'system:view'))
-        : !!currentUser && (hasRole(currentUser, 'developer') || hasPermission(currentUser, 'module:read'));
+        ? !!currentUser && (hasRole(currentUser, 'admin') || hasRole(currentUser, 'developer') || hasPermission(currentUser, 'system:view'))
+        : !!currentUser && (hasRole(currentUser, 'developer') || hasRole(currentUser, 'admin') || hasPermission(currentUser, 'module:read'));
       if (currentUser && !pageAllowed && targetPage && targetPage !== currentPath) {
         window.location.replace(targetPage);
         return;
       }
-      if (currentUser && pageAllowed && targetPage && targetPage !== currentPath && targetPage !== (pageType === 'admin' ? 'admin.html' : 'dev.html')) {
+      if (currentUser && pageAllowed && targetPage && targetPage !== currentPath && targetPage !== 'admin.html') {
         window.location.replace(targetPage);
         return;
       }

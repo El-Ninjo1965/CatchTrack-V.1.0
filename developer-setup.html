@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Developer Setup</title>
+    <link rel="stylesheet" href="webroot/style.css" />
+    <style>
+      body { margin: 0; min-height: 100vh; background: #eef3f0; color: #17211d; font-family: Georgia, serif; }
+      .setup-shell { max-width: 540px; margin: 60px auto; padding: 24px; }
+      .setup-card { background: #fff; border: 1px solid #d6e1db; border-radius: 12px; padding: 24px; box-shadow: 0 12px 24px rgba(17, 38, 32, 0.06); }
+      .setup-header { margin-bottom: 18px; }
+      .setup-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+      .setup-field { margin-bottom: 16px; }
+      .setup-field label { display: block; margin-bottom: 8px; font-weight: 700; }
+      .setup-field input { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 8px; border: 1px solid #d8e0dc; background: #f8faf9; }
+      .helper { color: #4d5f59; font-size: 0.92rem; }
+      .status-box { margin-top: 16px; padding: 10px 12px; border-radius: 8px; background: #eefaf5; border: 1px solid #d8ece1; }
+      .status-box.error { background: #fff1ef; border-color: #f2d1cc; }
+      .status-box.success { background: #edf9f2; border-color: #d4ecde; }
+    </style>
+  </head>
+  <body>
+    <div class="setup-shell">
+      <div class="setup-card">
+        <div class="setup-header">
+          <span class="user-app-eyebrow">Offline-first developer setup</span>
+          <h1>Set up the local developer account</h1>
+          <p class="helper">The username is fixed to Developer. Choose a local password for this preview environment.</p>
+        </div>
+
+        <div class="setup-field">
+          <label for="developerUsername">Username</label>
+          <input id="developerUsername" type="text" value="Developer" readonly />
+        </div>
+
+        <div class="setup-field">
+          <label for="developerPassword">Password</label>
+          <input id="developerPassword" type="password" placeholder="Enter a local password" />
+        </div>
+
+        <div class="setup-field">
+          <label for="developerPasswordConfirm">Confirm password</label>
+          <input id="developerPasswordConfirm" type="password" placeholder="Repeat the password" />
+        </div>
+
+        <div class="setup-actions">
+          <button id="setupDeveloperBtn" class="primary" type="button">Create developer account</button>
+          <a class="secondary nav-item" href="webroot/index.html">Back to app</a>
+        </div>
+
+        <div id="setupStatus" class="status-box info">This setup only creates the first local developer account.</div>
+      </div>
+    </div>
+
+    <script src="platform/core.js"></script>
+    <script src="platform/core-event-bus.js"></script>
+    <script src="platform/core-error-handler.js"></script>
+    <script src="platform/error-log.js"></script>
+    <script src="platform/core-config.js"></script>
+    <script src="platform/core-context.js"></script>
+    <script src="platform/core-lifecycle.js"></script>
+    <script src="platform/core-state.js"></script>
+    <script src="platform/core-storage.js"></script>
+    <script src="platform/module-interface.js"></script>
+    <script src="platform/module-registry.js"></script>
+    <script src="platform/module-manager.js"></script>
+    <script src="platform/core-loader.js"></script>
+    <script src="platform/config-manager.js"></script>
+    <script src="platform/database-manager.js"></script>
+    <script src="platform/security.js"></script>
+    <script src="platform/core-auth.js"></script>
+    <script src="platform/core-access.js"></script>
+    <script src="platform/core-audit.js"></script>
+    <script src="platform/core-event-ring.js"></script>
+    <script src="platform/core-user.js"></script>
+    <script src="platform/core-admin.js"></script>
+    <script src="platform/service-manager.js"></script>
+    <script src="platform/core-startup.js"></script>
+    <script src="platform/core-runtime.js"></script>
+    <script src="platform/core-entry.js"></script>
+    <script src="platform/local-auth.js"></script>
+    <script>
+      (async () => {
+        const statusBox = document.getElementById('setupStatus');
+        const setStatus = (message, type = 'info') => {
+          statusBox.textContent = message;
+          statusBox.className = `status-box ${type}`;
+        };
+
+        const setupButton = document.getElementById('setupDeveloperBtn');
+        setupButton.addEventListener('click', async () => {
+          const password = document.getElementById('developerPassword').value;
+          const passwordConfirm = document.getElementById('developerPasswordConfirm').value;
+
+          if (!password || password !== passwordConfirm) {
+            setStatus('Passwords do not match or are empty.', 'error');
+            return;
+          }
+
+          if (window.LocalAuth && typeof window.LocalAuth.setupDeveloper === 'function') {
+            const result = await window.LocalAuth.setupDeveloper({ password, username: 'Developer' });
+            if (result && result.ok) {
+              setStatus('Developer account created successfully. Redirecting to the admin area.', 'success');
+              setTimeout(() => { window.location.assign('webroot/admin.html'); }, 800);
+            } else {
+              setStatus(result && result.message ? result.message : 'Developer setup failed.', 'error');
+            }
+            return;
+          }
+
+          setStatus('Local auth is unavailable in this environment.', 'error');
+        });
+
+        if (window.LocalAuth && window.LocalAuth.isSetupComplete && window.LocalAuth.isSetupComplete()) {
+          setStatus('A developer account has already been configured locally. Use the login form in the app to continue.', 'success');
+          setupButton.disabled = true;
+        }
+      })();
+    </script>
+  </body>
+</html>

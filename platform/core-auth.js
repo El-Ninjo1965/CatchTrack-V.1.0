@@ -254,6 +254,15 @@
                 userResult = await userModule.getUserById(input.userId);
             } else if (typeof input.username === 'string' && input.username.trim()) {
                 userResult = await userModule.getUserByUsername(input.username);
+                if (!userResult || !userResult.ok) {
+                    const fallbackName = String(input.username).trim();
+                    if (fallbackName.toLowerCase() === 'developer') {
+                        const bootstrapResult = userModule.bootstrapDeveloperUser ? userModule.bootstrapDeveloperUser() : null;
+                        if (bootstrapResult && bootstrapResult.ok && bootstrapResult.data) {
+                            userResult = { ok: true, data: bootstrapResult.data };
+                        }
+                    }
+                }
             }
 
             const user = userResult && userResult.ok ? userResult.data : null;
@@ -274,7 +283,8 @@
             }
 
             const bootstrapConfig = this.resolveBootstrapConfig();
-            if (bootstrapConfig.enabled && user.username === bootstrapConfig.username && bootstrapConfig.passwordRequired) {
+            const isDeveloperUser = String(user.username || '').trim().toLowerCase() === String(bootstrapConfig.username || 'developer').trim().toLowerCase();
+            if (bootstrapConfig.enabled && isDeveloperUser && bootstrapConfig.passwordRequired) {
                 const expectedPassword = bootstrapConfig.password;
                 const givenPassword = typeof input.password === 'string' ? input.password : '';
                 if (!expectedPassword) {
@@ -284,7 +294,7 @@
                         message: 'Set a local bootstrap password before testing the developer login.'
                     };
                 }
-                if (givenPassword !== expectedPassword) {
+                if (String(givenPassword) !== String(expectedPassword)) {
                     return {
                         ok: false,
                         code: 'INVALID_PASSWORD',
