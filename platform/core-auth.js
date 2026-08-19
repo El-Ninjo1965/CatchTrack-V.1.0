@@ -54,6 +54,31 @@
         return safeUser;
     };
 
+    const hashSecret = async (value) => {
+        const secret = String(value ?? '').trim();
+        if (!secret) {
+            return '';
+        }
+
+        if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle) {
+            const bytes = new TextEncoder().encode(secret);
+            const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+            return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+        }
+
+        if (typeof require === 'function' && typeof process !== 'undefined') {
+            const crypto = require('node:crypto');
+            return crypto.createHash('sha256').update(secret).digest('hex');
+        }
+
+        let hash = 2166136261;
+        for (let index = 0; index < secret.length; index += 1) {
+            hash ^= secret.charCodeAt(index);
+            hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(16);
+    };
+
     const SESSION_STORAGE_KEY = 'platform.auth.session';
 
     const readStoredSession = () => {
@@ -204,29 +229,29 @@
                 : (typeof localStorage !== 'undefined'
                     ? (localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || 'Developer')
                     : 'Developer');
-            const storagePassword = storageState && typeof storageState.password === 'string'
-                ? storageState.password
+            const storagePasswordHash = storageState && typeof storageState.passwordHash === 'string'
+                ? storageState.passwordHash
                 : (typeof localStorage !== 'undefined'
-                    ? (localStorage.getItem('platform.local.auth.developerPassword') || localStorage.getItem('core.bootstrap.developerPassword') || '')
+                    ? (localStorage.getItem('platform.local.auth.developerPasswordHash') || localStorage.getItem('core.bootstrap.developerPasswordHash') || '')
                     : '');
 
             const username = typeof bootstrapConfig.developerUsername === 'string' && bootstrapConfig.developerUsername.trim()
                 ? bootstrapConfig.developerUsername.trim()
                 : storageUsername;
 
-            const password = typeof bootstrapConfig.developerPassword === 'string' && bootstrapConfig.developerPassword.trim()
-                ? bootstrapConfig.developerPassword
-                : storagePassword;
+            const passwordHash = typeof bootstrapConfig.developerPasswordHash === 'string' && bootstrapConfig.developerPasswordHash.trim()
+                ? bootstrapConfig.developerPasswordHash
+                : storagePasswordHash;
 
             return {
                 username,
-                password,
+                passwordHash,
                 passwordRequired: bootstrapConfig.passwordRequired !== false,
                 enabled: bootstrapConfig.enabled !== false
             };
         },
 
-        setDeveloperPassword(password) {
+        async setDeveloperPassword(password) {
             const normalized = String(password || '').trim();
             if (!normalized) {
                 return {
@@ -248,12 +273,14 @@
                     })()
                     : 'Developer')
                 : 'Developer';
+            const passwordHash = await hashSecret(normalized);
 
             if (typeof localStorage !== 'undefined') {
                 localStorage.setItem('catchtrack.local.auth.v1', JSON.stringify({
                     username: defaultUsername,
-                    password: normalized,
+                    passwordHash,
                     setupComplete: true,
+                    source: 'local-offline',
                     updatedAt: new Date().toISOString()
                 }));
             }
@@ -263,7 +290,7 @@
                 window.ConfigManager.set('bootstrap', {
                     ...current,
                     developerUsername: defaultUsername,
-                    developerPassword: normalized,
+                    developerPasswordHash: passwordHash,
                     passwordRequired: true,
                     passwordSource: 'local-offline'
                 });
@@ -272,7 +299,7 @@
             return {
                 ok: true,
                 code: 'DEVELOPER_PASSWORD_SET',
-                data: { password: normalized }
+                data: { passwordHash }
             };
         },
 
@@ -326,16 +353,17 @@
             const bootstrapConfig = this.resolveBootstrapConfig();
             const isDeveloperUser = String(user.username || '').trim().toLowerCase() === String(bootstrapConfig.username || 'developer').trim().toLowerCase();
             if (bootstrapConfig.enabled && isDeveloperUser && bootstrapConfig.passwordRequired) {
-                const expectedPassword = bootstrapConfig.password;
+                const expectedPasswordHash = bootstrapConfig.passwordHash || '';
                 const givenPassword = typeof input.password === 'string' ? input.password : '';
-                if (!expectedPassword) {
+                if (!expectedPasswordHash) {
                     return {
                         ok: false,
                         code: 'PASSWORD_REQUIRED',
                         message: 'Set a local bootstrap password before testing the developer login.'
                     };
                 }
-                if (String(givenPassword) !== String(expectedPassword)) {
+                const givenPasswordHash = await hashSecret(givenPassword);
+                if (givenPasswordHash !== expectedPasswordHash) {
                     return {
                         ok: false,
                         code: 'INVALID_PASSWORD',

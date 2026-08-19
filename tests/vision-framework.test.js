@@ -136,7 +136,7 @@ test('media manager optimizes supported image uploads', async () => {
   assert.equal(result.dimensions.height <= 800, true);
 });
 
-test('developer setup persists the same local password for login and admin access', async () => {
+test('developer setup persists a hashed local password for login and admin access', async () => {
   const mkStorage = () => {
     const map = new Map();
     return {
@@ -172,7 +172,7 @@ test('developer setup persists the same local password for login and admin acces
           createOnInit: true,
           passwordRequired: true,
           passwordSource: 'local-offline',
-          developerPassword: ''
+          developerPasswordHash: ''
         });
       },
       set(key, value) { this.configs.set(key, value); },
@@ -195,12 +195,15 @@ test('developer setup persists the same local password for login and admin acces
   });
 
   assert.equal(setupResult.ok, true);
-  assert.equal(context.window.CoreAuth.resolveBootstrapConfig().password, 'Dev-password-42!');
-  assert.equal(context.window.ConfigManager.get('bootstrap').developerPassword, 'Dev-password-42!');
+
+  const bootstrapConfig = context.window.CoreAuth.resolveBootstrapConfig();
+  assert.equal(typeof bootstrapConfig.passwordHash === 'string' && bootstrapConfig.passwordHash.length > 0, true);
+  assert.equal(context.window.ConfigManager.get('bootstrap').developerPasswordHash, bootstrapConfig.passwordHash);
 
   const persistedState = JSON.parse(localStorage.getItem('catchtrack.local.auth.v1'));
-  assert.equal(persistedState.password, 'Dev-password-42!');
+  assert.equal(typeof persistedState.passwordHash === 'string' && persistedState.passwordHash.length > 0, true);
   assert.equal(localStorage.getItem('platform.local.auth.developerPassword'), null);
+  assert.equal(localStorage.getItem('core.bootstrap.developerPassword'), null);
 
   const reloadedWindow = {
     localStorage,
@@ -230,7 +233,7 @@ test('developer setup persists the same local password for login and admin acces
             createOnInit: true,
             passwordRequired: true,
             passwordSource: 'local-offline',
-            developerPassword: parsed.password || ''
+            developerPasswordHash: parsed.passwordHash || ''
           });
         }
       },
@@ -267,4 +270,5 @@ test('app config exposes a single neutral app name', () => {
   const appName = context.window.ConfigManager.get('app').name;
   assert.equal(appName, 'Neutral Platform');
   assert.equal(context.window.ConfigManager.get('bootstrap').developerUsername, 'Developer');
+  assert.equal(typeof context.window.ConfigManager.get('bootstrap').developerPasswordHash, 'string');
 });

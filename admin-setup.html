@@ -101,12 +101,12 @@
           }
 
           const state = window.LocalAuth.getState();
-          const configured = !!state.password && !!state.setupComplete;
+          const configured = !!state.passwordHash && !!state.setupComplete;
           metaBox.innerHTML = `
             <div><strong>Storage:</strong> catchtrack.local.auth.v1</div>
             <div><strong>Account:</strong> ${state.username || 'Developer'}</div>
             <div><strong>Configured:</strong> ${configured ? 'yes' : 'no'}</div>
-            <div><strong>Password set:</strong> ${state.password ? 'yes' : 'no'}</div>
+            <div><strong>Password set:</strong> ${state.passwordHash ? 'yes' : 'no'}</div>
           `;
 
           if (configured) {

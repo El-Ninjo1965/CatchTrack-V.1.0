@@ -34,7 +34,7 @@
                             this.set('bootstrap', {
                                 ...current,
                                 developerUsername: parsed.username || current.developerUsername || 'Developer',
-                                developerPassword: parsed.password || current.developerPassword || '',
+                                developerPasswordHash: parsed.passwordHash || current.developerPasswordHash || '',
                                 passwordRequired: true,
                                 enabled: current.enabled !== false,
                                 passwordSource: 'local-offline'
@@ -79,7 +79,7 @@
                 createOnInit: true,
                 passwordRequired: true,
                 passwordSource: 'local-offline',
-                developerPassword: ''
+                developerPasswordHash: ''
             });
 
             // Database Config

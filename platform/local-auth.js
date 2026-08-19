@@ -5,30 +5,58 @@
   const STORAGE_KEY = 'catchtrack.local.auth.v1';
   const LEGACY_STORAGE_KEYS = [
     'platform.local.auth.developerPassword',
+    'platform.local.auth.developerPasswordHash',
     'platform.local.auth.developerUsername',
     'platform.local.auth.setupComplete',
     'core.bootstrap.developerPassword',
+    'core.bootstrap.developerPasswordHash',
     'core.bootstrap.developerUsername'
   ];
 
   const normalizeUsername = (value) => String(value || '').trim();
+  const normalizeHash = (value) => String(value || '').trim();
+
+  const hashSecret = async (value) => {
+    const secret = String(value ?? '').trim();
+    if (!secret) {
+      return '';
+    }
+
+    if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle) {
+      const bytes = new TextEncoder().encode(secret);
+      const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    if (typeof require === 'function' && typeof process !== 'undefined') {
+      const crypto = require('node:crypto');
+      return crypto.createHash('sha256').update(secret).digest('hex');
+    }
+
+    let hash = 2166136261;
+    for (let index = 0; index < secret.length; index += 1) {
+      hash ^= secret.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16);
+  };
 
   const readLegacyState = () => {
     if (typeof localStorage === 'undefined') {
-      return { username: DEFAULT_DEVELOPER_USERNAME, password: '', setupComplete: false };
+      return { username: DEFAULT_DEVELOPER_USERNAME, passwordHash: '', setupComplete: false };
     }
 
     const username = localStorage.getItem('platform.local.auth.developerUsername')
       || localStorage.getItem('core.bootstrap.developerUsername')
       || DEFAULT_DEVELOPER_USERNAME;
-    const password = localStorage.getItem('platform.local.auth.developerPassword')
-      || localStorage.getItem('core.bootstrap.developerPassword')
+    const passwordHash = localStorage.getItem('platform.local.auth.developerPasswordHash')
+      || localStorage.getItem('core.bootstrap.developerPasswordHash')
       || '';
     const setupComplete = localStorage.getItem('platform.local.auth.setupComplete') === 'true';
 
     return {
       username: normalizeUsername(username) || DEFAULT_DEVELOPER_USERNAME,
-      password: String(password || '').trim(),
+      passwordHash: normalizeHash(passwordHash),
       setupComplete: !!setupComplete
     };
   };
@@ -36,8 +64,9 @@
   const writeState = (state) => {
     const nextState = {
       username: normalizeUsername(state && state.username) || DEFAULT_DEVELOPER_USERNAME,
-      password: String(state && state.password ? state.password : '').trim(),
+      passwordHash: normalizeHash(state && state.passwordHash),
       setupComplete: !!(state && state.setupComplete),
+      source: 'local-offline',
       updatedAt: new Date().toISOString()
     };
 
@@ -57,16 +86,18 @@
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const syncBootstrapConfig = (password, username = DEFAULT_DEVELOPER_USERNAME) => {
+  const syncBootstrapConfig = async (password, username = DEFAULT_DEVELOPER_USERNAME) => {
     const normalizedUsername = normalizeUsername(username) || DEFAULT_DEVELOPER_USERNAME;
     const normalizedPassword = String(password || '').trim();
+    const passwordHash = normalizedPassword ? await hashSecret(normalizedPassword) : '';
     const nextState = {
       enabled: true,
       developerUsername: normalizedUsername,
       developerDisplayId: 'USR-000001',
-      developerPassword: normalizedPassword,
+      developerPasswordHash: passwordHash,
       passwordRequired: true,
-      passwordSource: 'local-offline'
+      passwordSource: 'local-offline',
+      hasDeveloperAccount: !!passwordHash
     };
 
     if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
@@ -79,8 +110,8 @@
 
     writeState({
       username: normalizedUsername,
-      password: normalizedPassword,
-      setupComplete: !!normalizedPassword
+      passwordHash,
+      setupComplete: !!passwordHash
     });
 
     return nextState;
@@ -88,7 +119,7 @@
 
   const readLocalAuthState = () => {
     if (typeof localStorage === 'undefined') {
-      return { username: DEFAULT_DEVELOPER_USERNAME, password: '', setupComplete: false, source: 'local-offline' };
+      return { username: DEFAULT_DEVELOPER_USERNAME, passwordHash: '', setupComplete: false, source: 'local-offline' };
     }
 
     try {
@@ -98,11 +129,11 @@
         if (parsed && typeof parsed === 'object') {
           const state = {
             username: normalizeUsername(parsed.username) || DEFAULT_DEVELOPER_USERNAME,
-            password: String(parsed.password || '').trim(),
+            passwordHash: normalizeHash(parsed.passwordHash),
             setupComplete: !!parsed.setupComplete,
             source: 'local-offline'
           };
-          if (state.password || state.setupComplete) {
+          if (state.passwordHash || state.setupComplete) {
             return state;
           }
         }
@@ -127,37 +158,42 @@
 
     isSetupComplete() {
       const state = this.getState();
-      return !!state.setupComplete && !!state.password;
+      return !!state.setupComplete && !!state.passwordHash;
     },
 
     markSetupComplete(value = true) {
       const state = this.getState();
       const nextState = writeState({
         username: state.username,
-        password: state.password,
+        passwordHash: state.passwordHash,
         setupComplete: !!value
       });
       return !!nextState.setupComplete;
     },
 
-    getStoredPassword() {
-      return this.getState().password || '';
+    getStoredPasswordHash() {
+      return this.getState().passwordHash || '';
     },
 
-    setDeveloperPassword(password, username = DEFAULT_DEVELOPER_USERNAME) {
+    async setDeveloperPassword(password, username = DEFAULT_DEVELOPER_USERNAME) {
       const normalizedPassword = String(password || '').trim();
       if (!normalizedPassword) {
         return { ok: false, code: 'INVALID_PASSWORD', message: 'A developer password is required.' };
       }
 
       const normalizedUsername = normalizeUsername(username) || DEFAULT_DEVELOPER_USERNAME;
-      syncBootstrapConfig(normalizedPassword, normalizedUsername);
+      const config = await syncBootstrapConfig(normalizedPassword, normalizedUsername);
 
       if (window.CoreAuth && typeof window.CoreAuth.setDeveloperPassword === 'function') {
         return window.CoreAuth.setDeveloperPassword(normalizedPassword);
       }
 
-      return { ok: true, code: 'DEVELOPER_PASSWORD_SET', message: 'Developer password saved locally.' };
+      return {
+        ok: true,
+        code: 'DEVELOPER_PASSWORD_SET',
+        data: config,
+        message: 'Developer password saved locally.'
+      };
     },
 
     resetDeveloperAccount() {
@@ -169,10 +205,11 @@
           ...current,
           developerUsername: DEFAULT_DEVELOPER_USERNAME,
           developerDisplayId: 'USR-000001',
-          developerPassword: '',
+          developerPasswordHash: '',
           passwordRequired: true,
           passwordSource: 'local-offline',
-          enabled: true
+          enabled: true,
+          hasDeveloperAccount: false
         });
       }
 
@@ -229,14 +266,15 @@
 
       const state = this.getState();
       const expectedUsername = normalizeUsername(state.username) || DEFAULT_DEVELOPER_USERNAME;
-      const expectedPassword = String(state.password || '').trim();
+      const expectedPasswordHash = normalizeHash(state.passwordHash);
 
-      if (expectedPassword && password !== expectedPassword) {
-        return { ok: false, code: 'INVALID_PASSWORD', message: 'The local developer password is invalid.' };
+      if (!expectedPasswordHash) {
+        return { ok: false, code: 'LOCAL_SETUP_REQUIRED', message: 'Set up the local developer account before logging in.' };
       }
 
-      if (!expectedPassword) {
-        return { ok: false, code: 'LOCAL_SETUP_REQUIRED', message: 'Set up the local developer account before logging in.' };
+      const submittedPasswordHash = await hashSecret(password);
+      if (submittedPasswordHash !== expectedPasswordHash) {
+        return { ok: false, code: 'INVALID_PASSWORD', message: 'The local developer password is invalid.' };
       }
 
       const userLookup = await window.UserModule.getUserByUsername(username || expectedUsername);
@@ -261,7 +299,7 @@
         return { ok: false, code: 'INVALID_PASSWORD', message: 'A developer password is required.' };
       }
 
-      syncBootstrapConfig(normalizedPassword, normalizedUser);
+      await syncBootstrapConfig(normalizedPassword, normalizedUser);
 
       const bootstrapResult = await this.ensureDeveloperUser();
       if (!bootstrapResult || !bootstrapResult.ok) {
