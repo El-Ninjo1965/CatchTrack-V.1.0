@@ -1,6 +1,6 @@
 - Core validiert
-- Modul validiert
-- Routing validiert
+- Theme engine umgesetzt
+- Media pipeline umgesetzt
 - Admin-Bereich validiert
 - Serveranbindung validiert
 - Tests erfolgreich
