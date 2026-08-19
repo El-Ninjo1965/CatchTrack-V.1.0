@@ -201,10 +201,14 @@
 
             const storageUsername = storageState && typeof storageState.username === 'string' && storageState.username.trim()
                 ? storageState.username.trim()
-                : (typeof localStorage !== 'undefined' ? (localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || 'Developer') : 'Developer');
+                : (typeof localStorage !== 'undefined'
+                    ? (localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || 'Developer')
+                    : 'Developer');
             const storagePassword = storageState && typeof storageState.password === 'string'
                 ? storageState.password
-                : (typeof localStorage !== 'undefined' ? (localStorage.getItem('platform.local.auth.developerPassword') || localStorage.getItem('core.bootstrap.developerPassword') || '') : '');
+                : (typeof localStorage !== 'undefined'
+                    ? (localStorage.getItem('platform.local.auth.developerPassword') || localStorage.getItem('core.bootstrap.developerPassword') || '')
+                    : '');
 
             const username = typeof bootstrapConfig.developerUsername === 'string' && bootstrapConfig.developerUsername.trim()
                 ? bootstrapConfig.developerUsername.trim()
@@ -233,7 +237,16 @@
             }
 
             const defaultUsername = typeof localStorage !== 'undefined'
-                ? (localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || 'Developer')
+                ? (localStorage.getItem('catchtrack.local.auth.v1')
+                    ? (() => {
+                        try {
+                            const raw = JSON.parse(localStorage.getItem('catchtrack.local.auth.v1'));
+                            return raw && typeof raw.username === 'string' && raw.username.trim() ? raw.username.trim() : 'Developer';
+                        } catch (error) {
+                            return 'Developer';
+                        }
+                    })()
+                    : 'Developer')
                 : 'Developer';
 
             if (typeof localStorage !== 'undefined') {
@@ -243,11 +256,6 @@
                     setupComplete: true,
                     updatedAt: new Date().toISOString()
                 }));
-                localStorage.setItem('core.bootstrap.developerPassword', normalized);
-                localStorage.setItem('platform.local.auth.developerPassword', normalized);
-                localStorage.setItem('core.bootstrap.developerUsername', defaultUsername);
-                localStorage.setItem('platform.local.auth.developerUsername', defaultUsername);
-                localStorage.setItem('platform.local.auth.setupComplete', 'true');
             }
 
             if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {

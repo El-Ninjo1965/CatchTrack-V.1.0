@@ -1,5 +1,5 @@
-- Offline-First-Developer-Flow grundlegend korrigiert
-- Lokaler Admin Setup für Reset, Neu-Setup und transparente Persistenz ergänzt
-- Einziger lokaler Passwortzustand für Setup und Login konsolidiert
-- Developer-Login, Developer-Rolle und Admin-Zugriff validiert
+- GPS-Modul als registriertes, aktivierbares, persistentes User-Modul in der Registry und UI verknüpft
+- Offline-First-Developer-Flow mit einem einzigen lokalen Auth-Zustand für Setup, Reload und Login stabilisiert
+- Zentraler App-Name konfiguriert und in der User-UI verwendet
+- Auth-, GPS- und App-Name-Prüfung erfolgreich validiert
 - Finaler GitHub-Sync-Schritt vorbereitet

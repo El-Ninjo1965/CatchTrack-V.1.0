@@ -145,7 +145,7 @@
       }
       renderModules();
     } else {
-      showLoginForm();
+      renderModules();
     }
     bindNavigation();
   };

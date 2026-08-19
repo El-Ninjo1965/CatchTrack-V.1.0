@@ -43,11 +43,6 @@
 
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-      localStorage.setItem('platform.local.auth.developerUsername', nextState.username);
-      localStorage.setItem('platform.local.auth.developerPassword', nextState.password);
-      localStorage.setItem('platform.local.auth.setupComplete', String(nextState.setupComplete));
-      localStorage.setItem('core.bootstrap.developerUsername', nextState.username);
-      localStorage.setItem('core.bootstrap.developerPassword', nextState.password);
     }
 
     return nextState;

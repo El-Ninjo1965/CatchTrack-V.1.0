@@ -14,18 +14,23 @@
   - Fachlich konkrete App-Logik: bewusst nicht im Core hardcodiert; sie bleibt in neutralen Modulen bzw. im Final Framework als generische Oberfläche.
 - Prüfungen:
   - `npm test` wurde erfolgreich ausgeführt.
-  - Die kritischen Framework-Funktionen wurden validiert: Core-Initialisierung, Berechtigungen, Module-Handling, Theme-Engine und Medien-Optimierung.
+  - Die kritischen Framework-Funktionen wurden validiert: Core-Initialisierung, Berechtigungen, Module-Handling, Theme-Engine, Medien-Optimierung, Offline-Auth-Reload und zentrale App-Name-Konfiguration.
+  - Geprüft wurden die drei kritischen Bereiche: Auth-Reload, GPS-Modul-Kette und App-Name-Zentralisierung.
 - Abschluss:
   - Die Repo-Struktur ist für den Vision-Stand konsistent und stabil.
   - Es liegt kein offener Implementierungsblocker für die umgesetzte Architektur vor.
-  - Nach der finalen Audit wurden keine weiteren Codeänderungen verlangt; der Stand ist reviewbereit.
-- Offline-First-Developer-Flow grundlegend korrigiert:
-  - Der lokale Developer-Setup und der Login-Flow wurden auf einen einzigen, konsistenten Offline-Passwortzustand vereinheitlicht.
-  - Beim Setup gewählt passwort wird jetzt in einer klaren lokalen Persistenz gespeichert und beim Login exakt wiederverwendet.
-  - Der Developer-State kann jetzt über ein separates lokales Admin Setup vollständig zurückgesetzt, neu eingerichtet und transparent geprüft werden.
-  - Entwickler-User, Developer-Rolle und Admin-Zugriff bleiben nach erfolgreicher Einrichtung stabil und lokal nutzbar.
-  - Die Bootstrap-Konfiguration wird nach dem Reload aus der lokalen Auth-Persistenz konsistent wiederhergestellt.
+  - Nach der finalen Audit und gezielten Korrekturen ist der Stand reviewbereit.
+- GPS-Modul- und User-UI-Korrektur:
+  - Das GPS-Modul ist über das zentrale Module-Manifest im Modul-System registriert und kann durch den Module-Manager aktiviert werden.
+  - Die normale User-Oberfläche zeigt unter dem neutralen Login-Button nun echte aktive Module an, statt ein Login-Formular als Hauptinhalt einzublenden.
+  - Aktivierte Module werden aus der Registry gelesen und nicht mehr durch statische Dummy-Werte ersetzt.
+- Offline-First-Developer-Flow stabilisiert:
+  - Der lokale Developer-Setup und der Login-Flow verwenden denselben persistierten Auth-Zustand (`catchtrack.local.auth.v1`).
+  - Versteckte oder doppelte Passwortspeicher wurden nicht weiter gepflegt; der Reload-Login bleibt nach dem vollständigen App-Neustart konsistent gültig.
+  - Developer-User, Developer-Rolle und Admin-Zugriff bleiben nach erfolgreichem Setup und erfolgreichem Login stabil und lokal nutzbar.
+- App-Name zentralisiert:
+  - Der App-Name wird über die zentrale Konfiguration in `ConfigManager` verwaltet und in der User-UI ausgelesen.
+  - Die UI-Elemente nutzen den zentralen Wert statt lokaler Hardcodes.
 - Vorbereitung für den finalen Synchronisierungsschritt:
   - Die Workflow-Dokumentation wurde mit dem aktuellen Ergebnis ergänzt.
-  - Die am Zielpfad nicht benötigten, separat verwalteten Setup-/Password-Zustände wurden entfernt, damit kein versteckter Auth-Zustand mehr verbleibt.
-  - Der finale Commit und die GitHub-Synchronität werden als letzter Arbeitsschritt ausgeführt.
+  - Die finale Commit-/Push- und Synchronitätsprüfung werden als letzter Arbeitsschritt ausgeführt.

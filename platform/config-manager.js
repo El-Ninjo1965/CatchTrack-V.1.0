@@ -61,7 +61,7 @@
         loadDefaultConfigs() {
             // Application Config
             this.set('app', {
-                name: 'ApplicationCore',
+                name: 'Neutral Platform',
                 version: '1.0.0',
                 environment: 'development',
                 debug: true,
@@ -74,11 +74,11 @@
             // Bootstrap Config
             this.set('bootstrap', {
                 enabled: true,
-                developerUsername: 'developer',
+                developerUsername: 'Developer',
                 developerDisplayId: 'USR-000001',
                 createOnInit: true,
                 passwordRequired: true,
-                passwordSource: 'local-config-or-storage',
+                passwordSource: 'local-offline',
                 developerPassword: ''
             });
 
@@ -142,7 +142,7 @@
             // UI Config
             this.set('ui', {
                 theme: 'neutral',
-                language: navigator.language || 'de',
+                language: (typeof navigator !== 'undefined' && navigator.language) ? navigator.language : 'en',
                 responsive: true,
                 animationsEnabled: true,
                 updateInterval: 5000

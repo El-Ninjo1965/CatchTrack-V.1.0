@@ -167,11 +167,11 @@ test('developer setup persists the same local password for login and admin acces
       init() {
         this.set('bootstrap', {
           enabled: true,
-          developerUsername: 'developer',
+          developerUsername: 'Developer',
           developerDisplayId: 'USR-000001',
           createOnInit: true,
           passwordRequired: true,
-          passwordSource: 'local-config-or-storage',
+          passwordSource: 'local-offline',
           developerPassword: ''
         });
       },
@@ -198,12 +198,73 @@ test('developer setup persists the same local password for login and admin acces
   assert.equal(context.window.CoreAuth.resolveBootstrapConfig().password, 'Dev-password-42!');
   assert.equal(context.window.ConfigManager.get('bootstrap').developerPassword, 'Dev-password-42!');
 
-  const loginResult = await context.window.LocalAuth.login({
+  const persistedState = JSON.parse(localStorage.getItem('catchtrack.local.auth.v1'));
+  assert.equal(persistedState.password, 'Dev-password-42!');
+  assert.equal(localStorage.getItem('platform.local.auth.developerPassword'), null);
+
+  const reloadedWindow = {
+    localStorage,
+    Core: { emit() {} },
+    CoreAudit: { record() {} },
+    CoreAccess: {
+      can() { return { ok: true }; },
+      hasPermission(user, permission) {
+        return !!user && Array.isArray(user.permissions) && user.permissions.includes(permission);
+      }
+    },
+    DatabaseManager: {
+      async clear() {},
+      async save() {},
+      async getAll() { return []; }
+    },
+    ConfigManager: {
+      configs: new Map(),
+      init() {
+        const raw = localStorage.getItem('catchtrack.local.auth.v1');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          this.set('bootstrap', {
+            enabled: true,
+            developerUsername: parsed.username || 'Developer',
+            developerDisplayId: 'USR-000001',
+            createOnInit: true,
+            passwordRequired: true,
+            passwordSource: 'local-offline',
+            developerPassword: parsed.password || ''
+          });
+        }
+      },
+      set(key, value) { this.configs.set(key, value); },
+      get(key, fallback) { return this.configs.has(key) ? this.configs.get(key) : fallback; }
+    }
+  };
+  reloadedWindow.window = reloadedWindow;
+
+  const reloadedContext = vm.createContext(reloadedWindow);
+  loadScript(reloadedContext, path.resolve(__dirname, '../platform/config-manager.js'));
+  loadScript(reloadedContext, path.resolve(__dirname, '../platform/core-auth.js'));
+  loadScript(reloadedContext, path.resolve(__dirname, '../platform/core-user.js'));
+  loadScript(reloadedContext, path.resolve(__dirname, '../platform/local-auth.js'));
+  reloadedWindow.ConfigManager.init();
+
+  const loginResult = await reloadedContext.window.LocalAuth.login({
     username: 'Developer',
     password: 'Dev-password-42!'
   });
 
   assert.equal(loginResult.ok, true);
-  assert.equal(context.window.CoreAuth.getCurrentUser().username, 'Developer');
-  assert.ok(context.window.CoreAuth.getCurrentUser().roles.includes('developer'));
+  assert.equal(reloadedContext.window.CoreAuth.getCurrentUser().username, 'Developer');
+  assert.ok(reloadedContext.window.CoreAuth.getCurrentUser().roles.includes('developer'));
+});
+
+test('app config exposes a single neutral app name', () => {
+  const windowStub = { window: null, ConfigManager: null };
+  windowStub.window = windowStub;
+  const context = vm.createContext(windowStub);
+  loadScript(context, path.resolve(__dirname, '../platform/config-manager.js'));
+  context.window.ConfigManager.init();
+
+  const appName = context.window.ConfigManager.get('app').name;
+  assert.equal(appName, 'Neutral Platform');
+  assert.equal(context.window.ConfigManager.get('bootstrap').developerUsername, 'Developer');
 });

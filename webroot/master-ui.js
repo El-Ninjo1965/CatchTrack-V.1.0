@@ -18,6 +18,16 @@
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
+  const getConfiguredAppName = () => {
+    const appConfig = window.ConfigManager && typeof window.ConfigManager.get === 'function'
+      ? window.ConfigManager.get('app', {})
+      : {};
+    const name = appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
+      ? appConfig.name.trim()
+      : 'Neutral Platform';
+    return name;
+  };
+
   const getCurrentUser = () => {
     if (window.UserModule && typeof window.UserModule.getCurrentUser === 'function') {
       const user = window.UserModule.getCurrentUser();
@@ -284,7 +294,7 @@
             if (!form) return;
             const payload = {
               appId: form.querySelector('[name="appId"]') ? form.querySelector('[name="appId"]').value : 'neutral-app',
-              appName: form.querySelector('[name="appName"]') ? form.querySelector('[name="appName"]').value : 'Neutral App',
+              appName: form.querySelector('[name="appName"]') ? form.querySelector('[name="appName"]').value : getConfiguredAppName(),
               configuration: {
                 serverUrl: form.querySelector('[name="serverUrl"]') ? form.querySelector('[name="serverUrl"]').value : '',
                 apiBase: form.querySelector('[name="apiBase"]') ? form.querySelector('[name="apiBase"]').value : '/api',
@@ -454,7 +464,7 @@
       : [];
     const apps = appRegistry.length ? appRegistry : [{
       appId: 'neutral-app',
-      name: 'Neutral App',
+      name: getConfiguredAppName(),
       version: getAppVersion(),
       status: 'active',
       description: 'Default neutral application shell.'
@@ -1029,7 +1039,7 @@
         <div class="content-wrap">
           <form class="form-grid" style="margin-bottom: 18px;">
             <div class="form-field"><label>App ID</label><input type="text" name="appId" value="${escapeHtml(setup.appId || 'neutral-app')}" /></div>
-            <div class="form-field"><label>App name</label><input type="text" name="appName" value="${escapeHtml(setup.appName || 'Neutral App')}" /></div>
+            <div class="form-field"><label>App name</label><input type="text" name="appName" value="${escapeHtml(setup.appName || getConfiguredAppName())}" /></div>
             <div class="form-field"><label>Server URL</label><input type="text" name="serverUrl" value="${escapeHtml(configuration.serverUrl || 'http://127.0.0.1:3000')}" /></div>
             <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="${escapeHtml(configuration.apiBase || '/api')}" /></div>
             <div class="form-field"><label>Database type</label><input type="text" name="databaseType" value="${escapeHtml((configuration.database && configuration.database.type) || 'indexeddb')}" /></div>
@@ -1067,7 +1077,7 @@
           <div class="message info">This installation is not active yet. Configure the server, test the connections, and activate the system before using the admin workspace.</div>
           <div class="form-grid" style="margin-top: 18px; margin-bottom: 18px;">
             <div class="form-field"><label>Application ID</label><input type="text" name="appId" value="${escapeHtml(setup.appId || 'neutral-app')}" /></div>
-            <div class="form-field"><label>Application name</label><input type="text" name="appName" value="${escapeHtml(setup.appName || 'Neutral App')}" /></div>
+            <div class="form-field"><label>Application name</label><input type="text" name="appName" value="${escapeHtml(setup.appName || getConfiguredAppName())}" /></div>
             <div class="form-field"><label>Server URL</label><input type="text" name="serverUrl" value="${escapeHtml(configuration.serverUrl || 'https://your-domain.example')}" /></div>
             <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="${escapeHtml(configuration.apiBase || '/api')}" /></div>
             <div class="form-field"><label>Database type</label><input type="text" name="databaseType" value="${escapeHtml((configuration.database && configuration.database.type) || 'indexeddb')}" /></div>
