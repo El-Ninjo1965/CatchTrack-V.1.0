@@ -1,6 +1,6 @@
-- Core angepasst
-- Modul erstellt
-- Routing umgesetzt
-- Admin-Bereich umgesetzt
-- Serveranbindung umgesetzt
+- Core validiert
+- Modul validiert
+- Routing validiert
+- Admin-Bereich validiert
+- Serveranbindung validiert
 - Tests erfolgreich
