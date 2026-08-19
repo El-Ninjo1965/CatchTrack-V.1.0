@@ -37,6 +37,10 @@
                 module.name = module.id;
             }
 
+            if (!module.displayName || typeof module.displayName !== 'string') {
+                module.displayName = module.name;
+            }
+
             if (typeof module.status === 'undefined') {
                 module.status = 'available';
             }

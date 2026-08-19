@@ -66,6 +66,10 @@
                 module.name = module.id;
             }
 
+            if (!module.displayName || typeof module.displayName !== 'string') {
+                module.displayName = module.name;
+            }
+
             if (!Array.isArray(module.dependencies)) {
                 module.dependencies = [];
             }
@@ -200,6 +204,7 @@
                     ...implementation,
                     id: implementation.id || manifest.id,
                     name: implementation.name || manifest.name,
+                    displayName: implementation.displayName || manifest.displayName || implementation.name || manifest.name,
                     version: implementation.version || manifest.version,
                     description: implementation.description || manifest.description,
                     manifest,

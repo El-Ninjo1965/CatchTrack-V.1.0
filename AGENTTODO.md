@@ -1,5 +1,8 @@
 - GPS-Modul als registriertes, aktivierbares, persistentes User-Modul in der Registry und UI verknüpft
 - Offline-First-Developer-Flow mit einem einzigen lokalen Auth-Zustand für Setup, Reload und Login stabilisiert
 - Zentraler App-Name konfiguriert und in der User-UI verwendet
+- Neutraler Startseiten- und Modul-UI-Flow umgesetzt: Login erhalten, keine sichtbare „Modules“-Heading mehr, aktive Module als Buttons dargestellt
+- Sichtbarer Modulname und technischer Name sauber getrennt; GPS erscheint als `GPS`
 - Auth-, GPS- und App-Name-Prüfung erfolgreich validiert
-- Finaler GitHub-Sync-Schritt vorbereitet
+- Workflow-Dokumentation aktualisiert und zusammen mit den Änderungen committed/pushed
+- Finaler GitHub-Sync-Check mit HEAD-Vergleich durchgeführt

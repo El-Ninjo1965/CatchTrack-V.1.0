@@ -134,7 +134,8 @@
 
     const GpsModule = {
         id: 'gps',
-        name: 'GPS Tracker',
+        name: 'GPS',
+        displayName: 'GPS',
         version: '1.0.0',
         description: 'Neutral GPS tracking module.',
         permissions: [],

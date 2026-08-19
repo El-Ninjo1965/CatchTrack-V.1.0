@@ -21,16 +21,41 @@
     return null;
   };
 
+  const getAppName = () => {
+    const appConfig = window.ConfigManager && typeof window.ConfigManager.get === 'function'
+      ? window.ConfigManager.get('app', {})
+      : {};
+    return appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
+      ? appConfig.name.trim()
+      : 'Neutral Platform';
+  };
+
+  const getModuleDisplayName = (module) => {
+    const explicit = module && (module.displayName || module.manifest?.displayName || module.name || module.id || 'Module');
+    return String(explicit || module.id || 'Module').trim() || 'Module';
+  };
+
   const getModules = () => window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
     ? window.ModuleRegistry.getAll().filter((module) => module && module.id && (module.active || module.status === 'enabled' || module.status === 'active'))
     : [];
+
+  const getVisibleModules = () => {
+    const modules = getModules();
+    const currentUser = getCurrentUser();
+    return modules.filter((module) => {
+      if (!currentUser) {
+        return module && (module.public === true || module.isPublic === true || module.loginRequired === false || module.requiresLogin === false || module.public !== false);
+      }
+      return true;
+    });
+  };
 
   const setActiveView = (view) => document.querySelectorAll('[data-user-view]').forEach((button) => {
     button.classList.toggle('active', button.dataset.userView === view);
   });
 
   const showLoginForm = () => {
-    setActiveView('modules');
+    setActiveView('home');
     content.innerHTML = `
       <section class="user-app-panel">
         <span class="user-app-eyebrow">Account access</span>
@@ -88,34 +113,45 @@
   }));
 
   const renderModule = (moduleId) => {
-    const module = getModules().find((entry) => entry.id === moduleId);
+    const module = getVisibleModules().find((entry) => entry.id === moduleId) || getModules().find((entry) => entry.id === moduleId);
     if (!module) return renderModules();
-    content.innerHTML = '<section class="user-app-panel"><button class="user-app-back" type="button" data-user-view="modules">Modules</button><div id="moduleUserInterface"></div></section>';
+    content.innerHTML = '<section class="user-app-panel"><button class="user-app-back" type="button" data-user-view="home">Back</button><div id="moduleUserInterface"></div></section>';
     const target = document.getElementById('moduleUserInterface');
     if (typeof module.renderUserInterface === 'function') {
       module.renderUserInterface(target);
     } else {
-      target.innerHTML = '<span class="user-app-eyebrow">Module</span><h1>' + escapeHtml(module.name || module.id) + '</h1><p>This module does not provide a user interface.</p>';
+      target.innerHTML = '<span class="user-app-eyebrow">Module</span><h1>' + escapeHtml(getModuleDisplayName(module)) + '</h1><p>This module does not provide a user interface.</p>';
     }
     bindNavigation();
     content.focus();
   };
 
+  const renderLandingPage = () => {
+    const modules = getVisibleModules();
+    const appName = getAppName();
+    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Welcome</span><h1>Welcome to ' + escapeHtml(appName) + '</h1></div></div><p class="user-app-intro">A neutral platform for local-first tools, modules, and secure access.</p>' + (modules.length
+      ? '<div class="user-module-list">' + modules.map((module) => '<button type="button" class="user-module-card" data-module-id="' + escapeHtml(module.id) + '"><span class="user-module-icon" aria-hidden="true">' + escapeHtml(getModuleDisplayName(module).charAt(0) || module.id.charAt(0)) + '</span><span class="user-module-copy"><strong>' + escapeHtml(getModuleDisplayName(module)) + '</strong><small>Open</small></span><span class="user-module-arrow" aria-hidden="true">›</span></button>').join('') + '</div>'
+      : '<div class="user-app-empty"><p>No public modules are currently available.</p></div>') + '</section>';
+    content.querySelectorAll('[data-module-id]').forEach((button) => button.addEventListener('click', () => renderModule(button.dataset.moduleId)));
+  };
+
   const renderModules = () => {
-    const modules = getModules();
+    const modules = getVisibleModules();
     const currentUser = getCurrentUser();
-    setActiveView('modules');
-    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Your tools</span><h1>Modules</h1></div><span class="user-app-count">' + modules.length + '</span></div>' + (modules.length
-      ? '<div class="user-module-list">' + modules.map((module) => '<button type="button" class="user-module-card" data-module-id="' + escapeHtml(module.id) + '"><span class="user-module-icon" aria-hidden="true">' + escapeHtml((module.name || module.id).charAt(0)) + '</span><span class="user-module-copy"><strong>' + escapeHtml(module.name || module.id) + '</strong><small>Ready to use</small></span><span class="user-module-arrow" aria-hidden="true">›</span></button>').join('') + '</div>'
-      : '<div class="user-app-empty"><p>No modules are currently active.</p></div>') + '</section>';
+    setActiveView('home');
+    if (!currentUser) {
+      renderLandingPage();
+      return;
+    }
+    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Tools</span><h1>Available</h1></div><span class="user-app-count">' + modules.length + '</span></div>' + (modules.length
+      ? '<div class="user-module-list">' + modules.map((module) => '<button type="button" class="user-module-card" data-module-id="' + escapeHtml(module.id) + '"><span class="user-module-icon" aria-hidden="true">' + escapeHtml(getModuleDisplayName(module).charAt(0) || module.id.charAt(0)) + '</span><span class="user-module-copy"><strong>' + escapeHtml(getModuleDisplayName(module)) + '</strong><small>Open</small></span><span class="user-module-arrow" aria-hidden="true">›</span></button>').join('') + '</div>'
+      : '<div class="user-app-empty"><p>No modules are currently available.</p></div>') + '</section>';
     content.querySelectorAll('[data-module-id]').forEach((button) => button.addEventListener('click', () => renderModule(button.dataset.moduleId)));
 
-    if (currentUser) {
-      const status = document.createElement('div');
-      status.className = 'user-app-status';
-      status.textContent = `Signed in as ${currentUser.displayName || currentUser.username || 'User'} (${(currentUser.roles || ['user']).join(', ')})`;
-      content.appendChild(status);
-    }
+    const status = document.createElement('div');
+    status.className = 'user-app-status';
+    status.textContent = `Signed in as ${currentUser.displayName || currentUser.username || 'User'} (${(currentUser.roles || ['user']).join(', ')})`;
+    content.appendChild(status);
   };
 
   const bindLoginButton = () => {
@@ -145,7 +181,7 @@
       }
       renderModules();
     } else {
-      renderModules();
+      renderLandingPage();
     }
     bindNavigation();
   };

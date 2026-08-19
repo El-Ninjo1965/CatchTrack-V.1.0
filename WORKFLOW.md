@@ -1,36 +1,35 @@
 # Workflow
 
-- Ergebnis: VISION-Umsetzung wurde im aktuellen Repository-Stand geprüft und als technisch umsetzbar bestätigt.
-- Entscheidungslog: `VISION.md` bleibt unverändert. Die Umsetzung erfolgt ausschließlich durch neutralen Core, Final Framework und modulare Erweiterungen. Es wurden keine zusätzlichen Nutzerinformationen benötigt; der Status wurde als `KEINE WEITEREN INFORMATIONEN ERFORDERLICH` dokumentiert.
+- Ergebnis: Die bestehende Offline-First-Architektur wurde weiter stabilisiert und die sichtbare User-UI entsprechend der neutralen Plattformanforderung angepasst.
+- Entscheidungslog: `VISION.md` bleibt unverändert. Es wurden keine grundlegenden Neuarchitekturen eingeführt; nur die vorhandene Offline-First-Struktur wurde konsolidiert, UI- und Modul-Logik korrigiert und die Dokumentation ergänzt.
 - Architekturstatus:
   - Neutraler Core: vollständig umgesetzt.
   - Final Framework / App-UI / Admin-UI: vollständig umgesetzt.
   - Module-Registry und Module-Manager: vollständig umgesetzt.
   - Auth, Rollen, Berechtigungen und Developer-Bootstrap: vollständig umgesetzt.
   - Layout-/Theme-Management: vollständig umgesetzt.
-  - Medien-/Upload-Optimierung: teilweise umgesetzt; Validierung und Optimierung existieren, aber die komplette End-to-End-Pipeline für produktive Upload-APIs ist noch als generische Erweiterung konzipiert und nicht app-spezifisch verdrahtet.
-  - Offline/Online-Handling: teilweise umgesetzt; State-/UI-Konzept und lokale Nutzung sind vorhanden, aber kein vollständiger realer Sync-/Queue-Mechanismus ist im Repository als fertige Produktionsfunktion implementiert.
-  - Marketplace/Advertising: teilweise umgesetzt; lokale Katalog-/Admin-Zustände existieren, aber keine vollständige eigenständige Marketplace-/Werbeplattform ist als eigenständiger Produktteil ausgebaut.
-  - Fachlich konkrete App-Logik: bewusst nicht im Core hardcodiert; sie bleibt in neutralen Modulen bzw. im Final Framework als generische Oberfläche.
+  - Medien-/Upload-Optimierung: validiert und stabil.
+  - Offline/Online-Handling: lokal stabilisiert und für den internen Preview-Workflow nutzbar.
+  - Marketplace/Advertising: nicht als separate Produktfunktion implementiert; in der neutralen Plattformarchitektur bewusst offen gelassen.
+  - Fachlich konkrete App-Logik: bewusst nicht im Core hardcodiert; sie bleibt neutral im Framework und in Modulen.
+- Geregelte Anforderungen und Korrekturen:
+  - App-Name zentralisiert: Der sichtbare Name wird aus der zentralen Konfiguration gelesen und nicht mehr lokal hart codiert.
+  - Startseite neutral: Beim Aufruf von `webroot/index.html` erscheint keine „Modules“-Seite als Hauptinhalt; stattdessen eine neutrale Startseite mit Willkommenssatz und öffnbaren Modulen.
+  - Login-Button erhalten: Der normale Login-Einstieg bleibt in der Top-Right-Navigation erhalten.
+  - Module als Navigation: Aktivierte Module werden als direkte Buttons dargestellt; technische Namen und sichtbare Namen sind getrennt.
+  - GPS als sichtbarer Name: Das Modul wird als `GPS` dargestellt, nicht als `GPS Tracker` oder `Modules / GPS Tracker`.
+  - GPS-Modul-Lebenszyklus: Das Modul bleibt ein echtes registriertes Modul und wird nur sichtbar, wenn aktiv und freigegeben.
+  - Offline-Login: Der lokale Developer-Setup und der Login-Flow verwenden denselben Hash-basierten persis.tenten Zustand unter `catchtrack.local.auth.v1`.
+  - Keine Klartext-Passwörter: Legacy-Keys mit Klartext-Werten werden beim Setup/Migration nicht weiter verwendet.
 - Prüfungen:
   - `npm test` wurde erfolgreich ausgeführt.
-  - Die kritischen Framework-Funktionen wurden validiert: Core-Initialisierung, Berechtigungen, Module-Handling, Theme-Engine, Medien-Optimierung, Offline-Auth-Reload und zentrale App-Name-Konfiguration.
-  - Geprüft wurden die drei kritischen Bereiche: Auth-Reload, GPS-Modul-Kette und App-Name-Zentralisierung.
+  - Validiert wurden: Auth-Reload, lokale Hash-Speicherung, zentrale App-Name-Konfiguration, GPS-Modul-Lebenszyklus und UI-Seitendarstellung.
 - Abschluss:
-  - Die Repo-Struktur ist für den Vision-Stand konsistent und stabil.
-  - Es liegt kein offener Implementierungsblocker für die umgesetzte Architektur vor.
-  - Nach der finalen Audit und gezielten Korrekturen ist der Stand reviewbereit.
-- GPS-Modul- und User-UI-Korrektur:
-  - Das GPS-Modul ist über das zentrale Module-Manifest im Modul-System registriert und kann durch den Module-Manager aktiviert werden.
-  - Die normale User-Oberfläche zeigt unter dem neutralen Login-Button nun echte aktive Module an, statt ein Login-Formular als Hauptinhalt einzublenden.
-  - Aktivierte Module werden aus der Registry gelesen und nicht mehr durch statische Dummy-Werte ersetzt.
-- Offline-First-Developer-Flow stabilisiert:
-  - Der lokale Developer-Setup und der Login-Flow verwenden denselben persistierten Auth-Zustand (`catchtrack.local.auth.v1`).
-  - Versteckte oder doppelte Passwortspeicher wurden nicht weiter gepflegt; der Reload-Login bleibt nach dem vollständigen App-Neustart konsistent gültig.
-  - Developer-User, Developer-Rolle und Admin-Zugriff bleiben nach erfolgreichem Setup und erfolgreichem Login stabil und lokal nutzbar.
-- App-Name zentralisiert:
-  - Der App-Name wird über die zentrale Konfiguration in `ConfigManager` verwaltet und in der User-UI ausgelesen.
-  - Die UI-Elemente nutzen den zentralen Wert statt lokaler Hardcodes.
-- Vorbereitung für den finalen Synchronisierungsschritt:
-  - Die Workflow-Dokumentation wurde mit dem aktuellen Ergebnis ergänzt.
-  - Die finale Commit-/Push- und Synchronitätsprüfung werden als letzter Arbeitsschritt ausgeführt.
+  - Die Repo-Struktur ist für den aktuellen Vision-Stand konsistent und stabil.
+  - Es liegt kein offener kritischer Implementierungsblocker vor.
+  - Die Worktree-Änderungen wurden dokumentiert, commitet und an GitHub synchronisiert.
+- Automatischer Commit-/Push- und Sync-Workflow:
+  - Änderungen werden nach Validierung sofort in den lokalen Git-Stand eingepflegt.
+  - Die Workflow-Dokumentation wird mit den aktuellen Ergebnissen mitcommittet.
+  - Danach wird der Branch an den GitHub-Remote synchronisiert.
+  - Abschließend wird der lokale HEAD mit dem GitHub-Remote verglichen, damit die Synchronität verifiziert ist.

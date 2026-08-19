@@ -1,7 +1,8 @@
 [
   {
     "id": "gps",
-    "name": "GPS Tracker",
+    "name": "GPS",
+    "displayName": "GPS",
     "version": "1.0.0",
     "type": "app",
     "description": "Neutral GPS tracking module. Provides geolocation access, position events and track storage.",
