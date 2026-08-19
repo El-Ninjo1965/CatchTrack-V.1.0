@@ -23,6 +23,24 @@
             }
 
             this.loadDefaultConfigs();
+
+            if (typeof localStorage !== 'undefined') {
+                const storedUsername = localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || '';
+                const storedPassword = localStorage.getItem('platform.local.auth.developerPassword') || localStorage.getItem('core.bootstrap.developerPassword') || '';
+
+                if (storedUsername || storedPassword) {
+                    const current = this.get('bootstrap', {});
+                    this.set('bootstrap', {
+                        ...current,
+                        developerUsername: storedUsername || current.developerUsername || 'developer',
+                        developerPassword: storedPassword || current.developerPassword || '',
+                        passwordRequired: true,
+                        enabled: current.enabled !== false,
+                        passwordSource: 'local-storage'
+                    });
+                }
+            }
+
             this.initialized = true;
 
             if (window.Core) {

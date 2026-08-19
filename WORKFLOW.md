@@ -19,6 +19,11 @@
   - Die Repo-Struktur ist für den Vision-Stand konsistent und stabil.
   - Es liegt kein offener Implementierungsblocker für die umgesetzte Architektur vor.
   - Nach der finalen Audit wurden keine weiteren Codeänderungen verlangt; der Stand ist reviewbereit.
+- Offline-First-Developer-Login korrigiert:
+  - Der lokale Developer-Setup und der Login-Flow wurden auf einen einzigen, konsistenten Passwortzustand vereinheitlicht.
+  - Das beim Setup gewählte Passwort wird jetzt persistiert und beim Login exakt wiederverwendet.
+  - Entwickler-User und Developer-Rolle bleiben nach erfolgreicher Einrichtung stabil und adminzugänglich.
+  - Die Bootstrap-Konfiguration wird nun auch nach einem Reload korrekt aus dem lokalen Speicher wiederhergestellt.
 - Finale Synchronisierung:
   - Die Workflow-Dokumentation wurde mit dem abschließenden Status ergänzt und auf GitHub synchronisiert.
   - Der Repository-Stand wurde mit einem Commit veröffentlicht und anschließend gegen `origin/main` geprüft.

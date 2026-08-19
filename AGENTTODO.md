@@ -1,1 +1,4 @@
-- Vollständigkeitsprüfung abgeschlossen
+- Offline-First-Developer-Login behoben
+- Passwortzustand konsolidiert und persistent gespeichert
+- Setup-/Login-Flow mit validem Developer-Account und Rollenprüfung validiert
+- Finaler Sync-Schritt vorbereitet

@@ -184,9 +184,16 @@
                 : {};
 
             const bootstrapConfig = configManager && typeof configManager === 'object' ? configManager : {};
+            const storageUsername = typeof localStorage !== 'undefined'
+                ? (localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || '')
+                : '';
+            const storagePassword = typeof localStorage !== 'undefined'
+                ? (localStorage.getItem('platform.local.auth.developerPassword') || localStorage.getItem('core.bootstrap.developerPassword') || '')
+                : '';
+
             const username = typeof bootstrapConfig.developerUsername === 'string' && bootstrapConfig.developerUsername.trim()
                 ? bootstrapConfig.developerUsername.trim()
-                : 'developer';
+                : (storageUsername || 'developer');
 
             const envPassword = (typeof process !== 'undefined' && process && process.env && typeof process.env.CORE_BOOTSTRAP_PASSWORD === 'string')
                 ? process.env.CORE_BOOTSTRAP_PASSWORD
@@ -194,7 +201,7 @@
 
             const password = typeof bootstrapConfig.developerPassword === 'string' && bootstrapConfig.developerPassword.trim()
                 ? bootstrapConfig.developerPassword
-                : (envPassword || (typeof localStorage !== 'undefined' ? localStorage.getItem('core.bootstrap.developerPassword') || '' : ''));
+                : (storagePassword || envPassword || '');
 
             return {
                 username,
@@ -216,12 +223,18 @@
 
             if (typeof localStorage !== 'undefined') {
                 localStorage.setItem('core.bootstrap.developerPassword', normalized);
+                localStorage.setItem('platform.local.auth.developerPassword', normalized);
+                localStorage.setItem('core.bootstrap.developerUsername', localStorage.getItem('platform.local.auth.developerUsername') || 'developer');
             }
 
             if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
                 const current = window.ConfigManager.get('bootstrap', {}) || {};
+                const username = typeof current.developerUsername === 'string' && current.developerUsername.trim()
+                    ? current.developerUsername.trim()
+                    : (typeof localStorage !== 'undefined' ? (localStorage.getItem('platform.local.auth.developerUsername') || 'developer') : 'developer');
                 window.ConfigManager.set('bootstrap', {
                     ...current,
+                    developerUsername: username,
                     developerPassword: normalized,
                     passwordRequired: true,
                     passwordSource: 'local-storage'

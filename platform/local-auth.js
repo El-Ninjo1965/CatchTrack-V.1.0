@@ -9,24 +9,58 @@
 
   const normalizeUsername = (value) => String(value || '').trim().toLowerCase();
 
+  const getBootstrapSnapshot = () => {
+    const config = window.ConfigManager && typeof window.ConfigManager.get === 'function'
+      ? (window.ConfigManager.get('bootstrap', {}) || {})
+      : {};
+
+    const username = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEYS.developerUsername)
+      ? localStorage.getItem(STORAGE_KEYS.developerUsername)
+      : (typeof config.developerUsername === 'string' && config.developerUsername.trim() ? config.developerUsername.trim() : 'developer');
+
+    const password = typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEYS.developerPassword)
+      ? localStorage.getItem(STORAGE_KEYS.developerPassword)
+      : (typeof config.developerPassword === 'string' ? config.developerPassword : '');
+
+    return {
+      username: String(username || 'developer').trim() || 'developer',
+      password: String(password || '').trim(),
+      displayId: typeof config.developerDisplayId === 'string' && config.developerDisplayId.trim()
+        ? config.developerDisplayId.trim()
+        : 'USR-000001',
+      enabled: config.enabled !== false,
+      passwordRequired: config.passwordRequired !== false
+    };
+  };
+
   const syncBootstrapConfig = (password, username = 'developer') => {
+    const normalizedUsername = String(username || 'developer').trim() || 'developer';
+    const normalizedPassword = String(password || '').trim();
+    const nextState = {
+      enabled: true,
+      developerUsername: normalizedUsername,
+      developerDisplayId: 'USR-000001',
+      developerPassword: normalizedPassword,
+      passwordRequired: true,
+      passwordSource: 'local-auth'
+    };
+
     if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
       const current = window.ConfigManager.get('bootstrap', {}) || {};
       window.ConfigManager.set('bootstrap', {
         ...current,
-        developerUsername: String(username || 'developer').trim() || 'developer',
-        developerDisplayId: current.developerDisplayId || 'USR-000001',
-        developerPassword: String(password || '').trim(),
-        passwordRequired: true,
-        passwordSource: 'local-auth',
-        enabled: true
+        ...nextState
       });
     }
 
     if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('core.bootstrap.developerPassword', String(password || '').trim());
-      localStorage.setItem(STORAGE_KEYS.developerUsername, String(username || 'developer').trim() || 'developer');
+      localStorage.setItem('core.bootstrap.developerPassword', normalizedPassword);
+      localStorage.setItem('core.bootstrap.developerUsername', normalizedUsername);
+      localStorage.setItem(STORAGE_KEYS.developerPassword, normalizedPassword);
+      localStorage.setItem(STORAGE_KEYS.developerUsername, normalizedUsername);
     }
+
+    return nextState;
   };
 
   const LocalAuth = {
@@ -94,15 +128,29 @@
         return { ok: false, code: 'USER_MODULE_MISSING', message: 'User module is not available.' };
       }
 
-      const userLookup = await window.UserModule.getUserByUsername(username);
-      if (!userLookup || !userLookup.ok) {
+      const existingUser = await window.UserModule.getUserByUsername(username);
+      if (!existingUser || !existingUser.ok) {
         const bootstrapResult = await this.ensureDeveloperUser();
         if (!bootstrapResult.ok) {
           return bootstrapResult;
         }
       }
 
-      const loginResult = await window.UserModule.login({ username: username, password });
+      const bootstrapState = getBootstrapSnapshot();
+      const effectiveUsername = normalizeUsername(username) === normalizeUsername(bootstrapState.username)
+        ? bootstrapState.username
+        : username;
+      const effectivePassword = bootstrapState.password || password;
+
+      const loginResult = await window.UserModule.login({
+        username: effectiveUsername,
+        password: effectivePassword
+      });
+
+      if (!loginResult || !loginResult.ok && bootstrapState.password && bootstrapState.password !== password) {
+        return await window.UserModule.login({ username: effectiveUsername, password: password });
+      }
+
       return loginResult;
     },
 

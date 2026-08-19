@@ -135,3 +135,75 @@ test('media manager optimizes supported image uploads', async () => {
   assert.equal(result.dimensions.width <= 800, true);
   assert.equal(result.dimensions.height <= 800, true);
 });
+
+test('developer setup persists the same local password for login and admin access', async () => {
+  const mkStorage = () => {
+    const map = new Map();
+    return {
+      getItem(key) { return map.has(key) ? map.get(key) : null; },
+      setItem(key, value) { map.set(key, String(value)); },
+      removeItem(key) { map.delete(key); }
+    };
+  };
+
+  const localStorage = mkStorage();
+  const windowStub = {
+    localStorage,
+    Core: { emit() {} },
+    CoreAudit: { record() {} },
+    CoreAccess: {
+      can() { return { ok: true }; },
+      hasPermission(user, permission) {
+        return !!user && Array.isArray(user.permissions) && user.permissions.includes(permission);
+      }
+    },
+    DatabaseManager: {
+      async clear() {},
+      async save() {},
+      async getAll() { return []; }
+    },
+    ConfigManager: {
+      configs: new Map(),
+      init() {
+        this.set('bootstrap', {
+          enabled: true,
+          developerUsername: 'developer',
+          developerDisplayId: 'USR-000001',
+          createOnInit: true,
+          passwordRequired: true,
+          passwordSource: 'local-config-or-storage',
+          developerPassword: ''
+        });
+      },
+      set(key, value) { this.configs.set(key, value); },
+      get(key, fallback) { return this.configs.has(key) ? this.configs.get(key) : fallback; }
+    }
+  };
+  windowStub.window = windowStub;
+
+  const context = vm.createContext(windowStub);
+  loadScript(context, path.resolve(__dirname, '../platform/config-manager.js'));
+  loadScript(context, path.resolve(__dirname, '../platform/core-auth.js'));
+  loadScript(context, path.resolve(__dirname, '../platform/core-user.js'));
+  loadScript(context, path.resolve(__dirname, '../platform/local-auth.js'));
+
+  windowStub.ConfigManager.init();
+
+  const setupResult = await context.window.LocalAuth.setupDeveloper({
+    username: 'Developer',
+    password: 'Dev-password-42!'
+  });
+
+  assert.equal(setupResult.ok, true);
+  assert.equal(context.window.CoreAuth.resolveBootstrapConfig().password, 'Dev-password-42!');
+  assert.equal(context.window.ConfigManager.get('bootstrap').developerPassword, 'Dev-password-42!');
+
+  const loginResult = await context.window.LocalAuth.login({
+    username: 'Developer',
+    password: 'Dev-password-42!'
+  });
+
+  assert.equal(loginResult.ok, true);
+  assert.equal(context.window.CoreAuth.getCurrentUser().username, 'Developer');
+  assert.ok(context.window.CoreAuth.getCurrentUser().roles.includes('developer'));
+});
