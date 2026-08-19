@@ -186,3 +186,29 @@ After commit:
 - push to `origin main`
 - confirm `git status` is clean
 - confirm the latest commit is the expected one
+
+## 13. Machbarkeitsbewertung: autonomer Einmalauftrag für kompletten Framework-Core
+
+Diese Entscheidung dokumentiert explizit die Anfrage, ob das bestehende Repository in **einem einzigen vollständig autonomen Arbeitsauftrag** zu einem funktionsfähigen, stabilen und langfristig erweiterbaren Framework-Core weiterentwickelt werden kann.
+
+### Ergebnis
+
+- **NEIN**
+
+### Technische Begründung (verbindlich)
+
+1. **Architekturweite Transformation statt isolierter Änderung**
+   - Die geforderte Zielarchitektur umfasst Core-Generalisierung, modulare Theme-/Design-Trennung, zentrale Admin-Governance, Setup-/Update-/Marketplace-Vorbereitung, rollenbasierte Routing-Sicherheit und automatische Modul-Integration.
+   - Das betrifft mehrere Schichten gleichzeitig (`platform/`, `server/`, `webroot/`, `app/`) und kann nicht verantwortbar als ein atomarer Einzelauftrag mit belastbarer Stabilitätsaussage umgesetzt werden.
+
+2. **Fehlende final verbindliche Zielverträge für Kernschnittstellen**
+   - Für zentrale, langfristig stabile Erweiterungspunkte fehlen in den vorhandenen Artefakten vollständig verbindliche Endverträge (z. B. finaler Modul-Lifecycle-Contract, Theme-Contract, Rechte-/Policy-Matrix, Update-/Marketplace-Protokolle, versionierte Migrationsregeln).
+   - Ohne diese präzisen, eingefrorenen Schnittstellen wäre eine sofortige Endimplementierung technisch mehrdeutig und damit nicht zuverlässig „final stabil“.
+
+3. **Verifikation erfordert gestufte Migration mit Systemtests über Rollen- und Bereichsgrenzen**
+   - Die geforderte Zusicherung funktionierender End-to-End-Benutzerflüsse (Login, Logout, Session-Aufbau/-Ende, rollenabhängige Redirects zwischen User/Admin/Developer/Setup/Error) benötigt iterative Integration und belastbare Mehrbereichs-Validierung.
+   - Eine einmalige, nicht gestufte Umsetzung kann diese Qualität und Betriebssicherheit nicht seriös garantieren.
+
+### Konsequenz für künftige Umsetzung
+
+- Das Ziel bleibt erreichbar, aber **nur** über eine phasenweise, vollständig kompatible Weiterentwicklung des bestehenden zentralen Kerns (ohne parallele Auth-/Setup-/Config-/Modul-Systeme), mit klar definierten Contracts und wiederholter Integrationsvalidierung pro Phase.
