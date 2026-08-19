@@ -3,6 +3,7 @@
 
   const content = document.getElementById('userAppContent');
   const loginButton = document.getElementById('userLoginButton');
+  const nav = document.getElementById('userAppNav');
 
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -47,6 +48,17 @@
         return module && (module.public === true || module.isPublic === true || module.loginRequired === false || module.requiresLogin === false || module.public !== false);
       }
       return true;
+    });
+  };
+
+  const renderModuleNav = () => {
+    if (!nav) return;
+    const modules = getVisibleModules();
+    nav.innerHTML = modules.length
+      ? modules.map((module) => '<button type="button" class="user-app-nav-item" data-module-id="' + escapeHtml(module.id) + '">' + escapeHtml(getModuleDisplayName(module)) + '</button>').join('')
+      : '';
+    nav.querySelectorAll('[data-module-id]').forEach((button) => {
+      button.addEventListener('click', () => renderModule(button.dataset.moduleId));
     });
   };
 
@@ -127,26 +139,21 @@
   };
 
   const renderLandingPage = () => {
-    const modules = getVisibleModules();
     const appName = getAppName();
-    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Welcome</span><h1>Welcome to ' + escapeHtml(appName) + '</h1></div></div><p class="user-app-intro">A neutral platform for local-first tools, modules, and secure access.</p>' + (modules.length
-      ? '<div class="user-module-list">' + modules.map((module) => '<button type="button" class="user-module-card" data-module-id="' + escapeHtml(module.id) + '"><span class="user-module-icon" aria-hidden="true">' + escapeHtml(getModuleDisplayName(module).charAt(0) || module.id.charAt(0)) + '</span><span class="user-module-copy"><strong>' + escapeHtml(getModuleDisplayName(module)) + '</strong><small>Open</small></span><span class="user-module-arrow" aria-hidden="true">›</span></button>').join('') + '</div>'
-      : '<div class="user-app-empty"><p>No public modules are currently available.</p></div>') + '</section>';
-    content.querySelectorAll('[data-module-id]').forEach((button) => button.addEventListener('click', () => renderModule(button.dataset.moduleId)));
+    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Welcome</span><h1>Welcome to ' + escapeHtml(appName) + '</h1></div></div><p class="user-app-intro">Use the module navigation to open the available tools.</p></section>';
+    renderModuleNav();
   };
 
   const renderModules = () => {
     const modules = getVisibleModules();
     const currentUser = getCurrentUser();
     setActiveView('home');
+    renderModuleNav();
     if (!currentUser) {
       renderLandingPage();
       return;
     }
-    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Tools</span><h1>Available</h1></div><span class="user-app-count">' + modules.length + '</span></div>' + (modules.length
-      ? '<div class="user-module-list">' + modules.map((module) => '<button type="button" class="user-module-card" data-module-id="' + escapeHtml(module.id) + '"><span class="user-module-icon" aria-hidden="true">' + escapeHtml(getModuleDisplayName(module).charAt(0) || module.id.charAt(0)) + '</span><span class="user-module-copy"><strong>' + escapeHtml(getModuleDisplayName(module)) + '</strong><small>Open</small></span><span class="user-module-arrow" aria-hidden="true">›</span></button>').join('') + '</div>'
-      : '<div class="user-app-empty"><p>No modules are currently available.</p></div>') + '</section>';
-    content.querySelectorAll('[data-module-id]').forEach((button) => button.addEventListener('click', () => renderModule(button.dataset.moduleId)));
+    content.innerHTML = '<section class="user-app-panel"><div class="user-app-section-heading"><div><span class="user-app-eyebrow">Tools</span><h1>Available</h1></div><span class="user-app-count">' + modules.length + '</span></div><p class="user-app-intro">Select a module from the navigation to continue.</p></section>';
 
     const status = document.createElement('div');
     status.className = 'user-app-status';

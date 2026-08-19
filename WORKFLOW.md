@@ -18,8 +18,8 @@
   - Login-Button erhalten: Der normale Login-Einstieg bleibt in der Top-Right-Navigation erhalten.
   - Module als Navigation: Aktivierte Module werden als direkte Buttons dargestellt; technische Namen und sichtbare Namen sind getrennt.
   - GPS als sichtbarer Name: Das Modul wird als `GPS` dargestellt, nicht als `GPS Tracker` oder `Modules / GPS Tracker`.
-  - GPS-Modul-Lebenszyklus: Das Modul bleibt ein echtes registriertes Modul und wird nur sichtbar, wenn aktiv und freigegeben.
-  - Offline-Login: Der lokale Developer-Setup und der Login-Flow verwenden denselben Hash-basierten persis.tenten Zustand unter `catchtrack.local.auth.v1`.
+  - GPS-Modul-Lebenszyklus: Das Modul bleibt ein echtes registriertes Modul und wird nur sichtbar, wenn aktiv und freigegeben; ein vollständiger Discover- oder Enable-Lauf startet keine Geolocation-Trackings ohne expliziten Benutzerstart.
+  - Offline-Login: Der lokale Developer-Setup und der Login-Flow verwenden denselben Hash-basierten persistenten Zustand unter `catchtrack.local.auth.v1`.
   - Keine Klartext-Passwörter: Legacy-Keys mit Klartext-Werten werden beim Setup/Migration nicht weiter verwendet.
 - Prüfungen:
   - `npm test` wurde erfolgreich ausgeführt.

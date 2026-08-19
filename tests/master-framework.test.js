@@ -301,6 +301,12 @@ test('loads and cycles the gps module lifecycle without duplicate watchers', asy
   assert.ok(gps);
   assert.equal(gps.status, 'enabled');
   assert.equal(gps.active, true);
+  assert.equal(gps.isTracking(), false);
+  assert.equal(geolocationState.watchCalls, 0);
+  assert.equal(geolocationState.activeWatches.size, 0);
+
+  const result = gps.startTracking();
+  assert.equal(result.ok, true);
   assert.equal(gps.isTracking(), true);
   assert.equal(geolocationState.watchCalls, 1);
   assert.equal(geolocationState.activeWatches.size, 1);
@@ -315,10 +321,9 @@ test('loads and cycles the gps module lifecycle without duplicate watchers', asy
 
   sandbox.ModuleManager.enable('gps');
   assert.equal(gps.status, 'enabled');
-  assert.equal(gps.isTracking(), true);
-  assert.equal(geolocationState.watchCalls, 2);
-  assert.equal(geolocationState.activeWatches.size, 1);
-  assert.notEqual([...geolocationState.activeWatches.keys()][0], firstWatchId);
+  assert.equal(gps.isTracking(), false);
+  assert.equal(geolocationState.watchCalls, 1);
+  assert.equal(geolocationState.activeWatches.size, 0);
 
   geolocationState.nextCurrentPositionError = { code: 2, message: 'Position unavailable' };
   await assert.rejects(gps.getCurrentPosition(), (error) => error.code === 'POSITION_UNAVAILABLE');

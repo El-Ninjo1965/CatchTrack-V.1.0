@@ -169,10 +169,14 @@
             status = 'enabled';
             this.status = status;
             this.active = true;
+            tracking = false;
+            if (watchId !== null && typeof navigator !== 'undefined' && navigator.geolocation && typeof navigator.geolocation.clearWatch === 'function') {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
             audit('gps:enable', { moduleId: this.id });
-            const trackingResult = this.startTracking();
-            emit('gps:enabled', { moduleId: this.id, permissionState, tracking: trackingResult.ok });
-            return { ok: true, status, tracking: trackingResult.ok, permissionState };
+            emit('gps:enabled', { moduleId: this.id, permissionState, tracking: false });
+            return { ok: true, status, tracking: false, permissionState };
         },
 
         disable() {
@@ -233,6 +237,7 @@
                 return { ok: false, code: 'GEOLOCATION_UNAVAILABLE' };
             }
 
+            refreshPermissionState().catch(() => {});
             if (permissionState === 'denied') {
                 const detail = { code: 'PERMISSION_DENIED', message: 'Geolocation permission was denied.' };
                 lastError = detail;
@@ -285,15 +290,22 @@
         // ── One-shot position ─────────────────────────────────────────────────
 
         getCurrentPosition() {
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
                 const geolocation = getGeolocation();
                 if (!geolocation) {
                     reject(Object.assign(new Error('Geolocation API not available.'), { code: 'GEOLOCATION_UNAVAILABLE' }));
                     return;
                 }
 
+                try {
+                    await refreshPermissionState();
+                } catch (error) {
+                    // Continue with the direct browser call and surface the actual geolocation error.
+                }
+
                 if (permissionState === 'denied') {
                     const error = Object.assign(new Error('Geolocation permission was denied.'), { code: 'PERMISSION_DENIED' });
+                    lastError = { code: 'PERMISSION_DENIED', message: error.message };
                     reject(error);
                     return;
                 }
