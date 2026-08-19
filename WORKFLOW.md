@@ -19,12 +19,13 @@
   - Die Repo-Struktur ist für den Vision-Stand konsistent und stabil.
   - Es liegt kein offener Implementierungsblocker für die umgesetzte Architektur vor.
   - Nach der finalen Audit wurden keine weiteren Codeänderungen verlangt; der Stand ist reviewbereit.
-- Offline-First-Developer-Login korrigiert:
-  - Der lokale Developer-Setup und der Login-Flow wurden auf einen einzigen, konsistenten Passwortzustand vereinheitlicht.
-  - Das beim Setup gewählte Passwort wird jetzt persistiert und beim Login exakt wiederverwendet.
-  - Entwickler-User und Developer-Rolle bleiben nach erfolgreicher Einrichtung stabil und adminzugänglich.
-  - Die Bootstrap-Konfiguration wird nun auch nach einem Reload korrekt aus dem lokalen Speicher wiederhergestellt.
-- Finale Synchronisierung:
-  - Die Workflow-Dokumentation wurde mit dem abschließenden Status ergänzt und auf GitHub synchronisiert.
-  - Der Repository-Stand wurde mit einem Commit veröffentlicht und anschließend gegen `origin/main` geprüft.
-  - Verifikation: `git status --short --branch` zeigt `## main...origin/main` und bestätigt damit, dass keine lokale Abweichung mehr besteht und die GitHub-Synchronisierung für den Workflow-Stand aktiv ist.
+- Offline-First-Developer-Flow grundlegend korrigiert:
+  - Der lokale Developer-Setup und der Login-Flow wurden auf einen einzigen, konsistenten Offline-Passwortzustand vereinheitlicht.
+  - Beim Setup gewählt passwort wird jetzt in einer klaren lokalen Persistenz gespeichert und beim Login exakt wiederverwendet.
+  - Der Developer-State kann jetzt über ein separates lokales Admin Setup vollständig zurückgesetzt, neu eingerichtet und transparent geprüft werden.
+  - Entwickler-User, Developer-Rolle und Admin-Zugriff bleiben nach erfolgreicher Einrichtung stabil und lokal nutzbar.
+  - Die Bootstrap-Konfiguration wird nach dem Reload aus der lokalen Auth-Persistenz konsistent wiederhergestellt.
+- Vorbereitung für den finalen Synchronisierungsschritt:
+  - Die Workflow-Dokumentation wurde mit dem aktuellen Ergebnis ergänzt.
+  - Die am Zielpfad nicht benötigten, separat verwalteten Setup-/Password-Zustände wurden entfernt, damit kein versteckter Auth-Zustand mehr verbleibt.
+  - Der finale Commit und die GitHub-Synchronität werden als letzter Arbeitsschritt ausgeführt.

@@ -1,4 +1,5 @@
-- Offline-First-Developer-Login behoben
-- Passwortzustand konsolidiert und persistent gespeichert
-- Setup-/Login-Flow mit validem Developer-Account und Rollenprüfung validiert
-- Finaler Sync-Schritt vorbereitet
+- Offline-First-Developer-Flow grundlegend korrigiert
+- Lokaler Admin Setup für Reset, Neu-Setup und transparente Persistenz ergänzt
+- Einziger lokaler Passwortzustand für Setup und Login konsolidiert
+- Developer-Login, Developer-Rolle und Admin-Zugriff validiert
+- Finaler GitHub-Sync-Schritt vorbereitet

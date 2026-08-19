@@ -25,19 +25,24 @@
             this.loadDefaultConfigs();
 
             if (typeof localStorage !== 'undefined') {
-                const storedUsername = localStorage.getItem('platform.local.auth.developerUsername') || localStorage.getItem('core.bootstrap.developerUsername') || '';
-                const storedPassword = localStorage.getItem('platform.local.auth.developerPassword') || localStorage.getItem('core.bootstrap.developerPassword') || '';
-
-                if (storedUsername || storedPassword) {
-                    const current = this.get('bootstrap', {});
-                    this.set('bootstrap', {
-                        ...current,
-                        developerUsername: storedUsername || current.developerUsername || 'developer',
-                        developerPassword: storedPassword || current.developerPassword || '',
-                        passwordRequired: true,
-                        enabled: current.enabled !== false,
-                        passwordSource: 'local-storage'
-                    });
+                try {
+                    const raw = localStorage.getItem('catchtrack.local.auth.v1');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && typeof parsed === 'object') {
+                            const current = this.get('bootstrap', {});
+                            this.set('bootstrap', {
+                                ...current,
+                                developerUsername: parsed.username || current.developerUsername || 'Developer',
+                                developerPassword: parsed.password || current.developerPassword || '',
+                                passwordRequired: true,
+                                enabled: current.enabled !== false,
+                                passwordSource: 'local-offline'
+                            });
+                        }
+                    }
+                } catch (error) {
+                    // Ignore malformed local bootstrap state and retain the default config.
                 }
             }
 

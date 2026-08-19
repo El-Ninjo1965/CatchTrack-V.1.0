@@ -47,7 +47,6 @@
           </div>
           <div class="user-login-actions">
             <button type="button" id="userLoginSubmit" class="primary">Login</button>
-            <a href="../developer-setup.html" class="secondary nav-item">Developer setup</a>
           </div>
           <div id="userLoginStatus" class="message info">Developer setup is available once locally in this preview.</div>
         </div>
@@ -84,13 +83,8 @@
     });
   };
 
-  const renderSettings = () => {
-    setActiveView('settings');
-    content.innerHTML = '<section class="user-app-panel user-app-empty"><span class="user-app-eyebrow">Settings</span><h1>Your workspace, kept simple.</h1><p>There are no user settings available yet.</p></section>';
-  };
-
   const bindNavigation = () => document.querySelectorAll('[data-user-view]').forEach((button) => button.addEventListener('click', () => {
-    button.dataset.userView === 'settings' ? renderSettings() : renderModules();
+    renderModules();
   }));
 
   const renderModule = (moduleId) => {

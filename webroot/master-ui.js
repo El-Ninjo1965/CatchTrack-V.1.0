@@ -1374,14 +1374,13 @@
 
   const bindAuth = () => {
     const loginBtn = document.getElementById('loginBtn');
-    const setPasswordBtn = document.getElementById('setPasswordBtn');
     const logoutBtn = document.getElementById('logoutBtn');
 
     if (loginBtn) {
       loginBtn.addEventListener('click', async () => {
         const usernameInput = document.getElementById('loginUsername');
         const passwordInput = document.getElementById('loginPassword');
-        const username = usernameInput ? usernameInput.value.trim() : 'developer';
+        const username = usernameInput ? usernameInput.value.trim() : 'Developer';
         const password = passwordInput ? passwordInput.value : '';
 
         if (!window.UserModule || typeof window.UserModule.login !== 'function') {
@@ -1408,22 +1407,6 @@
         renderSummary();
         renderUserMenu();
         renderPageContent();
-      });
-    }
-
-    if (setPasswordBtn) {
-      setPasswordBtn.addEventListener('click', () => {
-        const passwordInput = document.getElementById('developerPassword');
-        const value = passwordInput ? passwordInput.value : '';
-        if (!window.CoreAuth || typeof window.CoreAuth.setDeveloperPassword !== 'function') {
-          return;
-        }
-        const result = window.CoreAuth.setDeveloperPassword(value);
-        const authMessage = document.getElementById('authMessage');
-        if (authMessage) {
-          authMessage.className = result && result.ok ? 'message success' : 'message error';
-          authMessage.textContent = result && result.message ? result.message : (result && result.ok ? 'Developer password configured.' : 'Password is required.');
-        }
       });
     }
 
