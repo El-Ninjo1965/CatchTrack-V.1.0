@@ -898,6 +898,95 @@
     `;
   };
 
+  const renderAdminAudit = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const entries = window.CoreAudit && typeof window.CoreAudit.list === 'function'
+      ? window.CoreAudit.list()
+      : [];
+    const summary = window.CoreAudit && typeof window.CoreAudit.summary === 'function'
+      ? window.CoreAudit.summary()
+      : { total: entries.length, success: 0, error: 0, warning: 0, info: 0, actors: [], actions: [], resources: [] };
+    const actorOptions = ['all', ...summary.actors].filter((value, index, list) => list.indexOf(value) === index);
+    const actionOptions = ['all', ...summary.actions].filter((value, index, list) => list.indexOf(value) === index);
+    const resourceOptions = ['all', ...summary.resources].filter((value, index, list) => list.indexOf(value) === index);
+    const resultOptions = ['all', 'success', 'ok', 'error', 'failed', 'warning', 'info'];
+    const activeActor = document.getElementById('auditActorFilter') ? document.getElementById('auditActorFilter').value : 'all';
+    const activeAction = document.getElementById('auditActionFilter') ? document.getElementById('auditActionFilter').value : 'all';
+    const activeResource = document.getElementById('auditResourceFilter') ? document.getElementById('auditResourceFilter').value : 'all';
+    const activeResult = document.getElementById('auditResultFilter') ? document.getElementById('auditResultFilter').value : 'all';
+    const searchValue = document.getElementById('auditSearchInput') ? String(document.getElementById('auditSearchInput').value || '').trim().toLowerCase() : '';
+
+    const filteredEntries = (window.CoreAudit && typeof window.CoreAudit.filter === 'function'
+      ? window.CoreAudit.filter({
+          actor: activeActor,
+          action: activeAction,
+          resource: activeResource,
+          result: activeResult,
+          search: searchValue
+        })
+      : entries.filter((entry) => {
+          const actorMatches = activeActor === 'all' || String(entry.actor || 'system') === activeActor;
+          const actionMatches = activeAction === 'all' || String(entry.action || 'unknown') === activeAction;
+          const resourceMatches = activeResource === 'all' || String(entry.resource || 'resource') === activeResource;
+          const resultMatches = activeResult === 'all' || String(entry.result || 'unknown') === activeResult;
+          const searchMatches = !searchValue || [entry.actor, entry.action, entry.resource, entry.result, JSON.stringify(entry.metadata || {})].join(' ').toLowerCase().includes(searchValue);
+          return actorMatches && actionMatches && resourceMatches && resultMatches && searchMatches;
+        }))
+      .slice(0, 120);
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Audit</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Total entries</span><div class="metric-value">${summary.total}</div></div>
+            <div class="metric"><span class="metric-label">Success</span><div class="metric-value">${summary.success}</div></div>
+            <div class="metric"><span class="metric-label">Errors</span><div class="metric-value">${summary.error}</div></div>
+            <div class="metric"><span class="metric-label">Warnings</span><div class="metric-value">${summary.warning}</div></div>
+          </div>
+
+          <div class="card" style="margin-top: 18px;">
+            <div class="card-header"><h3 class="card-title">Filters</h3></div>
+            <div class="content-wrap">
+              <div class="form-grid">
+                <div class="form-field"><label>Actor</label><select id="auditActorFilter">${actorOptions.map((option) => `<option value="${escapeHtml(option)}" ${option === activeActor ? 'selected' : ''}>${escapeHtml(option === 'all' ? 'All actors' : option)}</option>`).join('')}</select></div>
+                <div class="form-field"><label>Action</label><select id="auditActionFilter">${actionOptions.map((option) => `<option value="${escapeHtml(option)}" ${option === activeAction ? 'selected' : ''}>${escapeHtml(option === 'all' ? 'All actions' : option)}</option>`).join('')}</select></div>
+                <div class="form-field"><label>Resource</label><select id="auditResourceFilter">${resourceOptions.map((option) => `<option value="${escapeHtml(option)}" ${option === activeResource ? 'selected' : ''}>${escapeHtml(option === 'all' ? 'All resources' : option)}</option>`).join('')}</select></div>
+                <div class="form-field"><label>Result</label><select id="auditResultFilter">${resultOptions.map((option) => `<option value="${escapeHtml(option)}" ${option === activeResult ? 'selected' : ''}>${escapeHtml(option === 'all' ? 'All results' : option)}</option>`).join('')}</select></div>
+                <div class="form-field" style="grid-column: 1 / -1;"><label>Search</label><input id="auditSearchInput" type="text" value="${escapeHtml(searchValue)}" placeholder="Search actor, action, resource or metadata" /></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top: 18px;">
+            <table>
+              <thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Resource</th><th>Result</th><th>Metadata</th></tr></thead>
+              <tbody>
+                ${filteredEntries.length ? filteredEntries.map((entry) => `
+                  <tr>
+                    <td>${escapeHtml(new Date(entry.timestamp || Date.now()).toLocaleString())}</td>
+                    <td>${escapeHtml(entry.actor || 'system')}</td>
+                    <td>${escapeHtml(entry.action || 'unknown')}</td>
+                    <td>${escapeHtml(entry.resource || 'resource')}</td>
+                    <td><span class="status-badge ${String(entry.result || 'unknown').toLowerCase() === 'success' || String(entry.result || 'unknown').toLowerCase() === 'ok' ? 'ok' : (String(entry.result || 'unknown').toLowerCase() === 'error' || String(entry.result || 'unknown').toLowerCase() === 'failed' ? 'warning' : 'ok')}">${escapeHtml(entry.result || 'unknown')}</span></td>
+                    <td>${escapeHtml(JSON.stringify(entry.metadata || {}))}</td>
+                  </tr>
+                `).join('') : '<tr><td colspan="6">No audit entries match the current filters.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    page.querySelectorAll('#auditActorFilter, #auditActionFilter, #auditResourceFilter, #auditResultFilter, #auditSearchInput').forEach((control) => {
+      control.addEventListener('input', renderAdminAudit);
+      control.addEventListener('change', renderAdminAudit);
+    });
+  };
+
   const renderAdminApps = () => {
     const page = document.getElementById('mainContent');
     if (!page) return;

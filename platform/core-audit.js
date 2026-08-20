@@ -179,6 +179,69 @@
             return entry;
         },
 
+        filter(filters = {}) {
+            const normalized = {
+                actor: typeof filters.actor === 'string' && filters.actor.trim() ? filters.actor.trim() : 'all',
+                action: typeof filters.action === 'string' && filters.action.trim() ? filters.action.trim() : 'all',
+                resource: typeof filters.resource === 'string' && filters.resource.trim() ? filters.resource.trim() : 'all',
+                result: typeof filters.result === 'string' && filters.result.trim() ? filters.result.trim() : 'all',
+                search: typeof filters.search === 'string' ? filters.search.trim().toLowerCase() : ''
+            };
+
+            const entries = this.entries.filter((entry) => {
+                if (normalized.actor !== 'all' && String(entry.actor || 'system') !== normalized.actor) {
+                    return false;
+                }
+                if (normalized.action !== 'all' && String(entry.action || 'unknown') !== normalized.action) {
+                    return false;
+                }
+                if (normalized.resource !== 'all' && String(entry.resource || 'resource') !== normalized.resource) {
+                    return false;
+                }
+                if (normalized.result !== 'all' && String(entry.result || 'unknown') !== normalized.result) {
+                    return false;
+                }
+                if (normalized.search) {
+                    const searchable = [entry.actor, entry.action, entry.resource, entry.result, JSON.stringify(entry.metadata || {})].join(' ').toLowerCase();
+                    if (!searchable.includes(normalized.search)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            return entries.map((entry) => ({ ...entry, metadata: { ...(entry.metadata || {}) } }));
+        },
+
+        summary() {
+            const totals = { total: this.entries.length, success: 0, error: 0, warning: 0, info: 0, actors: new Set(), actions: new Set(), resources: new Set() };
+
+            for (const entry of this.entries) {
+                const actor = String(entry.actor || 'system');
+                const action = String(entry.action || 'unknown');
+                const resource = String(entry.resource || 'resource');
+                const result = String(entry.result || 'unknown');
+                totals.actors.add(actor);
+                totals.actions.add(action);
+                totals.resources.add(resource);
+                if (result === 'success' || result === 'ok') totals.success += 1;
+                else if (result === 'error' || result === 'failed') totals.error += 1;
+                else if (result === 'warning') totals.warning += 1;
+                else totals.info += 1;
+            }
+
+            return {
+                total: totals.total,
+                success: totals.success,
+                error: totals.error,
+                warning: totals.warning,
+                info: totals.info,
+                actors: Array.from(totals.actors),
+                actions: Array.from(totals.actions),
+                resources: Array.from(totals.resources)
+            };
+        },
+
         list() {
             return this.entries.map((entry) => ({ ...entry, metadata: { ...(entry.metadata || {}) } }));
         },

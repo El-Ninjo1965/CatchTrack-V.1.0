@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.8 - audit persistence and reusable app templates
+## Version 1.1.9 - audit timeline filters and admin visibility
 
 Status:
 - Framework core remains stable and module-driven.
@@ -16,6 +16,7 @@ Status:
 - App feature groups now also support a role-based access matrix so dashboard, profile, module workspaces and future feature groups can be enabled or disabled by role without touching the framework core.
 - Audit logging is now persisted in browser storage and accepts the real event signatures used by the rest of the platform, preventing audit entries from being lost or malformed.
 - App template registration and creation are now available in the framework and admin UI so new app variants can be created from reusable blueprints instead of custom code paths.
+- Admin audit now includes filterable timeline views so administrators can quickly review actions by actor, action, resource, result and searchable metadata.
 
 ### Included milestones
 - neutral framework shell
@@ -33,6 +34,7 @@ Status:
 - connection normalization for shared hosting, local JSON workflows and future SQL backends
 - admin-side module metadata editing for future-ready CMS-style module governance
 - durable audit events and reusable app blueprint creation for multi-app growth
+- filterable audit timeline in the admin workspace for operational transparency
 
 ### Current focus
 - continue the first real app rollout with additional business modules
@@ -45,6 +47,7 @@ Status:
 - extend feature-level governance to app-specific feature templates and role-based coverage in the admin matrix
 - persist and review audit events as part of a real admin governance layer
 - create app instances from reusable templates for multi-app deployment
+- provide filterable review and operational visibility through the admin audit timeline
 
 ### Planned next steps
 - add the next real domain module after the current core feature set
