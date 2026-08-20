@@ -435,6 +435,92 @@
             }));
         },
 
+        getEntitySchemas(appId = null) {
+            if (!window.MasterFramework || typeof window.MasterFramework.listEntitySchemas !== 'function') {
+                return [];
+            }
+            return window.MasterFramework.listEntitySchemas(appId);
+        },
+
+        getEntitySchema(appId, entityId) {
+            if (!window.MasterFramework || typeof window.MasterFramework.getEntitySchema !== 'function') {
+                return null;
+            }
+            return window.MasterFramework.getEntitySchema(appId, entityId);
+        },
+
+        registerEntitySchema(appId, schemaDefinition) {
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.registerEntitySchema !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+            try {
+                const schema = framework.registerEntitySchema(appId, schemaDefinition || {});
+                return { ok: true, data: schema, message: `Entity schema registered: ${schema.id}` };
+            } catch (error) {
+                return { ok: false, code: 'ENTITY_SCHEMA_ERROR', message: error && error.message ? error.message : 'Entity schema registration failed.' };
+            }
+        },
+
+        deleteEntitySchema(appId, entityId) {
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.unregisterEntitySchema !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+            try {
+                const removed = framework.unregisterEntitySchema(appId, entityId);
+                return { ok: true, data: removed, message: `Entity schema removed: ${entityId}` };
+            } catch (error) {
+                return { ok: false, code: 'ENTITY_SCHEMA_ERROR', message: error && error.message ? error.message : 'Entity schema removal failed.' };
+            }
+        },
+
+        listEntityRecords(appId, entityId, filters = {}) {
+            if (!window.MasterFramework || typeof window.MasterFramework.listEntityRecords !== 'function') {
+                return [];
+            }
+            return window.MasterFramework.listEntityRecords(appId, entityId, filters || {});
+        },
+
+        createEntityRecord(appId, entityId, payload = {}) {
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.createEntityRecord !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+            try {
+                const record = framework.createEntityRecord(appId, entityId, payload || {});
+                return { ok: true, data: record, message: `Record created for ${entityId}` };
+            } catch (error) {
+                return { ok: false, code: 'ENTITY_RECORD_ERROR', message: error && error.message ? error.message : 'Record creation failed.' };
+            }
+        },
+
+        updateEntityRecord(appId, entityId, recordId, updates = {}) {
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.updateEntityRecord !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+            try {
+                const record = framework.updateEntityRecord(appId, entityId, recordId, updates || {});
+                return { ok: true, data: record, message: `Record updated for ${entityId}` };
+            } catch (error) {
+                return { ok: false, code: 'ENTITY_RECORD_ERROR', message: error && error.message ? error.message : 'Record update failed.' };
+            }
+        },
+
+        deleteEntityRecord(appId, entityId, recordId) {
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.deleteEntityRecord !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+            try {
+                const records = framework.deleteEntityRecord(appId, entityId, recordId);
+                return { ok: true, data: records, message: `Record deleted from ${entityId}` };
+            } catch (error) {
+                return { ok: false, code: 'ENTITY_RECORD_ERROR', message: error && error.message ? error.message : 'Record deletion failed.' };
+            }
+        },
+
         getAppTemplateCatalog() {
             if (window.MasterFramework && typeof window.MasterFramework.listAppTemplates === 'function') {
                 return window.MasterFramework.listAppTemplates();

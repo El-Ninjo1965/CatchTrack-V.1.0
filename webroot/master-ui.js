@@ -351,6 +351,56 @@
         const statusTarget = document.getElementById('adminActionStatus');
 
         try {
+          if (action === 'entity-schema-create') {
+            const schemaId = document.getElementById('entitySchemaIdInput') ? document.getElementById('entitySchemaIdInput').value.trim() : '';
+            const schemaName = document.getElementById('entitySchemaNameInput') ? document.getElementById('entitySchemaNameInput').value.trim() : '';
+            const fieldsValue = document.getElementById('entitySchemaFieldsInput') ? document.getElementById('entitySchemaFieldsInput').value : '[]';
+            const appId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
+              ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
+              : 'catchtrack');
+            if (!schemaId) {
+              throw new Error('A schema ID is required.');
+            }
+            let parsedFields = [];
+            try {
+              parsedFields = JSON.parse(fieldsValue || '[]');
+            } catch (error) {
+              throw new Error('Schema fields must be valid JSON.');
+            }
+            const schemaDefinition = {
+              id: schemaId,
+              name: schemaName || schemaId,
+              appId,
+              fields: Array.isArray(parsedFields) ? parsedFields : []
+            };
+            const result = window.AdminModule && typeof window.AdminModule.registerEntitySchema === 'function'
+              ? window.AdminModule.registerEntitySchema(appId, schemaDefinition)
+              : { ok: false, message: 'Entity schema creation is unavailable.' };
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? (result.message || 'Schema created.') : (result && result.message) || 'Schema creation failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              renderAdminData();
+            }
+          }
+
+          if (action === 'entity-record-delete') {
+            const appId = button.dataset.entityAppId || '';
+            const entityId = button.dataset.entitySchemaId || '';
+            const recordId = button.dataset.entityRecordId || '';
+            const result = window.AdminModule && typeof window.AdminModule.deleteEntityRecord === 'function'
+              ? window.AdminModule.deleteEntityRecord(appId, entityId, recordId)
+              : { ok: false, message: 'Record deletion is unavailable.' };
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? (result.message || 'Record deleted.') : (result && result.message) || 'Record deletion failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              renderAdminData();
+            }
+          }
+
           if (action === 'server-test') {
             const payload = { serverUrl: document.getElementById('serverUrlInput') ? document.getElementById('serverUrlInput').value : '', apiBase: document.getElementById('serverApiBaseInput') ? document.getElementById('serverApiBaseInput').value : '/api' };
             const result = await postJson('/api/server/test', payload, { ok: false, result: { status: 'ERROR', message: 'Server test failed.' } });
@@ -1214,6 +1264,184 @@
         </div>
       </div>
     `;
+  };
+
+  const renderAdminData = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const appId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
+      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
+      : 'catchtrack');
+    const schemas = window.AdminModule && typeof window.AdminModule.getEntitySchemas === 'function'
+      ? window.AdminModule.getEntitySchemas(appId)
+      : [];
+
+    const fieldExample = JSON.stringify([
+      { key: 'name', name: 'Name', type: 'string', required: true },
+      { key: 'quantity', name: 'Quantity', type: 'number', required: true },
+      { key: 'active', name: 'Active', type: 'boolean', defaultValue: true }
+    ], null, 2);
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Data</h2></div>
+        <div class="content-wrap">
+          <div id="adminActionStatus" class="message info">Manage app-specific entity schemas and records in the active app runtime.</div>
+
+          <div class="card" style="margin-top: 18px;">
+            <div class="card-header"><h3 class="card-title">Create schema</h3></div>
+            <div class="content-wrap">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>Schema ID</label>
+                  <input id="entitySchemaIdInput" type="text" placeholder="inventory" />
+                </div>
+                <div class="form-field">
+                  <label>Schema name</label>
+                  <input id="entitySchemaNameInput" type="text" placeholder="Inventory" />
+                </div>
+                <div class="form-field" style="grid-column: 1 / -1;">
+                  <label>Fields (JSON array)</label>
+                  <textarea id="entitySchemaFieldsInput" rows="8">${escapeHtml(fieldExample)}</textarea>
+                </div>
+              </div>
+              <div class="action-list" style="margin-top: 14px;">
+                <button type="button" class="primary" data-admin-action="entity-schema-create">Create schema</button>
+              </div>
+            </div>
+          </div>
+
+          ${schemas.length ? schemas.map((schema) => {
+            const rows = Array.isArray(schema.fields) ? schema.fields : [];
+            const records = window.AdminModule && typeof window.AdminModule.listEntityRecords === 'function'
+              ? window.AdminModule.listEntityRecords(appId, schema.id)
+              : [];
+
+            return `
+              <div class="card" style="margin-top: 20px;">
+                <div class="card-header"><h3 class="card-title">${escapeHtml(schema.name || schema.id)}</h3></div>
+                <div class="content-wrap">
+                  <div class="small-muted">App: ${escapeHtml(schema.appId || appId)} · ID: ${escapeHtml(schema.id || 'schema')}</div>
+                  <div class="table-wrap" style="margin-top: 12px;">
+                    <table>
+                      <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Default</th></tr></thead>
+                      <tbody>
+                        ${rows.length ? rows.map((field) => `
+                          <tr>
+                            <td>${escapeHtml(field.key || field.name || field.id || 'field')}</td>
+                            <td>${escapeHtml(field.type || 'string')}</td>
+                            <td>${field.required ? 'Yes' : 'No'}</td>
+                            <td>${field.defaultValue === undefined ? '—' : escapeHtml(String(field.defaultValue))}</td>
+                          </tr>
+                        `).join('') : '<tr><td colspan="4">No fields defined.</td></tr>'}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <form class="form-grid" style="margin-top: 16px;" data-entity-record-form data-entity-app-id="${escapeHtml(appId)}" data-entity-schema-id="${escapeHtml(schema.id || '')}">
+                    ${rows.length ? rows.map((field) => {
+                      const fieldType = String(field.type || 'string').toLowerCase();
+                      const fieldKey = field.key || field.name || field.id || 'field';
+                      const fieldLabel = escapeHtml(field.label || field.name || fieldKey);
+                      const defaultValue = field.defaultValue === undefined ? '' : escapeHtml(String(field.defaultValue));
+                      if (fieldType === 'boolean') {
+                        return `
+                          <div class="form-field">
+                            <label><input type="checkbox" name="${escapeHtml(fieldKey)}" data-field-key="${escapeHtml(fieldKey)}" data-field-type="boolean" ${field.defaultValue ? 'checked' : ''} /> ${fieldLabel}</label>
+                          </div>
+                        `;
+                      }
+                      if (fieldType === 'number') {
+                        return `
+                          <div class="form-field">
+                            <label>${fieldLabel}</label>
+                            <input type="number" name="${escapeHtml(fieldKey)}" data-field-key="${escapeHtml(fieldKey)}" data-field-type="number" value="${defaultValue}" />
+                          </div>
+                        `;
+                      }
+                      if (fieldType === 'date' || fieldType === 'datetime') {
+                        return `
+                          <div class="form-field">
+                            <label>${fieldLabel}</label>
+                            <input type="datetime-local" name="${escapeHtml(fieldKey)}" data-field-key="${escapeHtml(fieldKey)}" data-field-type="${escapeHtml(fieldType)}" value="${defaultValue}" />
+                          </div>
+                        `;
+                      }
+                      return `
+                        <div class="form-field">
+                          <label>${fieldLabel}</label>
+                          <input type="text" name="${escapeHtml(fieldKey)}" data-field-key="${escapeHtml(fieldKey)}" data-field-type="${escapeHtml(fieldType)}" value="${defaultValue}" />
+                        </div>
+                      `;
+                    }).join('') : '<div class="small-muted">Add fields to create a record form.</div>'}
+                    <div class="action-list" style="grid-column: 1 / -1;">
+                      <button type="submit" class="primary" ${rows.length ? '' : 'disabled'}>Create record</button>
+                    </div>
+                  </form>
+
+                  <div class="table-wrap" style="margin-top: 16px;">
+                    <table>
+                      <thead><tr><th>ID</th>${rows.length ? rows.map((field) => `<th>${escapeHtml(field.key || field.name || field.id || 'field')}</th>`).join('') : '<th>Value</th>'}</tr></thead>
+                      <tbody>
+                        ${records.length ? records.map((record) => `
+                          <tr>
+                            <td>${escapeHtml(record.id || 'record')}</td>
+                            ${rows.length ? rows.map((field) => {
+                              const fieldKey = field.key || field.name || field.id || 'field';
+                              const value = record && Object.prototype.hasOwnProperty.call(record, fieldKey) ? record[fieldKey] : '';
+                              return `<td>${escapeHtml(Array.isArray(value) ? value.join(', ') : (typeof value === 'boolean' ? (value ? 'true' : 'false') : String(value ?? '')))}</td>`;
+                            }).join('') : `<td>—</td>`}
+                            <td><button type="button" class="secondary" data-admin-action="entity-record-delete" data-entity-app-id="${escapeHtml(appId)}" data-entity-schema-id="${escapeHtml(schema.id || '')}" data-entity-record-id="${escapeHtml(record.id || '')}">Delete</button></td>
+                          </tr>
+                        `).join('') : '<tr><td colspan="${Math.max(2, (rows.length || 1) + 1)}">No records created yet.</td></tr>'}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('') : '<div class="message warning" style="margin-top: 18px;">No schemas are registered for this app yet.</div>'}
+        </div>
+      </div>
+    `;
+
+    page.querySelectorAll('[data-entity-record-form]').forEach((form) => {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const appIdValue = form.dataset.entityAppId || appId;
+        const entityId = form.dataset.entitySchemaId || '';
+        const payload = {};
+        form.querySelectorAll('[data-field-key]').forEach((field) => {
+          const key = field.dataset.fieldKey;
+          if (!key) return;
+          if (field.type === 'checkbox') {
+            payload[key] = !!field.checked;
+            return;
+          }
+          if (field.dataset.fieldType === 'number') {
+            payload[key] = field.value === '' ? 0 : Number(field.value);
+            return;
+          }
+          payload[key] = field.value;
+        });
+
+        const result = window.AdminModule && typeof window.AdminModule.createEntityRecord === 'function'
+          ? window.AdminModule.createEntityRecord(appIdValue, entityId, payload)
+          : { ok: false, message: 'Data engine is unavailable.' };
+
+        const statusTarget = document.getElementById('adminActionStatus');
+        if (statusTarget) {
+          statusTarget.className = result && result.ok ? 'message success' : 'message error';
+          statusTarget.textContent = result && result.ok ? 'Record created successfully.' : (result && result.message) || 'Record creation failed.';
+        }
+        if (result && result.ok) {
+          renderAdminData();
+        }
+      });
+    });
+
+    bindActionButtons();
   };
 
   const renderAdminModules = () => {
@@ -2532,6 +2760,7 @@
           { id: 'admin:dashboard', label: 'Dashboard' },
           { id: 'admin:apps', label: 'Apps' },
           { id: 'admin:modules', label: 'Modules' },
+          { id: 'admin:data', label: 'Data' },
           { id: 'admin:templates', label: 'Templates' },
           { id: 'admin:users', label: 'Users' },
           { id: 'admin:roles', label: 'Roles' },
@@ -2542,8 +2771,7 @@
           { id: 'admin:settings', label: 'Settings' },
           { id: 'admin:diagnostics', label: 'Diagnostics' },
           { id: 'admin:audit', label: 'Audit' }
-        ]
-      : [
+        ]      : [
           { id: 'dashboard', label: 'Dashboard' },
           { id: 'profile', label: 'Profile' },
           { id: 'modules', label: 'Modules' },
@@ -2664,6 +2892,10 @@
       }
       if (state.activeView === 'admin:modules') {
         renderAdminModules();
+        return;
+      }
+      if (state.activeView === 'admin:data') {
+        renderAdminData();
         return;
       }
       if (state.activeView === 'admin:templates') {

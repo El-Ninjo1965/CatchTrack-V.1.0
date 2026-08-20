@@ -764,6 +764,24 @@
         : null;
     },
 
+    unregisterEntitySchema(appId, entityId) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const normalizedEntityId = normalizeString(entityId, '');
+      if (!normalizedEntityId) {
+        return false;
+      }
+
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, normalizedEntityId);
+      const removed = this.entitySchemas.delete(storageKey);
+      if (removed) {
+        const storage = this.getActiveStorageConnection();
+        if (storage && typeof storage.remove === 'function') {
+          storage.remove('entity-schemas', storageKey);
+        }
+      }
+      return removed;
+    },
+
     listEntitySchemas(appId = null) {
       const entries = Array.from(this.entitySchemas.values());
       if (!appId) {
