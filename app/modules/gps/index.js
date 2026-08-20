@@ -289,8 +289,11 @@
                 return { ok: false, code: 'ALREADY_TRACKING' };
             }
 
-            if (status !== 'enabled') {
-                return { ok: false, code: 'MODULE_NOT_ENABLED', status };
+            if (status !== 'enabled' && !this.active) {
+                const activation = this.enable();
+                if (!activation.ok && activation.code !== 'GEOLOCATION_UNAVAILABLE') {
+                    return { ok: false, code: activation.code || 'MODULE_NOT_ENABLED', status };
+                }
             }
 
             const geolocation = getGeolocation();
@@ -352,6 +355,10 @@
 
         getCurrentPosition() {
             return new Promise(async (resolve, reject) => {
+                if (status !== 'enabled' && !this.active) {
+                    this.enable();
+                }
+
                 const geolocation = getGeolocation();
                 if (!geolocation) {
                     reject(Object.assign(new Error('Geolocation API not available.'), { code: 'GEOLOCATION_UNAVAILABLE' }));

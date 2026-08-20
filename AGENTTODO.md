@@ -19,6 +19,8 @@
 - `VERSION.md` als Versionierungs- und Zustandsdokument eingeführt.
 - Generische Module-Templates im Admin hinzugefügt, damit neue Module aus vorgefertigten Schemata erstellt werden können.
 - Modul-/Rollen-Permissions-Ansicht erweitert, sodass systemweite und modulare Rechte zusammen sichtbar sind.
+- Benutzerprofil- und Einstellungsbereich für Funktionsauswahl, Privacy-Controls und lokale Sync-Entscheidungen ergänzt.
+- GPS-Modul gegen den nicht aktivierten Zustand abgesichert; Start- und Abfrageaktionen aktivieren das Modul jetzt automatisch und bleiben damit im echten User-Flow nutzbar.
 
 ## Getestet
 - `npm test` vollständig ausgeführt.

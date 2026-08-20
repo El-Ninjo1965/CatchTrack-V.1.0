@@ -1,13 +1,13 @@
 # VERSION
 
-## Version 1.1.0 - module-driven admin and future app scaffolding
+## Version 1.1.1 - user profile settings, privacy controls, and GPS reliability
 
 Status:
-- Framework core is stable and module-driven.
-- User and admin shells are usable.
-- GPS remains the technical proof module.
-- Catch Log is the first real product domain module.
-- The admin shell now supports module templates and dynamic module capability/permission visibility.
+- Framework core remains stable and module-driven.
+- User shell now includes dedicated profile settings for feature visibility and privacy preferences.
+- GPS is hardened against inactive module state and remains usable from real user interactions.
+- Catch Log and Fishing Spots remain the first real product domain modules in the active app.
+- The admin shell continues to support templates and dynamic module/permission visibility.
 
 ### Included milestones
 - neutral framework shell
@@ -16,16 +16,20 @@ Status:
 - GPS module with working geolocation flow
 - first app scaffolding and starter dashboard module
 - first real business module: Catch Log
+- second business module: Fishing Spots
+- user profile settings for visible functions and privacy choices
 - module template scaffolding for future app modules
 - expanded module and permission matrix in the admin workspace
+- GPS reliability hardening for active user-triggered actions
 
 ### Current focus
 - continue the first real app rollout with additional business modules
 - standardize module creation patterns for future app variants
 - keep the framework generic enough to support multiple apps without structural rewrites
+- validate that user feature preferences and privacy toggles remain stable in the local workflow
 
 ### Planned next steps
-- add a second real domain module beyond Catch Log and Dashboard
+- add the next real domain module after the current core feature set
 - enrich role-based module access by app and feature area
 - allow admin-managed content modules and app-specific workflows without core changes
 - keep module templates and permission mapping in sync with future module development

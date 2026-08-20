@@ -11,6 +11,72 @@
     activeModuleId: null
   };
 
+  const USER_SETTINGS_KEY = 'catchtrack.user.preferences.v1';
+
+  const defaultUserPreferences = Object.freeze({
+    visibleModuleIds: null,
+    privacy: {
+      shareLocationContext: false,
+      shareImages: false,
+      allowOnlineSync: false,
+      allowUsageAnalytics: false
+    }
+  });
+
+  const readUserPreferences = () => {
+    try {
+      if (typeof localStorage === 'undefined') {
+        return JSON.parse(JSON.stringify(defaultUserPreferences));
+      }
+
+      const raw = localStorage.getItem(USER_SETTINGS_KEY);
+      if (!raw) {
+        return JSON.parse(JSON.stringify(defaultUserPreferences));
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') {
+        return JSON.parse(JSON.stringify(defaultUserPreferences));
+      }
+
+      return {
+        visibleModuleIds: Array.isArray(parsed.visibleModuleIds) ? parsed.visibleModuleIds.filter((id) => typeof id === 'string' && id.trim()) : null,
+        privacy: {
+          shareLocationContext: !!parsed.privacy?.shareLocationContext,
+          shareImages: !!parsed.privacy?.shareImages,
+          allowOnlineSync: !!parsed.privacy?.allowOnlineSync,
+          allowUsageAnalytics: !!parsed.privacy?.allowUsageAnalytics
+        }
+      };
+    } catch (error) {
+      return JSON.parse(JSON.stringify(defaultUserPreferences));
+    }
+  };
+
+  const saveUserPreferences = (preferences) => {
+    const nextPreferences = {
+      visibleModuleIds: Array.isArray(preferences && preferences.visibleModuleIds)
+        ? preferences.visibleModuleIds.filter((id) => typeof id === 'string' && id.trim())
+        : null,
+      privacy: {
+        shareLocationContext: !!(preferences && preferences.privacy && preferences.privacy.shareLocationContext),
+        shareImages: !!(preferences && preferences.privacy && preferences.privacy.shareImages),
+        allowOnlineSync: !!(preferences && preferences.privacy && preferences.privacy.allowOnlineSync),
+        allowUsageAnalytics: !!(preferences && preferences.privacy && preferences.privacy.allowUsageAnalytics)
+      }
+    };
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(nextPreferences));
+      }
+    } catch (error) {
+      // Ignore persistence failures in restricted offline environments.
+    }
+
+    return nextPreferences;
+  };
+
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -54,10 +120,27 @@
   const getVisibleModules = () => {
     const modules = getModules();
     const currentUser = getCurrentUser();
+    const preferences = readUserPreferences();
+    const visibleSet = Array.isArray(preferences.visibleModuleIds)
+      ? new Set(preferences.visibleModuleIds)
+      : null;
+
     return modules.filter((module) => {
-      if (!currentUser) {
-        return module && (module.public === true || module.isPublic === true || module.loginRequired === false || module.requiresLogin === false || module.public !== false);
+      if (!module || !module.id) {
+        return false;
       }
+
+      if (!currentUser) {
+        const isPublic = module.public === true || module.isPublic === true || module.loginRequired === false || module.requiresLogin === false || module.public !== false;
+        if (!isPublic) {
+          return false;
+        }
+      }
+
+      if (visibleSet && !visibleSet.has(module.id)) {
+        return false;
+      }
+
       return true;
     });
   };
@@ -79,12 +162,22 @@
   const renderActions = () => {
     if (!actions) return;
     const currentUser = getCurrentUser();
+    const settingsButton = '<button id="userSettingsButton" class="user-app-link" type="button" aria-label="User settings">⚙ Settings</button>';
+
     if (!currentUser) {
-      actions.innerHTML = '<button id="userLoginButton" class="user-app-action" type="button">Login</button>';
+      actions.innerHTML = `${settingsButton}<button id="userLoginButton" class="user-app-action" type="button">Login</button>`;
       const loginButton = document.getElementById('userLoginButton');
       if (loginButton) {
         loginButton.addEventListener('click', () => {
           showLoginForm();
+        });
+      }
+      const settingsButtonElement = document.getElementById('userSettingsButton');
+      if (settingsButtonElement) {
+        settingsButtonElement.addEventListener('click', () => {
+          state.activeView = 'settings';
+          state.activeModuleId = null;
+          renderApp();
         });
       }
       return;
@@ -93,6 +186,7 @@
     actions.innerHTML = `
       <span class="user-app-session-badge">${escapeHtml(currentUser.displayName || currentUser.username || 'User')}</span>
       ${canOpenAdmin() ? '<a class="user-app-link" href="admin.html">Admin</a>' : ''}
+      ${settingsButton}
       <button id="userLogoutButton" class="user-app-link" type="button">Logout</button>
     `;
     const logoutButton = document.getElementById('userLogoutButton');
@@ -104,6 +198,14 @@
           await window.UserModule.logout();
         }
         state.activeView = 'home';
+        state.activeModuleId = null;
+        renderApp();
+      });
+    }
+    const settingsButtonElement = document.getElementById('userSettingsButton');
+    if (settingsButtonElement) {
+      settingsButtonElement.addEventListener('click', () => {
+        state.activeView = 'settings';
         state.activeModuleId = null;
         renderApp();
       });
@@ -183,6 +285,120 @@
       state.activeView = 'home';
       renderApp();
     });
+  };
+
+  const renderUserSettings = () => {
+    const modules = getModules();
+    const preferences = readUserPreferences();
+    const hasExplicitVisibility = Array.isArray(preferences.visibleModuleIds);
+    const moduleVisibility = hasExplicitVisibility
+      ? new Set(preferences.visibleModuleIds)
+      : new Set(modules.map((module) => module.id));
+
+    content.innerHTML = `
+      <section class="user-app-panel">
+        <button class="user-app-back" type="button" id="userSettingsBackButton">Back</button>
+        <div class="user-app-section-heading">
+          <div>
+            <span class="user-app-eyebrow">Profile</span>
+            <h1>Settings</h1>
+          </div>
+          <span class="user-app-count">${modules.length}</span>
+        </div>
+        <div class="user-settings-card">
+          <h2>Functions</h2>
+          <p>Choose which features should remain visible in your current workspace menu.</p>
+          <div class="user-settings-module-list">
+            ${modules.length ? modules.map((module) => `
+              <label class="user-settings-toggle" for="module-toggle-${escapeHtml(module.id)}">
+                <input id="module-toggle-${escapeHtml(module.id)}" type="checkbox" data-user-setting-module="${escapeHtml(module.id)}" ${moduleVisibility.has(module.id) ? 'checked' : ''} />
+                <span>
+                  <strong>${escapeHtml(getModuleDisplayName(module))}</strong>
+                  <small>${escapeHtml(module.description || 'Feature available in this app.')}</small>
+                </span>
+              </label>
+            `).join('') : '<p class="user-app-empty">No active modules are available yet.</p>'}
+          </div>
+        </div>
+        <div class="user-settings-card">
+          <h2>Privacy and sharing</h2>
+          <div class="user-settings-list">
+            <label class="user-settings-toggle" for="setting-location-context">
+              <input id="setting-location-context" type="checkbox" data-user-setting-privacy="shareLocationContext" ${preferences.privacy.shareLocationContext ? 'checked' : ''} />
+              <span>Allow location context sharing</span>
+            </label>
+            <label class="user-settings-toggle" for="setting-media-sharing">
+              <input id="setting-media-sharing" type="checkbox" data-user-setting-privacy="shareImages" ${preferences.privacy.shareImages ? 'checked' : ''} />
+              <span>Allow image and media sharing</span>
+            </label>
+            <label class="user-settings-toggle" for="setting-online-sync">
+              <input id="setting-online-sync" type="checkbox" data-user-setting-privacy="allowOnlineSync" ${preferences.privacy.allowOnlineSync ? 'checked' : ''} />
+              <span>Enable online sync when available</span>
+            </label>
+            <label class="user-settings-toggle" for="setting-analytics">
+              <input id="setting-analytics" type="checkbox" data-user-setting-privacy="allowUsageAnalytics" ${preferences.privacy.allowUsageAnalytics ? 'checked' : ''} />
+              <span>Allow usage analytics for product improvements</span>
+            </label>
+          </div>
+        </div>
+        <div class="user-settings-actions">
+          <button id="userSettingsSaveButton" type="button" class="primary">Save settings</button>
+          <button id="userSettingsResetButton" type="button" class="secondary">Show all functions</button>
+        </div>
+        <p id="userSettingsStatus" class="user-settings-status">Changes are stored locally in this workspace.</p>
+      </section>
+    `;
+
+    const backButton = document.getElementById('userSettingsBackButton');
+    if (backButton) {
+      backButton.addEventListener('click', () => {
+        state.activeView = 'home';
+        state.activeModuleId = null;
+        renderApp();
+      });
+    }
+
+    const saveButton = document.getElementById('userSettingsSaveButton');
+    if (saveButton) {
+      saveButton.addEventListener('click', () => {
+        const moduleSelection = Array.from(document.querySelectorAll('[data-user-setting-module]:checked')).map((input) => input.dataset.userSettingModule).filter(Boolean);
+        const privacySelection = {};
+        document.querySelectorAll('[data-user-setting-privacy]').forEach((input) => {
+          privacySelection[input.dataset.userSettingPrivacy] = !!input.checked;
+        });
+
+        const nextPreferences = saveUserPreferences({
+          visibleModuleIds: moduleSelection,
+          privacy: privacySelection
+        });
+
+        const status = document.getElementById('userSettingsStatus');
+        if (status) {
+          status.textContent = 'Settings saved successfully.';
+          status.className = 'user-settings-status success';
+        }
+
+        if (Object.keys(nextPreferences.privacy).some((key) => nextPreferences.privacy[key])) {
+          const currentUser = getCurrentUser();
+          if (currentUser && window.UserModule && typeof window.UserModule.updateProfile === 'function') {
+            window.UserModule.updateProfile({ privacy: nextPreferences.privacy });
+          }
+        }
+
+        renderApp();
+      });
+    }
+
+    const resetButton = document.getElementById('userSettingsResetButton');
+    if (resetButton) {
+      resetButton.addEventListener('click', () => {
+        const moduleIds = getModules().map((module) => module.id);
+        saveUserPreferences({ visibleModuleIds: moduleIds, privacy: defaultUserPreferences.privacy });
+        state.activeView = 'home';
+        state.activeModuleId = null;
+        renderApp();
+      });
+    }
   };
 
   const renderModule = (moduleId) => {
@@ -270,6 +486,11 @@
 
     if (state.activeView === 'login') {
       showLoginForm();
+      return;
+    }
+
+    if (state.activeView === 'settings') {
+      renderUserSettings();
       return;
     }
 
