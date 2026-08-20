@@ -12,7 +12,7 @@ if (!MasterFramework.getApp('neutral-app')) {
     description: 'Default neutral application shell for the framework runtime.',
     status: 'active',
     active: true,
-    modules: ['dashboard', 'gps'],
+    modules: ['dashboard', 'gps', 'catch-log'],
     config: { framework: 'neutral-master-framework' }
   });
 }
@@ -25,7 +25,7 @@ if (!MasterFramework.getApp('catchtrack')) {
     description: 'First real application shell for the CatchTrack framework.',
     status: 'active',
     active: true,
-    modules: ['dashboard', 'gps'],
+    modules: ['dashboard', 'gps', 'catch-log'],
     config: {
       framework: 'neutral-master-framework',
       defaultView: 'dashboard'

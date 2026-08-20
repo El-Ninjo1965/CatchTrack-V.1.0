@@ -26,5 +26,19 @@
     "capabilities": ["gps", "geolocation"],
     "dependencies": [],
     "appId": "catchtrack"
+  },
+  {
+    "id": "catch-log",
+    "name": "Catch Log",
+    "displayName": "Catch Log",
+    "version": "1.0.0",
+    "type": "app",
+    "description": "First real CatchTrack business module for logging and tracking fishing catches in a local, modular flow.",
+    "entry": "index.js",
+    "globalName": "CatchLogModule",
+    "permissions": ["module:read"],
+    "capabilities": ["catch-log", "tracking", "data-entry"],
+    "dependencies": ["gps"],
+    "appId": "catchtrack"
   }
 ]

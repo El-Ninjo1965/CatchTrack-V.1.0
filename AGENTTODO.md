@@ -14,12 +14,15 @@
 - Zentrale Rollen-/Rechte-Registrierung für framework-overarching governance ergänzt.
 - Erste App-Basis für CatchTrack als neutraler Starter-Application-Shell angelegt.
 - Erstes Dashboard-Modul als modulare Landing-/Overview-Funktion erstellt.
+- Zusätzliches Business-Modul `catch-log` erstellt und in die erste App-Shell integriert.
 - `VERSION.md` als Versionierungs- und Zustandsdokument eingeführt.
+- Generische Module-Templates im Admin hinzugefügt, damit neue Module aus vorgefertigten Schemata erstellt werden können.
+- Modul-/Rollen-Permissions-Ansicht erweitert, sodass systemweite und modulare Rechte zusammen sichtbar sind.
 
 ## Getestet
 - `npm test` vollständig ausgeführt.
-- Verifiziert: GPS-Lebenszyklus ohne Duplicate Watcher, LocalAuth/Setup-Login-Reload-Persistenz, zentrale App-Name-Konfiguration, neutraler User-UI-Flow, Framework-Regressionen, Admin-Module-/GPS-Verwaltung und neue App-/Modul-Scaffolding-Integration.
-- Browserseitige Logik wurde anhand der tatsächlichen API-Verwendung und des erwarteten UI-Verhaltens geprüft: kein automatischer GPS-Start, Start/Stop/GetCurrentPosition auf echter Geolocation-API, korrekte Status- und Fehlermeldungen, Modul-Discovery für die erste App-Shell.
+- Verifiziert: GPS-Lebenszyklus ohne Duplicate Watcher, LocalAuth/Setup-Login-Reload-Persistenz, zentrale App-Name-Konfiguration, neutraler User-UI-Flow, Framework-Regressionen, Admin-Module-/GPS-Verwaltung, neue App-/Modul-Scaffolding-Integration, Module-Templates und zentraler Permissions-Overlay.
+- Browserseitige Logik wurde anhand der tatsächlichen API-Verwendung und des erwarteten UI-Verhaltens geprüft: kein automatischer GPS-Start, Start/Stop/GetCurrentPosition auf echter Geolocation-API, korrekte Status- und Fehlermeldungen, Modul-Discovery für die erste App-Shell und die Erstellung neuer Module aus Templates.
 
 ## Tatsächlich funktional
 - User-Login funktioniert über das normale User-Interface.
@@ -31,9 +34,11 @@
 - Admin-Module können aktiv/deaktiviert werden; der GPS-Adminbereich steuert die echte Geolocation-API an.
 - Die erste produktive App-Basis (`catchtrack`) ist als modulare App-Definition aktiv.
 - Das Dashboard-Modul dient als erster generischer App-Home und als Vorlage für spätere Module.
+- Das Catch-Log-Modul ist die erste echte fachliche Module-Instanz mit lokalem Datensatz und einfacher Eingabe.
+- Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
 
 ## Offen / Nächster Arbeitsfortschritt
-- Erste App und Dashboard sind angelegt; als nächster sinnvoller Schritt folgt die Standardisierung von Modul-Templates und App-Spezifikationen.
-- Danach: modulare Rollen-/Rechte-Zuordnung pro Modul und pro App-Feature, um neue Module ohne Core-Änderung zu erweitern.
-- Danach: erste echte fachliche App-Module neben GPS und Dashboard, z. B. Basisfunktionen für Standort-/Aktivitäts-/Profilbereiche.
-- Die nächste Umsetzung bleibt bewusst im neutralen Framework, damit spätere App-Varianten ohne Rework ergänzt werden können.
+- Nächster sinnvoller Schritt: weiteres fachliches App-Modul erstellen, das über Catch Log hinaus stärker produktiv und anwendungsnah funktioniert.
+- Danach: app-spezifische Module und Rollen-/Rechte-Zuordnung pro Modul und per Feature pro App erweitern.
+- Danach: weitere erste fachliche App-Module neben GPS, Catch Log und Dashboard, z. B. Profil-, Standort- oder Aktivitätsbereiche.
+- Die Umsetzung bleibt bewusst im neutralen Framework, damit spätere App-Varianten ohne Rework ergänzt werden können.

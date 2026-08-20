@@ -1,12 +1,13 @@
 # VERSION
 
-## Version 1.0.0 - Initial neutral app foundation
+## Version 1.1.0 - module-driven admin and future app scaffolding
 
 Status:
 - Framework core is stable and module-driven.
 - User and admin shells are usable.
-- GPS is the first proven app module.
-- The first neutral starter app shell and dashboard module are now scaffolded as the next milestone.
+- GPS remains the technical proof module.
+- Catch Log is the first real product domain module.
+- The admin shell now supports module templates and dynamic module capability/permission visibility.
 
 ### Included milestones
 - neutral framework shell
@@ -14,14 +15,17 @@ Status:
 - admin governance (users, roles, permissions, module settings)
 - GPS module with working geolocation flow
 - first app scaffolding and starter dashboard module
+- first real business module: Catch Log
+- module template scaffolding for future app modules
+- expanded module and permission matrix in the admin workspace
 
 ### Current focus
-- build the first real application shell around the neutral framework
-- define a starter dashboard module for the app home
-- keep module creation generic so future apps can be added without structural rewrites
+- continue the first real app rollout with additional business modules
+- standardize module creation patterns for future app variants
+- keep the framework generic enough to support multiple apps without structural rewrites
 
 ### Planned next steps
-- module template standards for future app modules
-- role-based module access by app and feature area
-- app-specific content modules for user workflows beyond GPS
-- admin-managed creation of future modules without core changes
+- add a second real domain module beyond Catch Log and Dashboard
+- enrich role-based module access by app and feature area
+- allow admin-managed content modules and app-specific workflows without core changes
+- keep module templates and permission mapping in sync with future module development

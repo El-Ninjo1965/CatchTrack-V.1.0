@@ -450,6 +450,120 @@
             });
         },
 
+        getModuleTemplateCatalog() {
+            return [
+                {
+                    id: 'content-module',
+                    name: 'Content module',
+                    type: 'app',
+                    description: 'Generic editable content module for pages, lists or entries.',
+                    permissions: ['module:read'],
+                    capabilities: ['content', 'entries'],
+                    settings: [
+                        { key: 'title', path: 'moduleSettings.contentModule.title', label: 'Default title', type: 'text', defaultValue: 'New content module' },
+                        { key: 'itemsPerPage', path: 'moduleSettings.contentModule.itemsPerPage', label: 'Items per page', type: 'number', defaultValue: 10, min: 1, step: 1 },
+                        { key: 'allowDrafts', path: 'moduleSettings.contentModule.allowDrafts', label: 'Allow drafts', type: 'boolean', defaultValue: true }
+                    ]
+                },
+                {
+                    id: 'dashboard-module',
+                    name: 'Dashboard module',
+                    type: 'app',
+                    description: 'A compact overview module with KPI tiles and action cards.',
+                    permissions: ['module:read'],
+                    capabilities: ['dashboard', 'overview'],
+                    settings: [
+                        { key: 'defaultView', path: 'moduleSettings.dashboardModule.defaultView', label: 'Default view', type: 'text', defaultValue: 'overview' },
+                        { key: 'showSummaryCards', path: 'moduleSettings.dashboardModule.showSummaryCards', label: 'Show summary cards', type: 'boolean', defaultValue: true }
+                    ]
+                },
+                {
+                    id: 'data-module',
+                    name: 'Data module',
+                    type: 'app',
+                    description: 'A structured data module for form-based records and local storage workflows.',
+                    permissions: ['module:read', 'user:read'],
+                    capabilities: ['data-entry', 'storage', 'records'],
+                    settings: [
+                        { key: 'recordLimit', path: 'moduleSettings.dataModule.recordLimit', label: 'Record limit', type: 'number', defaultValue: 500, min: 10, step: 10 },
+                        { key: 'requireApproval', path: 'moduleSettings.dataModule.requireApproval', label: 'Require approval', type: 'boolean', defaultValue: false }
+                    ]
+                }
+            ];
+        },
+
+        createModuleFromTemplate(templateId, overrides = {}) {
+            const template = this.getModuleTemplateCatalog().find((entry) => entry.id === templateId)
+                || this.getModuleTemplateCatalog()[0];
+
+            if (!template) {
+                return { ok: false, code: 'NO_TEMPLATE', message: 'No module template is available.' };
+            }
+
+            const moduleId = String(overrides.moduleId || overrides.id || template.id || 'custom-module')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9-_]+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') || 'custom-module';
+
+            const baseName = String(overrides.name || template.name || 'New module').trim();
+            const displayName = String(overrides.displayName || baseName || moduleId).trim();
+            const moduleDefinition = {
+                id: moduleId,
+                name: baseName,
+                displayName,
+                version: String(overrides.version || '1.0.0').trim() || '1.0.0',
+                type: String(overrides.type || template.type || 'app').trim() || 'app',
+                appId: String(overrides.appId || 'catchtrack').trim() || 'catchtrack',
+                description: String(overrides.description || template.description || 'Generated from a framework module template').trim(),
+                permissions: Array.isArray(overrides.permissions) ? [...overrides.permissions] : Array.isArray(template.permissions) ? [...template.permissions] : ['module:read'],
+                capabilities: Array.isArray(overrides.capabilities) ? [...overrides.capabilities] : Array.isArray(template.capabilities) ? [...template.capabilities] : ['customization'],
+                dependencies: Array.isArray(overrides.dependencies) ? [...overrides.dependencies] : [],
+                status: 'enabled',
+                active: true,
+                admin: {
+                    title: `${displayName} settings`,
+                    description: `${displayName} settings generated from the ${template.name || 'template'} template.`,
+                    settings: Array.isArray(overrides.settings) ? [...overrides.settings] : Array.isArray(template.settings) ? template.settings.map((setting) => ({ ...setting })) : []
+                },
+                renderUserInterface(container) {
+                    if (!container) {
+                        return;
+                    }
+                    container.innerHTML = `
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">${displayName}</h3>
+                            </div>
+                            <div class="content-wrap">
+                                <div class="message info">This module was generated from the ${template.name || 'module'} template and is ready for app-specific content.</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            };
+
+            if (window.ModuleRegistry && typeof window.ModuleRegistry.get === 'function' && window.ModuleRegistry.get(moduleId)) {
+                return { ok: false, code: 'MODULE_EXISTS', message: `Module already exists: ${moduleId}` };
+            }
+
+            if (window.ModuleManager && typeof window.ModuleManager.register === 'function') {
+                const created = window.ModuleManager.register(moduleDefinition);
+                if (created && typeof created.id === 'string' && window.ModuleManager.enable) {
+                    window.ModuleManager.enable(created.id);
+                }
+                return { ok: true, data: created, message: `Module created: ${created.id}` };
+            }
+
+            if (window.ModuleRegistry && typeof window.ModuleRegistry.register === 'function') {
+                const created = window.ModuleRegistry.register(moduleDefinition);
+                return { ok: true, data: created, message: `Module created: ${created.id}` };
+            }
+
+            return { ok: false, code: 'MODULE_REGISTRY_UNAVAILABLE', message: 'Module registry is unavailable.' };
+        },
+
         getModuleState(moduleId) {
             if (!moduleId || typeof moduleId !== 'string') {
                 return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };

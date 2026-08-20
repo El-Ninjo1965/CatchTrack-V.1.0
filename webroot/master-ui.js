@@ -367,6 +367,38 @@
             }
           }
 
+          if (action === 'module-template-create') {
+            const manager = window.AdminModule || null;
+            if (!manager || typeof manager.createModuleFromTemplate !== 'function') {
+              if (statusTarget) {
+                statusTarget.className = 'message error';
+                statusTarget.textContent = 'Module template creation is unavailable.';
+              }
+              return;
+            }
+
+            const templateSelect = document.getElementById('moduleTemplateSelect');
+            const moduleIdInput = document.getElementById('moduleTemplateModuleId');
+            const nameInput = document.getElementById('moduleTemplateName');
+            const appInput = document.getElementById('moduleTemplateAppId');
+
+            const result = manager.createModuleFromTemplate(templateSelect ? templateSelect.value : '', {
+              moduleId: moduleIdInput ? moduleIdInput.value : '',
+              name: nameInput ? nameInput.value : '',
+              appId: appInput ? appInput.value : 'catchtrack'
+            });
+
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? (result.message || 'Module created.') : (result && result.message) || 'Module template creation failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+
+            if (result && result.ok) {
+              renderAdminModules();
+              renderPageContent();
+            }
+          }
+
           if (action === 'device-save') {
             const payload = {
               deviceId: document.getElementById('deviceIdInput') ? document.getElementById('deviceIdInput').value : '',
@@ -794,6 +826,60 @@
         renderPageContent();
       });
     });
+  };
+
+  const renderAdminTemplates = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const templates = window.AdminModule && typeof window.AdminModule.getModuleTemplateCatalog === 'function'
+      ? window.AdminModule.getModuleTemplateCatalog()
+      : [
+          { id: 'content-module', name: 'Content module', type: 'app', description: 'Generic editable content module.', permissions: ['module:read'], capabilities: ['content', 'entries'] },
+          { id: 'dashboard-module', name: 'Dashboard module', type: 'app', description: 'Overview and KPI module.', permissions: ['module:read'], capabilities: ['dashboard', 'overview'] },
+          { id: 'data-module', name: 'Data module', type: 'app', description: 'Structured data entry module.', permissions: ['module:read', 'user:read'], capabilities: ['data-entry', 'storage'] }
+        ];
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Module templates</h2></div>
+        <div class="content-wrap">
+          <div id="adminActionStatus" class="message info">Templates create future-ready modules without restructuring the framework core.</div>
+          <div class="form-grid" style="margin: 18px 0;">
+            <div class="form-field"><label>Template</label>
+              <select id="moduleTemplateSelect">
+                ${templates.map((template) => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.name || template.id)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-field"><label>Module ID</label><input id="moduleTemplateModuleId" type="text" placeholder="new-report-module" /></div>
+            <div class="form-field"><label>Name</label><input id="moduleTemplateName" type="text" placeholder="New report module" /></div>
+            <div class="form-field"><label>App</label><input id="moduleTemplateAppId" type="text" value="catchtrack" /></div>
+            <div class="action-list">
+              <button type="button" class="primary" data-admin-action="module-template-create">Create module</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Permissions</th><th>Capabilities</th><th>Description</th></tr></thead>
+              <tbody>
+                ${templates.map((template) => `
+                  <tr>
+                    <td>${escapeHtml(template.id)}</td>
+                    <td>${escapeHtml(template.name || template.id)}</td>
+                    <td>${escapeHtml(template.type || 'app')}</td>
+                    <td>${escapeHtml(Array.isArray(template.permissions) ? template.permissions.join(', ') : 'module:read')}</td>
+                    <td>${escapeHtml(Array.isArray(template.capabilities) ? template.capabilities.join(', ') : '—')}</td>
+                    <td>${escapeHtml(template.description || 'No description available')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    bindActionButtons();
   };
 
   const renderAdminModuleWorkspace = (moduleId) => {
@@ -1273,12 +1359,35 @@
       ];
     }
 
+    const modulePermissions = (window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+      ? window.ModuleRegistry.getAll()
+      : []).flatMap((module) => {
+        if (!module || !Array.isArray(module.permissions)) {
+          return [];
+        }
+        return module.permissions.map((permission) => ({
+          permission,
+          description: `Module permission for ${module.name || module.id || 'module'}`
+        }));
+      });
+
+    const merged = [...permissions, ...modulePermissions].reduce((result, entry) => {
+      if (!entry || !entry.permission) {
+        return result;
+      }
+      const key = String(entry.permission);
+      if (!result.has(key)) {
+        result.set(key, { permission: key, description: entry.description || 'Framework permission' });
+      }
+      return result;
+    }, new Map());
+
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Permissions</h2></div>
         <div class="content-wrap">
           <div class="grid">
-            ${permissions.map((entry) => `<div class="metric"><span class="metric-label">${escapeHtml(entry.permission)}</span><div class="metric-value" style="font-size:0.85rem;">${escapeHtml(entry.description || 'Framework permission')}</div></div>`).join('')}
+            ${Array.from(merged.values()).map((entry) => `<div class="metric"><span class="metric-label">${escapeHtml(entry.permission)}</span><div class="metric-value" style="font-size:0.85rem;">${escapeHtml(entry.description || 'Framework permission')}</div></div>`).join('')}
           </div>
         </div>
       </div>
@@ -1681,6 +1790,7 @@
           { id: 'admin:dashboard', label: 'Dashboard' },
           { id: 'admin:apps', label: 'Apps' },
           { id: 'admin:modules', label: 'Modules' },
+          { id: 'admin:templates', label: 'Templates' },
           { id: 'admin:users', label: 'Users' },
           { id: 'admin:roles', label: 'Roles' },
           { id: 'admin:permissions', label: 'Permissions' },
@@ -1812,6 +1922,10 @@
       }
       if (state.activeView === 'admin:modules') {
         renderAdminModules();
+        return;
+      }
+      if (state.activeView === 'admin:templates') {
+        renderAdminTemplates();
         return;
       }
       if (state.activeView === 'admin:gps') {
