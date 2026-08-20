@@ -385,6 +385,21 @@
             }
           }
 
+          if (action === 'entity-schema-delete') {
+            const appId = button.dataset.entityAppId || '';
+            const entityId = button.dataset.entitySchemaId || '';
+            const result = window.AdminModule && typeof window.AdminModule.deleteEntitySchema === 'function'
+              ? window.AdminModule.deleteEntitySchema(appId, entityId)
+              : { ok: false, message: 'Schema deletion is unavailable.' };
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? (result.message || 'Schema deleted.') : (result && result.message) || 'Schema deletion failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              renderAdminData();
+            }
+          }
+
           if (action === 'entity-record-delete') {
             const appId = button.dataset.entityAppId || '';
             const entityId = button.dataset.entitySchemaId || '';
@@ -1317,12 +1332,16 @@
             const records = window.AdminModule && typeof window.AdminModule.listEntityRecords === 'function'
               ? window.AdminModule.listEntityRecords(appId, schema.id)
               : [];
+            const schemaFieldsJson = JSON.stringify(rows, null, 2);
 
             return `
               <div class="card" style="margin-top: 20px;">
                 <div class="card-header"><h3 class="card-title">${escapeHtml(schema.name || schema.id)}</h3></div>
                 <div class="content-wrap">
                   <div class="small-muted">App: ${escapeHtml(schema.appId || appId)} · ID: ${escapeHtml(schema.id || 'schema')}</div>
+                  <div class="action-list" style="margin-top: 12px; justify-content: flex-start;">
+                    <button type="button" class="secondary" data-admin-action="entity-schema-delete" data-entity-app-id="${escapeHtml(appId)}" data-entity-schema-id="${escapeHtml(schema.id || '')}">Delete schema</button>
+                  </div>
                   <div class="table-wrap" style="margin-top: 12px;">
                     <table>
                       <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Default</th></tr></thead>
@@ -1338,6 +1357,20 @@
                       </tbody>
                     </table>
                   </div>
+
+                  <form class="form-grid" style="margin-top: 16px;" data-entity-schema-form data-entity-app-id="${escapeHtml(appId)}" data-entity-schema-id="${escapeHtml(schema.id || '')}">
+                    <div class="form-field">
+                      <label>Schema name</label>
+                      <input type="text" name="schemaName" value="${escapeHtml(schema.name || schema.id || '')}" />
+                    </div>
+                    <div class="form-field" style="grid-column: 1 / -1;">
+                      <label>Fields (JSON)</label>
+                      <textarea name="schemaFields" rows="8">${escapeHtml(schemaFieldsJson)}</textarea>
+                    </div>
+                    <div class="action-list" style="grid-column: 1 / -1;">
+                      <button type="submit" class="primary">Update schema</button>
+                    </div>
+                  </form>
 
                   <form class="form-grid" style="margin-top: 16px;" data-entity-record-form data-entity-app-id="${escapeHtml(appId)}" data-entity-schema-id="${escapeHtml(schema.id || '')}">
                     ${rows.length ? rows.map((field) => {
@@ -1405,6 +1438,40 @@
         </div>
       </div>
     `;
+
+    page.querySelectorAll('[data-entity-schema-form]').forEach((form) => {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const appIdValue = form.dataset.entityAppId || appId;
+        const entityId = form.dataset.entitySchemaId || '';
+        const schemaName = form.querySelector('[name="schemaName"]') ? form.querySelector('[name="schemaName"]').value.trim() : '';
+        const fieldsValue = form.querySelector('[name="schemaFields"]') ? form.querySelector('[name="schemaFields"]').value : '[]';
+        let parsedFields = [];
+        try {
+          parsedFields = JSON.parse(fieldsValue || '[]');
+        } catch (error) {
+          const statusTarget = document.getElementById('adminActionStatus');
+          if (statusTarget) {
+            statusTarget.className = 'message error';
+            statusTarget.textContent = 'Schema fields must be valid JSON.';
+          }
+          return;
+        }
+
+        const result = window.AdminModule && typeof window.AdminModule.updateEntitySchema === 'function'
+          ? window.AdminModule.updateEntitySchema(appIdValue, entityId, { name: schemaName || entityId, fields: Array.isArray(parsedFields) ? parsedFields : [] })
+          : { ok: false, message: 'Schema editor is unavailable.' };
+
+        const statusTarget = document.getElementById('adminActionStatus');
+        if (statusTarget) {
+          statusTarget.className = result && result.ok ? 'message success' : 'message error';
+          statusTarget.textContent = result && result.ok ? (result.message || 'Schema updated successfully.') : (result && result.message) || 'Schema update failed.';
+        }
+        if (result && result.ok) {
+          renderAdminData();
+        }
+      });
+    });
 
     page.querySelectorAll('[data-entity-record-form]').forEach((form) => {
       form.addEventListener('submit', async (event) => {

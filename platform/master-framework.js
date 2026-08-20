@@ -751,6 +751,40 @@
       return { ...schema, fields: schema.fields.map((field) => ({ ...field })) };
     },
 
+    updateEntitySchema(appId, entityId, schemaDefinition = {}) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const normalizedEntityId = normalizeString(entityId, '');
+      if (!normalizedEntityId) {
+        throw new Error('Entity schema id is required.');
+      }
+
+      const current = this.getEntitySchema(normalizedAppId, normalizedEntityId);
+      if (!current) {
+        throw new Error(`Entity schema not found for app ${normalizedAppId}: ${normalizedEntityId}`);
+      }
+
+      const nextDefinition = {
+        ...current,
+        ...schemaDefinition,
+        id: normalizedEntityId,
+        appId: normalizedAppId,
+        fields: Array.isArray(schemaDefinition.fields)
+          ? schemaDefinition.fields
+          : current.fields || []
+      };
+
+      const schema = this.normalizeEntitySchema(normalizedAppId, nextDefinition);
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, schema.id);
+      this.entitySchemas.set(storageKey, schema);
+
+      const storage = this.getActiveStorageConnection();
+      if (storage && typeof storage.write === 'function') {
+        storage.write('entity-schemas', storageKey, schema);
+      }
+
+      return { ...schema, fields: schema.fields.map((field) => ({ ...field })) };
+    },
+
     getEntitySchema(appId, entityId) {
       const normalizedAppId = normalizeString(appId, 'default-app');
       const normalizedEntityId = normalizeString(entityId, '');

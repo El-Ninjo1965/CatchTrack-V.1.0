@@ -32,7 +32,7 @@
 - Modul-Editor im UI ergänzt: Module können im Adminbereich direkt über eine Metadata-Form bearbeitet und per Toggle/Back-Flow zurück in der Verwaltungsübersicht gesteuert werden.
 - App-spezifische Modul-Zugriffskontrolle ergänzt: Jede App kann jetzt pro Modul und pro Rolle explizit festlegen, ob ein Modul für bestimmte Rollen freigegeben oder blockiert ist. Das wirkt sich in der User-UI direkt auf die sichtbaren Module aus und bildet die Grundlage für modulare App-Varianten ohne Core-Rework.
 - App-spezifische Feature-Zugriffskontrolle ergänzt: Neben Modulen gibt es jetzt auch eine app- und rollenbasierte Feature-Matrix, damit Feature-Gruppen wie Dashboard, Profile, Module oder zukünftige Module-Bereiche für einzelne Rollen frei- oder gesperrt werden können, ohne das Core-Framework anzufassen.
-- Generische Daten-/Schema-Engine im Admin ergänzt: Der Admin hat jetzt eine eigene "Data"-Ansicht, in der Entity-Schemata angelegt, Felder definiert und Record-Einträge per Formular erstellt und gelöscht werden können, ohne das Core-Framework manuell zu erweitern.
+- Generische Daten-/Schema-Engine im Admin ergänzt: Der Admin hat jetzt eine eigene "Data"-Ansicht, in der Entity-Schemata angelegt, Felder definiert, bearbeitet und Record-Einträge per Formular erstellt und gelöscht werden können, ohne das Core-Framework manuell zu erweitern.
 
 ## Getestet
 - `node --test tests/master-framework.test.js` erfolgreich ausgeführt.

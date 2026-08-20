@@ -455,6 +455,18 @@ test('registers generic entity schemas and records for app-level business data',
   const updated = runtime.updateEntityRecord('catchtrack', 'inventory', record.id, { quantity: 12 });
   assert.equal(updated.quantity, 12);
 
+  const updatedSchema = runtime.updateEntitySchema('catchtrack', 'inventory', {
+    name: 'Inventory items',
+    fields: [
+      { key: 'name', type: 'string', required: true },
+      { key: 'quantity', type: 'number', required: true },
+      { key: 'active', type: 'boolean', defaultValue: true },
+      { key: 'price', type: 'number', required: false, defaultValue: 0 }
+    ]
+  });
+  assert.equal(updatedSchema.name, 'Inventory items');
+  assert.equal(updatedSchema.fields.some((field) => field.key === 'price'), true);
+
   const afterDelete = runtime.deleteEntityRecord('catchtrack', 'inventory', record.id);
   assert.equal(afterDelete.length, 0);
 });

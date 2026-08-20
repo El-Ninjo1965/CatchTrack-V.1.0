@@ -462,6 +462,19 @@
             }
         },
 
+        updateEntitySchema(appId, entityId, schemaDefinition) {
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.updateEntitySchema !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+            try {
+                const schema = framework.updateEntitySchema(appId, entityId, schemaDefinition || {});
+                return { ok: true, data: schema, message: `Entity schema updated: ${schema.id}` };
+            } catch (error) {
+                return { ok: false, code: 'ENTITY_SCHEMA_ERROR', message: error && error.message ? error.message : 'Entity schema update failed.' };
+            }
+        },
+
         deleteEntitySchema(appId, entityId) {
             const framework = window.MasterFramework;
             if (!framework || typeof framework.unregisterEntitySchema !== 'function') {
