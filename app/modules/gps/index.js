@@ -22,6 +22,12 @@
     let permissionState = 'unknown'; // unknown | granted | prompt | denied | unsupported
     let lastError = null;
     let lastPosition = null;
+    const defaultSettings = Object.freeze({
+        enableHighAccuracy: true,
+        timeoutMs: 10000,
+        maximumAgeMs: 0,
+        persistLocationHistory: true
+    });
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -41,6 +47,26 @@
 
     const getGeolocation = () => (hasGeolocation() ? navigator.geolocation : null);
 
+    const readSettings = () => {
+        const configured = window.ConfigManager && typeof window.ConfigManager.getPath === 'function'
+            ? window.ConfigManager.getPath('moduleSettings.gps', {})
+            : {};
+
+        return {
+            ...defaultSettings,
+            ...(configured && typeof configured === 'object' ? configured : {})
+        };
+    };
+
+    const getGeolocationOptions = () => {
+        const settings = readSettings();
+        return {
+            enableHighAccuracy: settings.enableHighAccuracy !== false,
+            timeout: Number.isFinite(Number(settings.timeoutMs)) ? Number(settings.timeoutMs) : defaultSettings.timeoutMs,
+            maximumAge: Number.isFinite(Number(settings.maximumAgeMs)) ? Number(settings.maximumAgeMs) : defaultSettings.maximumAgeMs
+        };
+    };
+
     const persistPosition = (position) => {
         const coords = position && position.coords ? position.coords : {};
         const record = {
@@ -55,16 +81,15 @@
             heading: coords.heading,
             timestamp: new Date(position.timestamp || Date.now()).toISOString()
         };
+        const settings = readSettings();
 
-        // Prefer DatabaseManager sync store when available.
-        if (window.DatabaseManager && typeof window.DatabaseManager.save === 'function') {
+        if (settings.persistLocationHistory && window.DatabaseManager && typeof window.DatabaseManager.save === 'function') {
             window.DatabaseManager.save('sync', record).catch(() => {
                 // Fallback is intentionally silent.
             });
         }
 
-        // Always keep the last position in CoreStorage for quick read.
-        if (window.CoreStorage && typeof window.CoreStorage.set === 'function') {
+        if (settings.persistLocationHistory && window.CoreStorage && typeof window.CoreStorage.set === 'function') {
             window.CoreStorage.set('gps:lastPosition', record);
         }
 
@@ -124,12 +149,6 @@
         audit('gps:error', detail);
     };
 
-    const geolocationOptions = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    };
-
     // ── Public API ────────────────────────────────────────────────────────────
 
     const GpsModule = {
@@ -140,6 +159,48 @@
         description: 'Neutral GPS tracking module.',
         permissions: [],
         capabilities: ['gps', 'geolocation'],
+        admin: {
+            title: 'GPS settings',
+            description: 'Controls for browser geolocation behaviour and local GPS data handling.',
+            settings: [
+                {
+                    key: 'enableHighAccuracy',
+                    path: 'moduleSettings.gps.enableHighAccuracy',
+                    label: 'Enable high accuracy',
+                    type: 'boolean',
+                    defaultValue: true,
+                    description: 'Ask the browser for the most precise available position.'
+                },
+                {
+                    key: 'timeoutMs',
+                    path: 'moduleSettings.gps.timeoutMs',
+                    label: 'Location timeout (ms)',
+                    type: 'number',
+                    defaultValue: 10000,
+                    min: 1000,
+                    step: 500,
+                    description: 'Maximum time the module waits for a geolocation response.'
+                },
+                {
+                    key: 'maximumAgeMs',
+                    path: 'moduleSettings.gps.maximumAgeMs',
+                    label: 'Cached position age (ms)',
+                    type: 'number',
+                    defaultValue: 0,
+                    min: 0,
+                    step: 1000,
+                    description: 'How old a cached GPS position may be before the browser must refresh it.'
+                },
+                {
+                    key: 'persistLocationHistory',
+                    path: 'moduleSettings.gps.persistLocationHistory',
+                    label: 'Persist location history',
+                    type: 'boolean',
+                    defaultValue: true,
+                    description: 'Store GPS positions in the local framework storage for later reuse.'
+                }
+            ]
+        },
         status: 'available',
         active: false,
 
@@ -250,7 +311,7 @@
                 watchId = geolocation.watchPosition(
                     onPosition,
                     onError,
-                    geolocationOptions
+                    getGeolocationOptions()
                 );
             } catch (error) {
                 const detail = normalizeError(error);
@@ -323,7 +384,7 @@
                         onError(error);
                         reject(Object.assign(new Error(detail.message), { code: detail.code }));
                     },
-                    geolocationOptions
+                    getGeolocationOptions()
                 );
             });
         },

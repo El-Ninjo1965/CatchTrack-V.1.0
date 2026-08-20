@@ -70,6 +70,12 @@
                 module.displayName = module.name;
             }
 
+            if (!module.admin || typeof module.admin !== 'object') {
+                module.admin = module.manifest && module.manifest.admin && typeof module.manifest.admin === 'object'
+                    ? module.manifest.admin
+                    : null;
+            }
+
             if (!Array.isArray(module.dependencies)) {
                 module.dependencies = [];
             }
@@ -101,7 +107,8 @@
                     description: module.description || '',
                     dependencies: [...module.dependencies],
                     permissions: [...module.permissions],
-                    capabilities: [...module.capabilities]
+                    capabilities: [...module.capabilities],
+                    admin: module.admin
                 };
             }
 
@@ -208,6 +215,7 @@
                     version: implementation.version || manifest.version,
                     description: implementation.description || manifest.description,
                     manifest,
+                    admin: implementation.admin || manifest.admin || null,
                     dependencies: Array.isArray(implementation.dependencies)
                         ? [...implementation.dependencies]
                         : [...manifest.dependencies],

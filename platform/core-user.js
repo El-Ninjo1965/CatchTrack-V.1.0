@@ -102,16 +102,16 @@
         };
 
         const explicit = Array.isArray(user.permissions)
-            ? user.permissions.filter(Boolean).map(String)
+            ? user.permissions.filter(Boolean).map((permission) => String(permission).trim()).filter(Boolean)
             : [];
         const roles = Array.isArray(user.roles)
-            ? user.roles.filter(Boolean).map(String)
-            : (typeof user.role === 'string' && user.role.trim() ? [user.role.trim()] : []);
+            ? user.roles.filter(Boolean).map((role) => String(role).trim().toLowerCase())
+            : (typeof user.role === 'string' && user.role.trim() ? [String(user.role).trim().toLowerCase()] : []);
 
         const set = new Set(explicit);
         roles.forEach((role) => {
             const mapped = rolePermissions[role] || [];
-            mapped.forEach((permission) => set.add(permission));
+            mapped.forEach((permission) => set.add(String(permission).trim()));
         });
 
         return Array.from(set);
@@ -123,8 +123,8 @@
         }
 
         const roles = Array.isArray(user.roles) && user.roles.length > 0
-            ? user.roles.map(String)
-            : (typeof user.role === 'string' && user.role.trim() ? [user.role.trim()] : ['user']);
+            ? user.roles.map((role) => String(role).trim().toLowerCase()).filter(Boolean)
+            : (typeof user.role === 'string' && user.role.trim() ? [String(user.role).trim().toLowerCase()] : ['user']);
 
         return {
             id: String(user.id || generateUuid()),
@@ -504,8 +504,8 @@
                 displayName: userData.displayName || username,
                 email: userData.email || '',
                 status: userData.status || 'active',
-                roles: Array.isArray(userData.roles) && userData.roles.length > 0 ? userData.roles.map(String) : [userData.role || 'user'],
-                permissions: userData.permissions || [],
+                roles: Array.isArray(userData.roles) && userData.roles.length > 0 ? userData.roles.map((role) => String(role).trim().toLowerCase()).filter(Boolean) : [String(userData.role || 'user').trim().toLowerCase() || 'user'],
+                permissions: Array.isArray(userData.permissions) ? userData.permissions.map((permission) => String(permission).trim()).filter(Boolean) : [],
                 protected: !!userData.protected,
                 createdAt,
                 updatedAt: createdAt,
@@ -579,8 +579,8 @@
                 ...currentUser,
                 ...updates,
                 updatedAt: new Date().toISOString(),
-                roles: Array.isArray(updates.roles) ? updates.roles.map(String) : currentUser.roles,
-                permissions: Array.isArray(updates.permissions) ? updates.permissions.map(String) : currentUser.permissions,
+                roles: Array.isArray(updates.roles) ? updates.roles.map((role) => String(role).trim().toLowerCase()).filter(Boolean) : currentUser.roles,
+                permissions: Array.isArray(updates.permissions) ? updates.permissions.map((permission) => String(permission).trim()).filter(Boolean) : currentUser.permissions,
                 protected: typeof updates.protected === 'boolean' ? updates.protected : currentUser.protected,
                 metadata: updates.metadata && typeof updates.metadata === 'object' ? { ...currentUser.metadata, ...updates.metadata } : currentUser.metadata
             };

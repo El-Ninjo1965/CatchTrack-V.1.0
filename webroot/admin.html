@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Platform Administration</title>
+    <title data-app-title>Platform Administration</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body data-page="admin">
@@ -19,7 +19,7 @@
 
     <div id="authPanel" class="auth-shell">
       <div class="auth-card">
-        <h2>Platform Administration</h2>
+      <h2 data-auth-title>Platform Administration</h2>
         <p class="subtle">Sign in to access the administrator workspace.</p>
         <div class="form-grid">
           <div class="form-field">
@@ -39,13 +39,17 @@
     </div>
 
     <div id="appShell" class="app-shell hidden">
-      <aside class="sidebar">
-        <div class="brand-box">
-          <div class="brand-mark">P</div>
+      <aside class="sidebar shared-shell-sidebar">
+        <div class="brand-box shared-shell-brand">
+          <div id="brandMark" class="brand-mark shared-shell-mark">P</div>
           <div>
-            <div class="brand-name">Platform</div>
-            <div class="brand-subtitle">Administration</div>
+            <div id="brandName" class="brand-name shared-shell-name">Platform</div>
+            <div id="brandSubtitle" class="brand-subtitle">Administration</div>
           </div>
+        </div>
+        <div class="nav-section shared-shell-nav-section">
+          <div class="nav-section-title">Application</div>
+          <div id="appModuleNav" class="nav-list shared-shell-nav"></div>
         </div>
         <div class="user-card">
           <div id="currentUserInitial" class="avatar">D</div>
@@ -56,31 +60,12 @@
         </div>
         <div class="nav-section">
           <div class="nav-section-title">Administration</div>
-          <div id="userMenu" class="nav-list">
-            <button type="button" class="nav-item active" data-view="admin:dashboard">Dashboard</button>
-            <button type="button" class="nav-item" data-view="admin:apps">Apps</button>
-            <button type="button" class="nav-item" data-view="admin:modules">Modules</button>
-            <button type="button" class="nav-item" data-view="admin:gps">GPS</button>
-            <button type="button" class="nav-item" data-view="admin:marketplace">Marketplace</button>
-            <button type="button" class="nav-item" data-view="admin:connections">Connections</button>
-            <button type="button" class="nav-item" data-view="admin:server">Server</button>
-            <button type="button" class="nav-item" data-view="admin:database">Database</button>
-            <button type="button" class="nav-item" data-view="admin:users">Users</button>
-            <button type="button" class="nav-item" data-view="admin:roles">Roles</button>
-            <button type="button" class="nav-item" data-view="admin:permissions">Permissions</button>
-            <button type="button" class="nav-item" data-view="admin:devices">Devices</button>
-            <button type="button" class="nav-item" data-view="admin:licenses">Licenses</button>
-            <button type="button" class="nav-item" data-view="admin:updates">Updates</button>
-            <button type="button" class="nav-item" data-view="admin:diagnostics">Diagnostics</button>
-            <button type="button" class="nav-item" data-view="admin:audit">Audit</button>
-            <button type="button" class="nav-item" data-view="admin:settings">Settings</button>
-            <button type="button" class="nav-item" data-view="dashboard" data-href="index.html">Back to platform</button>
-          </div>
+          <div id="userMenu" class="nav-list"></div>
         </div>
       </aside>
       <main class="main-panel">
         <div class="topbar">
-          <div class="topbar-title">Platform Administration</div>
+          <div id="topbarTitle" class="topbar-title">Platform Administration</div>
           <div class="header-actions">
             <span id="summaryRoleBadge" class="role-badge developer">developer</span>
             <button id="logoutBtn" class="secondary" type="button">Logout</button>

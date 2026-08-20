@@ -59,6 +59,7 @@
     featureFlags: new Map(),
     normalizeSetupStatus,
     permissions: new Map(),
+    roles: new Map(),
     migrations: [],
     createdAt: new Date().toISOString(),
 
@@ -66,11 +67,34 @@
       this.setFeatureFlag('new-sync-engine', false);
       this.setFeatureFlag('beta-admin', false);
       this.setFeatureFlag('offline-first', true);
+      this.registerRole('user', {
+        description: 'Standard end user.',
+        permissions: ['user:read']
+      });
+      this.registerRole('member', {
+        description: 'Member with basic collaboration access.',
+        permissions: ['user:read']
+      });
+      this.registerRole('manager', {
+        description: 'Management role with restricted write access.',
+        permissions: ['user:read', 'user:write']
+      });
+      this.registerRole('admin', {
+        description: 'Administrators can manage users and system settings.',
+        permissions: ['user:read', 'user:write', 'system:view']
+      });
+      this.registerRole('developer', {
+        description: 'Developer role with module and framework access.',
+        permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update']
+      });
       this.registerPermission('system:view', 'Read system and diagnostics information.');
       this.registerPermission('module:read', 'Read module metadata and status.');
+      this.registerPermission('module:update', 'Update module metadata and runtime state.');
       this.registerPermission('app:read', 'Read app metadata.');
       this.registerPermission('connection:read', 'Read connection metadata.');
       this.registerPermission('connection:write', 'Modify connection metadata.');
+      this.registerPermission('user:read', 'Read user data.');
+      this.registerPermission('user:write', 'Create and update users.');
       return this;
     },
 
@@ -257,6 +281,52 @@
 
     listFeatureFlags() {
       return Array.from(this.featureFlags.entries()).map(([name, value]) => ({ name, value, status: createStatusSnapshot(name, value) }));
+    },
+
+    registerRole(roleId, roleDefinition = {}) {
+      const normalized = normalizeString(roleId, '');
+      if (!normalized) {
+        throw new Error('Role key is required.');
+      }
+
+      const definition = isPlainObject(roleDefinition) ? roleDefinition : {};
+      const permissions = Array.isArray(definition.permissions)
+        ? [...new Set(definition.permissions.filter(Boolean).map((value) => normalizeString(String(value), '')))].filter(Boolean)
+        : [];
+
+      const role = {
+        role: normalized,
+        name: normalizeString(definition.name, normalized),
+        description: normalizeString(definition.description, ''),
+        permissions,
+        isSystem: !!definition.isSystem
+      };
+
+      this.roles.set(normalized, role);
+      permissions.forEach((permission) => {
+        this.registerPermission(permission, definition.permissionDescriptions && definition.permissionDescriptions[permission] ? definition.permissionDescriptions[permission] : '');
+      });
+
+      return { ...role };
+    },
+
+    getRole(roleId) {
+      const normalized = normalizeString(roleId, '');
+      if (!normalized) {
+        return null;
+      }
+      return this.roles.has(normalized) ? { ...this.roles.get(normalized) } : null;
+    },
+
+    getRoleCatalog() {
+      return Array.from(this.roles.values()).map((role) => ({ ...role, permissions: [...role.permissions] }));
+    },
+
+    getPermissionCatalog() {
+      return Array.from(this.permissions.entries()).map(([permission, description]) => ({
+        permission,
+        description: normalizeString(description, '')
+      }));
     },
 
     registerPermission(permission, description = '') {

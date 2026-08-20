@@ -1,0 +1,38 @@
+{
+  "id": "dashboard",
+  "name": "Dashboard",
+  "displayName": "Dashboard",
+  "version": "1.0.0",
+  "type": "app",
+  "description": "Starter dashboard module for the first CatchTrack application shell.",
+  "entry": "index.js",
+  "globalName": "DashboardModule",
+  "permissions": ["module:read"],
+  "capabilities": ["dashboard", "overview"],
+  "dependencies": [],
+  "appId": "catchtrack",
+  "admin": {
+    "title": "Dashboard settings",
+    "description": "Controls for the default overview experience in the CatchTrack app shell.",
+    "settings": [
+      {
+        "key": "showSummaryCards",
+        "path": "moduleSettings.dashboard.showSummaryCards",
+        "label": "Show summary cards",
+        "type": "boolean",
+        "defaultValue": true,
+        "description": "Display the quick overview cards on the dashboard screen."
+      },
+      {
+        "key": "defaultTileCount",
+        "path": "moduleSettings.dashboard.defaultTileCount",
+        "label": "Default card count",
+        "type": "number",
+        "defaultValue": 3,
+        "min": 1,
+        "step": 1,
+        "description": "Number of summary tiles displayed on the landing dashboard."
+      }
+    ]
+  }
+}

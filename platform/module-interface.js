@@ -75,7 +75,10 @@
                     : {},
                 requirements: Array.isArray(manifest.requirements)
                     ? manifest.requirements.filter(Boolean).map(String)
-                    : []
+                    : [],
+                admin: manifest.admin && typeof manifest.admin === 'object'
+                    ? manifest.admin
+                    : null
             };
         },
 
@@ -96,6 +99,7 @@
                 dependencies: [...manifest.dependencies],
                 permissions: [...manifest.permissions],
                 capabilities: [...manifest.capabilities],
+                admin: manifest.admin,
                 manifest,
 
                 install() {

@@ -1,0 +1,18 @@
+{
+  "appId": "catchtrack",
+  "name": "CatchTrack",
+  "displayName": "CatchTrack",
+  "version": "1.0.0",
+  "description": "First neutral application shell for the CatchTrack ecosystem and future module-driven app expansion.",
+  "status": "active",
+  "active": true,
+  "modules": ["dashboard", "gps"],
+  "config": {
+    "framework": "neutral-master-framework",
+    "defaultView": "dashboard",
+    "theme": "neutral",
+    "moduleLayout": "cards"
+  },
+  "permissions": ["system:view", "module:read"],
+  "capabilities": ["dashboard", "gps", "modular-app-shell"]
+}

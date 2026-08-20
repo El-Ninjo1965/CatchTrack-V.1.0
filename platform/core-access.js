@@ -18,27 +18,74 @@
         developer: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update']
     };
 
+    const DEFAULT_ROLE_DEFINITIONS = Object.freeze({
+        user: {
+            role: 'user',
+            name: 'User',
+            description: 'Standard end user.',
+            permissions: ['user:read'],
+            isSystem: true
+        },
+        member: {
+            role: 'member',
+            name: 'Member',
+            description: 'Member with basic collaboration access.',
+            permissions: ['user:read'],
+            isSystem: true
+        },
+        manager: {
+            role: 'manager',
+            name: 'Manager',
+            description: 'Manager with limited write access.',
+            permissions: ['user:read', 'user:write'],
+            isSystem: true
+        },
+        admin: {
+            role: 'admin',
+            name: 'Admin',
+            description: 'Administrator with system access.',
+            permissions: ['user:read', 'user:write', 'system:view'],
+            isSystem: true
+        },
+        developer: {
+            role: 'developer',
+            name: 'Developer',
+            description: 'Developer role with module and framework access.',
+            permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'],
+            isSystem: true
+        }
+    });
+
     const normalizeArray = (value) => Array.isArray(value)
-        ? value.filter(Boolean).map(String)
+        ? value.filter(Boolean).map((entry) => String(entry).trim()).filter(Boolean)
         : [];
 
+    const normalizeRoleName = (value) => String(value || '').trim().toLowerCase();
+    const normalizePermissionName = (value) => String(value || '').trim();
+
+    const getDefaultRoleCatalog = () => Object.entries(DEFAULT_ROLE_DEFINITIONS).map(([role, definition]) => ({
+        ...definition,
+        role,
+        permissions: Array.isArray(definition.permissions) ? [...definition.permissions] : []
+    }));
+
     const normalizeRoles = (user) => {
-        const roles = normalizeArray(user && user.roles);
+        const roles = normalizeArray(user && user.roles).map(normalizeRoleName).filter(Boolean);
         if (roles.length === 0 && user && typeof user.role === 'string' && user.role.trim()) {
-            roles.push(user.role.trim());
+            roles.push(normalizeRoleName(user.role));
         }
-        return roles;
+        return Array.from(new Set(roles));
     };
 
     const expandPermissions = (user) => {
-        const explicit = normalizeArray(user && user.permissions);
+        const explicit = normalizeArray(user && user.permissions).map(normalizePermissionName).filter(Boolean);
         const roles = normalizeRoles(user);
 
         const merged = new Set(explicit);
 
         roles.forEach((role) => {
             const rolePermissions = DEFAULT_ROLE_PERMISSIONS[role] || [];
-            rolePermissions.forEach((permission) => merged.add(permission));
+            rolePermissions.forEach((permission) => merged.add(normalizePermissionName(permission)));
         });
 
         return Array.from(merged);
@@ -61,6 +108,37 @@
             }
 
             return this;
+        },
+
+        getRoleCatalog() {
+            if (window.MasterFramework && typeof window.MasterFramework.getRoleCatalog === 'function') {
+                return window.MasterFramework.getRoleCatalog();
+            }
+            return getDefaultRoleCatalog();
+        },
+
+        getPermissionCatalog() {
+            const roleCatalog = this.getRoleCatalog();
+            const permissions = new Map();
+            roleCatalog.forEach((role) => {
+                (Array.isArray(role.permissions) ? role.permissions : []).forEach((permission) => {
+                    permissions.set(String(permission).trim(), permission);
+                });
+            });
+            return Array.from(permissions.values()).map((permission) => ({
+                permission,
+                description: 'Resolved from the framework role catalog.'
+            }));
+        },
+
+        getRolePermissions(role) {
+            const normalizedRole = normalizeRoleName(role);
+            if (!normalizedRole) {
+                return [];
+            }
+            const catalog = this.getRoleCatalog();
+            const definition = catalog.find((entry) => normalizeRoleName(entry.role) === normalizedRole);
+            return definition && Array.isArray(definition.permissions) ? [...definition.permissions] : (DEFAULT_ROLE_PERMISSIONS[normalizedRole] || []);
         },
 
         can(subject, action, resource = null, context = {}) {
@@ -114,13 +192,15 @@
         },
 
         hasRole(user, role) {
+            const normalizedRole = normalizeRoleName(role);
             const roles = normalizeRoles(user);
-            return roles.includes(role);
+            return roles.includes(normalizedRole);
         },
 
         hasPermission(user, permission) {
+            const normalizedPermission = normalizePermissionName(permission);
             const permissions = expandPermissions(user);
-            return permissions.includes(permission);
+            return permissions.includes(normalizedPermission);
         }
     };
 

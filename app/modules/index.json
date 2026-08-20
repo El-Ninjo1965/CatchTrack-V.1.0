@@ -1,5 +1,19 @@
 [
   {
+    "id": "dashboard",
+    "name": "Dashboard",
+    "displayName": "Dashboard",
+    "version": "1.0.0",
+    "type": "app",
+    "description": "Starter dashboard module for the first CatchTrack application shell.",
+    "entry": "index.js",
+    "globalName": "DashboardModule",
+    "permissions": ["module:read"],
+    "capabilities": ["dashboard", "overview"],
+    "dependencies": [],
+    "appId": "catchtrack"
+  },
+  {
     "id": "gps",
     "name": "GPS",
     "displayName": "GPS",
@@ -10,6 +24,7 @@
     "globalName": "GpsModule",
     "permissions": [],
     "capabilities": ["gps", "geolocation"],
-    "dependencies": []
+    "dependencies": [],
+    "appId": "catchtrack"
   }
 ]

@@ -80,8 +80,15 @@
                     description: module.description || '',
                     dependencies: [...module.dependencies],
                     permissions: [...module.permissions],
-                    capabilities: [...module.capabilities]
+                    capabilities: [...module.capabilities],
+                    admin: module.admin || null
                 };
+            }
+
+            if (!module.admin || typeof module.admin !== 'object') {
+                module.admin = module.manifest && module.manifest.admin && typeof module.manifest.admin === 'object'
+                    ? module.manifest.admin
+                    : null;
             }
 
             return module;

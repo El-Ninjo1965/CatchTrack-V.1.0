@@ -10,6 +10,168 @@
 (() => {
     'use strict';
 
+    const cloneValue = (value) => {
+        if (Array.isArray(value)) {
+            return value.map((entry) => cloneValue(entry));
+        }
+
+        if (value && typeof value === 'object') {
+            return Object.keys(value).reduce((result, key) => {
+                result[key] = cloneValue(value[key]);
+                return result;
+            }, {});
+        }
+
+        return value;
+    };
+
+    const frameworkSettingsSchema = Object.freeze([
+        {
+            id: 'app',
+            title: 'Application',
+            description: 'General application identity and debug settings.',
+            settings: [
+                { key: 'name', path: 'app.name', label: 'Application name', type: 'text', defaultValue: 'Neutral Platform' },
+                { key: 'version', path: 'app.version', label: 'Application version', type: 'text', defaultValue: '1.0.0' },
+                { key: 'debug', path: 'app.debug', label: 'Debug mode', type: 'boolean', defaultValue: true },
+                { key: 'logging.level', path: 'app.logging.level', label: 'Log level', type: 'select', defaultValue: 'debug', options: ['debug', 'info', 'warn', 'error'] },
+                { key: 'logging.maxLogs', path: 'app.logging.maxLogs', label: 'Max log entries', type: 'number', defaultValue: 1000, min: 10, step: 10 }
+            ]
+        },
+        {
+            id: 'api',
+            title: 'API',
+            description: 'Connectivity behaviour for online services.',
+            settings: [
+                { key: 'baseUrl', path: 'api.baseUrl', label: 'Base URL', type: 'text', defaultValue: 'http://localhost:3000/api' },
+                { key: 'timeout', path: 'api.timeout', label: 'Request timeout (ms)', type: 'number', defaultValue: 30000, min: 1000, step: 500 },
+                { key: 'retries', path: 'api.retries', label: 'Retry count', type: 'number', defaultValue: 3, min: 0, step: 1 },
+                { key: 'retryDelay', path: 'api.retryDelay', label: 'Retry delay (ms)', type: 'number', defaultValue: 1000, min: 0, step: 100 }
+            ]
+        },
+        {
+            id: 'modules',
+            title: 'Module runtime',
+            description: 'Default behaviour for module discovery and activation.',
+            settings: [
+                { key: 'autoLoad', path: 'modules.autoLoad', label: 'Auto-load modules', type: 'boolean', defaultValue: true },
+                { key: 'autoActivate', path: 'modules.autoActivate', label: 'Auto-activate modules', type: 'boolean', defaultValue: true },
+                { key: 'moduleTimeout', path: 'modules.moduleTimeout', label: 'Module timeout (ms)', type: 'number', defaultValue: 5000, min: 1000, step: 500 }
+            ]
+        },
+        {
+            id: 'security',
+            title: 'Security',
+            description: 'Framework-wide session and request safety defaults.',
+            settings: [
+                { key: 'sessionTimeout', path: 'security.sessionTimeout', label: 'Session timeout (ms)', type: 'number', defaultValue: 3600000, min: 60000, step: 60000 },
+                { key: 'csrfProtection', path: 'security.csrfProtection', label: 'CSRF protection', type: 'boolean', defaultValue: true },
+                { key: 'allowCors', path: 'security.allowCors', label: 'Allow CORS', type: 'boolean', defaultValue: false }
+            ]
+        },
+        {
+            id: 'ui',
+            title: 'User interface',
+            description: 'Shared UI behaviour for the application and admin workspace.',
+            settings: [
+                { key: 'theme', path: 'ui.theme', label: 'Theme', type: 'text', defaultValue: 'neutral' },
+                { key: 'language', path: 'ui.language', label: 'Language', type: 'text', defaultValue: 'en' },
+                { key: 'animationsEnabled', path: 'ui.animationsEnabled', label: 'Animations enabled', type: 'boolean', defaultValue: true },
+                { key: 'updateInterval', path: 'ui.updateInterval', label: 'Refresh interval (ms)', type: 'number', defaultValue: 5000, min: 1000, step: 500 }
+            ]
+        },
+        {
+            id: 'features',
+            title: 'Feature flags',
+            description: 'Globally enabled framework areas.',
+            settings: [
+                { key: 'userModule', path: 'features.userModule', label: 'User module', type: 'boolean', defaultValue: true },
+                { key: 'adminModule', path: 'features.adminModule', label: 'Admin module', type: 'boolean', defaultValue: true },
+                { key: 'advancedLogging', path: 'features.advancedLogging', label: 'Advanced logging', type: 'boolean', defaultValue: false },
+                { key: 'betaFeatures', path: 'features.betaFeatures', label: 'Beta features', type: 'boolean', defaultValue: false },
+                { key: 'maintenanceMode', path: 'features.maintenanceMode', label: 'Maintenance mode', type: 'boolean', defaultValue: false }
+            ]
+        }
+    ]);
+
+    const normalizeSettingField = (field, moduleId = null, index = 0) => {
+        if (!field || typeof field !== 'object') {
+            return null;
+        }
+
+        const key = typeof field.key === 'string' && field.key.trim()
+            ? field.key.trim()
+            : typeof field.path === 'string' && field.path.trim()
+                ? field.path.trim().split('.').pop()
+                : `setting-${index + 1}`;
+        const path = typeof field.path === 'string' && field.path.trim()
+            ? field.path.trim()
+            : moduleId
+                ? `moduleSettings.${moduleId}.${key}`
+                : key;
+
+        return {
+            key,
+            path,
+            label: typeof field.label === 'string' && field.label.trim() ? field.label.trim() : key,
+            type: typeof field.type === 'string' && field.type.trim() ? field.type.trim() : 'text',
+            description: typeof field.description === 'string' ? field.description : '',
+            options: Array.isArray(field.options) ? [...field.options] : [],
+            min: typeof field.min === 'number' ? field.min : null,
+            max: typeof field.max === 'number' ? field.max : null,
+            step: typeof field.step === 'number' ? field.step : null,
+            defaultValue: Object.prototype.hasOwnProperty.call(field, 'defaultValue')
+                ? cloneValue(field.defaultValue)
+                : ''
+        };
+    };
+
+    const normalizeSection = (section, moduleId = null) => {
+        if (!section || typeof section !== 'object') {
+            return null;
+        }
+
+        const id = typeof section.id === 'string' && section.id.trim()
+            ? section.id.trim()
+            : moduleId
+                ? `module-${moduleId}`
+                : 'section';
+        const settings = Array.isArray(section.settings)
+            ? section.settings.map((field, index) => normalizeSettingField(field, moduleId, index)).filter(Boolean)
+            : [];
+
+        return {
+            id,
+            title: typeof section.title === 'string' && section.title.trim() ? section.title.trim() : id,
+            description: typeof section.description === 'string' ? section.description : '',
+            moduleId,
+            settings
+        };
+    };
+
+    const createModuleSettingsSection = (module) => {
+        if (!module || !module.id) {
+            return null;
+        }
+
+        const adminDefinition = module.admin && typeof module.admin === 'object'
+            ? module.admin
+            : module.manifest && module.manifest.admin && typeof module.manifest.admin === 'object'
+                ? module.manifest.admin
+                : null;
+
+        if (!adminDefinition || !Array.isArray(adminDefinition.settings) || adminDefinition.settings.length === 0) {
+            return null;
+        }
+
+        return normalizeSection({
+            id: `module-${module.id}`,
+            title: adminDefinition.title || module.displayName || module.name || module.id,
+            description: adminDefinition.description || module.description || '',
+            settings: adminDefinition.settings
+        }, module.id);
+    };
+
     const AdminModule = {
         name: 'admin-module',
         version: '1.0.0',
@@ -30,13 +192,162 @@
                     }
                 });
 
+                window.Core.on('module:registered', () => {
+                    this.seedModuleSettings();
+                });
+
+                window.Core.on('module:activated', () => {
+                    this.seedModuleSettings();
+                });
+
                 window.Core.emit('admin:initialized', {
                     timestamp: new Date().toISOString(),
                     startedAt: this.startedAt
                 });
             }
 
+            this.seedFrameworkSettings();
+            this.seedModuleSettings();
+
             return this;
+        },
+
+        getConfigManager() {
+            return window.ConfigManager && typeof window.ConfigManager.getPath === 'function' && typeof window.ConfigManager.setPath === 'function'
+                ? window.ConfigManager
+                : null;
+        },
+
+        ensureSettingDefault(path, defaultValue) {
+            const manager = this.getConfigManager();
+            if (!manager || typeof path !== 'string' || !path.trim()) {
+                return false;
+            }
+
+            if (manager.getPath(path) !== undefined) {
+                return false;
+            }
+
+            manager.setPath(path, cloneValue(defaultValue));
+            return true;
+        },
+
+        hydrateSettingsSection(section) {
+            const manager = this.getConfigManager();
+            const normalized = normalizeSection(section, section && section.moduleId ? section.moduleId : null);
+            if (!normalized) {
+                return null;
+            }
+
+            return {
+                ...normalized,
+                settings: normalized.settings.map((setting) => {
+                    this.ensureSettingDefault(setting.path, setting.defaultValue);
+                    return {
+                        ...setting,
+                        value: manager ? cloneValue(manager.getPath(setting.path, setting.defaultValue)) : cloneValue(setting.defaultValue)
+                    };
+                })
+            };
+        },
+
+        seedFrameworkSettings() {
+            frameworkSettingsSchema.forEach((section) => {
+                section.settings.forEach((setting) => {
+                    this.ensureSettingDefault(setting.path, setting.defaultValue);
+                });
+            });
+        },
+
+        seedModuleSettings() {
+            this.getModuleCatalog()
+                .map((module) => createModuleSettingsSection(module))
+                .filter(Boolean)
+                .forEach((section) => {
+                    section.settings.forEach((setting) => {
+                        this.ensureSettingDefault(setting.path, setting.defaultValue);
+                    });
+                });
+        },
+
+        getFrameworkSettingsSections() {
+            return frameworkSettingsSchema
+                .map((section) => this.hydrateSettingsSection(section))
+                .filter(Boolean);
+        },
+
+        getModuleSettingsSections() {
+            return this.getModuleCatalog()
+                .map((module) => createModuleSettingsSection(module))
+                .filter(Boolean)
+                .map((section) => this.hydrateSettingsSection(section))
+                .filter(Boolean);
+        },
+
+        getSettingsCatalog() {
+            this.seedFrameworkSettings();
+            this.seedModuleSettings();
+
+            return {
+                ok: true,
+                data: {
+                    framework: this.getFrameworkSettingsSections(),
+                    modules: this.getModuleSettingsSections()
+                }
+            };
+        },
+
+        updateSettings(updates, actor = 'system') {
+            if (!Array.isArray(updates) || updates.length === 0) {
+                return { ok: false, code: 'INVALID_SETTINGS', message: 'At least one setting update is required.' };
+            }
+
+            const manager = this.getConfigManager();
+            if (!manager) {
+                return { ok: false, code: 'CONFIG_MANAGER_UNAVAILABLE', message: 'Config manager is unavailable.' };
+            }
+
+            const persistedRoots = new Set();
+            const applied = [];
+
+            updates.forEach((update) => {
+                if (!update || typeof update.path !== 'string' || !update.path.trim()) {
+                    throw new Error('Each setting update requires a valid path.');
+                }
+
+                manager.setPath(update.path.trim(), cloneValue(update.value));
+                persistedRoots.add(update.path.trim().split('.')[0]);
+                applied.push({
+                    path: update.path.trim(),
+                    value: cloneValue(update.value)
+                });
+            });
+
+            persistedRoots.forEach((rootKey) => {
+                if (typeof manager.persist === 'function') {
+                    manager.persist(rootKey);
+                }
+            });
+
+            if (window.CoreAudit && typeof window.CoreAudit.record === 'function') {
+                window.CoreAudit.record(actor, 'admin:settings:update', 'config', 'ok', {
+                    updated: applied.map((entry) => entry.path)
+                });
+            }
+
+            if (window.Core) {
+                window.Core.emit('admin:settings:updated', {
+                    updated: applied
+                });
+            }
+
+            return {
+                ok: true,
+                data: {
+                    updated: applied,
+                    persistedRoots: Array.from(persistedRoots)
+                }
+            };
         },
 
         getUptime() {
@@ -92,6 +403,53 @@
             return window.UserModule.getCurrentUser();
         },
 
+        getRoleCatalog() {
+            if (window.CoreAccess && typeof window.CoreAccess.getRoleCatalog === 'function') {
+                return window.CoreAccess.getRoleCatalog();
+            }
+
+            return [
+                { role: 'user', name: 'User', description: 'Standard end user.', permissions: ['user:read'], isSystem: true },
+                { role: 'member', name: 'Member', description: 'Member with basic collaboration access.', permissions: ['user:read'], isSystem: true },
+                { role: 'manager', name: 'Manager', description: 'Manager with limited write access.', permissions: ['user:read', 'user:write'], isSystem: true },
+                { role: 'admin', name: 'Admin', description: 'Administrator with system access.', permissions: ['user:read', 'user:write', 'system:view'], isSystem: true },
+                { role: 'developer', name: 'Developer', description: 'Developer role with module and framework access.', permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'], isSystem: true }
+            ];
+        },
+
+        getPermissionCatalog() {
+            if (window.CoreAccess && typeof window.CoreAccess.getPermissionCatalog === 'function') {
+                return window.CoreAccess.getPermissionCatalog();
+            }
+
+            const permissions = new Map();
+            this.getRoleCatalog().forEach((role) => {
+                (Array.isArray(role.permissions) ? role.permissions : []).forEach((permission) => {
+                    permissions.set(String(permission).trim(), permission);
+                });
+            });
+
+            return Array.from(permissions.values()).map((permission) => ({
+                permission,
+                description: 'Permission resolved from the framework role catalog.'
+            }));
+        },
+
+        getModuleCatalog() {
+            if (!window.ModuleRegistry || typeof window.ModuleRegistry.getAll !== 'function') {
+                return [];
+            }
+
+            return window.ModuleRegistry.getAll().map((module) => {
+                const section = createModuleSettingsSection(module);
+                return {
+                    ...module,
+                    admin: module.admin || (module.manifest && module.manifest.admin) || null,
+                    adminSettingsCount: section ? section.settings.length : 0
+                };
+            });
+        },
+
         getModuleState(moduleId) {
             if (!moduleId || typeof moduleId !== 'string') {
                 return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
@@ -114,7 +472,9 @@
                     status: module.status || (module.active ? 'enabled' : 'available'),
                     active: !!module.active,
                     permissions: Array.isArray(module.permissions) ? [...module.permissions] : [],
-                    capabilities: Array.isArray(module.capabilities) ? [...module.capabilities] : []
+                    capabilities: Array.isArray(module.capabilities) ? [...module.capabilities] : [],
+                    admin: module.admin || (module.manifest && module.manifest.admin) || null,
+                    adminSettingsCount: createModuleSettingsSection(module)?.settings.length || 0
                 }
             };
         },

@@ -8,13 +8,17 @@
   </head>
   <body class="user-app">
     <div class="user-app-shell">
-      <header class="user-app-header">
-        <div class="user-app-identity"><span class="user-app-mark" aria-hidden="true">N</span><span class="user-app-brand"></span></div>
-        <div class="user-app-actions">
-          <button id="userLoginButton" class="user-app-action" type="button">Login</button>
+      <header class="user-app-header shared-shell-header">
+        <div class="user-app-identity shared-shell-brand">
+          <span id="userAppMark" class="user-app-mark shared-shell-mark" aria-hidden="true">N</span>
+          <div>
+            <span class="user-app-brand shared-shell-name"></span>
+            <span class="shared-shell-subtitle">Active application</span>
+          </div>
         </div>
+        <div id="userAppActions" class="user-app-actions shared-shell-actions"></div>
       </header>
-      <nav id="userAppNav" class="user-app-nav" aria-label="Main navigation"></nav>
+      <nav id="userAppNav" class="user-app-nav shared-shell-nav" aria-label="Application navigation"></nav>
       <main id="userAppContent" class="user-app-content" tabindex="-1"></main>
     </div>
     <script src="../platform/core.js"></script>
@@ -47,33 +51,6 @@
     <script src="../platform/media-manager.js"></script>
     <script src="../platform/local-auth.js"></script>
     <script src="../platform/app.js"></script>
-    <script>
-      (() => {
-        const getAppName = () => {
-          const appConfig = window.ConfigManager && typeof window.ConfigManager.get === 'function'
-            ? window.ConfigManager.get('app', {})
-            : {};
-          const configuredName = appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
-            ? appConfig.name.trim()
-            : 'Neutral Platform';
-          return configuredName;
-        };
-
-        const applyAppName = () => {
-          const appName = getAppName();
-          const title = document.querySelector('[data-app-title]');
-          if (title) title.textContent = appName;
-          const brand = document.querySelector('.user-app-brand');
-          if (brand) brand.textContent = appName;
-        };
-
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', applyAppName, { once: true });
-        } else {
-          applyAppName();
-        }
-      })();
-    </script>
     <script src="user-app.js"></script>
   </body>
 </html>

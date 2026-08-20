@@ -9,7 +9,7 @@
       : pageType === 'setup'
         ? 'setup:overview'
         : 'dashboard';
-  const state = { activeView: defaultView };
+  const state = { activeView: defaultView, activeSettingsModuleId: null };
 
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -26,6 +26,11 @@
       ? appConfig.name.trim()
       : 'Neutral Platform';
     return name;
+  };
+
+  const getAppMark = () => {
+    const name = getConfiguredAppName().trim();
+    return name ? name.charAt(0).toUpperCase() : 'A';
   };
 
   const getCurrentUser = () => {
@@ -50,6 +55,25 @@
 
   const canViewAdmin = (user) => !!user && (hasRole(user, 'admin') || hasPermission(user, 'system:view'));
   const canViewDeveloper = (user) => !!user && (hasRole(user, 'developer') || hasPermission(user, 'module:read'));
+  const parseCommaList = (value) => String(value || '')
+    .split(/[\n,]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const getRoleCatalog = () => {
+    if (window.AdminModule && typeof window.AdminModule.getRoleCatalog === 'function') {
+      return window.AdminModule.getRoleCatalog();
+    }
+    if (window.CoreAccess && typeof window.CoreAccess.getRoleCatalog === 'function') {
+      return window.CoreAccess.getRoleCatalog();
+    }
+    return [
+      { role: 'user', name: 'User', permissions: ['user:read'], description: 'Standard end user.' },
+      { role: 'member', name: 'Member', permissions: ['user:read'], description: 'Member with basic access.' },
+      { role: 'manager', name: 'Manager', permissions: ['user:read', 'user:write'], description: 'Manager.' },
+      { role: 'admin', name: 'Admin', permissions: ['user:read', 'user:write', 'system:view'], description: 'Administrator.' },
+      { role: 'developer', name: 'Developer', permissions: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'], description: 'Developer.' }
+    ];
+  };
 
   const resolveRoleRoute = (user) => {
     if (!user) {
@@ -78,8 +102,28 @@
     }).map((module) => ({
       id: module.id,
       name: module.name || module.id,
-      status: module.status || (module.active ? 'enabled' : 'available')
+      status: module.status || (module.active ? 'enabled' : 'available'),
+      description: module.description || '',
+      capabilities: Array.isArray(module.capabilities) ? [...module.capabilities] : []
     }));
+  };
+
+  const applyShellBranding = () => {
+    const appName = getConfiguredAppName();
+    const brandName = document.getElementById('brandName');
+    const brandMark = document.getElementById('brandMark');
+    const brandSubtitle = document.getElementById('brandSubtitle');
+    const topbarTitle = document.getElementById('topbarTitle');
+    const authTitle = document.querySelector('[data-auth-title]');
+    const title = document.querySelector('[data-app-title]');
+
+    document.title = pageType === 'admin' ? `${appName} Administration` : appName;
+    if (title) title.textContent = document.title;
+    if (authTitle) authTitle.textContent = `${appName} Administration`;
+    if (brandName) brandName.textContent = appName;
+    if (brandMark) brandMark.textContent = getAppMark();
+    if (brandSubtitle) brandSubtitle.textContent = pageType === 'admin' ? 'Administration' : 'Workspace';
+    if (topbarTitle) topbarTitle.textContent = pageType === 'admin' ? `${appName} Administration` : appName;
   };
 
   const renderFrameworkPreview = () => {
@@ -103,6 +147,7 @@
   };
 
   const renderSummary = () => {
+    applyShellBranding();
     const currentUser = getCurrentUser();
     const currentUserName = document.getElementById('currentUserName');
     const currentUserInitial = document.getElementById('currentUserInitial');
@@ -147,6 +192,30 @@
     }
   };
 
+  const renderAppModuleNav = () => {
+    const appModuleNav = document.getElementById('appModuleNav');
+    if (!appModuleNav) return;
+
+    const modules = getVisibleModules();
+    const primaryItems = [
+      { id: 'admin:dashboard', label: getConfiguredAppName() },
+      ...modules.map((module) => ({ id: `admin:module:${module.id}`, label: module.name || module.id }))
+    ];
+
+    appModuleNav.innerHTML = primaryItems.map((item) => `
+      <button type="button" class="nav-item ${state.activeView === item.id ? 'active' : ''}" data-app-nav="${escapeHtml(item.id)}">${escapeHtml(item.label)}</button>
+    `).join('') + '<a class="nav-item" href="index.html">Open app</a>';
+
+    appModuleNav.querySelectorAll('[data-app-nav]').forEach((button) => {
+      button.addEventListener('click', () => {
+        state.activeView = button.dataset.appNav;
+        renderAppModuleNav();
+        renderUserMenu();
+        renderPageContent();
+      });
+    });
+  };
+
   const fetchJson = async (url, fallback = { ok: false }, options = {}) => {
     try {
       const response = await fetch(url, { cache: 'no-store', ...options });
@@ -180,6 +249,81 @@
     headers: { 'Content-Type': 'application/json', ...getCurrentRoleHeaders() },
     body: JSON.stringify(payload)
   });
+
+  const parseSettingValue = (input) => {
+    if (!input) return '';
+    const type = input.dataset.settingType || input.type || 'text';
+
+    if (type === 'boolean' || input.type === 'checkbox') {
+      return !!input.checked;
+    }
+
+    if (type === 'number') {
+      return input.value === '' ? '' : Number(input.value);
+    }
+
+    return input.value;
+  };
+
+  const renderSettingInput = (setting) => {
+    const path = escapeHtml(setting.path || '');
+    const label = escapeHtml(setting.label || setting.key || 'Setting');
+    const description = setting.description ? `<div class="small-muted">${escapeHtml(setting.description)}</div>` : '';
+
+    if (setting.type === 'boolean') {
+      return `
+        <div class="form-field">
+          <label><input type="checkbox" data-setting-path="${path}" data-setting-type="boolean" ${setting.value ? 'checked' : ''} /> ${label}</label>
+          ${description}
+        </div>
+      `;
+    }
+
+    if (setting.type === 'select') {
+      const options = Array.isArray(setting.options) ? setting.options : [];
+      return `
+        <div class="form-field">
+          <label>${label}</label>
+          <select data-setting-path="${path}" data-setting-type="select">
+            ${options.map((option) => `<option value="${escapeHtml(option)}" ${String(setting.value) === String(option) ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+          </select>
+          ${description}
+        </div>
+      `;
+    }
+
+    const min = typeof setting.min === 'number' ? ` min="${setting.min}"` : '';
+    const max = typeof setting.max === 'number' ? ` max="${setting.max}"` : '';
+    const step = typeof setting.step === 'number' ? ` step="${setting.step}"` : '';
+    const inputType = setting.type === 'number' ? 'number' : 'text';
+    const value = setting.value === undefined || setting.value === null ? '' : setting.value;
+
+    return `
+      <div class="form-field">
+        <label>${label}</label>
+        <input type="${inputType}" value="${escapeHtml(value)}" data-setting-path="${path}" data-setting-type="${escapeHtml(setting.type || 'text')}"${min}${max}${step} />
+        ${description}
+      </div>
+    `;
+  };
+
+  const renderSettingsSection = (section, kind = 'framework') => `
+    <div class="card" data-settings-section="${escapeHtml(section.id || 'settings')}" data-settings-kind="${escapeHtml(kind)}" data-module-id="${escapeHtml(section.moduleId || '')}">
+      <div class="card-header">
+        <h2 class="card-title">${escapeHtml(section.title || 'Settings')}</h2>
+      </div>
+      <div class="content-wrap">
+        ${section.description ? `<div class="small-muted" style="margin-bottom: 14px;">${escapeHtml(section.description)}</div>` : ''}
+        <form class="form-grid">
+          ${Array.isArray(section.settings) ? section.settings.map((setting) => renderSettingInput(setting)).join('') : ''}
+          <div class="action-list">
+            <button type="button" class="primary" data-admin-action="config-section-save">Save section</button>
+          </div>
+        </form>
+        <div class="message info" data-settings-status style="margin-top: 14px;">Changes are stored locally in the active framework runtime.</div>
+      </div>
+    </div>
+  `;
 
   const bindActionButtons = () => {
     document.querySelectorAll('[data-admin-action]').forEach((button) => {
@@ -260,11 +404,14 @@
             if (!actor) {
               throw new Error('User management requires an authenticated admin or developer.');
             }
+            const rawRole = document.getElementById('newUserRoleInput') ? document.getElementById('newUserRoleInput').value : 'user';
+            const rawPermissions = document.getElementById('newUserPermissionsInput') ? document.getElementById('newUserPermissionsInput').value : '';
             const payload = {
               username: document.getElementById('newUserUsernameInput') ? document.getElementById('newUserUsernameInput').value : '',
               displayName: document.getElementById('newUserDisplayNameInput') ? document.getElementById('newUserDisplayNameInput').value : '',
               email: document.getElementById('newUserEmailInput') ? document.getElementById('newUserEmailInput').value : '',
-              roles: [document.getElementById('newUserRoleInput') ? document.getElementById('newUserRoleInput').value : 'user'].filter(Boolean)
+              roles: parseCommaList(rawRole || 'user').length ? parseCommaList(rawRole || 'user') : ['user'],
+              permissions: parseCommaList(rawPermissions)
             };
             if (!window.AdminModule || typeof window.AdminModule.createUser !== 'function') {
               throw new Error('User management is unavailable.');
@@ -273,6 +420,31 @@
             if (statusTarget) {
               statusTarget.textContent = result && result.ok ? 'User created.' : (result && result.message ? result.message : 'User creation failed.');
               statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              await renderAdminUsers();
+            }
+          }
+
+          if (action === 'user-delete') {
+            const actor = getCurrentUser();
+            const userId = button.dataset.userId;
+            if (!actor) {
+              throw new Error('User management requires an authenticated admin or developer.');
+            }
+            if (!userId) {
+              throw new Error('User ID is required for delete action.');
+            }
+            if (!window.AdminModule || typeof window.AdminModule.deleteUser !== 'function') {
+              throw new Error('User management is unavailable.');
+            }
+            const result = await window.AdminModule.deleteUser(userId, actor);
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'User deleted.' : (result && result.message ? result.message : 'User deletion failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              await renderAdminUsers();
             }
           }
 
@@ -287,6 +459,34 @@
               statusTarget.textContent = result && result.updates && result.updates.message ? result.updates.message : 'Update check failed.';
               statusTarget.className = result && result.ok ? 'message success' : 'message error';
             }
+          }
+
+          if (action === 'config-section-save') {
+            const section = button.closest('[data-settings-section]');
+            const sectionStatusTarget = section ? section.querySelector('[data-settings-status]') : statusTarget;
+            if (!section) {
+              throw new Error('Settings section not found.');
+            }
+
+            if (!window.AdminModule || typeof window.AdminModule.updateSettings !== 'function') {
+              throw new Error('Administrative settings are unavailable.');
+            }
+
+            const updates = Array.from(section.querySelectorAll('[data-setting-path]')).map((input) => ({
+              path: input.dataset.settingPath,
+              value: parseSettingValue(input)
+            }));
+
+            const result = await window.AdminModule.updateSettings(updates, getCurrentUser() || 'system');
+            if (sectionStatusTarget) {
+              sectionStatusTarget.textContent = result && result.ok
+                ? 'Settings saved successfully.'
+                : (result && result.message ? result.message : 'Settings save failed.');
+              sectionStatusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            renderSummary();
+            renderAppModuleNav();
+            renderUserMenu();
           }
 
           if (action === 'setup-save') {
@@ -312,10 +512,19 @@
               }
             };
             const result = await postJson('/api/setup', payload, { ok: false, setup: {} });
+            if (window.ConfigManager && typeof window.ConfigManager.setPath === 'function') {
+              window.ConfigManager.setPath('app.name', payload.appName);
+              if (typeof window.ConfigManager.persist === 'function') {
+                window.ConfigManager.persist('app');
+              }
+            }
             if (statusTarget) {
               statusTarget.textContent = result && result.ok ? 'Setup saved successfully.' : 'Setup could not be saved.';
               statusTarget.className = result && result.ok ? 'message success' : 'message error';
             }
+            renderSummary();
+            renderAppModuleNav();
+            renderUserMenu();
           }
 
           if (action === 'setup-activate') {
@@ -341,9 +550,15 @@
     });
   };
 
-  const getModuleCatalog = () => window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
-    ? window.ModuleRegistry.getAll()
-    : [];
+  const getModuleCatalog = () => {
+    if (window.AdminModule && typeof window.AdminModule.getModuleCatalog === 'function') {
+      return window.AdminModule.getModuleCatalog();
+    }
+
+    return window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
+      ? window.ModuleRegistry.getAll()
+      : [];
+  };
 
   const getFrameworkVersion = () => {
     if (window.CoreConfig && window.CoreConfig.core && typeof window.CoreConfig.core.version === 'string') {
@@ -517,7 +732,7 @@
           <div class="table-wrap" style="margin-top: 18px;">
             <table>
               <thead>
-                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Dependencies</th><th>Capabilities</th><th>Actions</th></tr>
+                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Dependencies</th><th>Capabilities</th><th>Admin</th><th>Actions</th></tr>
               </thead>
               <tbody>
                 ${modules.length ? modules.map((module) => {
@@ -531,14 +746,16 @@
                       <td>${escapeHtml(module.type || 'framework')}</td>
                       <td>${escapeHtml(Array.isArray(module.dependencies) ? module.dependencies.join(', ') : '')}</td>
                       <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
+                      <td>${module.adminSettingsCount ? `<span class="status-badge ok">${module.adminSettingsCount} setting${module.adminSettingsCount === 1 ? '' : 's'}</span>` : '<span class="status-badge warning">No schema</span>'}</td>
                       <td>
                         <div class="action-list" style="gap: 8px; justify-content: flex-start;">
                           <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id || '')}">${actionState.label}</button>
+                          ${module.adminSettingsCount ? `<button type="button" class="secondary" data-admin-open-settings data-module-id="${escapeHtml(module.id || '')}">Open settings</button>` : ''}
                         </div>
                       </td>
                     </tr>
                   `;
-                }).join('') : '<tr><td colspan="8">No modules discovered.</td></tr>'}
+                }).join('') : '<tr><td colspan="9">No modules discovered.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -569,6 +786,82 @@
         renderAdminModules();
       });
     });
+
+    page.querySelectorAll('[data-admin-open-settings]').forEach((button) => {
+      button.addEventListener('click', () => {
+        state.activeSettingsModuleId = button.dataset.moduleId || null;
+        state.activeView = 'admin:settings';
+        renderPageContent();
+      });
+    });
+  };
+
+  const renderAdminModuleWorkspace = (moduleId) => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const module = getModuleCatalog().find((entry) => entry.id === moduleId);
+    if (!module) {
+      renderAdminModules();
+      return;
+    }
+
+    const status = getModuleActionState(module);
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">${escapeHtml(module.name || module.id)}</h2>
+          <span class="status-badge ${status.active ? 'ok' : 'warn'}">${escapeHtml(status.status)}</span>
+        </div>
+        <div class="content-wrap">
+          <div class="small-muted">${escapeHtml(module.description || 'This module does not expose additional descriptive metadata yet.')}</div>
+          <div class="action-list">
+            <button type="button" class="secondary" data-admin-open-settings data-module-id="${escapeHtml(module.id)}">Open settings</button>
+            <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id)}">${escapeHtml(status.label)}</button>
+          </div>
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Module ID</span><div class="metric-value">${escapeHtml(module.id)}</div></div>
+            <div class="metric"><span class="metric-label">Capabilities</span><div class="metric-value" style="font-size:0.95rem;">${escapeHtml(Array.isArray(module.capabilities) && module.capabilities.length ? module.capabilities.join(', ') : '—')}</div></div>
+            <div class="metric"><span class="metric-label">Admin schema</span><div class="metric-value">${module.adminSettingsCount || 0}</div></div>
+          </div>
+          <div id="adminModulePreview" class="admin-module-preview"></div>
+        </div>
+      </div>
+    `;
+
+    const preview = document.getElementById('adminModulePreview');
+    if (preview && typeof module.renderUserInterface === 'function') {
+      module.renderUserInterface(preview);
+    } else if (preview) {
+      preview.innerHTML = '<div class="empty-state">This module does not provide a live preview yet.</div>';
+    }
+
+    const settingsButton = page.querySelector('[data-admin-open-settings]');
+    if (settingsButton) {
+      settingsButton.addEventListener('click', () => {
+        state.activeSettingsModuleId = module.id;
+        state.activeView = 'admin:settings';
+        renderAppModuleNav();
+        renderUserMenu();
+        renderPageContent();
+      });
+    }
+
+    const toggleButton = page.querySelector('[data-module-action="toggle"]');
+    if (toggleButton) {
+      toggleButton.addEventListener('click', async () => {
+        const manager = window.AdminModule || null;
+        if (!manager || typeof manager.toggleModule !== 'function') {
+          return;
+        }
+
+        await manager.toggleModule(module.id);
+        renderSummary();
+        renderAppModuleNav();
+        renderUserMenu();
+        renderAdminModuleWorkspace(module.id);
+      });
+    }
   };
 
   const renderAdminGPS = () => {
@@ -870,6 +1163,7 @@
     const page = document.getElementById('mainContent');
     if (!page) return;
 
+    const roleCatalog = getRoleCatalog();
     let rows = [];
     if (window.UserModule && typeof window.UserModule.listUsers === 'function') {
       const result = await window.UserModule.listUsers();
@@ -884,7 +1178,13 @@
             <div class="form-field"><label>Username</label><input id="newUserUsernameInput" type="text" placeholder="new.user" /></div>
             <div class="form-field"><label>Display name</label><input id="newUserDisplayNameInput" type="text" placeholder="New User" /></div>
             <div class="form-field"><label>Email</label><input id="newUserEmailInput" type="email" placeholder="user@example.com" /></div>
-            <div class="form-field"><label>Role</label><input id="newUserRoleInput" type="text" placeholder="user" /></div>
+            <div class="form-field">
+              <label>Role</label>
+              <select id="newUserRoleInput">
+                ${roleCatalog.map((role) => `<option value="${escapeHtml(role.role)}">${escapeHtml(role.name || role.role)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-field"><label>Permissions</label><input id="newUserPermissionsInput" type="text" placeholder="user:read, module:read" /></div>
             <div class="action-list">
               <button type="button" class="primary" data-admin-action="user-save">Create user</button>
             </div>
@@ -892,7 +1192,7 @@
           <div id="adminActionStatus" class="message info">User management uses the central framework identity layer.</div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>User ID</th><th>Username</th><th>Name</th><th>Status</th><th>Roles</th></tr></thead>
+              <thead><tr><th>User ID</th><th>Username</th><th>Name</th><th>Status</th><th>Roles</th><th>Actions</th></tr></thead>
               <tbody>
                 ${rows.length ? rows.map((user) => `
                   <tr>
@@ -901,8 +1201,9 @@
                     <td>${escapeHtml(user.displayName || user.username || '—')}</td>
                     <td><span class="status-badge ${user.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(user.status || 'active')}</span></td>
                     <td>${escapeHtml(Array.isArray(user.roles) ? user.roles.join(', ') : '')}</td>
+                    <td><button type="button" class="secondary" data-admin-action="user-delete" data-user-id="${escapeHtml(user.id || '')}">Delete</button></td>
                   </tr>
-                `).join('') : '<tr><td colspan="5">No users available.</td></tr>'}
+                `).join('') : '<tr><td colspan="6">No users available.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -922,18 +1223,13 @@
       users = result && result.data && Array.isArray(result.data.items) ? result.data.items : [];
     }
 
-    const defaultRoles = {
-      admin: ['user:read', 'user:write', 'system:view'],
-      developer: ['user:read', 'user:write', 'system:view', 'module:read', 'module:update'],
-      manager: ['user:read', 'user:write'],
-      member: ['user:read'],
-      user: ['user:read']
-    };
-
-    const roles = Object.entries(defaultRoles).map(([role, permissions]) => ({
-      role,
-      permissions,
-      userCount: users.filter((user) => Array.isArray(user.roles) && user.roles.includes(role)).length
+    const roleCatalog = getRoleCatalog();
+    const roles = roleCatalog.map((role) => ({
+      role: role.role,
+      name: role.name || role.role,
+      permissions: Array.isArray(role.permissions) ? role.permissions : [],
+      description: role.description || '',
+      userCount: users.filter((user) => Array.isArray(user.roles) && user.roles.includes(role.role)).length
     }));
 
     page.innerHTML = `
@@ -942,9 +1238,9 @@
         <div class="content-wrap">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Role</th><th>Users</th><th>Permissions</th></tr></thead>
+              <thead><tr><th>Role</th><th>Name</th><th>Users</th><th>Permissions</th></tr></thead>
               <tbody>
-                ${roles.map((entry) => `<tr><td>${escapeHtml(entry.role)}</td><td>${escapeHtml(String(entry.userCount))}</td><td>${escapeHtml(entry.permissions.join(', '))}</td></tr>`).join('')}
+                ${roles.map((entry) => `<tr><td>${escapeHtml(entry.role)}</td><td>${escapeHtml(entry.name)}</td><td>${escapeHtml(String(entry.userCount))}</td><td>${escapeHtml(entry.permissions.join(', ') || '—')}</td></tr>`).join('')}
               </tbody>
             </table>
           </div>
@@ -956,25 +1252,33 @@
   const renderAdminPermissions = () => {
     const page = document.getElementById('mainContent');
     if (!page) return;
-    const permissions = [
-      { permission: 'framework:read', source: 'Core framework diagnostics' },
-      { permission: 'auth:read', source: 'Core auth' },
-      { permission: 'auth:write', source: 'Core auth' },
-      { permission: 'module:read', source: 'Core access / module registry' },
-      { permission: 'module:update', source: 'Developer access' },
-      { permission: 'system:view', source: 'Admin access' },
-      { permission: 'user:read', source: 'Core user module' },
-      { permission: 'user:write', source: 'Core user module' },
-      { permission: 'connection:read', source: 'Master framework' },
-      { permission: 'connection:write', source: 'Master framework' }
-    ];
+
+    let permissions = [];
+    if (window.AdminModule && typeof window.AdminModule.getPermissionCatalog === 'function') {
+      permissions = window.AdminModule.getPermissionCatalog();
+    } else if (window.CoreAccess && typeof window.CoreAccess.getPermissionCatalog === 'function') {
+      permissions = window.CoreAccess.getPermissionCatalog();
+    } else {
+      permissions = [
+        { permission: 'framework:read', description: 'Core framework diagnostics' },
+        { permission: 'auth:read', description: 'Core auth' },
+        { permission: 'auth:write', description: 'Core auth' },
+        { permission: 'module:read', description: 'Core access / module registry' },
+        { permission: 'module:update', description: 'Developer access' },
+        { permission: 'system:view', description: 'Admin access' },
+        { permission: 'user:read', description: 'Core user module' },
+        { permission: 'user:write', description: 'Core user module' },
+        { permission: 'connection:read', description: 'Master framework' },
+        { permission: 'connection:write', description: 'Master framework' }
+      ];
+    }
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Permissions</h2></div>
         <div class="content-wrap">
           <div class="grid">
-            ${permissions.map((entry) => `<div class="metric"><span class="metric-label">${escapeHtml(entry.permission)}</span><div class="metric-value" style="font-size:0.85rem;">${escapeHtml(entry.source)}</div></div>`).join('')}
+            ${permissions.map((entry) => `<div class="metric"><span class="metric-label">${escapeHtml(entry.permission)}</span><div class="metric-value" style="font-size:0.85rem;">${escapeHtml(entry.description || 'Framework permission')}</div></div>`).join('')}
           </div>
         </div>
       </div>
@@ -1188,9 +1492,26 @@
     if (!page) return;
 
     const setupResult = await fetchJson('/api/setup/status', { ok: true, status: 'NOT_CONFIGURED', setup: {} });
+    const settingsCatalog = window.AdminModule && typeof window.AdminModule.getSettingsCatalog === 'function'
+      ? window.AdminModule.getSettingsCatalog()
+      : { ok: true, data: { framework: [], modules: [] } };
     const setup = setupResult.setup || {};
     const configuration = setup.configuration || {};
     const installation = setup.installation || {};
+    const frameworkSections = settingsCatalog && settingsCatalog.data && Array.isArray(settingsCatalog.data.framework)
+      ? settingsCatalog.data.framework
+      : [];
+    const moduleSections = settingsCatalog && settingsCatalog.data && Array.isArray(settingsCatalog.data.modules)
+      ? [...settingsCatalog.data.modules]
+      : [];
+
+    if (state.activeSettingsModuleId) {
+      moduleSections.sort((left, right) => {
+        if (left.moduleId === state.activeSettingsModuleId) return -1;
+        if (right.moduleId === state.activeSettingsModuleId) return 1;
+        return String(left.title || '').localeCompare(String(right.title || ''));
+      });
+    }
 
     page.innerHTML = `
       <div class="card">
@@ -1216,6 +1537,24 @@
           </div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">CMS settings registry</h2></div>
+        <div class="content-wrap">
+          <div class="grid">
+            <div class="metric"><span class="metric-label">Framework sections</span><div class="metric-value">${frameworkSections.length}</div></div>
+            <div class="metric"><span class="metric-label">Module sections</span><div class="metric-value">${moduleSections.length}</div></div>
+            <div class="metric"><span class="metric-label">Focused module</span><div class="metric-value">${escapeHtml(state.activeSettingsModuleId || 'All modules')}</div></div>
+          </div>
+          <div class="small-muted" style="margin-top: 14px;">Framework defaults and module-defined admin settings are rendered from schema metadata, so new modules can appear here without bespoke admin page code.</div>
+        </div>
+      </div>
+      ${frameworkSections.map((section) => renderSettingsSection(section, 'framework')).join('')}
+      ${moduleSections.length ? moduleSections.map((section) => renderSettingsSection(section, 'module')).join('') : `
+        <div class="card">
+          <div class="card-header"><h2 class="card-title">Module settings</h2></div>
+          <div class="content-wrap">No modules currently expose an admin settings schema.</div>
+        </div>
+      `}
     `;
     bindActionButtons();
   };
@@ -1337,12 +1676,27 @@
       return;
     }
 
-    const items = [
-      { id: 'dashboard', label: 'Dashboard' },
-      { id: 'profile', label: 'Profile' },
-      { id: 'modules', label: 'Modules' },
-      ...getVisibleModules().map((module) => ({ id: `module:${module.id}`, label: module.name }))
-    ];
+    const items = pageType === 'admin'
+      ? [
+          { id: 'admin:dashboard', label: 'Dashboard' },
+          { id: 'admin:apps', label: 'Apps' },
+          { id: 'admin:modules', label: 'Modules' },
+          { id: 'admin:users', label: 'Users' },
+          { id: 'admin:roles', label: 'Roles' },
+          { id: 'admin:permissions', label: 'Permissions' },
+          { id: 'admin:connections', label: 'Connections' },
+          { id: 'admin:server', label: 'Server' },
+          { id: 'admin:database', label: 'Database' },
+          { id: 'admin:settings', label: 'Settings' },
+          { id: 'admin:diagnostics', label: 'Diagnostics' },
+          { id: 'admin:audit', label: 'Audit' }
+        ]
+      : [
+          { id: 'dashboard', label: 'Dashboard' },
+          { id: 'profile', label: 'Profile' },
+          { id: 'modules', label: 'Modules' },
+          ...getVisibleModules().map((module) => ({ id: `module:${module.id}`, label: module.name }))
+        ];
 
     userMenu.innerHTML = items.map((item) => `
       <button type="button" class="nav-item ${state.activeView === item.id ? 'active' : ''}" data-view="${escapeHtml(item.id)}">${escapeHtml(item.label)}</button>
@@ -1356,7 +1710,7 @@
       });
     });
 
-    if (canViewAdmin(currentUser)) {
+    if (pageType !== 'admin' && canViewAdmin(currentUser)) {
       if (adminSection) adminSection.classList.remove('hidden');
       if (adminMenu) {
         adminMenu.innerHTML = '<button type="button" class="nav-item" data-view="admin:dashboard" data-href="admin.html">Administration</button>';
@@ -1366,7 +1720,7 @@
       if (adminMenu) adminMenu.innerHTML = '';
     }
 
-    if (canViewDeveloper(currentUser)) {
+    if (pageType !== 'admin' && canViewDeveloper(currentUser)) {
       if (developerSection) developerSection.classList.remove('hidden');
       if (developerMenu) {
         developerMenu.innerHTML = '<button type="button" class="nav-item" data-view="developer:core" data-href="dev.html">Developer</button>';
@@ -1444,6 +1798,10 @@
 
   const renderPageContent = async () => {
     if (pageType === 'admin') {
+      if (state.activeView.startsWith('admin:module:')) {
+        renderAdminModuleWorkspace(state.activeView.slice('admin:module:'.length));
+        return;
+      }
       if (state.activeView === 'admin:dashboard') {
         await renderAdminDashboard();
         return;
@@ -1651,6 +2009,7 @@
 
     renderFrameworkPreview();
     renderSummary();
+    renderAppModuleNav();
     renderUserMenu();
     syncShellVisibility();
     await renderPageContent();

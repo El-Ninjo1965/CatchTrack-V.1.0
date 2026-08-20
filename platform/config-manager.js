@@ -23,6 +23,7 @@
             }
 
             this.loadDefaultConfigs();
+            this.loadPersistedConfigs();
 
             if (typeof localStorage !== 'undefined') {
                 try {
@@ -156,6 +157,10 @@
                 betaFeatures: false,
                 maintenanceMode: false
             });
+
+            // Module-owned settings are stored centrally so new modules can
+            // contribute editable admin configuration without custom UI code.
+            this.set('moduleSettings', {});
         },
 
         /**
@@ -330,6 +335,12 @@
                 } else {
                     this.set(key, value);
                 }
+            });
+        },
+
+        loadPersistedConfigs() {
+            Array.from(this.configs.keys()).forEach((key) => {
+                this.load(key);
             });
         },
 

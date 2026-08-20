@@ -31,6 +31,8 @@ const createGpsModuleContext = ({ permissionState = 'granted' } = {}) => {
     permissionState,
     watchCalls: 0,
     activeWatches: new Map(),
+    lastWatchOptions: null,
+    lastCurrentPositionOptions: null,
     nextCurrentPositionError: null,
     position: {
       coords: {
@@ -53,15 +55,17 @@ const createGpsModuleContext = ({ permissionState = 'granted' } = {}) => {
         query: () => ({ state: geolocationState.permissionState })
       },
       geolocation: {
-        watchPosition(success, error) {
+        watchPosition(success, error, options) {
           const watchId = ++geolocationState.watchCalls;
+          geolocationState.lastWatchOptions = options || null;
           geolocationState.activeWatches.set(watchId, { success, error });
           return watchId;
         },
         clearWatch(watchId) {
           geolocationState.activeWatches.delete(watchId);
         },
-        getCurrentPosition(success, error) {
+        getCurrentPosition(success, error, options) {
+          geolocationState.lastCurrentPositionOptions = options || null;
           if (geolocationState.nextCurrentPositionError) {
             const currentError = geolocationState.nextCurrentPositionError;
             geolocationState.nextCurrentPositionError = null;
@@ -75,7 +79,8 @@ const createGpsModuleContext = ({ permissionState = 'granted' } = {}) => {
     },
     Core: {
       state: {},
-      emit() {}
+      emit() {},
+      on() {}
     },
     CoreEventBus: {
       emit() {}
@@ -102,6 +107,20 @@ const createGpsModuleContext = ({ permissionState = 'granted' } = {}) => {
         return Promise.resolve({ ok: true });
       }
     },
+    localStorage: (() => {
+      const storage = new Map();
+      return {
+        getItem(key) {
+          return storage.has(key) ? storage.get(key) : null;
+        },
+        setItem(key, value) {
+          storage.set(key, String(value));
+        },
+        removeItem(key) {
+          storage.delete(key);
+        }
+      };
+    })(),
     ModuleInterface: null,
     ModuleRegistry: null,
     ModuleManager: null,
@@ -201,6 +220,25 @@ test('supports feature flags, permissions, and migrations', async () => {
   const result = await runtime.applyMigrations('1.0.0', runtime.migrations);
   assert.equal(result.ok, true);
   assert.equal(result.applied, 1);
+});
+
+test('registers a centralized role and permission catalog', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.roles.clear();
+  runtime.permissions.clear();
+
+  runtime.registerRole('manager', {
+    description: 'Can manage user access.',
+    permissions: ['user:read', 'user:write']
+  });
+  runtime.registerPermission('module:read', 'Read module metadata.');
+
+  const roles = runtime.getRoleCatalog();
+  const permissionCatalog = runtime.getPermissionCatalog();
+
+  assert.ok(roles.some((role) => role.role === 'manager' && role.permissions.includes('user:write')));
+  assert.ok(permissionCatalog.some((permission) => permission.permission === 'module:read'));
 });
 
 test('supports persisted setup state and connection updates', () => {
@@ -348,6 +386,45 @@ test('marks gps permission denied without starting a watcher', async () => {
   assert.equal(gps.getPermissionState(), 'denied');
   assert.equal(gps.isTracking(), false);
   assert.equal(geolocationState.watchCalls, 0);
+});
+
+test('registers module-provided admin settings and applies them to gps runtime options', async () => {
+  cleanupRuntimeState();
+
+  const { sandbox, geolocationState } = createGpsModuleContext();
+  loadScriptIntoContext(sandbox, path.resolve(__dirname, '../platform/config-manager.js'));
+  loadScriptIntoContext(sandbox, path.resolve(__dirname, '../platform/core-admin.js'));
+
+  sandbox.ConfigManager.init();
+  sandbox.ModuleManager.register(sandbox.GpsModule);
+  sandbox.AdminModule.init();
+
+  const settingsCatalog = sandbox.AdminModule.getSettingsCatalog();
+  const gpsSettingsSection = settingsCatalog.data.modules.find((section) => section.moduleId === 'gps');
+  assert.ok(gpsSettingsSection);
+  assert.equal(sandbox.ConfigManager.getPath('moduleSettings.gps.timeoutMs'), 10000);
+  assert.equal(sandbox.ConfigManager.getPath('moduleSettings.gps.enableHighAccuracy'), true);
+
+  const updateResult = sandbox.AdminModule.updateSettings([
+    { path: 'moduleSettings.gps.enableHighAccuracy', value: false },
+    { path: 'moduleSettings.gps.timeoutMs', value: 4500 },
+    { path: 'moduleSettings.gps.maximumAgeMs', value: 60000 }
+  ], { id: 'developer' });
+
+  assert.equal(updateResult.ok, true);
+  assert.equal(sandbox.ConfigManager.getPath('moduleSettings.gps.timeoutMs'), 4500);
+  assert.match(sandbox.localStorage.getItem('core-config-moduleSettings') || '', /"timeoutMs":4500/);
+
+  sandbox.ModuleManager.install('gps');
+  sandbox.ModuleManager.initialize('gps');
+  sandbox.ModuleManager.enable('gps');
+
+  const gps = sandbox.ModuleManager.get('gps');
+  const trackingResult = gps.startTracking();
+  assert.equal(trackingResult.ok, true);
+  assert.equal(geolocationState.lastWatchOptions.enableHighAccuracy, false);
+  assert.equal(geolocationState.lastWatchOptions.timeout, 4500);
+  assert.equal(geolocationState.lastWatchOptions.maximumAge, 60000);
 });
 
 test('supports setup, database, and activation flow', async () => {
