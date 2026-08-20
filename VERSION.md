@@ -20,6 +20,7 @@ Status:
 - App runtime isolation is now managed explicitly: each application has its own runtime context, storage namespace, admin scope and active selection without relying on a shared global app state.
 - Admin app configuration is now available in the CMS-like admin area: the active app can be selected, app branding can be changed, and the default storage mode can be set from the admin without code rewrites.
 - The admin workspace now includes a Data section for schema creation, schema editing, and entity record management, allowing app-local data models to be defined and edited without custom core code paths.
+- A retail store reference template was added to validate the framework against a real commerce app domain, including products, categories, customers, and orders as generic entity schemas without hardcoding the core.
 - Architectural gate: each app, including admin and server context, must be independent and not rely on another app’s runtime state or modules.
 - Freeze gate: no additional app-dependent modules will be installed until the full base system is completed, stable and explicitly reviewed and approved by the user.
 

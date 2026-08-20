@@ -353,6 +353,27 @@ test('supports admin-configurable storage modes and connection metadata', () => 
   assert.equal(runtime.getConnection('primary-storage').status, 'active');
 });
 
+test('provides a retail store app template with product and order entity schemas', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.apps.clear();
+  runtime.entitySchemas.clear();
+
+  const template = runtime.getAppTemplate('retail-store');
+  assert.ok(template);
+  assert.equal(template.modules.includes('catalog'), true);
+  assert.equal(template.entitySchemas.some((schema) => schema.id === 'products'), true);
+
+  const app = runtime.createAppFromTemplate('retail-store', {
+    appId: 'retail-demo',
+    name: 'Retail demo'
+  });
+
+  assert.equal(app.appId, 'retail-demo');
+  assert.equal(runtime.getEntitySchema('retail-demo', 'products').id, 'products');
+  assert.equal(runtime.getEntitySchema('retail-demo', 'orders').id, 'orders');
+});
+
 test('allows developer roles to pass resource-scoped user write checks', () => {
   const context = {
     window: null,

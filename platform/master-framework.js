@@ -138,6 +138,69 @@
           featureSet: 'catchtrack-starter'
         }
       });
+      this.registerAppTemplate({
+        id: 'retail-store',
+        name: 'Retail store',
+        description: 'Reference store template for products, categories, orders, and customer workflows.',
+        version: '1.0.0',
+        defaultStatus: 'active',
+        modules: ['dashboard', 'catalog', 'orders', 'customers'],
+        featureTemplates: [
+          { id: 'dashboard', label: 'Dashboard', description: 'Overview and KPI summary.', permissions: ['system:view'] },
+          { id: 'catalog', label: 'Catalog', description: 'Product catalog and inventory management.', permissions: ['user:read'] },
+          { id: 'orders', label: 'Orders', description: 'Manage orders and fulfillment status.', permissions: ['user:write'] },
+          { id: 'customers', label: 'Customers', description: 'Customer records and retention workflows.', permissions: ['user:read'] },
+          { id: 'profile', label: 'Profile', description: 'User profile and privacy controls.', permissions: ['user:read'] }
+        ],
+        entitySchemas: [
+          {
+            id: 'products',
+            name: 'Products',
+            fields: [
+              { key: 'name', type: 'string', required: true },
+              { key: 'sku', type: 'string', required: true },
+              { key: 'category', type: 'string', required: true },
+              { key: 'price', type: 'number', required: true, defaultValue: 0 },
+              { key: 'stock', type: 'number', required: true, defaultValue: 0 },
+              { key: 'active', type: 'boolean', defaultValue: true }
+            ]
+          },
+          {
+            id: 'categories',
+            name: 'Categories',
+            fields: [
+              { key: 'name', type: 'string', required: true },
+              { key: 'description', type: 'string', required: false },
+              { key: 'active', type: 'boolean', defaultValue: true }
+            ]
+          },
+          {
+            id: 'customers',
+            name: 'Customers',
+            fields: [
+              { key: 'name', type: 'string', required: true },
+              { key: 'email', type: 'string', required: true },
+              { key: 'status', type: 'string', required: true, defaultValue: 'active' },
+              { key: 'loyaltyPoints', type: 'number', defaultValue: 0 }
+            ]
+          },
+          {
+            id: 'orders',
+            name: 'Orders',
+            fields: [
+              { key: 'customerId', type: 'string', required: true },
+              { key: 'status', type: 'string', required: true, defaultValue: 'pending' },
+              { key: 'total', type: 'number', required: true, defaultValue: 0 },
+              { key: 'currency', type: 'string', required: true, defaultValue: 'EUR' }
+            ]
+          }
+        ],
+        config: {
+          mode: 'local',
+          featureSet: 'retail-store',
+          defaultCurrency: 'EUR'
+        }
+      });
       return this;
     },
 
@@ -154,6 +217,12 @@
       const featureTemplates = Array.isArray(templateDefinition.featureTemplates)
         ? templateDefinition.featureTemplates.map((feature) => this.normalizeFeatureTemplate(feature)).filter(Boolean)
         : [];
+      const entitySchemas = Array.isArray(templateDefinition.entitySchemas)
+        ? templateDefinition.entitySchemas.map((entry) => ({
+            ...this.normalizeEntitySchema(templateId, entry),
+            appId: normalizeString(templateDefinition.appId || templateId, templateId)
+          }))
+        : [];
 
       return {
         id: templateId,
@@ -164,6 +233,7 @@
         defaultStatus: normalizeString(templateDefinition.defaultStatus, 'active'),
         modules: moduleIds,
         featureTemplates,
+        entitySchemas,
         permissions: Array.isArray(templateDefinition.permissions)
           ? [...new Set(templateDefinition.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
           : [],
@@ -229,7 +299,19 @@
         updatedAt: new Date().toISOString()
       };
 
-      return this.registerApp(appDefinition);
+      const app = this.registerApp(appDefinition);
+      const schemas = Array.isArray(overrides.entitySchemas)
+        ? overrides.entitySchemas
+        : Array.isArray(template.entitySchemas)
+          ? template.entitySchemas
+          : [];
+      for (const schemaDefinition of schemas) {
+        if (!schemaDefinition || !schemaDefinition.id) {
+          continue;
+        }
+        this.registerEntitySchema(app.appId, schemaDefinition);
+      }
+      return app;
     },
 
     normalizeApp(appDefinition) {
