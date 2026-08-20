@@ -360,7 +360,68 @@
             const form = button.closest('form');
             if (!form) return;
             const payload = Object.fromEntries(new FormData(form).entries());
-            const result = await postJson('/api/connections', payload, { ok: false, connection: null });
+            const finalPayload = {
+              connectionId: payload.connectionId || payload.name || 'default-storage',
+              appId: payload.appId || 'neutral-app',
+              serverUrl: payload.serverUrl || payload.url || '',
+              apiBase: payload.apiBase || '/api',
+              storageType: payload.storageType || payload.type || 'file',
+              connectionType: payload.storageType || payload.type || 'file',
+              databaseType: payload.databaseType || payload.storageType || 'file',
+              databaseName: payload.databaseName || payload.database || '',
+              storagePath: payload.storagePath || payload.path || '',
+              host: payload.host || '',
+              port: payload.port || '',
+              username: payload.username || '',
+              password: payload.password || '',
+              active: payload.active === 'on' || payload.active === 'true' || payload.active === true,
+              default: payload.default === 'on' || payload.default === 'true' || payload.default === true,
+              status: payload.status || (payload.active === 'on' || payload.active === 'true' ? 'active' : 'inactive'),
+              authType: payload.authType || 'none',
+              credentialsRef: payload.credentialsRef || ''
+            };
+            if (window.ConfigManager && typeof window.ConfigManager.get === 'function') {
+              const current = window.ConfigManager.get('connections', { connections: [] }) || { connections: [] };
+              const nextConnections = Array.isArray(current.connections) ? [...current.connections] : [];
+              const existingIndex = nextConnections.findIndex((entry) => String(entry.connectionId || entry.id) === String(finalPayload.connectionId));
+              const entry = {
+                connectionId: finalPayload.connectionId,
+                name: finalPayload.connectionId,
+                type: finalPayload.storageType,
+                storageType: finalPayload.storageType,
+                databaseType: finalPayload.databaseType,
+                databaseName: finalPayload.databaseName,
+                storagePath: finalPayload.storagePath,
+                host: finalPayload.host,
+                port: finalPayload.port,
+                username: finalPayload.username,
+                status: finalPayload.status,
+                active: finalPayload.active,
+                default: finalPayload.default,
+                lastModified: new Date().toISOString()
+              };
+              if (existingIndex >= 0) {
+                nextConnections[existingIndex] = { ...nextConnections[existingIndex], ...entry };
+              } else {
+                nextConnections.push(entry);
+              }
+              window.ConfigManager.set('connections', {
+                ...current,
+                defaultConnectionId: finalPayload.default ? finalPayload.connectionId : (current.defaultConnectionId || finalPayload.connectionId),
+                activeConnectionId: finalPayload.connectionId,
+                activeStorageType: finalPayload.storageType,
+                connections: nextConnections
+              });
+            }
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('catchtrack.connections.v1', JSON.stringify({
+                defaultConnectionId: finalPayload.connectionId,
+                activeConnectionId: finalPayload.connectionId,
+                activeStorageType: finalPayload.storageType,
+                connections: [finalPayload]
+              }));
+            }
+            const result = await postJson('/api/connections', finalPayload, { ok: false, connection: null, message: 'Connection save failed.' });
             if (statusTarget) {
               statusTarget.textContent = result && result.ok ? 'Connection saved.' : (result && result.message ? result.message : 'Connection save failed.');
               statusTarget.className = result && result.ok ? 'message success' : 'message error';
@@ -1175,23 +1236,54 @@
       : [];
     const apiResult = await fetchJson('/api/connections', { ok: true, connections: [] });
     const connections = fromFramework.length ? fromFramework : (apiResult.connections || []);
+    const defaultConnection = connections[0] || {
+      connectionId: 'file-storage',
+      appId: 'neutral-app',
+      serverUrl: 'http://127.0.0.1:3000',
+      apiBase: '/api',
+      storageType: 'file',
+      databaseType: 'file',
+      databaseName: 'data',
+      host: '',
+      port: '',
+      username: '',
+      status: 'active',
+      active: true
+    };
 
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Connections</h2></div>
         <div class="content-wrap">
           <form class="form-grid" style="margin-bottom: 18px;">
-            <div class="form-field"><label>Name</label><input type="text" name="connectionId" value="default-connection" /></div>
-            <div class="form-field"><label>App</label><input type="text" name="appId" value="neutral-app" /></div>
-            <div class="form-field"><label>Server URL</label><input id="connectionServerUrl" type="text" name="serverUrl" value="http://127.0.0.1:3000" /></div>
-            <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="/api" /></div>
-            <div class="form-field"><label>Type</label><input type="text" name="authType" value="none" /></div>
-            <div class="form-field"><label>Status</label><input type="text" name="status" value="inactive" /></div>
+            <div class="form-field"><label>Name</label><input type="text" name="connectionId" value="${escapeHtml(defaultConnection.connectionId || defaultConnection.id || 'file-storage')}" /></div>
+            <div class="form-field"><label>App</label><input type="text" name="appId" value="${escapeHtml(defaultConnection.appId || 'neutral-app')}" /></div>
+            <div class="form-field"><label>Preferred storage</label>
+              <select name="storageType">
+                <option value="file" ${defaultConnection.storageType === 'file' || defaultConnection.type === 'file' ? 'selected' : ''}>Text / JSON files</option>
+                <option value="sqlite" ${defaultConnection.storageType === 'sqlite' || defaultConnection.databaseType === 'sqlite' ? 'selected' : ''}>SQLite</option>
+                <option value="mysql" ${defaultConnection.storageType === 'mysql' || defaultConnection.databaseType === 'mysql' ? 'selected' : ''}>MySQL</option>
+                <option value="postgresql" ${defaultConnection.storageType === 'postgresql' || defaultConnection.databaseType === 'postgresql' ? 'selected' : ''}>PostgreSQL</option>
+              </select>
+            </div>
+            <div class="form-field"><label>Database type</label><input type="text" name="databaseType" value="${escapeHtml(defaultConnection.databaseType || defaultConnection.type || defaultConnection.storageType || 'file')}" /></div>
+            <div class="form-field"><label>Database / file name</label><input type="text" name="databaseName" value="${escapeHtml(defaultConnection.databaseName || defaultConnection.database || defaultConnection.storagePath || 'data')}" /></div>
+            <div class="form-field"><label>Storage path</label><input type="text" name="storagePath" value="${escapeHtml(defaultConnection.storagePath || defaultConnection.filePath || defaultConnection.path || 'data')}" /></div>
+            <div class="form-field"><label>Host</label><input type="text" name="host" value="${escapeHtml(defaultConnection.host || '')}" /></div>
+            <div class="form-field"><label>Port</label><input type="text" name="port" value="${escapeHtml(defaultConnection.port || '')}" /></div>
+            <div class="form-field"><label>Username</label><input type="text" name="username" value="${escapeHtml(defaultConnection.username || '')}" /></div>
+            <div class="form-field"><label>Password</label><input type="password" name="password" value="" /></div>
+            <div class="form-field"><label>Server URL</label><input id="connectionServerUrl" type="text" name="serverUrl" value="${escapeHtml(defaultConnection.serverUrl || 'http://127.0.0.1:3000')}" /></div>
+            <div class="form-field"><label>API base</label><input type="text" name="apiBase" value="${escapeHtml(defaultConnection.apiBase || '/api')}" /></div>
+            <div class="form-field"><label>Auth type</label><input type="text" name="authType" value="${escapeHtml(defaultConnection.authType || 'none')}" /></div>
+            <div class="form-field"><label>Status</label><input type="text" name="status" value="${escapeHtml(defaultConnection.status || (defaultConnection.active ? 'active' : 'inactive'))}" /></div>
+            <div class="form-field"><label><input type="checkbox" name="active" ${defaultConnection.active || defaultConnection.status === 'active' ? 'checked' : ''} /> Active</label></div>
+            <div class="form-field"><label><input type="checkbox" name="default" ${defaultConnection.default || defaultConnection.connectionId === 'file-storage' ? 'checked' : ''} /> Default storage</label></div>
             <div class="action-list">
               <button type="button" class="primary" data-admin-action="connection-save">Save connection</button>
             </div>
           </form>
-          <div id="adminActionStatus" class="message info">Connection settings are saved to the framework runtime, not stored in the repository.</div>
+          <div id="adminActionStatus" class="message info">The connection mode can be switched between file storage and SQL storage directly from the admin area.</div>
           <div class="table-wrap" style="margin-top: 20px;">
             <table>
               <thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Target</th><th>Service</th><th>Last test</th></tr></thead>
@@ -1199,9 +1291,9 @@
                 ${connections.length ? connections.map((connection) => `
                   <tr>
                     <td>${escapeHtml(connection.connectionId || connection.id || connection.name || 'Unknown')}</td>
-                    <td>${escapeHtml(connection.authType || connection.type || 'none')}</td>
+                    <td>${escapeHtml(connection.storageType || connection.databaseType || connection.type || connection.authType || 'file')}</td>
                     <td><span class="status-badge ${connection.active || connection.status === 'active' || connection.status === 'healthy' ? 'ok' : 'warning'}">${escapeHtml(connection.status || (connection.active ? 'active' : 'inactive'))}</span></td>
-                    <td>${escapeHtml(connection.serverUrl || connection.url || '—')}</td>
+                    <td>${escapeHtml(connection.storagePath || connection.databaseName || connection.serverUrl || connection.url || '—')}</td>
                     <td>${escapeHtml(connection.appId || connection.service || 'framework')}</td>
                     <td>${escapeHtml(connection.lastTestAt || connection.updatedAt || 'never')}</td>
                   </tr>

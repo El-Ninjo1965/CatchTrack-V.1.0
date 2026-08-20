@@ -22,6 +22,8 @@
 - Benutzerprofil- und Einstellungsbereich für Funktionsauswahl, Privacy-Controls und lokale Sync-Entscheidungen ergänzt.
 - GPS-Modul gegen den nicht aktivierten Zustand abgesichert; Start- und Abfrageaktionen aktivieren das Modul jetzt automatisch und bleiben damit im echten User-Flow nutzbar.
 - Admin-Lebenszyklus für Module erweitert: Installieren, Deaktivieren und Deinstallieren sind nun als echte Framework-Aktionen im Admin-Panel verfügbar, ohne die Kernarchitektur zu gefährden.
+- Storage-/Connection-Architektur erweitert: Der Admin kann jetzt im Bereich „Connections“ zwischen Text/JSON-Dateien und SQL-Varianten wie SQLite/MySQL/PostgreSQL wechseln und die Konfiguration direkt im Framework-/Admin-Workflow persistieren.
+- Connection-Model und default Config erweitert, damit die Daten-Speicherstrategie nicht hart verdrahtet, sondern im Admin konfigurierbar ist.
 
 ## Getestet
 - `npm test` vollständig ausgeführt.

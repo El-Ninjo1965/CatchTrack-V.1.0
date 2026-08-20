@@ -83,6 +83,24 @@
                 developerPasswordHash: ''
             });
 
+            this.set('connections', {
+                defaultConnectionId: 'file-storage',
+                activeConnectionId: 'file-storage',
+                activeStorageType: 'file',
+                supportedTypes: ['file', 'sqlite', 'mysql', 'postgresql'],
+                connections: [{
+                    connectionId: 'file-storage',
+                    name: 'Text file storage',
+                    type: 'file',
+                    storageType: 'file',
+                    status: 'active',
+                    active: true,
+                    default: true,
+                    path: 'data',
+                    description: 'Default lightweight storage for shared hosting and JSON/text file workflows.'
+                }]
+            });
+
             // Database Config
             this.set('database', {
                 type: 'indexeddb',

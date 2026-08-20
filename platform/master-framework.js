@@ -182,6 +182,14 @@
       const appId = normalizeString(connectionDefinition.appId || connectionDefinition.app, 'default-app');
       const serverUrl = normalizeString(connectionDefinition.serverUrl || connectionDefinition.url || connectionDefinition.serverAddress, 'http://localhost');
       const apiBase = normalizeString(connectionDefinition.apiBase || connectionDefinition.basePath || '/api', '/api');
+      const storageType = normalizeString(connectionDefinition.storageType || connectionDefinition.type || connectionDefinition.databaseType || connectionDefinition.connectionType || 'file', 'file');
+      const databaseType = normalizeString(connectionDefinition.databaseType || connectionDefinition.sqlType || ((storageType === 'sql' || storageType === 'sqlite' || storageType === 'mysql' || storageType === 'postgresql') ? storageType : ''), '');
+      const databaseName = normalizeString(connectionDefinition.databaseName || connectionDefinition.name || connectionDefinition.database || '', '');
+      const storagePath = normalizeString(connectionDefinition.storagePath || connectionDefinition.filePath || connectionDefinition.path || '', '');
+      const host = normalizeString(connectionDefinition.host || '', '');
+      const port = normalizeString(connectionDefinition.port || connectionDefinition.portNumber || '', '');
+      const username = normalizeString(connectionDefinition.username || '', '');
+      const password = normalizeString(connectionDefinition.password || '', '');
 
       return {
         connectionId,
@@ -189,9 +197,20 @@
         appId,
         serverUrl,
         apiBase,
+        type: storageType,
+        storageType,
+        connectionType: normalizeString(connectionDefinition.connectionType || storageType, storageType),
+        databaseType,
+        databaseName,
+        storagePath,
+        host,
+        port,
+        username,
+        password,
         endpoints: isPlainObject(connectionDefinition.endpoints) ? { ...connectionDefinition.endpoints } : {},
         status: normalizeString(connectionDefinition.status, 'inactive'),
         active: !!connectionDefinition.active,
+        default: !!connectionDefinition.default,
         authType: normalizeString(connectionDefinition.authType, 'none'),
         credentialsRef: normalizeString(connectionDefinition.credentialsRef, ''),
         health: isPlainObject(connectionDefinition.health) ? { ...connectionDefinition.health } : { status: 'unknown' },

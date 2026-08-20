@@ -282,16 +282,6 @@
                 };
             }
 
-            if (this.users.size > 0) {
-                return {
-                    ok: true,
-                    code: 'SYSTEM_USERS_EXIST',
-                    created: false,
-                    data: null,
-                    message: 'System users already exist. Bootstrap developer seed is skipped.'
-                };
-            }
-
             const normalizedTargetUser = String(config.developerUsername || 'developer').trim();
             const usernameExists = Array.from(this.users.values()).some((user) => {
                 const existingUsername = user && typeof user.username === 'string' ? user.username.trim().toLowerCase() : '';

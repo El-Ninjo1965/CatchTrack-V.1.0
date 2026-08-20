@@ -222,6 +222,32 @@ test('supports feature flags, permissions, and migrations', async () => {
   assert.equal(result.applied, 1);
 });
 
+test('supports admin-configurable storage modes and connection metadata', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.connections.clear();
+
+  const connection = runtime.registerConnection({
+    connectionId: 'primary-storage',
+    appId: 'catchtrack',
+    storageType: 'sqlite',
+    databaseType: 'sqlite',
+    databaseName: 'catchtrack.db',
+    host: 'localhost',
+    port: '3306',
+    username: 'appuser',
+    active: true,
+    status: 'active',
+    default: true
+  });
+
+  assert.equal(connection.storageType, 'sqlite');
+  assert.equal(connection.databaseType, 'sqlite');
+  assert.equal(connection.databaseName, 'catchtrack.db');
+  assert.equal(connection.default, true);
+  assert.equal(runtime.getConnection('primary-storage').status, 'active');
+});
+
 test('registers a centralized role and permission catalog', () => {
   cleanupRuntimeState();
   const runtime = Framework;
@@ -529,4 +555,68 @@ test('supports setup, database, and activation flow', async () => {
   } finally {
     await new Promise((resolve) => app.close(resolve));
   }
+});
+
+test('bootstraps the developer user even when other users already exist', async () => {
+  const context = {
+    window: null,
+    document: { readyState: 'complete', addEventListener() {} },
+    navigator: {},
+    localStorage: {
+      store: new Map(),
+      getItem(key) { return this.store.has(key) ? this.store.get(key) : null; },
+      setItem(key, value) { this.store.set(key, String(value)); },
+      removeItem(key) { this.store.delete(key); }
+    },
+    crypto: {
+      randomUUID() { return 'test-uuid'; },
+      subtle: null
+    },
+    console,
+    require,
+    process,
+    DatabaseManager: {
+      async clear() { return true; },
+      async save() { return true; },
+      async getAll() { return []; }
+    },
+    Core: { emit() {}, on() {} },
+    CoreAudit: { record() {} },
+    CoreAccess: null,
+    ConfigManager: null,
+    FrameworkModuleCatalog: []
+  };
+  const sandbox = vm.createContext(context);
+  sandbox.window = sandbox;
+  sandbox.globalThis = sandbox;
+  sandbox.window.localStorage = sandbox.localStorage;
+
+  const base = path.resolve(__dirname, '..');
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/core-access.js'));
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/config-manager.js'));
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/core-user.js'));
+
+  sandbox.ConfigManager.init();
+  sandbox.ConfigManager.set('bootstrap', {
+    enabled: true,
+    developerUsername: 'Developer',
+    developerDisplayId: 'USR-000001',
+    developerPasswordHash: 'hash',
+    passwordRequired: true,
+    passwordSource: 'local-offline'
+  });
+
+  const firstUser = await sandbox.UserModule.createUser({
+    username: 'alice',
+    displayName: 'Alice',
+    roles: ['user'],
+    permissions: ['user:read']
+  });
+  assert.equal(firstUser.ok, true);
+  assert.equal(sandbox.UserModule.users.size, 1);
+
+  const result = sandbox.UserModule.bootstrapDeveloperUser();
+  assert.equal(result.ok, true);
+  assert.equal(result.created, true);
+  assert.ok(Array.from(sandbox.UserModule.users.values()).some((user) => user.username === 'Developer'));
 });
