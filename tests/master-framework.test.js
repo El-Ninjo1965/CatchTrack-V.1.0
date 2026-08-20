@@ -176,6 +176,36 @@ test('registers and activates apps', () => {
   assert.equal(runtime.getApp('weather').status, 'active');
 });
 
+test('supports app-scoped module access and role mappings', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.apps.clear();
+
+  runtime.registerApp({
+    appId: 'catchtrack',
+    name: 'CatchTrack',
+    version: '1.0.0',
+    active: true,
+    modules: ['gps', 'catch-log'],
+    config: { mode: 'local' }
+  });
+
+  const updated = runtime.setAppModuleAccess('catchtrack', 'gps', {
+    enabled: true,
+    permissions: ['module:read'],
+    roles: {
+      user: false,
+      admin: true,
+      developer: true
+    }
+  });
+
+  assert.equal(updated.appId, 'catchtrack');
+  assert.equal(runtime.getAppModuleAccess('catchtrack', 'gps').roles.admin, true);
+  assert.equal(runtime.getAppModuleAccess('catchtrack', 'gps').roles.user, false);
+  assert.equal(runtime.listAppModuleAccess('catchtrack').length, 1);
+});
+
 test('registers and tests connections', async () => {
   cleanupRuntimeState();
   const runtime = Framework;

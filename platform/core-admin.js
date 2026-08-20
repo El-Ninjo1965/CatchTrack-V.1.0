@@ -450,6 +450,68 @@
             });
         },
 
+        getModuleAccessMatrix(appId = null) {
+            const framework = window.MasterFramework || null;
+            const roleCatalog = framework && typeof framework.getRoleCatalog === 'function'
+                ? framework.getRoleCatalog()
+                : this.getRoleCatalog();
+            const modules = this.getModuleCatalog();
+            const normalizedAppId = typeof appId === 'string' && appId.trim() ? appId.trim() : null;
+            const filteredModules = normalizedAppId
+                ? modules.filter((module) => (module.appId || module.manifest?.appId || 'catchtrack') === normalizedAppId)
+                : modules;
+
+            return roleCatalog.map((role) => ({
+                role: role.role || role.name || 'user',
+                name: role.name || role.role || 'User',
+                modules: filteredModules.map((module) => {
+                    const access = framework && typeof framework.getAppModuleAccess === 'function'
+                        ? framework.getAppModuleAccess(module.appId || normalizedAppId || module.manifest?.appId || 'catchtrack', module.id)
+                        : null;
+                    const defaultEnabled = !!(module.active || module.status === 'enabled' || module.status === 'active');
+                    const roles = access && access.roles && typeof access.roles === 'object' ? access.roles : {};
+                    const enabledByRole = typeof roles[role.role || role.name || 'user'] === 'boolean'
+                        ? !!roles[role.role || role.name || 'user']
+                        : defaultEnabled;
+                    return {
+                        id: module.id,
+                        name: module.name || module.id,
+                        enabled: enabledByRole,
+                        permissions: Array.isArray(module.permissions) ? [...module.permissions] : []
+                    };
+                })
+            }));
+        },
+
+        setModuleAccessForRole(appId, moduleId, roleId, enabled = true) {
+            if (!appId || typeof appId !== 'string') {
+                return { ok: false, code: 'INVALID_APP_ID', message: 'An app id is required.' };
+            }
+            if (!moduleId || typeof moduleId !== 'string') {
+                return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
+            }
+            if (!roleId || typeof roleId !== 'string') {
+                return { ok: false, code: 'INVALID_ROLE_ID', message: 'A role id is required.' };
+            }
+
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.setAppModuleAccess !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+
+            const existing = framework.getAppModuleAccess(appId, moduleId) || { enabled: true, permissions: [], roles: {} };
+            const nextRoles = { ...(existing.roles || {}) };
+            nextRoles[roleId] = !!enabled;
+
+            const result = framework.setAppModuleAccess(appId, moduleId, {
+                enabled: typeof existing.enabled === 'boolean' ? existing.enabled : true,
+                permissions: Array.isArray(existing.permissions) ? [...existing.permissions] : [],
+                roles: nextRoles
+            });
+
+            return { ok: true, data: result, message: `Updated role access for ${moduleId} in ${appId}` };
+        },
+
         updateModule(moduleId, updates = {}) {
             if (!moduleId || typeof moduleId !== 'string') {
                 return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };

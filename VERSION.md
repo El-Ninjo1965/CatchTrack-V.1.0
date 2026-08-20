@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.5 - admin module governance and metadata-first CMS workflow
+## Version 1.1.6 - app-scoped module governance and role matrix
 
 Status:
 - Framework core remains stable and module-driven.
@@ -12,6 +12,7 @@ Status:
 - Admin user creation and role-based permission checks are fixed so developer/admin accounts can manage users without false `Access denied` results.
 - Existing users can now be edited in the admin workspace, including username, display name, email, role, permissions, and status.
 - Modules can now be edited directly in the admin workspace through a metadata-driven governance form covering app ID, name, type, description, permissions, capabilities, and enable/disable status.
+- The framework now supports app-scoped module access control by role. Each app can block or allow individual modules by role, and the visible module navigation reacts to that matrix without requiring core rewrites.
 
 ### Included milestones
 - neutral framework shell
@@ -36,6 +37,7 @@ Status:
 - validate that admin-defined storage choices remain stable and future-proof
 - prepare the production layer for plain shared hosting with JSON/text files and optional SQL upgrade paths
 - extend module-to-role and app-to-module mappings for feature-level governance
+- bind app-scoped module access to real navigation and user visibility in the shell
 
 ### Planned next steps
 - add the next real domain module after the current core feature set
@@ -44,3 +46,4 @@ Status:
 - keep module templates and permission mapping in sync with future module development
 - implement the actual file- and SQL-backed adapters behind the admin-chosen connection type
 - keep the admin connection matrix aligned with the deployment target (shared hosting vs dedicated server)
+- add deeper audit trails and app-level permission templates for multi-app deployments

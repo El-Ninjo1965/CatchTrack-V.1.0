@@ -92,10 +92,28 @@
     const currentUser = getCurrentUser();
     if (!currentUser) return [];
 
+    const activeAppId = window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
+      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
+      : 'catchtrack';
+    const currentRole = Array.isArray(currentUser.roles) && currentUser.roles.length
+      ? currentUser.roles[0]
+      : (typeof currentUser.role === 'string' ? currentUser.role : 'user');
+
     return registry.filter((module) => {
       if (!module || !module.id) return false;
       const active = module.active === true || module.status === 'enabled' || module.status === 'active';
       if (!active) return false;
+
+      if (window.MasterFramework && typeof window.MasterFramework.getAppModuleAccess === 'function') {
+        const appAccess = window.MasterFramework.getAppModuleAccess(activeAppId, module.id);
+        if (appAccess && appAccess.roles && typeof appAccess.roles === 'object' && Object.keys(appAccess.roles).length > 0) {
+          const explicitRoleState = appAccess.roles[currentRole];
+          if (typeof explicitRoleState === 'boolean' && !explicitRoleState) {
+            return false;
+          }
+        }
+      }
+
       const permissions = Array.isArray(module.permissions) && module.permissions.length ? module.permissions : [];
       if (!permissions.length) return true;
       return permissions.some((permission) => hasPermission(currentUser, permission));
@@ -895,6 +913,20 @@
     const page = document.getElementById('mainContent');
     if (!page) return;
     const modules = getModuleCatalog();
+    const roleCatalog = getRoleCatalog();
+    const defaultAppId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
+      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
+      : 'catchtrack');
+    const matrix = window.AdminModule && typeof window.AdminModule.getModuleAccessMatrix === 'function'
+      ? window.AdminModule.getModuleAccessMatrix(defaultAppId)
+      : [];
+    const accessLookup = {};
+    matrix.forEach((roleEntry) => {
+      const roleId = roleEntry.role || 'user';
+      (roleEntry.modules || []).forEach((entry) => {
+        accessLookup[`${roleId}:${entry.id}`] = !!entry.enabled;
+      });
+    });
 
     page.innerHTML = `
       <div class="card">
@@ -910,17 +942,17 @@
                 ${modules.length ? modules.map((module) => {
                   const actionState = getModuleActionState(module);
                   return `
-                    <tr>
-                      <td>${escapeHtml(module.id || 'unknown')}</td>
-                      <td>${escapeHtml(module.name || module.id || 'Module')}</td>
-                      <td>${escapeHtml(module.version || '1.0.0')}</td>
-                      <td><span class="status-badge ${actionState.active ? 'ok' : 'warning'}">${escapeHtml(actionState.status)}</span></td>
-                      <td>${escapeHtml(module.type || 'framework')}</td>
-                      <td>${escapeHtml(Array.isArray(module.dependencies) ? module.dependencies.join(', ') : '')}</td>
-                      <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
-                      <td>${module.adminSettingsCount ? `<span class="status-badge ok">${module.adminSettingsCount} setting${module.adminSettingsCount === 1 ? '' : 's'}</span>` : '<span class="status-badge warning">No schema</span>'}</td>
-                      <td>
-                        <div class="action-list" style="gap: 8px; justify-content: flex-start;">
+                   <tr>
+                     <td>${escapeHtml(module.id || 'unknown')}</td>
+                     <td>${escapeHtml(module.name || module.id || 'Module')}</td>
+                     <td>${escapeHtml(module.version || '1.0.0')}</td>
+                     <td><span class="status-badge ${actionState.active ? 'ok' : 'warning'}">${escapeHtml(actionState.status)}</span></td>
+                     <td>${escapeHtml(module.type || 'framework')}</td>
+                     <td>${escapeHtml(Array.isArray(module.dependencies) ? module.dependencies.join(', ') : '')}</td>
+                     <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
+                     <td>${module.adminSettingsCount ? `<span class="status-badge ok">${module.adminSettingsCount} setting${module.adminSettingsCount === 1 ? '' : 's'}</span>` : '<span class="status-badge warning">No schema</span>'}</td>
+                     <td>
+                       <div class="action-list" style="gap: 8px; justify-content: flex-start;">
                          <button type="button" class="secondary" data-module-action="edit" data-module-id="${escapeHtml(module.id || '')}">Edit</button>
                          <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id || '')}">${actionState.label}</button>
                          <button type="button" class="secondary" data-module-action="uninstall" data-module-id="${escapeHtml(module.id || '')}">Uninstall</button>
@@ -932,6 +964,35 @@
                 }).join('') : '<tr><td colspan="9">No modules discovered.</td></tr>'}
               </tbody>
             </table>
+          </div>
+
+          <div class="card" style="margin-top: 24px;">
+            <div class="card-header"><h3 class="card-title">App role access matrix</h3></div>
+            <div class="content-wrap">
+              <div class="small-muted">This matrix controls which roles can access which modules within the active app shell.</div>
+              <div class="table-wrap" style="margin-top: 18px;">
+                <table>
+                  <thead>
+                   <tr>
+                     <th>Module</th>
+                     ${roleCatalog.map((role) => `<th>${escapeHtml(role.name || role.role || 'Role')}</th>`).join('')}
+                   </tr>
+                  </thead>
+                  <tbody>
+                   ${modules.length ? modules.map((module) => `
+                     <tr>
+                       <td>${escapeHtml(module.name || module.id || 'Module')}</td>
+                       ${roleCatalog.map((role) => {
+                         const roleId = role.role || role.name || 'user';
+                         const enabled = !!accessLookup[`${roleId}:${module.id}`];
+                         return `<td><button type="button" class="secondary" data-role-module-toggle data-module-id="${escapeHtml(module.id || '')}" data-role-id="${escapeHtml(roleId)}" data-enabled="${enabled ? 'true' : 'false'}">${enabled ? 'Allow' : 'Blocked'}</button></td>`;
+                       }).join('')}
+                     </tr>
+                   `).join('') : '<tr><td colspan="2">No module access data available.</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -987,6 +1048,31 @@
           statusTarget.textContent = result && result.ok
             ? `Module ${moduleId} was uninstalled.`
             : (result && result.message) || 'Module uninstall failed.';
+        }
+        renderAdminModules();
+      });
+    });
+
+    page.querySelectorAll('[data-role-module-toggle]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const moduleId = button.dataset.moduleId;
+        const roleId = button.dataset.roleId;
+        const manager = window.AdminModule || null;
+        if (!moduleId || !roleId || !manager || typeof manager.setModuleAccessForRole !== 'function') {
+          if (statusTarget) {
+            statusTarget.className = 'message error';
+            statusTarget.textContent = 'Role access controls are unavailable.';
+          }
+          return;
+        }
+
+        const nextEnabled = button.dataset.enabled !== 'true';
+        const result = await manager.setModuleAccessForRole(defaultAppId, moduleId, roleId, nextEnabled);
+        if (statusTarget) {
+          statusTarget.className = result && result.ok ? 'message success' : 'message error';
+          statusTarget.textContent = result && result.ok
+            ? `Updated ${roleId} access for ${moduleId} to ${nextEnabled ? 'allowed' : 'blocked'}.`
+            : (result && result.message) || 'Role access update failed.';
         }
         renderAdminModules();
       });

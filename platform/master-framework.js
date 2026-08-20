@@ -91,10 +91,13 @@
       this.registerPermission('module:read', 'Read module metadata and status.');
       this.registerPermission('module:update', 'Update module metadata and runtime state.');
       this.registerPermission('app:read', 'Read app metadata.');
+      this.registerPermission('app:module:read', 'Read app-specific module access metadata.');
+      this.registerPermission('app:module:update', 'Update app-specific module access metadata.');
       this.registerPermission('connection:read', 'Read connection metadata.');
       this.registerPermission('connection:write', 'Modify connection metadata.');
       this.registerPermission('user:read', 'Read user data.');
       this.registerPermission('user:write', 'Create and update users.');
+      this.setFeatureFlag('app-scoped-governance', true);
       return this;
     },
 
@@ -105,6 +108,12 @@
 
       const appId = normalizeString(appDefinition.appId || appDefinition.id, 'default-app');
       const appName = normalizeString(appDefinition.name, appId);
+      const moduleAccess = isPlainObject(appDefinition.moduleAccess)
+        ? { ...appDefinition.moduleAccess }
+        : (isPlainObject(appDefinition.config) && isPlainObject(appDefinition.config.moduleAccess)
+          ? { ...appDefinition.config.moduleAccess }
+          : {});
+
       const normalized = {
         appId,
         id: appId,
@@ -114,6 +123,7 @@
         active: !!appDefinition.active,
         status: normalizeString(appDefinition.status, appDefinition.active ? 'active' : 'inactive'),
         modules: Array.isArray(appDefinition.modules) ? [...appDefinition.modules] : [],
+        moduleAccess,
         config: isPlainObject(appDefinition.config) ? { ...appDefinition.config } : {},
         secrets: isPlainObject(appDefinition.secrets) ? { ...appDefinition.secrets } : {},
         runtimeState: isPlainObject(appDefinition.runtimeState) ? { ...appDefinition.runtimeState } : {},
@@ -124,6 +134,10 @@
         createdAt: appDefinition.createdAt || new Date().toISOString(),
         updatedAt: appDefinition.updatedAt || new Date().toISOString()
       };
+
+      if (normalized.config && typeof normalized.config === 'object' && !normalized.config.moduleAccess) {
+        normalized.config.moduleAccess = normalized.moduleAccess;
+      }
 
       return normalized;
     },
@@ -140,6 +154,70 @@
         return null;
       }
       return this.apps.get(normalized) || null;
+    },
+
+    setAppModuleAccess(appId, moduleId, access = {}) {
+      const app = this.getApp(appId);
+      if (!app) {
+        throw new Error(`Application not found: ${appId}`);
+      }
+
+      const moduleKey = normalizeString(moduleId, '');
+      if (!moduleKey) {
+        throw new Error('Module id is required.');
+      }
+
+      const source = isPlainObject(app.moduleAccess) ? { ...app.moduleAccess } : {};
+      const roleMatrix = isPlainObject(access.roles) ? Object.fromEntries(
+        Object.entries(access.roles).map(([role, enabled]) => [normalizeString(role, ''), !!enabled])
+          .filter(([role]) => role)
+      ) : {};
+
+      const nextEntry = {
+        enabled: typeof access.enabled === 'boolean' ? access.enabled : true,
+        permissions: Array.isArray(access.permissions)
+          ? [...new Set(access.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')))].filter(Boolean)
+          : Array.isArray(source[moduleKey] && source[moduleKey].permissions) ? [...source[moduleKey].permissions] : [],
+        roles: roleMatrix,
+        updatedAt: new Date().toISOString()
+      };
+
+      source[moduleKey] = nextEntry;
+      app.moduleAccess = source;
+      if (isPlainObject(app.config)) {
+        app.config.moduleAccess = source;
+      }
+      app.updatedAt = new Date().toISOString();
+      return { ...nextEntry, moduleId: moduleKey, appId: app.appId };
+    },
+
+    getAppModuleAccess(appId, moduleId) {
+      const app = this.getApp(appId);
+      if (!app) {
+        return null;
+      }
+
+      const moduleKey = normalizeString(moduleId, '');
+      if (!moduleKey) {
+        return null;
+      }
+
+      const access = isPlainObject(app.moduleAccess) ? app.moduleAccess[moduleKey] : null;
+      return access ? { ...access, moduleId: moduleKey, appId: app.appId } : null;
+    },
+
+    listAppModuleAccess(appId) {
+      const app = this.getApp(appId);
+      if (!app) {
+        return [];
+      }
+
+      const accessMap = isPlainObject(app.moduleAccess) ? app.moduleAccess : {};
+      return Object.entries(accessMap).map(([moduleId, value]) => ({
+        appId: app.appId,
+        moduleId,
+        ...(isPlainObject(value) ? value : {})
+      }));
     },
 
     listApps() {
