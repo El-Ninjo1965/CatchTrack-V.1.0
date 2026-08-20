@@ -64,6 +64,8 @@
     migrations: [],
     appRuntimeState: new Map(),
     currentAppId: null,
+    entitySchemas: new Map(),
+    entityRecords: new Map(),
     createdAt: new Date().toISOString(),
 
     initialize() {
@@ -656,6 +658,337 @@
     unregisterApp(appId) {
       const normalized = normalizeString(appId, '');
       return this.apps.delete(normalized);
+    },
+
+    normalizeEntityField(fieldDefinition = {}, fallbackName = 'field') {
+      if (!isPlainObject(fieldDefinition)) {
+        return null;
+      }
+
+      const fieldName = normalizeString(
+        fieldDefinition.name || fieldDefinition.key || fieldDefinition.id || fieldDefinition.label || fallbackName,
+        fallbackName
+      );
+      const key = normalizeString(fieldDefinition.key || fieldDefinition.id || fieldDefinition.name || fieldName, fieldName);
+      const type = normalizeString(fieldDefinition.type || 'string', 'string').toLowerCase();
+      const allowedTypes = ['string', 'number', 'boolean', 'date', 'datetime', 'array', 'object', 'json'];
+
+      return {
+        id: key,
+        key,
+        name: fieldName,
+        label: normalizeString(fieldDefinition.label || fieldDefinition.name || key, fieldName),
+        type: allowedTypes.includes(type) ? type : 'string',
+        required: !!fieldDefinition.required,
+        unique: !!fieldDefinition.unique,
+        visible: fieldDefinition.visible !== false,
+        description: normalizeString(fieldDefinition.description, ''),
+        defaultValue: Object.prototype.hasOwnProperty.call(fieldDefinition, 'defaultValue') ? fieldDefinition.defaultValue : undefined,
+        options: Array.isArray(fieldDefinition.options)
+          ? fieldDefinition.options.map((option) => normalizeString(String(option), '')).filter(Boolean)
+          : [],
+        min: fieldDefinition.min !== undefined ? fieldDefinition.min : null,
+        max: fieldDefinition.max !== undefined ? fieldDefinition.max : null,
+        step: fieldDefinition.step !== undefined ? fieldDefinition.step : null,
+        createdAt: fieldDefinition.createdAt || new Date().toISOString(),
+        updatedAt: fieldDefinition.updatedAt || new Date().toISOString()
+      };
+    },
+
+    normalizeEntitySchema(appId, schemaDefinition = {}) {
+      if (!isPlainObject(schemaDefinition)) {
+        throw new TypeError('Entity schema definition must be an object.');
+      }
+
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const schemaId = normalizeString(schemaDefinition.id || schemaDefinition.entityId || schemaDefinition.name || 'records', 'records');
+      const name = normalizeString(schemaDefinition.name || schemaDefinition.label || schemaId, schemaId);
+      const fields = Array.isArray(schemaDefinition.fields)
+        ? schemaDefinition.fields
+            .map((field, index) => this.normalizeEntityField(field, `field-${index + 1}`))
+            .filter(Boolean)
+        : [];
+
+      return {
+        appId: normalizedAppId,
+        id: schemaId,
+        key: schemaId,
+        name,
+        label: normalizeString(schemaDefinition.label || name, name),
+        plural: normalizeString(schemaDefinition.plural || schemaDefinition.name || `${schemaId}s`, `${schemaId}s`),
+        singular: normalizeString(schemaDefinition.singular || schemaDefinition.label || schemaId, schemaId),
+        description: normalizeString(schemaDefinition.description, ''),
+        status: normalizeString(schemaDefinition.status, 'enabled'),
+        fields,
+        permissions: Array.isArray(schemaDefinition.permissions)
+          ? [...new Set(schemaDefinition.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
+          : [],
+        defaultSort: normalizeString(schemaDefinition.defaultSort, 'createdAt'),
+        createdAt: schemaDefinition.createdAt || new Date().toISOString(),
+        updatedAt: schemaDefinition.updatedAt || new Date().toISOString()
+      };
+    },
+
+    getEntitySchemaStorageKey(appId, entityId) {
+      return `${normalizeString(appId, 'default-app')}::${normalizeString(entityId, 'records')}`;
+    },
+
+    registerEntitySchema(appId, schemaDefinition) {
+      const app = this.getApp(appId);
+      if (!app) {
+        throw new Error(`Application not found: ${appId}`);
+      }
+
+      const schema = this.normalizeEntitySchema(appId, schemaDefinition);
+      const storageKey = this.getEntitySchemaStorageKey(app.appId, schema.id);
+      this.entitySchemas.set(storageKey, schema);
+
+      const storage = this.getActiveStorageConnection();
+      if (storage && typeof storage.write === 'function') {
+        storage.write('entity-schemas', storageKey, schema);
+      }
+
+      return { ...schema, fields: schema.fields.map((field) => ({ ...field })) };
+    },
+
+    getEntitySchema(appId, entityId) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const normalizedEntityId = normalizeString(entityId, '');
+      if (!normalizedEntityId) {
+        return null;
+      }
+
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, normalizedEntityId);
+      return this.entitySchemas.has(storageKey)
+        ? { ...this.entitySchemas.get(storageKey), fields: (this.entitySchemas.get(storageKey).fields || []).map((field) => ({ ...field })) }
+        : null;
+    },
+
+    listEntitySchemas(appId = null) {
+      const entries = Array.from(this.entitySchemas.values());
+      if (!appId) {
+        return entries.map((schema) => ({ ...schema, fields: (schema.fields || []).map((field) => ({ ...field })) }));
+      }
+
+      const normalizedAppId = normalizeString(appId, '');
+      return entries
+        .filter((schema) => schema.appId === normalizedAppId)
+        .map((schema) => ({ ...schema, fields: (schema.fields || []).map((field) => ({ ...field })) }));
+    },
+
+    normalizeEntityValue(field = {}, rawValue) {
+      if (!isPlainObject(field)) {
+        return rawValue;
+      }
+
+      const type = normalizeString(field.type || 'string', 'string').toLowerCase();
+      const hasValue = rawValue !== null && rawValue !== undefined && rawValue !== '';
+
+      if (!hasValue) {
+        if (Object.prototype.hasOwnProperty.call(field, 'defaultValue')) {
+          return field.defaultValue;
+        }
+        if (type === 'number') {
+          return 0;
+        }
+        if (type === 'boolean') {
+          return false;
+        }
+        if (type === 'array') {
+          return [];
+        }
+        if (type === 'object' || type === 'json') {
+          return {};
+        }
+        return '';
+      }
+
+      if (type === 'number') {
+        const numeric = Number(rawValue);
+        return Number.isFinite(numeric) ? numeric : 0;
+      }
+
+      if (type === 'boolean') {
+        return rawValue === true || rawValue === 'true' || rawValue === 1 || rawValue === '1';
+      }
+
+      if (type === 'array') {
+        if (Array.isArray(rawValue)) {
+          return rawValue;
+        }
+        if (typeof rawValue === 'string') {
+          try {
+            const parsed = JSON.parse(rawValue);
+            return Array.isArray(parsed) ? parsed : [rawValue];
+          } catch (error) {
+            return [rawValue];
+          }
+        }
+        return [rawValue];
+      }
+
+      if (type === 'object' || type === 'json') {
+        if (isPlainObject(rawValue)) {
+          return rawValue;
+        }
+        if (typeof rawValue === 'string') {
+          try {
+            const parsed = JSON.parse(rawValue);
+            return isPlainObject(parsed) ? parsed : { value: rawValue };
+          } catch (error) {
+            return { value: rawValue };
+          }
+        }
+        return { value: rawValue };
+      }
+
+      if (type === 'date' || type === 'datetime') {
+        if (rawValue instanceof Date) {
+          return rawValue.toISOString();
+        }
+        if (typeof rawValue === 'string' && rawValue.trim()) {
+          return rawValue;
+        }
+        return new Date().toISOString();
+      }
+
+      return String(rawValue);
+    },
+
+    createEntityRecord(appId, entityId, payload = {}) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const schema = this.getEntitySchema(normalizedAppId, entityId);
+      if (!schema) {
+        throw new Error(`Entity schema not found for app ${normalizedAppId}: ${entityId}`);
+      }
+
+      const source = isPlainObject(payload) ? payload : {};
+      const recordId = normalizeString(source.id || `${entityId}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`, '');
+      if (!recordId) {
+        throw new Error('Record id is required.');
+      }
+
+      const record = {
+        id: recordId,
+        appId: normalizedAppId,
+        entityId: normalizeString(entityId, schema.id),
+        createdAt: source.createdAt || new Date().toISOString(),
+        updatedAt: source.updatedAt || new Date().toISOString()
+      };
+
+      for (const field of schema.fields) {
+        const candidate = field.key || field.id;
+        const hasExplicitValue = Object.prototype.hasOwnProperty.call(source, candidate)
+          || Object.prototype.hasOwnProperty.call(source, field.name)
+          || Object.prototype.hasOwnProperty.call(source, field.label);
+        const valueFromSource = hasExplicitValue
+          ? (Object.prototype.hasOwnProperty.call(source, candidate)
+            ? source[candidate]
+            : (Object.prototype.hasOwnProperty.call(source, field.name)
+              ? source[field.name]
+              : source[field.label]))
+          : undefined;
+
+        if (valueFromSource === undefined && field.required) {
+          throw new Error(`Field "${field.name}" is required for entity "${schema.id}".`);
+        }
+
+        const normalizedValue = this.normalizeEntityValue(field, valueFromSource);
+        record[candidate] = normalizedValue;
+      }
+
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, entityId);
+      const storage = this.getActiveStorageConnection();
+      const existingRecords = storage && typeof storage.read === 'function'
+        ? (storage.read('entity-records', storageKey, []) || [])
+        : (this.entityRecords.get(storageKey) || []);
+
+      const records = Array.isArray(existingRecords) ? [...existingRecords] : [];
+      records.push(record);
+
+      this.entityRecords.set(storageKey, records);
+      if (storage && typeof storage.write === 'function') {
+        storage.write('entity-records', storageKey, records);
+      }
+
+      return { ...record };
+    },
+
+    listEntityRecords(appId, entityId, filters = {}) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const normalizedEntityId = normalizeString(entityId, '');
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, normalizedEntityId);
+      const storage = this.getActiveStorageConnection();
+      const records = storage && typeof storage.read === 'function'
+        ? (storage.read('entity-records', storageKey, []) || [])
+        : (this.entityRecords.get(storageKey) || []);
+
+      const nextList = Array.isArray(records) ? records : [];
+      const filterMap = isPlainObject(filters) ? filters : {};
+      const filtered = nextList.filter((entry) => {
+        if (!entry || typeof entry !== 'object') {
+          return false;
+        }
+        return Object.entries(filterMap).every(([key, value]) => {
+          if (value === undefined || value === null || value === '') {
+            return true;
+          }
+          return entry[key] === value;
+        });
+      });
+
+      return filtered.map((record) => ({ ...record }));
+    },
+
+    getEntityRecord(appId, entityId, recordId) {
+      const records = this.listEntityRecords(appId, entityId);
+      return records.find((record) => record.id === recordId) || null;
+    },
+
+    updateEntityRecord(appId, entityId, recordId, updates = {}) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const normalizedEntityId = normalizeString(entityId, '');
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, normalizedEntityId);
+      const storage = this.getActiveStorageConnection();
+      const records = storage && typeof storage.read === 'function'
+        ? (storage.read('entity-records', storageKey, []) || [])
+        : (this.entityRecords.get(storageKey) || []);
+
+      const nextRecords = Array.isArray(records) ? [...records] : [];
+      const index = nextRecords.findIndex((record) => record && record.id === recordId);
+      if (index === -1) {
+        return null;
+      }
+
+      const nextRecord = {
+        ...nextRecords[index],
+        ...(isPlainObject(updates) ? updates : {}),
+        updatedAt: new Date().toISOString()
+      };
+      nextRecords[index] = nextRecord;
+
+      this.entityRecords.set(storageKey, nextRecords);
+      if (storage && typeof storage.write === 'function') {
+        storage.write('entity-records', storageKey, nextRecords);
+      }
+      return { ...nextRecord };
+    },
+
+    deleteEntityRecord(appId, entityId, recordId) {
+      const normalizedAppId = normalizeString(appId, 'default-app');
+      const normalizedEntityId = normalizeString(entityId, '');
+      const storageKey = this.getEntitySchemaStorageKey(normalizedAppId, normalizedEntityId);
+      const storage = this.getActiveStorageConnection();
+      const records = storage && typeof storage.read === 'function'
+        ? (storage.read('entity-records', storageKey, []) || [])
+        : (this.entityRecords.get(storageKey) || []);
+
+      const nextRecords = Array.isArray(records) ? records.filter((record) => record && record.id !== recordId) : [];
+      this.entityRecords.set(storageKey, nextRecords);
+      if (storage && typeof storage.write === 'function') {
+        storage.write('entity-records', storageKey, nextRecords);
+      }
+      return nextRecords;
     },
 
     normalizeConnection(connectionDefinition) {

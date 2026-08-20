@@ -409,6 +409,56 @@ test('creates a live file storage adapter and a sql-ready adapter for admin-mana
   assert.equal(sqlSaved.mode, 'sqlite');
 });
 
+test('registers generic entity schemas and records for app-level business data', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.apps.clear();
+  runtime.entitySchemas.clear();
+  runtime.entityRecords.clear();
+
+  runtime.registerApp({
+    appId: 'catchtrack',
+    name: 'CatchTrack',
+    version: '1.0.0',
+    active: true,
+    modules: ['gps'],
+    config: { mode: 'local', storageType: 'file' }
+  });
+
+  runtime.registerEntitySchema('catchtrack', {
+    id: 'inventory',
+    name: 'Inventory',
+    fields: [
+      { key: 'name', type: 'string', required: true },
+      { key: 'quantity', type: 'number', required: true },
+      { key: 'active', type: 'boolean', defaultValue: true }
+    ]
+  });
+
+  const schema = runtime.getEntitySchema('catchtrack', 'inventory');
+  assert.equal(schema.id, 'inventory');
+  assert.equal(schema.fields.some((field) => field.key === 'name'), true);
+
+  const record = runtime.createEntityRecord('catchtrack', 'inventory', {
+    name: 'Salmon',
+    quantity: 8,
+    active: true
+  });
+
+  assert.equal(record.entityId, 'inventory');
+  assert.equal(record.quantity, 8);
+  assert.equal(runtime.getEntityRecord('catchtrack', 'inventory', record.id).name, 'Salmon');
+
+  const records = runtime.listEntityRecords('catchtrack', 'inventory');
+  assert.equal(records.length, 1);
+
+  const updated = runtime.updateEntityRecord('catchtrack', 'inventory', record.id, { quantity: 12 });
+  assert.equal(updated.quantity, 12);
+
+  const afterDelete = runtime.deleteEntityRecord('catchtrack', 'inventory', record.id);
+  assert.equal(afterDelete.length, 0);
+});
+
 test('registers a centralized role and permission catalog', () => {
   cleanupRuntimeState();
   const runtime = Framework;

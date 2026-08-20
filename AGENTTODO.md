@@ -59,7 +59,7 @@
 ## Offen / Nächster Arbeitsfortschritt
 - Abschluss der eigenständigen App-Architektur: Jede App trägt ihren eigenen Runtime-/Admin-Kontext, Rollen-/Permission-Scope und Storage-/Server-Kontext, ohne auf andere Apps zuzugreifen.
 - Abschluss der systemischen Validierung: App-Setup, Server-Setup, Admin-Login, Rollen-/Rechte-Checks, Connections, Storage-Adapter und App-Template-Instanziierung müssen ohne Cross-App-Abhängigkeit sauber funktionieren.
-- Nächster logischer Schritt: Die aktive App wird als eigener, isolierter Runtime-Kontext verwaltet; Module, Admin-Aktionen und Connection-Konfigurationen werden dadurch pro App gekapselt und nicht mehr als globaler Shared-State behandelt.
+- Nächster logischer Schritt: eine generische Daten-/Schema-Engine für app-lokale Business-Objekte, damit Module und spätere App-Varianten (z. B. Store, CRM, Booking, Portal) mit einheitlichen Schema-, CRUD- und Rechte-Mechaniken arbeiten, ohne das Core-Framework für jede neue App hart zu erweitern.
 - Danach: erst nach freiem Review und Zustimmung, neue fachliche App-Module oder neue Server-/Admin-Features ergänzen.
 - Reale Hosting- und Deployment-Validierung: shared hosting, JSON/Text-Storage, optional SQL-Upgrade-Pfad und eigenständige App-Instanzierung nach dem vorher festgelegten Framework-Prinzip.
 
@@ -69,4 +69,5 @@
 - Die Server-Initialisierung nutzt jetzt einen app-spezifischen Bootstrap-Workflow statt hart codierter Global-Registrierungen.
 - Die Framework-Validierung läuft über eine gezielte Runtime-Regression zur App-Isolation, damit keine Cross-App-Kontamination mehr entsteht.
 - Der Admin hat jetzt ein eigenes App-Konfigurations-Panel für aktive App-Auswahl, App-Name, Modus und Storage-Strategie erhalten, damit Branding und Datenhaltung direkt im CMS-artigen Admin gesteuert werden können.
+- Die generische Data-/Schema-Engine wurde ergänzt: app-spezifische Entity-Schemata, Validierung, CRUD-Operations und persistente Record-Storage folgen jetzt einem zentralen, wiederverwendbaren Muster und sind für spätere Module und Store-/App-Templates vorbereitet.
 - Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.

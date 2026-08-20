@@ -47,15 +47,16 @@ Status:
 - finish the framework hardening pass for setup, storage, permissions, admin flows and runtime consistency
 - keep the system generic enough for future app variants without global structural rewrites
 - validate that admin-defined storage choices remain stable and future-proof
+- implement the generic data schema and CRUD engine so future modules and app templates can define entities without custom code paths
 - prepare the production layer for plain shared hosting with JSON/text files and optional SQL upgrade paths
 - keep the app freeze active until the framework, roles, permissions, connection layer and admin/runtime model are fully stable and reviewed
 - only re-open new app-dependent module installations after explicit approval and system completion
-- current pass: app runtime isolation is implemented and validated at the framework core; the remaining step is a final regression check on multi-app bootstrap behavior and storage scoping
+- current pass: app runtime isolation is implemented and validated at the framework core; the generic data schema + CRUD engine is added as the next core capability before app-specific expansion
 
 ### Planned next steps
 - complete the final framework validation for independent app/admin/server execution
 - confirm the shared-hosting deployment model and the optional SQL upgrade path
-- add only the next required core functionality if the system is not yet stable enough for final review
+- add the next core business layer: schema registry, entity CRUD, validation defaults, and admin-side record management for app data
 - after approval, continue with the next real domain module only if it is genuinely required by the app design and not just a new feature branch
 - keep module templates, role matrices and feature access aligned with the final approved architecture
 - add deeper audit filters, export options and operational review views only after the platform stability gate is cleared
