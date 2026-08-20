@@ -161,7 +161,7 @@
           message: 'File-based storage is available and writable.'
         };
       },
-      async read(collection, key, fallbackValue = null) {
+      read(collection, key, fallbackValue = null) {
         const normalizedCollection = normalizeString(collection || 'default', 'default');
         const normalizedKey = normalizeString(key || '', 'default');
         const storageValue = typeof localStorage !== 'undefined' && localStorage
@@ -169,7 +169,7 @@
           : readNodeFile(normalizedCollection, normalizedKey, fallbackValue);
         return storageValue === undefined ? fallbackValue : storageValue;
       },
-      async write(collection, key, value) {
+      write(collection, key, value) {
         const normalizedCollection = normalizeString(collection || 'default', 'default');
         const normalizedKey = normalizeString(key || '', 'default');
         if (typeof localStorage !== 'undefined' && localStorage) {
@@ -177,14 +177,14 @@
         }
         return writeNodeFile(normalizedCollection, normalizedKey, value);
       },
-      async list(collection) {
+      list(collection) {
         const normalizedCollection = normalizeString(collection || 'default', 'default');
         if (typeof localStorage !== 'undefined' && localStorage) {
           return browserList(normalizedCollection);
         }
         return listNodeFiles(normalizedCollection);
       },
-      async remove(collection, key) {
+      remove(collection, key) {
         const normalizedCollection = normalizeString(collection || 'default', 'default');
         const normalizedKey = normalizeString(key || '', 'default');
 
@@ -307,7 +307,7 @@
           message: `${normalizedType.toUpperCase()} backend is configured for future database connectivity.`
         };
       },
-      async read(collection, key, fallbackValue = null) {
+      read(collection, key, fallbackValue = null) {
         if (normalizedType !== 'sqlite' || !database) {
           return fallbackValue;
         }
@@ -325,7 +325,7 @@
           return row.value;
         }
       },
-      async write(collection, key, value) {
+      write(collection, key, value) {
         if (normalizedType !== 'sqlite' || !database) {
           return value;
         }
@@ -344,7 +344,7 @@
 
         return value;
       },
-      async list(collection) {
+      list(collection) {
         if (normalizedType !== 'sqlite' || !database) {
           return [];
         }
@@ -353,7 +353,7 @@
         const rows = database.prepare('SELECT entry_key FROM records WHERE collection = ? ORDER BY entry_key ASC').all(normalizedCollection);
         return rows.map((row) => row.entry_key);
       },
-      async remove(collection, key) {
+      remove(collection, key) {
         if (normalizedType !== 'sqlite' || !database) {
           return true;
         }
@@ -384,10 +384,63 @@
     return createFileAdapter(config);
   };
 
+  const getConnectionDefinitionFromRuntime = () => {
+    const runtimeConnection = (() => {
+      if (typeof window !== 'undefined' && window.ConfigManager && typeof window.ConfigManager.get === 'function') {
+        const connectionConfig = window.ConfigManager.get('connections', {});
+        const activeId = window.ConfigManager.getPath ? window.ConfigManager.getPath('connections.activeConnectionId', '') : '';
+        const connections = Array.isArray(connectionConfig && connectionConfig.connections) ? connectionConfig.connections : [];
+        const selected = connections.find((entry) => entry.connectionId === activeId)
+          || connections.find((entry) => entry.default === true)
+          || connections.find((entry) => entry.active === true)
+          || (connections[0] || null);
+        if (selected) {
+          return selected;
+        }
+      }
+
+      if (typeof window !== 'undefined' && window.MasterFramework && typeof window.MasterFramework.listConnections === 'function') {
+        const connections = window.MasterFramework.listConnections();
+        const selected = connections.find((entry) => !!entry.default)
+          || connections.find((entry) => !!entry.active)
+          || (connections[0] || null);
+        if (selected) {
+          return selected;
+        }
+      }
+
+      return {
+        connectionId: 'file-storage',
+        storageType: 'file',
+        databaseType: 'file',
+        active: true,
+        default: true,
+        status: 'active'
+      };
+    })();
+
+    if (runtimeConnection && typeof runtimeConnection === 'object') {
+      return { ...runtimeConnection };
+    }
+
+    return {
+      connectionId: 'file-storage',
+      storageType: 'file',
+      databaseType: 'file',
+      active: true,
+      default: true,
+      status: 'active'
+    };
+  };
+
   const StorageManager = {
     resolveStorageAdapter,
     createFileAdapter,
     createSqlAdapter,
+    getActiveConnectionConfig: getConnectionDefinitionFromRuntime,
+    getRuntimeAdapter() {
+      return resolveStorageAdapter(getConnectionDefinitionFromRuntime());
+    },
     normalizeStorageType: (value, fallback = 'file') => {
       const normalized = normalizeString(value || fallback, fallback).toLowerCase();
       if (normalized === 'text') {

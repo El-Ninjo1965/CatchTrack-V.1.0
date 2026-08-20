@@ -26,8 +26,26 @@
     };
   };
 
+  const getStorageAdapter = () => {
+    if (typeof window !== 'undefined' && window.StorageManager && typeof window.StorageManager.getRuntimeAdapter === 'function') {
+      return window.StorageManager.getRuntimeAdapter();
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.StorageManager && typeof globalThis.StorageManager.getRuntimeAdapter === 'function') {
+      return globalThis.StorageManager.getRuntimeAdapter();
+    }
+    return null;
+  };
+
   const readEntries = () => {
     try {
+      const adapter = getStorageAdapter();
+      if (adapter && typeof adapter.read === 'function') {
+        const value = adapter.read('catch-log', 'entries', []);
+        if (Array.isArray(value)) {
+          return value;
+        }
+      }
+
       if (typeof localStorage !== 'undefined') {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
@@ -45,6 +63,12 @@
 
   const writeEntries = (entries) => {
     try {
+      const adapter = getStorageAdapter();
+      if (adapter && typeof adapter.write === 'function') {
+        adapter.write('catch-log', 'entries', entries);
+        return entries;
+      }
+
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
       }
