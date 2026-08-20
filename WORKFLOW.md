@@ -1,35 +1,37 @@
 # Workflow
 
-- Ergebnis: Die bestehende Offline-First-Architektur wurde weiter stabilisiert und die sichtbare User-UI entsprechend der neutralen Plattformanforderung angepasst.
-- Entscheidungslog: `VISION.md` bleibt unverändert. Es wurden keine grundlegenden Neuarchitekturen eingeführt; nur die vorhandene Offline-First-Struktur wurde konsolidiert, UI- und Modul-Logik korrigiert und die Dokumentation ergänzt.
+- Ergebnis: Die bestehende Offline-First-Architektur wurde weiter stabilisiert, die sichtbare User-UI gemäß der neutralen Plattformanforderung korrigiert und die Admin-/GPS-Verwaltung realisiert.
+- Entscheidungslog: `VISION.md` bleibt unverändert. Es wurden keine grundlegenden Neuarchitekturen eingeführt; die vorhandene Offline-First-Struktur wurde konsolidiert, die Auth-/Session-Abläufe und die Module-Management-UI in den bestehenden Rahmen integriert und dokumentiert.
 - Architekturstatus:
-  - Neutraler Core: vollständig umgesetzt.
-  - Final Framework / App-UI / Admin-UI: vollständig umgesetzt.
-  - Module-Registry und Module-Manager: vollständig umgesetzt.
-  - Auth, Rollen, Berechtigungen und Developer-Bootstrap: vollständig umgesetzt.
-  - Layout-/Theme-Management: vollständig umgesetzt.
-  - Medien-/Upload-Optimierung: validiert und stabil.
+  - Neutraler Core: stabilisiert.
+  - Final Framework / App-UI / Admin-UI: stabilisiert und um echte Module-Verwaltungen erweitert.
+  - Module-Registry und Module-Manager: aktiv und nutzbar.
+  - Auth, Rollen, Berechtigungen und Developer-Bootstrap: stabilisiert.
+  - Layout-/Theme-Management: stabil.
+  - Medien-/Upload-Optimierung: validiert.
   - Offline/Online-Handling: lokal stabilisiert und für den internen Preview-Workflow nutzbar.
-  - Marketplace/Advertising: nicht als separate Produktfunktion implementiert; in der neutralen Plattformarchitektur bewusst offen gelassen.
+  - Marketplace/Advertising: bewusst offen gelassen; keine separate Produktfunktion.
   - Fachlich konkrete App-Logik: bewusst nicht im Core hardcodiert; sie bleibt neutral im Framework und in Modulen.
 - Geregelte Anforderungen und Korrekturen:
   - App-Name zentralisiert: Der sichtbare Name wird aus der zentralen Konfiguration gelesen und nicht mehr lokal hart codiert.
-  - Startseite neutral: Beim Aufruf von `webroot/index.html` erscheint keine „Modules“-Seite als Hauptinhalt; stattdessen eine neutrale Startseite mit Willkommenssatz und öffnbaren Modulen.
+  - Startseite neutral: Beim Aufruf von `webroot/index.html` erscheint keine „Modules“-Seite als Hauptinhalt; stattdessen eine neutrale Startseite mit öffnbaren Modulen.
   - Login-Button erhalten: Der normale Login-Einstieg bleibt in der Top-Right-Navigation erhalten.
   - Module als Navigation: Aktivierte Module werden als direkte Buttons dargestellt; technische Namen und sichtbare Namen sind getrennt.
-  - GPS als sichtbarer Name: Das Modul wird als `GPS` dargestellt, nicht als `GPS Tracker` oder `Modules / GPS Tracker`.
-  - GPS-Modul-Lebenszyklus: Das Modul bleibt ein echtes registriertes Modul und wird nur sichtbar, wenn aktiv und freigegeben; ein vollständiger Discover- oder Enable-Lauf startet keine Geolocation-Trackings ohne expliziten Benutzerstart.
+  - GPS als sichtbarer Name: Das Modul wird als `GPS` dargestellt; die relevanten Buttons verwenden die konkreten Aktionen `Get Current Position`, `Start Tracking` und `Stop Tracking`.
+  - GPS-Modul-Lebenszyklus: Das Modul bleibt ein echtes registriertes Modul und startet keine Geolocation-Trackings ohne expliziten Benutzerstart.
   - Offline-Login: Der lokale Developer-Setup und der Login-Flow verwenden denselben Hash-basierten persistenten Zustand unter `catchtrack.local.auth.v1`.
   - Keine Klartext-Passwörter: Legacy-Keys mit Klartext-Werten werden beim Setup/Migration nicht weiter verwendet.
+  - Admin-Modul-Verwaltung: Module lassen sich über die Admin-Oberfläche aktivieren/deaktivieren; die GPS-Verwaltung nutzt die reale Geolocation-API.
+  - Session-Schutz: Persistierte Sitzungen werden nur noch im vorhandenen Browser-Storage als gültig anerkannt und nicht in Nicht-Browser-Umgebungen missbraucht.
 - Prüfungen:
   - `npm test` wurde erfolgreich ausgeführt.
-  - Validiert wurden: Auth-Reload, lokale Hash-Speicherung, zentrale App-Name-Konfiguration, GPS-Modul-Lebenszyklus und UI-Seitendarstellung.
+  - Validiert wurden: Auth-Reload, lokale Hash-Speicherung, zentrale App-Name-Konfiguration, GPS-Modul-Lebenszyklus, Admin-Module-Verwaltung, GPS-Admin-Aktionen und UI-Seitendarstellung.
 - Abschluss:
-  - Die Repo-Struktur ist für den aktuellen Vision-Stand konsistent und stabil.
-  - Es liegt kein offener kritischer Implementierungsblocker vor.
-  - Die Worktree-Änderungen wurden dokumentiert, commitet und an GitHub synchronisiert.
+  - Der Repository-Stand ist für den aktuellen Vision-Zwischenstand konsistent und stabil.
+  - Es liegen keine kritischen offenen Implementierungsblocker für den aktuellen Stand vor.
+  - Die Worktree-Änderungen wurden dokumentiert und im aktuellen Arbeitsstand mit dem Git-Repository verbunden.
 - Automatischer Commit-/Push- und Sync-Workflow:
-  - Änderungen werden nach Validierung sofort in den lokalen Git-Stand eingepflegt.
+  - Änderungen werden nach Validierung in den lokalen Git-Stand eingepflegt.
   - Die Workflow-Dokumentation wird mit den aktuellen Ergebnissen mitcommittet.
   - Danach wird der Branch an den GitHub-Remote synchronisiert.
   - Abschließend wird der lokale HEAD mit dem GitHub-Remote verglichen, damit die Synchronität verifiziert ist.

@@ -92,6 +92,61 @@
             return window.UserModule.getCurrentUser();
         },
 
+        getModuleState(moduleId) {
+            if (!moduleId || typeof moduleId !== 'string') {
+                return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
+            }
+
+            if (!window.ModuleRegistry || typeof window.ModuleRegistry.get !== 'function') {
+                return { ok: false, code: 'MODULE_REGISTRY_UNAVAILABLE', message: 'Module registry is unavailable.' };
+            }
+
+            const module = window.ModuleRegistry.get(moduleId);
+            if (!module) {
+                return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+            }
+
+            return {
+                ok: true,
+                data: {
+                    id: module.id,
+                    name: module.name,
+                    status: module.status || (module.active ? 'enabled' : 'available'),
+                    active: !!module.active,
+                    permissions: Array.isArray(module.permissions) ? [...module.permissions] : [],
+                    capabilities: Array.isArray(module.capabilities) ? [...module.capabilities] : []
+                }
+            };
+        },
+
+        setModuleState(moduleId, enabled) {
+            if (!moduleId || typeof moduleId !== 'string') {
+                return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
+            }
+
+            if (!window.ModuleManager || typeof window.ModuleManager.enable !== 'function' || typeof window.ModuleManager.disable !== 'function') {
+                return { ok: false, code: 'MODULE_MANAGER_UNAVAILABLE', message: 'Module manager is unavailable.' };
+            }
+
+            const shouldEnable = !!enabled;
+            if (shouldEnable) {
+                window.ModuleManager.enable(moduleId);
+            } else {
+                window.ModuleManager.disable(moduleId);
+            }
+
+            return this.getModuleState(moduleId);
+        },
+
+        toggleModule(moduleId) {
+            const current = this.getModuleState(moduleId);
+            if (!current.ok || !current.data) {
+                return current;
+            }
+
+            return this.setModuleState(moduleId, !current.data.active);
+        },
+
         getAuditLog() {
             return window.CoreAudit && typeof window.CoreAudit.list === 'function'
                 ? window.CoreAudit.list()

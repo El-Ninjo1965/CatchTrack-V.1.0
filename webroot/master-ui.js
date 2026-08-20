@@ -358,6 +358,15 @@
     return '1.0.0';
   };
 
+  const getModuleActionState = (module) => {
+    const active = !!(module && (module.active || module.status === 'enabled' || module.status === 'active'));
+    return {
+      active,
+      status: active ? 'enabled' : 'available',
+      label: active ? 'Disable' : 'Enable'
+    };
+  };
+
   const getAppVersion = () => {
     if (window.App && typeof window.App.version === 'string') {
       return window.App.version;
@@ -504,29 +513,179 @@
       <div class="card">
         <div class="card-header"><h2 class="card-title">Modules</h2></div>
         <div class="content-wrap">
-          <div class="table-wrap">
+          <div id="adminModuleActionStatus" class="message info">Module state is managed directly through the runtime registry.</div>
+          <div class="table-wrap" style="margin-top: 18px;">
             <table>
               <thead>
-                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Dependencies</th><th>Capabilities</th></tr>
+                <tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Type</th><th>Dependencies</th><th>Capabilities</th><th>Actions</th></tr>
               </thead>
               <tbody>
-                ${modules.length ? modules.map((module) => `
-                  <tr>
-                    <td>${escapeHtml(module.id || 'unknown')}</td>
-                    <td>${escapeHtml(module.name || module.id || 'Module')}</td>
-                    <td>${escapeHtml(module.version || '1.0.0')}</td>
-                    <td><span class="status-badge ${module.active || module.status === 'enabled' || module.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(module.status || (module.active ? 'enabled' : 'available'))}</span></td>
-                    <td>${escapeHtml(module.type || 'framework')}</td>
-                    <td>${escapeHtml(Array.isArray(module.dependencies) ? module.dependencies.join(', ') : '')}</td>
-                    <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
-                  </tr>
-                `).join('') : '<tr><td colspan="7">No modules discovered.</td></tr>'}
+                ${modules.length ? modules.map((module) => {
+                  const actionState = getModuleActionState(module);
+                  return `
+                    <tr>
+                      <td>${escapeHtml(module.id || 'unknown')}</td>
+                      <td>${escapeHtml(module.name || module.id || 'Module')}</td>
+                      <td>${escapeHtml(module.version || '1.0.0')}</td>
+                      <td><span class="status-badge ${actionState.active ? 'ok' : 'warning'}">${escapeHtml(actionState.status)}</span></td>
+                      <td>${escapeHtml(module.type || 'framework')}</td>
+                      <td>${escapeHtml(Array.isArray(module.dependencies) ? module.dependencies.join(', ') : '')}</td>
+                      <td>${escapeHtml(Array.isArray(module.capabilities) ? module.capabilities.join(', ') : '')}</td>
+                      <td>
+                        <div class="action-list" style="gap: 8px; justify-content: flex-start;">
+                          <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id || '')}">${actionState.label}</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') : '<tr><td colspan="8">No modules discovered.</td></tr>'}
               </tbody>
             </table>
           </div>
         </div>
       </div>
     `;
+
+    const statusTarget = document.getElementById('adminModuleActionStatus');
+    page.querySelectorAll('[data-module-action="toggle"]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const moduleId = button.dataset.moduleId;
+        const manager = window.AdminModule || null;
+        if (!moduleId || !manager || typeof manager.toggleModule !== 'function') {
+          if (statusTarget) {
+            statusTarget.className = 'message error';
+            statusTarget.textContent = 'Module actions are unavailable.';
+          }
+          return;
+        }
+
+        const result = await manager.toggleModule(moduleId);
+        if (statusTarget) {
+          statusTarget.className = result && result.ok ? 'message success' : 'message error';
+          statusTarget.textContent = result && result.ok
+            ? `Module ${moduleId} is now ${result.data && result.data.active ? 'enabled' : 'disabled'}.`
+            : (result && result.message) || 'Module update failed.';
+        }
+        renderAdminModules();
+      });
+    });
+  };
+
+  const renderAdminGPS = () => {
+    const page = document.getElementById('mainContent');
+    if (!page) return;
+
+    const module = window.GpsModule || (window.ModuleRegistry && typeof window.ModuleRegistry.get === 'function' ? window.ModuleRegistry.get('gps') : null);
+    const runtime = module ? module.getRuntimeState() : { status: 'unavailable', active: false, tracking: false, permissionState: 'unknown', lastError: null, lastPosition: null };
+    const label = runtime.tracking ? 'Tracking active' : runtime.permissionState === 'denied' ? 'Permission denied' : runtime.status === 'enabled' ? 'Ready' : 'Not active';
+    const position = runtime.lastPosition || null;
+    const positionHtml = position ? `<div><dt>Latitude</dt><dd>${position.latitude ?? position.lat ?? '—'}</dd></div><div><dt>Longitude</dt><dd>${position.longitude ?? position.lng ?? '—'}</dd></div><div><dt>Accuracy</dt><dd>${position.accuracy ?? '—'}</dd></div><div><dt>Timestamp</dt><dd>${position.timestamp ?? '—'}</dd></div>` : '<div><dt>Position</dt><dd>Not available</dd></div>';
+
+    page.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">GPS module</h2></div>
+        <div class="content-wrap">
+          <div class="message info">Admin controls are wired to the real geolocation APIs and current module state.</div>
+          <div class="gps-user-module" style="margin-top: 18px;">
+            <div class="gps-heading">
+              <div><span class="user-app-eyebrow">Location</span><h1>GPS</h1></div>
+              <span id="gpsAdminStatus" class="gps-status ${runtime.permissionState === 'denied' ? 'error' : ''}">${label}</span>
+            </div>
+            <div class="gps-location-card">
+              <span class="gps-location-label">Current position</span>
+              <dl id="gpsAdminPosition" class="gps-position">${positionHtml}</dl>
+              <div class="gps-state-line">Permission: ${runtime.permissionState}</div>
+            </div>
+            <div class="gps-actions" style="margin-top: 18px;">
+              <button type="button" class="gps-primary-action" data-gps-action="current">Get Current Position</button>
+              <button type="button" data-gps-action="start" ${runtime.tracking ? 'disabled' : ''}>Start Tracking</button>
+              <button type="button" data-gps-action="stop" ${runtime.tracking ? '' : 'disabled'}>Stop Tracking</button>
+            </div>
+            <p id="gpsAdminMessage" class="gps-message">${runtime.lastError ? runtime.lastError.message : 'GPS module available.'}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const applyState = () => {
+      const nextRuntime = module && typeof module.getRuntimeState === 'function' ? module.getRuntimeState() : { status: 'unavailable', active: false, tracking: false, permissionState: 'unknown', lastError: null, lastPosition: null };
+      const positionNode = document.getElementById('gpsAdminPosition');
+      const statusNode = document.getElementById('gpsAdminStatus');
+      const messageNode = document.getElementById('gpsAdminMessage');
+      const nextPosition = nextRuntime.lastPosition || nextRuntime.lastPosition || null;
+      const nextLabel = nextRuntime.tracking ? 'Tracking active' : nextRuntime.permissionState === 'denied' ? 'Permission denied' : nextRuntime.status === 'enabled' ? 'Ready' : 'Not active';
+      if (positionNode) {
+        const positionHtmlValue = nextPosition ? `<div><dt>Latitude</dt><dd>${nextPosition.latitude ?? nextPosition.lat ?? '—'}</dd></div><div><dt>Longitude</dt><dd>${nextPosition.longitude ?? nextPosition.lng ?? '—'}</dd></div><div><dt>Accuracy</dt><dd>${nextPosition.accuracy ?? '—'}</dd></div><div><dt>Timestamp</dt><dd>${nextPosition.timestamp ?? '—'}</dd></div>` : '<div><dt>Position</dt><dd>Not available</dd></div>';
+        positionNode.innerHTML = positionHtmlValue;
+      }
+      if (statusNode) {
+        statusNode.textContent = nextLabel;
+        statusNode.className = `gps-status ${nextRuntime.permissionState === 'denied' ? 'error' : ''}`;
+      }
+      if (messageNode) {
+        messageNode.textContent = nextRuntime.lastError ? nextRuntime.lastError.message : nextRuntime.tracking ? 'GPS tracking active.' : 'GPS module available.';
+      }
+    };
+
+    const actionHandlers = {
+      current: async () => {
+        if (!module || typeof module.getCurrentPosition !== 'function') {
+          const messageNode = document.getElementById('gpsAdminMessage');
+          if (messageNode) {
+            messageNode.textContent = 'GPS module is unavailable.';
+          }
+          return;
+        }
+        try {
+          await module.getCurrentPosition();
+          applyState();
+        } catch (error) {
+          const messageNode = document.getElementById('gpsAdminMessage');
+          if (messageNode) {
+            messageNode.textContent = error && error.code === 'PERMISSION_DENIED'
+              ? 'Location permission was denied.'
+              : error && error.code === 'POSITION_UNAVAILABLE'
+                ? 'Position could not be determined.'
+                : error && error.code === 'TIMEOUT'
+                  ? 'Location request timed out.'
+                  : 'Location could not be retrieved.';
+          }
+          applyState();
+        }
+      },
+      start: () => {
+        if (!module || typeof module.startTracking !== 'function') {
+          const messageNode = document.getElementById('gpsAdminMessage');
+          if (messageNode) messageNode.textContent = 'GPS module is unavailable.';
+          return;
+        }
+        const result = module.startTracking();
+        if (result && result.ok) {
+          applyState();
+        } else {
+          const messageNode = document.getElementById('gpsAdminMessage');
+          if (messageNode) {
+            messageNode.textContent = result && result.code === 'PERMISSION_DENIED' ? 'Location permission was denied.' : 'Location tracking could not be started.';
+          }
+        }
+        applyState();
+      },
+      stop: () => {
+        if (module && typeof module.stopTracking === 'function') {
+          module.stopTracking();
+        }
+        applyState();
+      }
+    };
+
+    page.querySelectorAll('[data-gps-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.gpsAction;
+        if (action && actionHandlers[action]) {
+          actionHandlers[action]();
+        }
+      });
+    });
   };
 
   const renderAdminMarketplace = async () => {
@@ -1295,6 +1454,10 @@
       }
       if (state.activeView === 'admin:modules') {
         renderAdminModules();
+        return;
+      }
+      if (state.activeView === 'admin:gps') {
+        renderAdminGPS();
         return;
       }
       if (state.activeView === 'admin:marketplace') {

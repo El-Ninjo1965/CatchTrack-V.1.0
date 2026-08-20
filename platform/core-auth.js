@@ -144,20 +144,26 @@
     const restoreStoredSession = () => {
         const payload = readStoredSession();
         if (!payload || !payload.session || !payload.user) {
-            localStorage.removeItem(SESSION_STORAGE_KEY);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            }
             return false;
         }
 
         const session = payload.session;
         const expiresAt = session.expiresAt ? new Date(session.expiresAt).getTime() : 0;
         if (session.status !== 'active' || !session.sessionId || !session.userId || (expiresAt && expiresAt <= Date.now())) {
-            localStorage.removeItem(SESSION_STORAGE_KEY);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            }
             return false;
         }
 
         const user = normalizeUserRecord(payload.user);
         if (!user) {
-            localStorage.removeItem(SESSION_STORAGE_KEY);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            }
             return false;
         }
 
