@@ -248,6 +248,27 @@ test('supports admin-configurable storage modes and connection metadata', () => 
   assert.equal(runtime.getConnection('primary-storage').status, 'active');
 });
 
+test('allows developer roles to pass resource-scoped user write checks', () => {
+  const context = {
+    window: null,
+    console,
+    require,
+    setTimeout,
+    clearTimeout
+  };
+  context.window = context;
+  vm.createContext(context);
+  loadScriptIntoContext(context, path.resolve(__dirname, '../platform/core-access.js'));
+
+  const result = context.window.CoreAccess.can({ id: 'dev-1', roles: ['developer'] }, 'user:write', 'user');
+  assert.equal(result.ok, true);
+  assert.equal(result.code, 'ALLOWED');
+
+  const denied = context.window.CoreAccess.can({ id: 'user-1', roles: ['user'] }, 'user:write', 'user');
+  assert.equal(denied.ok, false);
+  assert.equal(denied.code, 'ACCESS_DENIED');
+});
+
 test('creates a live file storage adapter and a sql-ready adapter for admin-managed connections', async () => {
   cleanupRuntimeState();
   const runtime = Framework;

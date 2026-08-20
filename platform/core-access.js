@@ -63,6 +63,29 @@
     const normalizeRoleName = (value) => String(value || '').trim().toLowerCase();
     const normalizePermissionName = (value) => String(value || '').trim();
 
+    const resolveActionPermission = (action, resource = null) => {
+        const normalizedAction = normalizePermissionName(action);
+        if (!normalizedAction) {
+            return '';
+        }
+        if (normalizedAction.includes(':')) {
+            return normalizedAction;
+        }
+
+        if (typeof resource === 'string' && resource.trim()) {
+            return `${resource.trim()}:${normalizedAction}`;
+        }
+
+        if (resource && typeof resource === 'object') {
+            const resourceId = resource.id || resource.name || resource.type || resource.resource || '';
+            if (typeof resourceId === 'string' && resourceId.trim()) {
+                return `${resourceId.trim()}:${normalizedAction}`;
+            }
+        }
+
+        return normalizedAction;
+    };
+
     const getDefaultRoleCatalog = () => Object.entries(DEFAULT_ROLE_DEFINITIONS).map(([role, definition]) => ({
         ...definition,
         role,
@@ -152,12 +175,10 @@
             }
 
             const permissions = expandPermissions(user);
-            const actionPermission = typeof resource === 'string' && resource.trim()
-                ? `${resource.trim()}:${action}`
-                : action;
+            const actionPermission = resolveActionPermission(action, resource);
 
             const isProtected = !!(resource && resource.protected) || !!context.protected;
-            const explicitAllow = permissions.includes(actionPermission) || permissions.includes(action);
+            const explicitAllow = permissions.includes(actionPermission) || permissions.includes(normalizePermissionName(action));
 
             if (isProtected && !explicitAllow) {
                 return {

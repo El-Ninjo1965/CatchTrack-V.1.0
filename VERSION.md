@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.2 - admin-managed storage connections and future-ready data layer
+## Version 1.1.3 - fixed admin access for user management and protected write checks
 
 Status:
 - Framework core remains stable and module-driven.
@@ -9,6 +9,7 @@ Status:
 - Catch Log and Fishing Spots remain the first real product domain modules in the active app.
 - The admin shell now supports a storage/connection configuration model for file-based and SQL-based backends.
 - The framework can now be configured without hardcoding a single backend type.
+- Admin user creation and role-based permission checks are fixed so developer/admin accounts can manage users without false `Access denied` results.
 
 ### Included milestones
 - neutral framework shell

@@ -26,10 +26,11 @@
 - Connection-Model und default Config erweitert, damit die Daten-Speicherstrategie nicht hart verdrahtet, sondern im Admin konfigurierbar ist.
 - Live-Storage-Adapter ergänzt: File-Storage nutzt jetzt echte JSON-Dateien im Server-Runtime-Verzeichnis, während SQL-Varianten als konfigurierbare, zukunftsfähige Adapter-Modelle im Admin-Workflow nutzbar sind und die Verbindung direkt validiert.
 - SQLite-Adapter implementiert: Der SQL-Pfad nutzt nun echte SQLite-Datenbanken im Runtime-Verzeichnis und unterstützt Schreiben, Lesen, Auflisten und Löschen mit persistenter Datenhaltung.
+- Berechtigungsprüfung für resource-scoped User-Schreibrechte korrigiert: Entwickler/Admins können nun Benutzer anlegen und verwalten, ohne durch eine doppelte `user:user:write`-Prüfung blockiert zu werden.
 
 ## Getestet
-- `npm test` vollständig ausgeführt.
-- Verifiziert: GPS-Lebenszyklus ohne Duplicate Watcher, LocalAuth/Setup-Login-Reload-Persistenz, zentrale App-Name-Konfiguration, neutraler User-UI-Flow, Framework-Regressionen, Admin-Module-/GPS-Verwaltung, neue App-/Modul-Scaffolding-Integration, Module-Templates und zentraler Permissions-Overlay.
+- `node --test tests/master-framework.test.js` erfolgreich ausgeführt.
+- Verifiziert: GPS-Lebenszyklus ohne Duplicate Watcher, LocalAuth/Setup-Login-Reload-Persistenz, zentrale App-Name-Konfiguration, neutraler User-UI-Flow, Framework-Regressionen, Admin-Module-/GPS-Verwaltung, neue App-/Modul-Scaffolding-Integration, Module-Templates, zentraler Permissions-Overlay und korrigierte Admin-Berechtigungen für Benutzerverwaltung.
 - Browserseitige Logik wurde anhand der tatsächlichen API-Verwendung und des erwarteten UI-Verhaltens geprüft: kein automatischer GPS-Start, Start/Stop/GetCurrentPosition auf echter Geolocation-API, korrekte Status- und Fehlermeldungen, Modul-Discovery für die erste App-Shell und die Erstellung neuer Module aus Templates.
 
 ## Tatsächlich funktional
