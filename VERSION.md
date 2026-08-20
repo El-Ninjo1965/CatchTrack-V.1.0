@@ -14,6 +14,7 @@ Status:
 - Modules can be edited directly through metadata-driven governance forms covering app ID, name, type, description, permissions, capabilities and enable/disable state.
 - The framework supports app-scoped module access control by role, with UI-level visibility updates without rewrites of the core system.
 - Feature groups support a role-based access matrix for dashboard, profile, modules and other app areas without changing the framework core.
+- Active app naming now follows the runtime-selected app context in the user UI, so the visible app identity remains in sync after an app switch from the admin configuration screen.
 - Audit logging is persisted in browser storage and accepts the real event signatures used by the platform, preventing audit entries from being lost or malformed.
 - App template registration and creation are available in the framework and admin UI so new app variants can be generated from reusable blueprints rather than custom one-off code paths.
 - Admin audit includes filterable timeline views so administrators can review actions by actor, action, resource, result and searchable metadata.

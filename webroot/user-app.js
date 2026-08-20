@@ -95,12 +95,20 @@
   };
 
   const getAppName = () => {
+    const framework = window.MasterFramework && typeof window.MasterFramework.getActiveApp === 'function'
+      ? window.MasterFramework
+      : null;
+    const activeApp = framework ? framework.getActiveApp() : null;
+    if (activeApp && typeof activeApp.name === 'string' && activeApp.name.trim()) {
+      return activeApp.name.trim();
+    }
+
     const appConfig = window.ConfigManager && typeof window.ConfigManager.get === 'function'
       ? window.ConfigManager.get('app', {})
       : {};
     return appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
       ? appConfig.name.trim()
-      : 'Neutral Platform';
+      : 'Retail Demo';
   };
 
   const getAppMark = () => {
@@ -116,6 +124,20 @@
   const getModules = () => window.ModuleRegistry && typeof window.ModuleRegistry.getAll === 'function'
     ? window.ModuleRegistry.getAll().filter((module) => module && module.id && (module.active || module.status === 'enabled' || module.status === 'active'))
     : [];
+
+  const getActiveAppId = () => {
+    const framework = window.MasterFramework && typeof window.MasterFramework.getActiveApp === 'function'
+      ? window.MasterFramework
+      : null;
+    const activeApp = framework ? framework.getActiveApp() : null;
+    if (activeApp && typeof activeApp.appId === 'string' && activeApp.appId.trim()) {
+      return activeApp.appId.trim();
+    }
+
+    const appList = framework && typeof framework.listApps === 'function' ? framework.listApps() : [];
+    const firstApp = appList.find((app) => app && app.appId);
+    return firstApp && typeof firstApp.appId === 'string' ? firstApp.appId : 'retail-demo';
+  };
 
   const getVisibleModules = () => {
     const modules = getModules();

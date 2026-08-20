@@ -176,6 +176,37 @@ test('registers and activates apps', () => {
   assert.equal(runtime.getApp('weather').status, 'active');
 });
 
+test('prefers the active app in the app listing and keeps the retail app as the default working app', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.apps.clear();
+  runtime.appRuntimeState.clear();
+  runtime.currentAppId = null;
+
+  runtime.registerApp({
+    appId: 'catchtrack',
+    name: 'CatchTrack',
+    version: '1.0.0',
+    active: false,
+    modules: ['dashboard'],
+    config: { mode: 'local' }
+  });
+
+  runtime.registerApp({
+    appId: 'retail-demo',
+    name: 'Retail Demo',
+    version: '1.0.0',
+    active: true,
+    modules: ['dashboard', 'catalog'],
+    config: { mode: 'local', defaultView: 'catalog' }
+  });
+
+  const appList = runtime.listApps();
+  assert.equal(appList[0].appId, 'retail-demo');
+  assert.equal(runtime.getActiveApp().appId, 'retail-demo');
+  assert.equal(runtime.getApp('retail-demo').status, 'active');
+});
+
 test('keeps app runtime state isolated for each app instance', () => {
   cleanupRuntimeState();
   const runtime = Framework;
