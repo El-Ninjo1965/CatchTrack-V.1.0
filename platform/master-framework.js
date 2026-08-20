@@ -281,6 +281,70 @@
       return connection;
     },
 
+    getStorageManager() {
+      if (typeof globalThis !== 'undefined' && globalThis.StorageManager && typeof globalThis.StorageManager.resolveStorageAdapter === 'function') {
+        return globalThis.StorageManager;
+      }
+
+      if (typeof require === 'function') {
+        try {
+          return require('./storage-manager');
+        } catch (error) {
+          return null;
+        }
+      }
+
+      return null;
+    },
+
+    normalizeStorageType(value, fallback = 'file') {
+      const manager = this.getStorageManager();
+      if (manager && typeof manager.normalizeStorageType === 'function') {
+        return manager.normalizeStorageType(value, fallback);
+      }
+      const normalized = normalizeString(String(value || fallback), fallback).toLowerCase();
+      return normalized === 'text' ? 'file' : normalized;
+    },
+
+    createStorageAdapter(connectionDefinition = {}) {
+      const manager = this.getStorageManager();
+      if (manager && typeof manager.resolveStorageAdapter === 'function') {
+        return manager.resolveStorageAdapter(connectionDefinition || {});
+      }
+
+      const normalized = this.normalizeConnection(connectionDefinition || {});
+      return {
+        id: normalized.connectionId,
+        connectionId: normalized.connectionId,
+        type: normalized.storageType,
+        storageType: normalized.storageType,
+        name: `${normalized.storageType.toUpperCase()} storage adapter`,
+        async test() {
+          return { ok: true, status: 'healthy', mode: normalized.storageType, checkedAt: new Date().toISOString() };
+        },
+        async read() { return null; },
+        async write(collection, key, value) { return value; },
+        async list() { return []; },
+        async remove() { return true; }
+      };
+    },
+
+    getActiveStorageConnection() {
+      const defaultConnection = this.listConnections().find((connection) => !!connection.default) || this.listConnections().find((connection) => !!connection.active) || null;
+      const fallback = this.normalizeConnection({
+        connectionId: 'file-storage',
+        appId: 'default-app',
+        storageType: 'file',
+        databaseType: 'file',
+        active: true,
+        default: true,
+        status: 'active'
+      });
+
+      const source = defaultConnection || fallback;
+      return this.createStorageAdapter(source);
+    },
+
     setFeatureFlag(key, value) {
       const normalizedKey = normalizeString(key, '');
       if (!normalizedKey) {

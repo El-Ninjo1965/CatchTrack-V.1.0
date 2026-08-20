@@ -248,6 +248,36 @@ test('supports admin-configurable storage modes and connection metadata', () => 
   assert.equal(runtime.getConnection('primary-storage').status, 'active');
 });
 
+test('creates a live file storage adapter and a sql-ready adapter for admin-managed connections', async () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  const fileAdapter = runtime.createStorageAdapter({
+    connectionId: 'file-storage',
+    appId: 'catchtrack',
+    storageType: 'file',
+    storagePath: 'server/runtime/test-data'
+  });
+
+  assert.equal(fileAdapter.type, 'file');
+  const fileCheck = await fileAdapter.test();
+  assert.equal(fileCheck.ok, true);
+  await fileAdapter.write('sessions', 'session-demo', { ok: true, appId: 'catchtrack' });
+  const saved = await fileAdapter.read('sessions', 'session-demo', null);
+  assert.equal(saved.appId, 'catchtrack');
+
+  const sqlAdapter = runtime.createStorageAdapter({
+    connectionId: 'sql-storage',
+    appId: 'catchtrack',
+    storageType: 'sqlite',
+    databaseType: 'sqlite',
+    databaseName: 'catchtrack.db'
+  });
+
+  assert.equal(sqlAdapter.type, 'sqlite');
+  const sqlCheck = await sqlAdapter.test();
+  assert.equal(sqlCheck.status, 'ready');
+});
+
 test('registers a centralized role and permission catalog', () => {
   cleanupRuntimeState();
   const runtime = Framework;

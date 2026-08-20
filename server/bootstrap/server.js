@@ -310,7 +310,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
         return true;
       }
       readJsonBody(req)
-        .then((payload) => {
+        .then(async (payload) => {
           const connectionId = payload.connectionId || payload.id || payload.name || 'default-connection';
           const appId = payload.appId || payload.app || 'neutral-app';
           const existing = MasterFramework.getConnection(connectionId);
@@ -342,7 +342,25 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
             ? MasterFramework.updateConnection(connectionId, normalized)
             : MasterFramework.registerConnection(normalized);
 
-          sendJson(res, 200, { ok: true, connection: result, mode: existing ? 'updated' : 'created' });
+          const storageAdapter = MasterFramework.createStorageAdapter(result);
+          const connectionCheck = storageAdapter && typeof storageAdapter.test === 'function'
+            ? await storageAdapter.test()
+            : { ok: true, status: result.status || 'active', checkedAt: new Date().toISOString() };
+
+          const persisted = MasterFramework.updateConnection(connectionId, {
+            ...result,
+            status: connectionCheck.status || result.status || 'active',
+            active: !!result.active || !!connectionCheck.ok,
+            health: { ...result.health, ...connectionCheck }
+          });
+
+          sendJson(res, 200, {
+            ok: true,
+            connection: persisted,
+            adapter: storageAdapter,
+            check: connectionCheck,
+            mode: existing ? 'updated' : 'created'
+          });
         })
         .catch((error) => {
           sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', message: error.message || 'Connection payload invalid.' });
