@@ -11,7 +11,7 @@ const appShell = {
       if (registrar) {
         registrar({
           appId: context.appId || 'neutral-app',
-          name: context.name || 'Neutral App',
+          name: context.name || 'Neutral Platform',
           version: context.version || '1.0.0',
           description: 'Neutral application shell created by the framework bootstrap.',
           active: true,

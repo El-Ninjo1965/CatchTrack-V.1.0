@@ -32,7 +32,7 @@
       : {};
     const name = appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
       ? appConfig.name.trim()
-      : 'Neutral App';
+      : 'Neutral Platform';
     return name;
   };
 
