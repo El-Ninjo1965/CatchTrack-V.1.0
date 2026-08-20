@@ -4,34 +4,52 @@ const path = require('node:path');
 const { port, host, rootDir, webRootDir, apiBase } = require('../config');
 const MasterFramework = require('../../platform/master-framework');
 
-if (!MasterFramework.getApp('neutral-app')) {
-  MasterFramework.registerApp({
-    appId: 'neutral-app',
-    name: 'Neutral App',
-    version: '1.0.0',
-    description: 'Default neutral application shell for the framework runtime.',
-    status: 'active',
-    active: true,
-    modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
-    config: { framework: 'neutral-master-framework' }
-  });
-}
-
-if (!MasterFramework.getApp('catchtrack')) {
-  MasterFramework.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
-    version: '1.0.0',
-    description: 'First real application shell for the CatchTrack framework.',
-    status: 'active',
-    active: true,
-    modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
-    config: {
-      framework: 'neutral-master-framework',
-      defaultView: 'dashboard'
+const bootstrapDefaultApps = () => {
+  const defaults = [
+    {
+      appId: 'neutral-app',
+      name: 'Neutral App',
+      version: '1.0.0',
+      description: 'Default neutral application shell for the framework runtime.',
+      status: 'active',
+      active: true,
+      modules: ['dashboard', 'gps'],
+      config: {
+        framework: 'neutral-master-framework',
+        mode: 'local',
+        defaultView: 'dashboard'
+      }
+    },
+    {
+      appId: 'catchtrack',
+      name: 'CatchTrack',
+      version: '1.0.0',
+      description: 'First real application shell for the CatchTrack framework.',
+      status: 'active',
+      active: true,
+      modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
+      config: {
+        framework: 'neutral-master-framework',
+        mode: 'local',
+        defaultView: 'dashboard'
+      }
     }
-  });
-}
+  ];
+
+  for (const appDefinition of defaults) {
+    if (!MasterFramework.getApp(appDefinition.appId)) {
+      MasterFramework.registerApp(appDefinition);
+    }
+  }
+
+  const preferredAppId = (process.env.DEFAULT_APP_ID || 'catchtrack').trim() || 'catchtrack';
+  const targetApp = MasterFramework.getApp(preferredAppId) || MasterFramework.getApp('neutral-app');
+  if (targetApp) {
+    MasterFramework.setActiveApp(targetApp.appId);
+  }
+};
+
+bootstrapDefaultApps();
 
 if (typeof MasterFramework.markFrameworkInitialized === 'function') {
   MasterFramework.markFrameworkInitialized({

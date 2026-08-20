@@ -57,14 +57,15 @@
 - Der aktuelle Arbeitsblock ist bewusst auf Framework-Konsolidierung, App-Entkopplung und Admin-/Server-Integration ausgerichtet, nicht auf neue Domain-Module.
 
 ## Offen / Nächster Arbeitsfortschritt
-- Abschluss der eigenständigen App-Architektur: jede App soll ihre eigene adminseitige Konfiguration, Benutzersysteme, Rollen, Module, Connections und Server-/Runtime-Konfiguration tragen.
+- Abschluss der eigenständigen App-Architektur: Jede App trägt ihren eigenen Runtime-/Admin-Kontext, Rollen-/Permission-Scope und Storage-/Server-Kontext, ohne auf andere Apps zuzugreifen.
 - Abschluss der systemischen Validierung: App-Setup, Server-Setup, Admin-Login, Rollen-/Rechte-Checks, Connections, Storage-Adapter und App-Template-Instanziierung müssen ohne Cross-App-Abhängigkeit sauber funktionieren.
+- Nächster logischer Schritt: Die aktive App wird als eigener, isolierter Runtime-Kontext verwaltet; Module, Admin-Aktionen und Connection-Konfigurationen werden dadurch pro App gekapselt und nicht mehr als globaler Shared-State behandelt.
 - Danach: erst nach freiem Review und Zustimmung, neue fachliche App-Module oder neue Server-/Admin-Features ergänzen.
 - Reale Hosting- und Deployment-Validierung: shared hosting, JSON/Text-Storage, optional SQL-Upgrade-Pfad und eigenständige App-Instanzierung nach dem vorher festgelegten Framework-Prinzip.
 
 ## Aktuell in Arbeit
-- Persistente Audit-Log-Entries im Browser-Storage ergänzt, damit Admin- und Systemaktionen nicht nur temporär im Speicher bleiben.
-- App-Template-Foundation im Master Framework ergänzt, damit neue App-Varianten aus einem definierten Blueprint erzeugt werden können.
-- Admin-UI erweitert: App-Templates können jetzt im Apps-Bereich ausgewählt und als neue Instanz kreiert werden.
-- Audit-Timeline und Filter-Ansicht im Admin ergänzt, damit Ereignisse nach Actor, Action, Resource und Result durchsuchbar sind.
+- App-Umgebung und Runtime-Context wurden auf eigenständige App-Instanzen umgestellt.
+- Die aktive App wird zentral als eigener Konfigurations-/Runtime-Kontext verwaltet, mit eigener Storage-Namespace, Admin-Scope und isolierter Server-/UI-Konfiguration.
+- Die Server-Initialisierung nutzt jetzt einen app-spezifischen Bootstrap-Workflow statt hart codierter Global-Registrierungen.
+- Die Framework-Validierung läuft über eine gezielte Runtime-Regression zur App-Isolation, damit keine Cross-App-Kontamination mehr entsteht.
 - Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.

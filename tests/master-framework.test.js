@@ -176,6 +176,46 @@ test('registers and activates apps', () => {
   assert.equal(runtime.getApp('weather').status, 'active');
 });
 
+test('keeps app runtime state isolated for each app instance', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.apps.clear();
+  runtime.appRuntimeState.clear();
+  runtime.currentAppId = null;
+
+  runtime.registerApp({
+    appId: 'catchtrack',
+    name: 'CatchTrack',
+    version: '1.0.0',
+    active: true,
+    modules: ['gps'],
+    config: { mode: 'local', storageType: 'file', defaultView: 'dashboard' }
+  });
+
+  runtime.registerApp({
+    appId: 'weather',
+    name: 'Weather App',
+    version: '1.0.0',
+    active: false,
+    modules: ['gps'],
+    config: { mode: 'local', storageType: 'file', defaultView: 'overview' }
+  });
+
+  const catchtrackRuntime = runtime.getAppRuntimeState('catchtrack');
+  const weatherRuntime = runtime.getAppRuntimeState('weather');
+
+  assert.equal(catchtrackRuntime.appId, 'catchtrack');
+  assert.equal(weatherRuntime.appId, 'weather');
+  assert.equal(catchtrackRuntime.storage.namespace, 'app:catchtrack:');
+  assert.equal(weatherRuntime.storage.namespace, 'app:weather:');
+  assert.equal(runtime.getActiveApp().appId, 'catchtrack');
+
+  runtime.setActiveApp('weather');
+  assert.equal(runtime.getActiveApp().appId, 'weather');
+  assert.equal(runtime.getAppRuntimeState('weather').server.status, 'active');
+  assert.equal(runtime.getAppRuntimeState('catchtrack').server.status, 'active');
+});
+
 test('supports app-scoped module access and role mappings', () => {
   cleanupRuntimeState();
   const runtime = Framework;

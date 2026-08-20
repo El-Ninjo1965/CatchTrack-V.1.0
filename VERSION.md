@@ -17,6 +17,7 @@ Status:
 - Audit logging is persisted in browser storage and accepts the real event signatures used by the platform, preventing audit entries from being lost or malformed.
 - App template registration and creation are available in the framework and admin UI so new app variants can be generated from reusable blueprints rather than custom one-off code paths.
 - Admin audit includes filterable timeline views so administrators can review actions by actor, action, resource, result and searchable metadata.
+- App runtime isolation is now managed explicitly: each application has its own runtime context, storage namespace, admin scope and active selection without relying on a shared global app state.
 - Architectural gate: each app, including admin and server context, must be independent and not rely on another app’s runtime state or modules.
 - Freeze gate: no additional app-dependent modules will be installed until the full base system is completed, stable and explicitly reviewed and approved by the user.
 
@@ -48,6 +49,7 @@ Status:
 - prepare the production layer for plain shared hosting with JSON/text files and optional SQL upgrade paths
 - keep the app freeze active until the framework, roles, permissions, connection layer and admin/runtime model are fully stable and reviewed
 - only re-open new app-dependent module installations after explicit approval and system completion
+- current pass: app runtime isolation is implemented and validated at the framework core; the remaining step is a final regression check on multi-app bootstrap behavior and storage scoping
 
 ### Planned next steps
 - complete the final framework validation for independent app/admin/server execution

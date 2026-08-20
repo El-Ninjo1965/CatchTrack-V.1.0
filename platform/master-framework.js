@@ -62,6 +62,8 @@
     permissions: new Map(),
     roles: new Map(),
     migrations: [],
+    appRuntimeState: new Map(),
+    currentAppId: null,
     createdAt: new Date().toISOString(),
 
     initialize() {
@@ -290,6 +292,11 @@
     registerApp(appDefinition) {
       const app = this.normalizeApp(appDefinition);
       this.apps.set(app.appId, app);
+      const runtime = this.getAppRuntimeState(app.appId, app);
+      app.runtimeState = { ...runtime };
+      if (!this.currentAppId && app.active) {
+        this.currentAppId = app.appId;
+      }
       return app;
     },
 
@@ -299,6 +306,123 @@
         return null;
       }
       return this.apps.get(normalized) || null;
+    },
+
+    getAppRuntimeState(appId, appDefinition = null) {
+      const resolvedAppId = normalizeString(appId, '');
+      if (!resolvedAppId) {
+        return null;
+      }
+
+      const app = appDefinition || this.getApp(resolvedAppId);
+      const source = app || this.getApp(resolvedAppId) || {};
+      const runtime = this.appRuntimeState.get(resolvedAppId) || {
+        appId: resolvedAppId,
+        active: !!(source && source.active),
+        isolated: true,
+        server: {
+          appId: resolvedAppId,
+          mode: (source && source.config && source.config.mode) || 'local',
+          title: (source && source.name) || resolvedAppId,
+          status: (source && source.status) || 'inactive',
+          runtime: 'neutral-framework'
+        },
+        admin: {
+          appId: resolvedAppId,
+          roleScope: 'app-local',
+          isolated: true,
+          permissions: Array.isArray(source && source.permissions) ? [...source.permissions] : [],
+          capabilities: Array.isArray(source && source.capabilities) ? [...source.capabilities] : []
+        },
+        storage: {
+          appId: resolvedAppId,
+          namespace: `app:${resolvedAppId}:`,
+          adapter: ((source && source.config && source.config.storageType) || 'file'),
+          mode: ((source && source.config && source.config.mode) || 'local')
+        },
+        ui: {
+          appId: resolvedAppId,
+          defaultView: ((source && source.config && source.config.defaultView) || 'dashboard'),
+          appName: (source && source.name) || resolvedAppId
+        },
+        createdAt: (source && source.createdAt) || new Date().toISOString(),
+        updatedAt: (source && source.updatedAt) || new Date().toISOString()
+      };
+
+      const merged = {
+        ...runtime,
+        appId: resolvedAppId,
+        active: !!(source && source.active) || runtime.active,
+        isolated: true,
+        server: {
+          ...(runtime.server || {}),
+          appId: resolvedAppId,
+          mode: ((source && source.config && source.config.mode) || (runtime.server && runtime.server.mode) || 'local'),
+          title: (source && source.name) || (runtime.server && runtime.server.title) || resolvedAppId,
+          status: (source && source.status) || (runtime.server && runtime.server.status) || 'inactive',
+          runtime: 'neutral-framework'
+        },
+        admin: {
+          ...(runtime.admin || {}),
+          appId: resolvedAppId,
+          roleScope: 'app-local',
+          isolated: true,
+          permissions: Array.isArray(source && source.permissions) ? [...source.permissions] : (Array.isArray(runtime.admin && runtime.admin.permissions) ? [...runtime.admin.permissions] : []),
+          capabilities: Array.isArray(source && source.capabilities) ? [...source.capabilities] : (Array.isArray(runtime.admin && runtime.admin.capabilities) ? [...runtime.admin.capabilities] : [])
+        },
+        storage: {
+          ...(runtime.storage || {}),
+          appId: resolvedAppId,
+          namespace: `app:${resolvedAppId}:`,
+          adapter: ((source && source.config && source.config.storageType) || (runtime.storage && runtime.storage.adapter) || 'file'),
+          mode: ((source && source.config && source.config.mode) || (runtime.storage && runtime.storage.mode) || 'local')
+        },
+        ui: {
+          ...(runtime.ui || {}),
+          appId: resolvedAppId,
+          defaultView: ((source && source.config && source.config.defaultView) || (runtime.ui && runtime.ui.defaultView) || 'dashboard'),
+          appName: (source && source.name) || (runtime.ui && runtime.ui.appName) || resolvedAppId
+        },
+        updatedAt: (source && source.updatedAt) || new Date().toISOString()
+      };
+
+      this.appRuntimeState.set(resolvedAppId, merged);
+      if (app) {
+        app.runtimeState = { ...merged };
+      }
+      return { ...merged };
+    },
+
+    getActiveApp() {
+      if (!this.currentAppId) {
+        return null;
+      }
+      return this.getApp(this.currentAppId);
+    },
+
+    setActiveApp(appId) {
+      const normalized = normalizeString(appId, '');
+      if (!normalized) {
+        throw new Error('Application id is required.');
+      }
+
+      const app = this.getApp(normalized);
+      if (!app) {
+        throw new Error(`Application not found: ${normalized}`);
+      }
+
+      this.currentAppId = normalized;
+      app.active = true;
+      app.status = 'active';
+      app.updatedAt = new Date().toISOString();
+      const runtime = this.getAppRuntimeState(normalized, app);
+      runtime.active = true;
+      runtime.server.status = 'active';
+      return { ...runtime };
+    },
+
+    listAppRuntimeState() {
+      return Array.from(this.appRuntimeState.entries()).map(([appId, runtime]) => ({ ...runtime, appId }));
     },
 
     setAppModuleAccess(appId, moduleId, access = {}) {
@@ -485,7 +609,15 @@
     },
 
     listApps() {
-      return Array.from(this.apps.values()).map((app) => ({ ...app, config: { ...app.config }, secrets: { ...app.secrets }, runtimeState: { ...app.runtimeState } }));
+      return Array.from(this.apps.values()).map((app) => {
+        const runtime = this.getAppRuntimeState(app.appId, app);
+        return {
+          ...app,
+          config: { ...app.config },
+          secrets: { ...app.secrets },
+          runtimeState: { ...(app.runtimeState || {}), ...runtime }
+        };
+      });
     },
 
     activateApp(appId) {
@@ -496,6 +628,10 @@
       app.active = true;
       app.status = 'active';
       app.updatedAt = new Date().toISOString();
+      this.currentAppId = app.appId;
+      const runtime = this.getAppRuntimeState(app.appId, app);
+      runtime.active = true;
+      runtime.server.status = 'active';
       return app;
     },
 
@@ -507,6 +643,13 @@
       app.active = false;
       app.status = 'inactive';
       app.updatedAt = new Date().toISOString();
+      const runtime = this.getAppRuntimeState(app.appId, app);
+      runtime.active = false;
+      runtime.server.status = 'inactive';
+      if (this.currentAppId === app.appId && this.apps.size > 0) {
+        const current = Array.from(this.apps.keys()).find((key) => key !== app.appId);
+        this.currentAppId = current || null;
+      }
       return app;
     },
 
