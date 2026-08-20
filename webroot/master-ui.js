@@ -478,6 +478,118 @@
             }
           }
 
+          if (action === 'app-select-active') {
+            const appId = button.dataset.appId || document.getElementById('appConfigAppId')?.value || '';
+            if (!appId) {
+              throw new Error('Select an app before activating it.');
+            }
+            if (!window.MasterFramework || typeof window.MasterFramework.setActiveApp !== 'function') {
+              throw new Error('App runtime manager is unavailable.');
+            }
+            const runtime = window.MasterFramework.setActiveApp(appId);
+            if (window.ConfigManager && typeof window.ConfigManager.set === 'function') {
+              window.ConfigManager.set('app', {
+                ...(window.ConfigManager.get('app', {})),
+                name: runtime && runtime.ui && runtime.ui.appName ? runtime.ui.appName : (window.MasterFramework.getApp(appId)?.name || appId),
+                appId: appId,
+                defaultAppId: appId
+              });
+            }
+            if (statusTarget) {
+              statusTarget.textContent = runtime && runtime.appId ? `Active app set to ${runtime.appId}.` : 'App activated.';
+              statusTarget.className = 'message success';
+            }
+            renderAdminApps();
+            renderPageContent();
+          }
+
+          if (action === 'app-config-save') {
+            const appId = document.getElementById('appConfigAppId') ? document.getElementById('appConfigAppId').value : '';
+            const appName = document.getElementById('appConfigName') ? document.getElementById('appConfigName').value : '';
+            const appMode = document.getElementById('appConfigMode') ? document.getElementById('appConfigMode').value : 'local';
+            const storageType = document.getElementById('appConfigStorageType') ? document.getElementById('appConfigStorageType').value : 'file';
+            const defaultView = document.getElementById('appConfigDefaultView') ? document.getElementById('appConfigDefaultView').value : 'dashboard';
+
+            if (!appId) {
+              throw new Error('App ID is required.');
+            }
+            if (!window.MasterFramework || typeof window.MasterFramework.getApp !== 'function') {
+              throw new Error('App runtime manager is unavailable.');
+            }
+
+            const app = window.MasterFramework.getApp(appId);
+            if (!app) {
+              throw new Error(`App not found: ${appId}`);
+            }
+
+            app.name = appName || app.name || appId;
+            app.config = {
+              ...(app.config || {}),
+              mode: appMode,
+              storageType,
+              defaultView,
+              appId
+            };
+            app.runtimeState = {
+              ...(app.runtimeState || {}),
+              ...window.MasterFramework.getAppRuntimeState(appId, app)
+            };
+            app.updatedAt = new Date().toISOString();
+
+            if (window.ConfigManager && typeof window.ConfigManager.set === 'function') {
+              window.ConfigManager.set('app', {
+                ...(window.ConfigManager.get('app', {})),
+                name: app.name,
+                appId: appId,
+                defaultAppId: appId,
+                mode: appMode,
+                storageType,
+                defaultView
+              });
+            }
+
+            if (window.ConfigManager && typeof window.ConfigManager.set === 'function') {
+              const connections = window.ConfigManager.get('connections', { connections: [] });
+              const nextConnections = Array.isArray(connections.connections) ? [...connections.connections] : [];
+              const next = {
+                ...(connections || {}),
+                defaultConnectionId: nextConnections.find((entry) => entry && entry.storageType === storageType)?.connectionId || 'file-storage',
+                activeConnectionId: nextConnections.find((entry) => entry && entry.storageType === storageType)?.connectionId || 'file-storage',
+                activeStorageType: storageType,
+                connections: nextConnections.length ? nextConnections.map((entry) => ({
+                  ...entry,
+                  active: entry.storageType === storageType || entry.default,
+                  default: entry.storageType === storageType || (!!entry.default && entry.storageType === storageType),
+                  storageType: entry.storageType || storageType,
+                  appId: appId
+                })) : [{
+                  connectionId: `${appId}-storage`,
+                  name: `${app.name} default storage`,
+                  type: storageType,
+                  storageType,
+                  status: 'active',
+                  active: true,
+                  default: true,
+                  path: 'data',
+                  appId: appId,
+                  description: `Default ${storageType} storage for ${app.name}.`
+                }]
+              };
+              window.ConfigManager.set('connections', next);
+            }
+
+            if (window.MasterFramework && typeof window.MasterFramework.setActiveApp === 'function') {
+              window.MasterFramework.setActiveApp(appId);
+            }
+
+            if (statusTarget) {
+              statusTarget.textContent = `App settings saved for ${appId}.`;
+              statusTarget.className = 'message success';
+            }
+            renderAdminApps();
+            renderPageContent();
+          }
+
           if (action === 'app-template-create') {
             const manager = window.AdminModule || null;
             if (!manager || typeof manager.createAppFromTemplate !== 'function') {
@@ -997,6 +1109,9 @@
     const appTemplates = window.MasterFramework && typeof window.MasterFramework.listAppTemplates === 'function'
       ? window.MasterFramework.listAppTemplates()
       : [];
+    const activeApp = window.MasterFramework && typeof window.MasterFramework.getActiveApp === 'function'
+      ? window.MasterFramework.getActiveApp()
+      : (appRegistry.find((app) => app.active || app.status === 'active') || appRegistry[0] || null);
     const apps = appRegistry.length ? appRegistry : [{
       appId: 'neutral-app',
       name: getConfiguredAppName(),
@@ -1005,26 +1120,78 @@
       description: 'Default neutral application shell.'
     }];
 
+    const selectedAppId = activeApp && (activeApp.appId || activeApp.id) ? (activeApp.appId || activeApp.id) : (apps[0] && (apps[0].appId || apps[0].id)) || 'neutral-app';
+    const selectedApp = apps.find((app) => (app.appId || app.id) === selectedAppId) || apps[0] || null;
+    const selectedName = selectedApp && (selectedApp.name || selectedApp.appId || 'Neutral App');
+    const selectedMode = selectedApp && selectedApp.config && selectedApp.config.mode ? selectedApp.config.mode : 'local';
+    const selectedStorageType = selectedApp && selectedApp.config && selectedApp.config.storageType ? selectedApp.config.storageType : 'file';
+    const selectedDefaultView = selectedApp && selectedApp.config && selectedApp.config.defaultView ? selectedApp.config.defaultView : 'dashboard';
+
     page.innerHTML = `
       <div class="card">
         <div class="card-header"><h2 class="card-title">Apps</h2></div>
         <div class="content-wrap">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Description</th></tr></thead>
+              <thead><tr><th>ID</th><th>Name</th><th>Version</th><th>Status</th><th>Active app</th><th>Description</th></tr></thead>
               <tbody>
-                ${apps.map((app) => `
-                  <tr>
-                    <td>${escapeHtml(app.appId || app.id || 'unknown')}</td>
-                    <td>${escapeHtml(app.name || app.appId || 'Unnamed app')}</td>
-                    <td>${escapeHtml(app.version || '1.0.0')}</td>
-                    <td><span class="status-badge ${app.active || app.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(app.status || (app.active ? 'active' : 'inactive'))}</span></td>
-                    <td>${escapeHtml(app.description || 'No description available')}</td>
-                  </tr>
-                `).join('')}
+                ${apps.map((app) => {
+                  const appId = app.appId || app.id || 'unknown';
+                  const isActive = !!(window.MasterFramework && typeof window.MasterFramework.getActiveApp === 'function' && (window.MasterFramework.getActiveApp() && ((window.MasterFramework.getActiveApp().appId || window.MasterFramework.getActiveApp().id) === appId)));
+                  return `
+                    <tr>
+                      <td>${escapeHtml(appId)}</td>
+                      <td>${escapeHtml(app.name || appId || 'Unnamed app')}</td>
+                      <td>${escapeHtml(app.version || '1.0.0')}</td>
+                      <td><span class="status-badge ${app.active || app.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(app.status || (app.active ? 'active' : 'inactive'))}</span></td>
+                      <td>${isActive ? '<span class="status-badge ok">Active</span>' : '<button type="button" class="secondary" data-admin-action="app-select-active" data-app-id="' + escapeHtml(appId) + '">Set active</button>'}</td>
+                      <td>${escapeHtml(app.description || 'No description available')}</td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
+
+          <div class="spacer" style="height: 18px;"></div>
+          <div class="subsection">
+            <h3 style="margin: 0 0 12px;">Selected app configuration</h3>
+            <div class="form-grid" style="max-width: 700px;">
+              <div class="form-field">
+                <label>App ID</label>
+                <input id="appConfigAppId" type="text" value="${escapeHtml(selectedAppId)}" readonly />
+              </div>
+              <div class="form-field">
+                <label>App name</label>
+                <input id="appConfigName" type="text" value="${escapeHtml(selectedName)}" />
+              </div>
+              <div class="form-field">
+                <label>Mode</label>
+                <select id="appConfigMode">
+                  <option value="local" ${selectedMode === 'local' ? 'selected' : ''}>local</option>
+                  <option value="preview" ${selectedMode === 'preview' ? 'selected' : ''}>preview</option>
+                  <option value="server" ${selectedMode === 'server' ? 'selected' : ''}>server</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Default storage</label>
+                <select id="appConfigStorageType">
+                  <option value="file" ${selectedStorageType === 'file' ? 'selected' : ''}>file</option>
+                  <option value="sqlite" ${selectedStorageType === 'sqlite' ? 'selected' : ''}>sqlite</option>
+                  <option value="mysql" ${selectedStorageType === 'mysql' ? 'selected' : ''}>mysql</option>
+                  <option value="postgresql" ${selectedStorageType === 'postgresql' ? 'selected' : ''}>postgresql</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Default view</label>
+                <input id="appConfigDefaultView" type="text" value="${escapeHtml(selectedDefaultView)}" />
+              </div>
+            </div>
+            <div class="action-list" style="margin-top: 16px;">
+              <button type="button" class="primary" data-admin-action="app-config-save">Save app settings</button>
+            </div>
+          </div>
+
           <div class="spacer" style="height: 14px;"></div>
           <div class="subsection">
             <h3 style="margin: 0 0 12px;">Create app from template</h3>
@@ -2163,36 +2330,6 @@
                     <td><span class="status-badge warning">logged</span></td>
                   </tr>
                 `).join('') : '<tr><td colspan="4">No errors recorded.</td></tr>'}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    `;
-  };
-
-  const renderAdminAudit = () => {
-    const page = document.getElementById('mainContent');
-    if (!page) return;
-
-    const entries = window.CoreAudit && typeof window.CoreAudit.list === 'function' ? window.CoreAudit.list() : [];
-
-    page.innerHTML = `
-      <div class="card">
-        <div class="card-header"><h2 class="card-title">Audit</h2></div>
-        <div class="content-wrap">
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Time</th><th>Category</th><th>Action</th><th>Result</th></tr></thead>
-              <tbody>
-                ${entries.length ? entries.slice(0, 12).map((entry) => `
-                  <tr>
-                    <td>${escapeHtml(entry.timestamp || entry.createdAt || 'unknown')}</td>
-                    <td>${escapeHtml(entry.category || 'system')}</td>
-                    <td>${escapeHtml(entry.event || entry.action || 'unknown')}</td>
-                    <td><span class="status-badge ok">${escapeHtml(entry.result || 'ok')}</span></td>
-                  </tr>
-                `).join('') : '<tr><td colspan="4">No audit entries available.</td></tr>'}
               </tbody>
             </table>
           </div>
