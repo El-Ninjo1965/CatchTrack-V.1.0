@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.3 - fixed admin access for user management and protected write checks
+## Version 1.1.4 - admin user editing and permission-safe user management
 
 Status:
 - Framework core remains stable and module-driven.
@@ -10,6 +10,7 @@ Status:
 - The admin shell now supports a storage/connection configuration model for file-based and SQL-based backends.
 - The framework can now be configured without hardcoding a single backend type.
 - Admin user creation and role-based permission checks are fixed so developer/admin accounts can manage users without false `Access denied` results.
+- Existing users can now be edited in the admin workspace, including username, display name, email, role, permissions, and status.
 
 ### Included milestones
 - neutral framework shell

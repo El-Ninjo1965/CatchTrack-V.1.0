@@ -509,6 +509,74 @@ test('registers module-provided admin settings and applies them to gps runtime o
   assert.equal(geolocationState.lastWatchOptions.maximumAge, 60000);
 });
 
+test('updates an existing user role and status through the user and admin facades', async () => {
+  const context = {
+    window: null,
+    document: { readyState: 'complete', addEventListener() {} },
+    navigator: {},
+    localStorage: {
+      store: new Map(),
+      getItem(key) { return this.store.has(key) ? this.store.get(key) : null; },
+      setItem(key, value) { this.store.set(key, String(value)); },
+      removeItem(key) { this.store.delete(key); }
+    },
+    crypto: { randomUUID() { return 'test-uuid'; }, subtle: null },
+    console,
+    require,
+    process,
+    DatabaseManager: {
+      async clear() { return true; },
+      async save() { return true; },
+      async getAll() { return []; }
+    },
+    Core: { emit() {}, on() {} },
+    CoreAudit: { record() {} },
+    CoreAccess: null,
+    ConfigManager: null,
+    FrameworkModuleCatalog: []
+  };
+  const sandbox = vm.createContext(context);
+  sandbox.window = sandbox;
+  sandbox.globalThis = sandbox;
+  sandbox.window.localStorage = sandbox.localStorage;
+
+  const base = path.resolve(__dirname, '..');
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/core-access.js'));
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/config-manager.js'));
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/core-user.js'));
+  loadScriptIntoContext(sandbox, path.join(base, 'platform/core-admin.js'));
+
+  sandbox.ConfigManager.init();
+  const created = await sandbox.UserModule.createUser({
+    username: 'alina',
+    displayName: 'Alina',
+    roles: ['user'],
+    permissions: ['user:read']
+  }, 'system');
+  assert.equal(created.ok, true);
+
+  const updated = await sandbox.UserModule.updateUser(created.data.id, {
+    username: 'alina-admin',
+    displayName: 'Alina Admin',
+    roles: ['admin'],
+    permissions: ['user:read', 'user:write', 'system:view'],
+    status: 'inactive'
+  }, 'system');
+
+  assert.equal(updated.ok, true);
+  assert.equal(updated.data.username, 'alina-admin');
+  assert.equal(updated.data.roles[0], 'admin');
+  assert.equal(updated.data.status, 'inactive');
+
+  const adminUpdated = await sandbox.AdminModule.updateUser(updated.data.id, {
+    roles: ['developer'],
+    status: 'active'
+  }, { id: 'dev-1', roles: ['developer'] });
+  assert.equal(adminUpdated.ok, true);
+  assert.equal(adminUpdated.data.roles[0], 'developer');
+  assert.equal(adminUpdated.data.status, 'active');
+});
+
 test('supports setup, database, and activation flow', async () => {
   cleanupRuntimeState();
   const runtime = Framework;

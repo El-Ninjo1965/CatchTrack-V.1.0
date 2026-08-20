@@ -519,6 +519,73 @@
             }
           }
 
+          if (action === 'user-edit-open') {
+            const userId = button.dataset.userId;
+            if (!userId || !window.UserModule || typeof window.UserModule.getUserById !== 'function') {
+              throw new Error('User details are unavailable.');
+            }
+            const result = await window.UserModule.getUserById(userId);
+            const user = result && result.ok ? result.data : null;
+            if (!user) {
+              throw new Error('User not found.');
+            }
+
+            const usernameInput = document.getElementById('editUserUsernameInput');
+            const displayNameInput = document.getElementById('editUserDisplayNameInput');
+            const emailInput = document.getElementById('editUserEmailInput');
+            const roleInput = document.getElementById('editUserRoleInput');
+            const permissionsInput = document.getElementById('editUserPermissionsInput');
+            const statusInput = document.getElementById('editUserStatusInput');
+            const idInput = document.getElementById('editUserIdInput');
+
+            if (idInput) idInput.value = user.id || '';
+            if (usernameInput) usernameInput.value = user.username || '';
+            if (displayNameInput) displayNameInput.value = user.displayName || user.username || '';
+            if (emailInput) emailInput.value = user.email || '';
+            if (roleInput) roleInput.value = Array.isArray(user.roles) && user.roles.length ? user.roles[0] : 'user';
+            if (permissionsInput) permissionsInput.value = Array.isArray(user.permissions) ? user.permissions.join(', ') : '';
+            if (statusInput) statusInput.value = user.status || 'active';
+
+            const form = document.getElementById('userEditForm');
+            if (form) {
+              form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+
+          if (action === 'user-update') {
+            const actor = getCurrentUser();
+            if (!actor) {
+              throw new Error('User management requires an authenticated admin or developer.');
+            }
+
+            const userId = document.getElementById('editUserIdInput') ? document.getElementById('editUserIdInput').value : '';
+            const rawRole = document.getElementById('editUserRoleInput') ? document.getElementById('editUserRoleInput').value : 'user';
+            const rawStatus = document.getElementById('editUserStatusInput') ? document.getElementById('editUserStatusInput').value : 'active';
+            const rawPermissions = document.getElementById('editUserPermissionsInput') ? document.getElementById('editUserPermissionsInput').value : '';
+
+            const updates = {
+              username: document.getElementById('editUserUsernameInput') ? document.getElementById('editUserUsernameInput').value : '',
+              displayName: document.getElementById('editUserDisplayNameInput') ? document.getElementById('editUserDisplayNameInput').value : '',
+              email: document.getElementById('editUserEmailInput') ? document.getElementById('editUserEmailInput').value : '',
+              roles: parseCommaList(rawRole || 'user').length ? parseCommaList(rawRole || 'user') : ['user'],
+              permissions: parseCommaList(rawPermissions),
+              status: rawStatus || 'active'
+            };
+
+            if (!window.AdminModule || typeof window.AdminModule.updateUser !== 'function') {
+              throw new Error('User update is unavailable.');
+            }
+
+            const result = await window.AdminModule.updateUser(userId, updates, actor);
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? 'User updated.' : (result && result.message ? result.message : 'User update failed.');
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+            if (result && result.ok) {
+              await renderAdminUsers();
+            }
+          }
+
           if (action === 'user-delete') {
             const actor = getCurrentUser();
             const userId = button.dataset.userId;
@@ -1403,6 +1470,37 @@
               <button type="button" class="primary" data-admin-action="user-save">Create user</button>
             </div>
           </div>
+
+          <div id="userEditForm" class="card" style="margin-bottom: 18px;">
+            <div class="card-header"><h3 class="card-title">Edit user</h3></div>
+            <div class="content-wrap">
+              <div class="form-grid">
+                <input id="editUserIdInput" type="hidden" />
+                <div class="form-field"><label>Username</label><input id="editUserUsernameInput" type="text" /></div>
+                <div class="form-field"><label>Display name</label><input id="editUserDisplayNameInput" type="text" /></div>
+                <div class="form-field"><label>Email</label><input id="editUserEmailInput" type="email" /></div>
+                <div class="form-field">
+                  <label>Role</label>
+                  <select id="editUserRoleInput">
+                    ${roleCatalog.map((role) => `<option value="${escapeHtml(role.role)}">${escapeHtml(role.name || role.role)}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-field"><label>Permissions</label><input id="editUserPermissionsInput" type="text" placeholder="user:read, module:read" /></div>
+                <div class="form-field">
+                  <label>Status</label>
+                  <select id="editUserStatusInput">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="deleted">Deleted</option>
+                  </select>
+                </div>
+                <div class="action-list">
+                  <button type="button" class="primary" data-admin-action="user-update">Save changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div id="adminActionStatus" class="message info">User management uses the central framework identity layer.</div>
           <div class="table-wrap">
             <table>
@@ -1415,7 +1513,12 @@
                     <td>${escapeHtml(user.displayName || user.username || '—')}</td>
                     <td><span class="status-badge ${user.status === 'active' ? 'ok' : 'warning'}">${escapeHtml(user.status || 'active')}</span></td>
                     <td>${escapeHtml(Array.isArray(user.roles) ? user.roles.join(', ') : '')}</td>
-                    <td><button type="button" class="secondary" data-admin-action="user-delete" data-user-id="${escapeHtml(user.id || '')}">Delete</button></td>
+                    <td>
+                      <div class="action-list" style="gap: 8px; justify-content: flex-start;">
+                        <button type="button" class="secondary" data-admin-action="user-edit-open" data-user-id="${escapeHtml(user.id || '')}">Edit</button>
+                        <button type="button" class="secondary" data-admin-action="user-delete" data-user-id="${escapeHtml(user.id || '')}">Delete</button>
+                      </div>
+                    </td>
                   </tr>
                 `).join('') : '<tr><td colspan="6">No users available.</td></tr>'}
               </tbody>
