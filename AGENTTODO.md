@@ -15,6 +15,7 @@
 - Erste App-Basis für CatchTrack als neutraler Starter-Application-Shell angelegt.
 - Erstes Dashboard-Modul als modulare Landing-/Overview-Funktion erstellt.
 - Zusätzliches Business-Modul `catch-log` erstellt und in die erste App-Shell integriert.
+- Zweites Business-Modul `fishing-spots` als GPS-gestützter Lage-/Favoriten-Manager ergänzt.
 - `VERSION.md` als Versionierungs- und Zustandsdokument eingeführt.
 - Generische Module-Templates im Admin hinzugefügt, damit neue Module aus vorgefertigten Schemata erstellt werden können.
 - Modul-/Rollen-Permissions-Ansicht erweitert, sodass systemweite und modulare Rechte zusammen sichtbar sind.

@@ -6,7 +6,7 @@
   "description": "First neutral application shell for the CatchTrack ecosystem and future module-driven app expansion.",
   "status": "active",
   "active": true,
-  "modules": ["dashboard", "gps", "catch-log"],
+  "modules": ["dashboard", "gps", "catch-log", "fishing-spots"],
   "config": {
     "framework": "neutral-master-framework",
     "defaultView": "dashboard",

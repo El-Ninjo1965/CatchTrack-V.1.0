@@ -40,5 +40,19 @@
     "capabilities": ["catch-log", "tracking", "data-entry"],
     "dependencies": ["gps"],
     "appId": "catchtrack"
+  },
+  {
+    "id": "fishing-spots",
+    "name": "Fishing Spots",
+    "displayName": "Fishing Spots",
+    "version": "1.0.0",
+    "type": "app",
+    "description": "A location-aware module for saving and managing favorite fishing areas, GPS coordinates, and notes for the CatchTrack app.",
+    "entry": "index.js",
+    "globalName": "FishingSpotsModule",
+    "permissions": ["module:read"],
+    "capabilities": ["spots", "fishing", "location-planning"],
+    "dependencies": ["gps"],
+    "appId": "catchtrack"
   }
 ]
