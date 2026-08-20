@@ -21,6 +21,7 @@
 - Modul-/Rollen-Permissions-Ansicht erweitert, sodass systemweite und modulare Rechte zusammen sichtbar sind.
 - Benutzerprofil- und Einstellungsbereich für Funktionsauswahl, Privacy-Controls und lokale Sync-Entscheidungen ergänzt.
 - GPS-Modul gegen den nicht aktivierten Zustand abgesichert; Start- und Abfrageaktionen aktivieren das Modul jetzt automatisch und bleiben damit im echten User-Flow nutzbar.
+- Admin-Lebenszyklus für Module erweitert: Installieren, Deaktivieren und Deinstallieren sind nun als echte Framework-Aktionen im Admin-Panel verfügbar, ohne die Kernarchitektur zu gefährden.
 
 ## Getestet
 - `npm test` vollständig ausgeführt.

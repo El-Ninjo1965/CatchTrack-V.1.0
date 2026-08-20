@@ -612,6 +612,78 @@
             return this.getModuleState(moduleId);
         },
 
+        installModule(moduleId) {
+            if (!moduleId || typeof moduleId !== 'string') {
+                return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
+            }
+
+            if (!window.ModuleManager || typeof window.ModuleManager.install !== 'function') {
+                return { ok: false, code: 'MODULE_MANAGER_UNAVAILABLE', message: 'Module manager is unavailable.' };
+            }
+
+            const module = window.ModuleRegistry && typeof window.ModuleRegistry.get === 'function'
+                ? window.ModuleRegistry.get(moduleId)
+                : null;
+
+            if (!module) {
+                return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+            }
+
+            try {
+                const installed = window.ModuleManager.install(moduleId);
+                if (window.ModuleManager.enable) {
+                    window.ModuleManager.enable(moduleId);
+                }
+                return {
+                    ok: true,
+                    data: installed || module,
+                    message: `Module installed: ${moduleId}`
+                };
+            } catch (error) {
+                return {
+                    ok: false,
+                    code: 'MODULE_INSTALL_FAILED',
+                    message: error && error.message ? error.message : `Module install failed: ${moduleId}`
+                };
+            }
+        },
+
+        uninstallModule(moduleId) {
+            if (!moduleId || typeof moduleId !== 'string') {
+                return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
+            }
+
+            if (!window.ModuleRegistry || typeof window.ModuleRegistry.get !== 'function') {
+                return { ok: false, code: 'MODULE_REGISTRY_UNAVAILABLE', message: 'Module registry is unavailable.' };
+            }
+
+            const module = window.ModuleRegistry.get(moduleId);
+            if (!module) {
+                return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+            }
+
+            if (typeof module.id === 'string' && module.id.startsWith('core-')) {
+                return { ok: false, code: 'CORE_MODULE_PROTECTED', message: `Core modules cannot be uninstalled: ${moduleId}` };
+            }
+
+            if (window.ModuleManager && typeof window.ModuleManager.disable === 'function') {
+                window.ModuleManager.disable(moduleId);
+            }
+
+            let removed = false;
+            if (window.ModuleManager && typeof window.ModuleManager.unregister === 'function') {
+                removed = !!window.ModuleManager.unregister(moduleId);
+            } else if (typeof window.ModuleRegistry.unregister === 'function') {
+                removed = !!window.ModuleRegistry.unregister(moduleId);
+            }
+
+            return {
+                ok: removed,
+                data: removed ? { id: moduleId } : null,
+                message: removed ? `Module uninstalled: ${moduleId}` : `Module could not be uninstalled: ${moduleId}`
+            };
+        },
+
         toggleModule(moduleId) {
             const current = this.getModuleState(moduleId);
             if (!current.ok || !current.data) {

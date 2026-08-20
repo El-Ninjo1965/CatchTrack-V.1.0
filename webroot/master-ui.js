@@ -614,6 +614,18 @@
     };
   };
 
+  const getLifecycleActionButtons = (module) => {
+    const actionState = getModuleActionState(module);
+    const moduleId = module && module.id ? module.id : '';
+
+    return `
+      <div class="action-list" style="gap: 8px; justify-content: flex-start;">
+        <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(moduleId)}">${actionState.label}</button>
+        <button type="button" class="secondary" data-module-action="uninstall" data-module-id="${escapeHtml(moduleId)}">Uninstall</button>
+      </div>
+    `;
+  };
+
   const getAppVersion = () => {
     if (window.App && typeof window.App.version === 'string') {
       return window.App.version;
@@ -782,10 +794,11 @@
                       <td>
                         <div class="action-list" style="gap: 8px; justify-content: flex-start;">
                           <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id || '')}">${actionState.label}</button>
-                          ${module.adminSettingsCount ? `<button type="button" class="secondary" data-admin-open-settings data-module-id="${escapeHtml(module.id || '')}">Open settings</button>` : ''}
-                        </div>
-                      </td>
-                    </tr>
+                         <button type="button" class="secondary" data-module-action="uninstall" data-module-id="${escapeHtml(module.id || '')}">Uninstall</button>
+                         ${module.adminSettingsCount ? `<button type="button" class="secondary" data-admin-open-settings data-module-id="${escapeHtml(module.id || '')}">Open settings</button>` : ''}
+                       </div>
+                     </td>
+                   </tr>
                   `;
                 }).join('') : '<tr><td colspan="9">No modules discovered.</td></tr>'}
               </tbody>
@@ -814,6 +827,29 @@
           statusTarget.textContent = result && result.ok
             ? `Module ${moduleId} is now ${result.data && result.data.active ? 'enabled' : 'disabled'}.`
             : (result && result.message) || 'Module update failed.';
+        }
+        renderAdminModules();
+      });
+    });
+
+    page.querySelectorAll('[data-module-action="uninstall"]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const moduleId = button.dataset.moduleId;
+        const manager = window.AdminModule || null;
+        if (!moduleId || !manager || typeof manager.uninstallModule !== 'function') {
+          if (statusTarget) {
+            statusTarget.className = 'message error';
+            statusTarget.textContent = 'Module uninstall is unavailable.';
+          }
+          return;
+        }
+
+        const result = await manager.uninstallModule(moduleId);
+        if (statusTarget) {
+          statusTarget.className = result && result.ok ? 'message success' : 'message error';
+          statusTarget.textContent = result && result.ok
+            ? `Module ${moduleId} was uninstalled.`
+            : (result && result.message) || 'Module uninstall failed.';
         }
         renderAdminModules();
       });
