@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.4 - admin user editing and permission-safe user management
+## Version 1.1.5 - admin module governance and metadata-first CMS workflow
 
 Status:
 - Framework core remains stable and module-driven.
@@ -11,6 +11,7 @@ Status:
 - The framework can now be configured without hardcoding a single backend type.
 - Admin user creation and role-based permission checks are fixed so developer/admin accounts can manage users without false `Access denied` results.
 - Existing users can now be edited in the admin workspace, including username, display name, email, role, permissions, and status.
+- Modules can now be edited directly in the admin workspace through a metadata-driven governance form covering app ID, name, type, description, permissions, capabilities, and enable/disable status.
 
 ### Included milestones
 - neutral framework shell
@@ -26,6 +27,7 @@ Status:
 - GPS reliability hardening for active user-triggered actions
 - admin-managed storage connections with file and SQL-ready storage choices
 - connection normalization for shared hosting, local JSON workflows and future SQL backends
+- admin-side module metadata editing for future-ready CMS-style module governance
 
 ### Current focus
 - continue the first real app rollout with additional business modules
@@ -33,6 +35,7 @@ Status:
 - keep the framework generic enough to support multiple apps without structural rewrites
 - validate that admin-defined storage choices remain stable and future-proof
 - prepare the production layer for plain shared hosting with JSON/text files and optional SQL upgrade paths
+- extend module-to-role and app-to-module mappings for feature-level governance
 
 ### Planned next steps
 - add the next real domain module after the current core feature set

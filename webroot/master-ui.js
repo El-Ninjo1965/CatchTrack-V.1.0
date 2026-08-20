@@ -921,7 +921,8 @@
                       <td>${module.adminSettingsCount ? `<span class="status-badge ok">${module.adminSettingsCount} setting${module.adminSettingsCount === 1 ? '' : 's'}</span>` : '<span class="status-badge warning">No schema</span>'}</td>
                       <td>
                         <div class="action-list" style="gap: 8px; justify-content: flex-start;">
-                          <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id || '')}">${actionState.label}</button>
+                         <button type="button" class="secondary" data-module-action="edit" data-module-id="${escapeHtml(module.id || '')}">Edit</button>
+                         <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id || '')}">${actionState.label}</button>
                          <button type="button" class="secondary" data-module-action="uninstall" data-module-id="${escapeHtml(module.id || '')}">Uninstall</button>
                          ${module.adminSettingsCount ? `<button type="button" class="secondary" data-admin-open-settings data-module-id="${escapeHtml(module.id || '')}">Open settings</button>` : ''}
                        </div>
@@ -937,6 +938,14 @@
     `;
 
     const statusTarget = document.getElementById('adminModuleActionStatus');
+    page.querySelectorAll('[data-module-action="edit"]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const moduleId = button.dataset.moduleId;
+        if (!moduleId) return;
+        renderAdminModuleWorkspace(moduleId);
+      });
+    });
+
     page.querySelectorAll('[data-module-action="toggle"]').forEach((button) => {
       button.addEventListener('click', async () => {
         const moduleId = button.dataset.moduleId;
@@ -1057,6 +1066,8 @@
     }
 
     const status = getModuleActionState(module);
+    const permissionText = Array.isArray(module.permissions) && module.permissions.length ? module.permissions.join(', ') : 'No explicit permissions';
+    const capabilityText = Array.isArray(module.capabilities) && module.capabilities.length ? module.capabilities.join(', ') : 'No explicit capabilities';
     page.innerHTML = `
       <div class="card">
         <div class="card-header">
@@ -1068,12 +1079,36 @@
           <div class="action-list">
             <button type="button" class="secondary" data-admin-open-settings data-module-id="${escapeHtml(module.id)}">Open settings</button>
             <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id)}">${escapeHtml(status.label)}</button>
+            <button type="button" class="secondary" data-module-action="back" data-module-id="${escapeHtml(module.id)}">Back to modules</button>
           </div>
           <div class="grid">
             <div class="metric"><span class="metric-label">Module ID</span><div class="metric-value">${escapeHtml(module.id)}</div></div>
-            <div class="metric"><span class="metric-label">Capabilities</span><div class="metric-value" style="font-size:0.95rem;">${escapeHtml(Array.isArray(module.capabilities) && module.capabilities.length ? module.capabilities.join(', ') : '—')}</div></div>
+            <div class="metric"><span class="metric-label">App</span><div class="metric-value">${escapeHtml(module.appId || module.manifest?.appId || 'catchtrack')}</div></div>
+            <div class="metric"><span class="metric-label">Permissions</span><div class="metric-value" style="font-size:0.95rem;">${escapeHtml(permissionText)}</div></div>
+            <div class="metric"><span class="metric-label">Capabilities</span><div class="metric-value" style="font-size:0.95rem;">${escapeHtml(capabilityText)}</div></div>
             <div class="metric"><span class="metric-label">Admin schema</span><div class="metric-value">${module.adminSettingsCount || 0}</div></div>
           </div>
+
+          <div class="card" style="margin-top: 18px;">
+            <div class="card-header"><h3 class="card-title">Module metadata</h3></div>
+            <div class="content-wrap">
+              <form id="moduleMetadataForm" class="form-grid">
+                <div class="form-field"><label>App ID</label><input name="appId" value="${escapeHtml(module.appId || module.manifest?.appId || 'catchtrack')}" /></div>
+                <div class="form-field"><label>Name</label><input name="name" value="${escapeHtml(module.name || module.id || '')}" /></div>
+                <div class="form-field"><label>Display name</label><input name="displayName" value="${escapeHtml(module.displayName || module.name || module.id || '')}" /></div>
+                <div class="form-field"><label>Type</label><input name="type" value="${escapeHtml(module.type || 'framework')}" /></div>
+                <div class="form-field" style="grid-column: 1 / -1;"><label>Description</label><textarea name="description" rows="3">${escapeHtml(module.description || '')}</textarea></div>
+                <div class="form-field" style="grid-column: 1 / -1;"><label>Permissions (comma separated)</label><input name="permissions" value="${escapeHtml(permissionText === 'No explicit permissions' ? '' : permissionText)}" /></div>
+                <div class="form-field" style="grid-column: 1 / -1;"><label>Capabilities (comma separated)</label><input name="capabilities" value="${escapeHtml(capabilityText === 'No explicit capabilities' ? '' : capabilityText)}" /></div>
+                <div class="form-field"><label>Status</label><select name="status"><option value="enabled" ${status.active ? 'selected' : ''}>Enabled</option><option value="disabled" ${status.active ? '' : 'selected'}>Disabled</option></select></div>
+                <div class="action-list" style="grid-column: 1 / -1; justify-content: flex-start;">
+                  <button type="submit" class="primary">Save metadata</button>
+                  <button type="button" class="secondary" data-module-action="toggle" data-module-id="${escapeHtml(module.id)}">${escapeHtml(status.label)}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
           <div id="adminModulePreview" class="admin-module-preview"></div>
         </div>
       </div>
@@ -1084,6 +1119,37 @@
       module.renderUserInterface(preview);
     } else if (preview) {
       preview.innerHTML = '<div class="empty-state">This module does not provide a live preview yet.</div>';
+    }
+
+    const moduleForm = document.getElementById('moduleMetadataForm');
+    if (moduleForm) {
+      moduleForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const manager = window.AdminModule || null;
+        if (!manager || typeof manager.updateModule !== 'function') {
+          return;
+        }
+
+        const formData = new FormData(moduleForm);
+        const payload = {
+          appId: String(formData.get('appId') || '').trim(),
+          name: String(formData.get('name') || '').trim(),
+          displayName: String(formData.get('displayName') || '').trim(),
+          type: String(formData.get('type') || '').trim(),
+          description: String(formData.get('description') || '').trim(),
+          permissions: String(formData.get('permissions') || '').split(',').map((entry) => entry.trim()).filter(Boolean),
+          capabilities: String(formData.get('capabilities') || '').split(',').map((entry) => entry.trim()).filter(Boolean),
+          status: String(formData.get('status') || 'enabled').trim()
+        };
+
+        const result = await manager.updateModule(module.id, payload);
+        if (result && result.ok) {
+          renderSummary();
+          renderAppModuleNav();
+          renderUserMenu();
+          renderAdminModuleWorkspace(module.id);
+        }
+      });
     }
 
     const settingsButton = page.querySelector('[data-admin-open-settings]');
@@ -1097,8 +1163,15 @@
       });
     }
 
-    const toggleButton = page.querySelector('[data-module-action="toggle"]');
-    if (toggleButton) {
+    const backButton = page.querySelector('[data-module-action="back"]');
+    if (backButton) {
+      backButton.addEventListener('click', () => {
+        renderAdminModules();
+      });
+    }
+
+    const toggleButtons = page.querySelectorAll('[data-module-action="toggle"]');
+    toggleButtons.forEach((toggleButton) => {
       toggleButton.addEventListener('click', async () => {
         const manager = window.AdminModule || null;
         if (!manager || typeof manager.toggleModule !== 'function') {
@@ -1111,7 +1184,7 @@
         renderUserMenu();
         renderAdminModuleWorkspace(module.id);
       });
-    }
+    });
   };
 
   const renderAdminGPS = () => {

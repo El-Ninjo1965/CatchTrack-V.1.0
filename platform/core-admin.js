@@ -450,6 +450,118 @@
             });
         },
 
+        updateModule(moduleId, updates = {}) {
+            if (!moduleId || typeof moduleId !== 'string') {
+                return { ok: false, code: 'INVALID_MODULE_ID', message: 'A module id is required.' };
+            }
+
+            if (!window.ModuleRegistry || typeof window.ModuleRegistry.get !== 'function') {
+                return { ok: false, code: 'MODULE_REGISTRY_UNAVAILABLE', message: 'Module registry is unavailable.' };
+            }
+
+            const module = window.ModuleRegistry.get(moduleId);
+            if (!module) {
+                return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+            }
+
+            if (!updates || typeof updates !== 'object') {
+                return { ok: false, code: 'INVALID_MODULE_UPDATES', message: 'Module updates must be an object.' };
+            }
+
+            const nextState = {};
+
+            if (typeof updates.name === 'string' && updates.name.trim()) {
+                module.name = updates.name.trim();
+                nextState.name = module.name;
+            }
+
+            if (typeof updates.displayName === 'string' && updates.displayName.trim()) {
+                module.displayName = updates.displayName.trim();
+                nextState.displayName = module.displayName;
+            }
+
+            if (typeof updates.appId === 'string' && updates.appId.trim()) {
+                module.appId = updates.appId.trim();
+                nextState.appId = module.appId;
+            }
+
+            if (typeof updates.type === 'string' && updates.type.trim()) {
+                module.type = updates.type.trim();
+                nextState.type = module.type;
+            }
+
+            if (typeof updates.description === 'string') {
+                module.description = updates.description.trim();
+                nextState.description = module.description;
+            }
+
+            if (Array.isArray(updates.permissions)) {
+                module.permissions = updates.permissions
+                    .map((entry) => String(entry).trim())
+                    .filter(Boolean);
+                nextState.permissions = [...module.permissions];
+            }
+
+            if (Array.isArray(updates.capabilities)) {
+                module.capabilities = updates.capabilities
+                    .map((entry) => String(entry).trim())
+                    .filter(Boolean);
+                nextState.capabilities = [...module.capabilities];
+            }
+
+            if (typeof updates.active === 'boolean') {
+                module.active = updates.active;
+                module.status = updates.active ? 'enabled' : 'disabled';
+                nextState.active = module.active;
+                nextState.status = module.status;
+            }
+
+            if (typeof updates.status === 'string' && updates.status.trim()) {
+                module.status = updates.status.trim();
+                nextState.status = module.status;
+                if (module.status === 'enabled' || module.status === 'active') {
+                    module.active = true;
+                    nextState.active = true;
+                }
+                if (module.status === 'disabled' || module.status === 'inactive') {
+                    module.active = false;
+                    nextState.active = false;
+                }
+            }
+
+            if (module.manifest && typeof module.manifest === 'object') {
+                if (typeof module.name === 'string') module.manifest.name = module.name;
+                if (typeof module.displayName === 'string') module.manifest.displayName = module.displayName;
+                if (typeof module.appId === 'string') module.manifest.appId = module.appId;
+                if (typeof module.type === 'string') module.manifest.type = module.type;
+                if (typeof module.description === 'string') module.manifest.description = module.description;
+                if (Array.isArray(module.permissions)) module.manifest.permissions = [...module.permissions];
+                if (Array.isArray(module.capabilities)) module.manifest.capabilities = [...module.capabilities];
+            }
+
+            if (module.admin && typeof module.admin === 'object') {
+                if (typeof module.name === 'string' && !module.admin.title) {
+                    module.admin.title = module.name;
+                }
+                if (typeof module.description === 'string') {
+                    module.admin.description = module.description;
+                }
+            }
+
+            if (window.Core) {
+                window.Core.emit('module:updated', {
+                    id: moduleId,
+                    ...nextState
+                });
+            }
+
+            return {
+                ok: true,
+                data: this.getModuleState(moduleId).data,
+                message: `Module updated: ${moduleId}`
+            };
+        },
+
         getModuleTemplateCatalog() {
             return [
                 {

@@ -28,10 +28,12 @@
 - SQLite-Adapter implementiert: Der SQL-Pfad nutzt nun echte SQLite-Datenbanken im Runtime-Verzeichnis und unterstützt Schreiben, Lesen, Auflisten und Löschen mit persistenter Datenhaltung.
 - Berechtigungsprüfung für resource-scoped User-Schreibrechte korrigiert: Entwickler/Admins können nun Benutzer anlegen und verwalten, ohne durch eine doppelte `user:user:write`-Prüfung blockiert zu werden.
 - Admin-Benutzerverwaltung erweitert: Bestehende Nutzer können jetzt direkt im Adminbereich bearbeitet werden, inklusive Benutzername, Anzeigename, E-Mail, Rolle, Berechtigungen und Status.
+- Modul-Governance im Admin erweitert: Module lassen sich jetzt direkt im Admin-Workspace über App-ID, Name, Display-Name, Beschreibung, Berechtigungen, Fähigkeiten und Status verwalten. Damit werden einzelne Module als echte CMS-artige Einträge im Framework gesteuert, statt nur als rohe Registry-Objekte zu bestehen.
+- Modul-Editor im UI ergänzt: Module können im Adminbereich direkt über eine Metadata-Form bearbeitet und per Toggle/Back-Flow zurück in der Verwaltungsübersicht gesteuert werden.
 
 ## Getestet
 - `node --test tests/master-framework.test.js` erfolgreich ausgeführt.
-- Verifiziert: GPS-Lebenszyklus ohne Duplicate Watcher, LocalAuth/Setup-Login-Reload-Persistenz, zentrale App-Name-Konfiguration, neutraler User-UI-Flow, Framework-Regressionen, Admin-Module-/GPS-Verwaltung, neue App-/Modul-Scaffolding-Integration, Module-Templates, zentraler Permissions-Overlay, korrigierte Admin-Berechtigungen für Benutzerverwaltung und direkte Benutzerbearbeitung im Admin-Panel.
+- Verifiziert: GPS-Lebenszyklus ohne Duplicate Watcher, LocalAuth/Setup-Login-Reload-Persistenz, zentrale App-Name-Konfiguration, neutraler User-UI-Flow, Framework-Regressionen, Admin-Module-/GPS-Verwaltung, neue App-/Modul-Scaffolding-Integration, Module-Templates, zentraler Permissions-Overlay, korrigierte Admin-Berechtigungen für Benutzerverwaltung, direkte Benutzerbearbeitung im Admin-Panel und die neue Modul-Metadaten-Governance im Admin-Workspace.
 - Browserseitige Logik wurde anhand der tatsächlichen API-Verwendung und des erwarteten UI-Verhaltens geprüft: kein automatischer GPS-Start, Start/Stop/GetCurrentPosition auf echter Geolocation-API, korrekte Status- und Fehlermeldungen, Modul-Discovery für die erste App-Shell, die Erstellung neuer Module aus Templates und die echte Bearbeitung vorhandener Benutzerprofil- und Rollenwerte.
 
 ## Tatsächlich funktional
@@ -48,7 +50,7 @@
 - Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
 
 ## Offen / Nächster Arbeitsfortschritt
-- Nächster sinnvoller Schritt: weiteres fachliches App-Modul erstellen, das über Catch Log hinaus stärker produktiv und anwendungsnah funktioniert.
-- Danach: app-spezifische Module und Rollen-/Rechte-Zuordnung pro Modul und per Feature pro App erweitern.
+- Nächster sinnvoller Schritt: app-spezifische Modul- und Rollen-Zuordnung pro Feature weiter ausbauen, damit verschiedene App-Varianten ohne Core-Rework zusätzlich aktiv werden können.
+- Danach: echtes SQL-Backend mit verbindlichen Anmelde-/Persistenzdiensten für den produktiven Betrieb ergänzen und die Admin-Connection-Variante endgültig auf ein reales Hosting-Muster abbilden.
 - Danach: weitere erste fachliche App-Module neben GPS, Catch Log und Dashboard, z. B. Profil-, Standort- oder Aktivitätsbereiche.
 - Die Umsetzung bleibt bewusst im neutralen Framework, damit spätere App-Varianten ohne Rework ergänzt werden können.
