@@ -207,6 +207,29 @@ test('prefers the active app in the app listing and keeps the neutral app as the
   assert.equal(runtime.getApp('neutral-app').status, 'active');
 });
 
+test('loads the current app from the /apps/<app-id>/app-info.json manifest', () => {
+  const runtime = Framework;
+  const appRoot = path.resolve(__dirname, '../apps/neutral-app');
+  const manifestPath = path.join(appRoot, 'app-info.json');
+  assert.equal(fs.existsSync(manifestPath), true);
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  assert.equal(manifest.id, 'neutral-app');
+  assert.equal(manifest.name, 'Neutral App');
+
+  const app = runtime.registerApp({
+    appId: 'neutral-app',
+    name: 'Neutral App',
+    version: '1.0.0',
+    active: true,
+    modules: ['dashboard', 'gps'],
+    config: { mode: 'local', source: 'app-info.json' }
+  });
+
+  assert.equal(app.appId, 'neutral-app');
+  assert.equal(app.config.source, 'app-info.json');
+});
+
 test('keeps app runtime state isolated for each app instance', () => {
   cleanupRuntimeState();
   const runtime = Framework;

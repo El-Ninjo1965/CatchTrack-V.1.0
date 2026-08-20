@@ -5,45 +5,99 @@ const { port, host, rootDir, webRootDir, apiBase } = require('../config');
 const MasterFramework = require('../../platform/master-framework');
 
 const bootstrapDefaultApps = () => {
-  const defaults = [
-    {
-      appId: 'neutral-app',
-      name: 'Neutral App',
-      version: '1.0.0',
-      description: 'Default neutral application shell for the framework runtime.',
-      status: 'active',
-      active: true,
-      modules: ['dashboard', 'gps'],
-      config: {
-        framework: 'neutral-master-framework',
-        mode: 'local',
-        defaultView: 'dashboard'
-      }
-    },
-    {
-      appId: 'catchtrack',
-      name: 'CatchTrack',
-      version: '1.0.0',
-      description: 'Example application shell for a future app built on the neutral framework.',
-      status: 'inactive',
-      active: false,
-      modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
-      config: {
-        framework: 'neutral-master-framework',
-        mode: 'local',
-        defaultView: 'dashboard'
-      }
-    }
-  ];
+  const normalizeManifestValue = (value, fallback = 'neutral-app') => {
+    const normalized = typeof value === 'string' ? value.trim() : '';
+    return normalized || fallback;
+  };
 
-  for (const appDefinition of defaults) {
-    if (!MasterFramework.getApp(appDefinition.appId)) {
-      MasterFramework.registerApp(appDefinition);
+  const readAppManifests = () => {
+    const appsRoot = path.join(rootDir, 'apps');
+    if (!fs.existsSync(appsRoot)) {
+      return [];
     }
+
+    return fs.readdirSync(appsRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => {
+        const manifestPath = path.join(appsRoot, entry.name, 'app-info.json');
+        if (!fs.existsSync(manifestPath)) {
+          return null;
+        }
+
+        try {
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          const appId = normalizeManifestValue(manifest && manifest.id, entry.name);
+          return {
+            appId,
+            id: appId,
+            name: normalizeManifestValue(manifest && manifest.name, appId),
+            version: normalizeManifestValue(manifest && manifest.version, '1.0.0'),
+            description: normalizeManifestValue(manifest && manifest.description, ''),
+            status: 'active',
+            active: true,
+            modules: Array.isArray(manifest && manifest.modules) ? manifest.modules : ['dashboard', 'gps'],
+            config: {
+              framework: 'neutral-master-framework',
+              mode: 'local',
+              defaultView: 'dashboard',
+              appManifestPath: manifestPath,
+              source: 'app-info.json'
+            }
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter(Boolean);
+  };
+
+  let defaults = readAppManifests();
+  if (!defaults.length) {
+    defaults = [
+      {
+        appId: 'neutral-app',
+        name: 'Neutral App',
+        version: '1.0.0',
+        description: 'Default neutral application shell for the framework runtime.',
+        status: 'active',
+        active: true,
+        modules: ['dashboard', 'gps'],
+        config: {
+          framework: 'neutral-master-framework',
+          mode: 'local',
+          defaultView: 'dashboard',
+          source: 'default-runtime'
+        }
+      }
+    ];
   }
 
-  const preferredAppId = (process.env.DEFAULT_APP_ID || 'neutral-app').trim() || 'neutral-app';
-  const targetApp = MasterFramework.getApp(preferredAppId) || MasterFramework.getApp('neutral-app') || MasterFramework.getApp('catchtrack');
+  for (const appDefinition of defaults) {
+    const existingApp = MasterFramework.getApp(appDefinition.appId);
+    if (!existingApp) {
+      MasterFramework.registerApp(appDefinition);
+      continue;
+    }
+
+    existingApp.name = appDefinition.name || existingApp.name;
+    existingApp.description = appDefinition.description || existingApp.description;
+    existingApp.version = appDefinition.version || existingApp.version;
+    existingApp.modules = Array.isArray(appDefinition.modules) ? appDefinition.modules : existingApp.modules;
+    existingApp.config = {
+      ...(existingApp.config || {}),
+      ...(appDefinition.config || {}),
+      appManifestPath: appDefinition.config && appDefinition.config.appManifestPath
+        ? appDefinition.config.appManifestPath
+        : existingApp.config && existingApp.config.appManifestPath
+          ? existingApp.config.appManifestPath
+          : undefined,
+      source: 'app-info.json'
+    };
+    existingApp.updatedAt = new Date().toISOString();
+  }
+
+  const preferredAppId = (process.env.DEFAULT_APP_ID || (defaults[0] && defaults[0].appId) || 'neutral-app').trim() || 'neutral-app';
+  const targetApp = MasterFramework.getApp(preferredAppId) || MasterFramework.getApp('neutral-app');
   if (targetApp) {
     MasterFramework.setActiveApp(targetApp.appId);
   }
