@@ -483,6 +483,42 @@
             }));
         },
 
+        getFeatureAccessMatrix(appId = null) {
+            const framework = window.MasterFramework || null;
+            const roleCatalog = framework && typeof framework.getRoleCatalog === 'function'
+                ? framework.getRoleCatalog()
+                : this.getRoleCatalog();
+            const app = framework && typeof framework.getApp === 'function'
+                ? framework.getApp(appId || 'catchtrack')
+                : null;
+            const templates = app && Array.isArray(app.featureTemplates) && app.featureTemplates.length
+                ? app.featureTemplates
+                : (framework && typeof framework.listApps === 'function'
+                    ? (framework.listApps().find((entry) => entry.appId === (appId || 'catchtrack')) || {}).featureTemplates || []
+                    : []);
+            const normalizedAppId = typeof appId === 'string' && appId.trim() ? appId.trim() : 'catchtrack';
+
+            return roleCatalog.map((role) => ({
+                role: role.role || role.name || 'user',
+                name: role.name || role.role || 'User',
+                features: templates.map((template) => {
+                    const access = framework && typeof framework.getAppFeatureAccess === 'function'
+                        ? framework.getAppFeatureAccess(normalizedAppId, template.id)
+                        : null;
+                    const roles = access && access.roles && typeof access.roles === 'object' ? access.roles : {};
+                    const enabledByRole = typeof roles[role.role || role.name || 'user'] === 'boolean'
+                        ? !!roles[role.role || role.name || 'user']
+                        : !!template.enabled;
+                    return {
+                        id: template.id,
+                        name: template.label || template.name || template.id,
+                        enabled: enabledByRole,
+                        permissions: Array.isArray(template.permissions) ? [...template.permissions] : []
+                    };
+                })
+            }));
+        },
+
         setModuleAccessForRole(appId, moduleId, roleId, enabled = true) {
             if (!appId || typeof appId !== 'string') {
                 return { ok: false, code: 'INVALID_APP_ID', message: 'An app id is required.' };
@@ -510,6 +546,40 @@
             });
 
             return { ok: true, data: result, message: `Updated role access for ${moduleId} in ${appId}` };
+        },
+
+        setFeatureAccessForRole(appId, featureId, roleId, enabled = true) {
+            if (!appId || typeof appId !== 'string') {
+                return { ok: false, code: 'INVALID_APP_ID', message: 'An app id is required.' };
+            }
+            if (!featureId || typeof featureId !== 'string') {
+                return { ok: false, code: 'INVALID_FEATURE_ID', message: 'A feature id is required.' };
+            }
+            if (!roleId || typeof roleId !== 'string') {
+                return { ok: false, code: 'INVALID_ROLE_ID', message: 'A role id is required.' };
+            }
+
+            const framework = window.MasterFramework;
+            if (!framework || typeof framework.setAppFeatureAccess !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+
+            const app = framework.getApp(appId);
+            if (!app) {
+                return { ok: false, code: 'APP_NOT_FOUND', message: `App not found: ${appId}` };
+            }
+
+            const existing = framework.getAppFeatureAccess(appId, featureId) || { enabled: true, permissions: [], roles: {} };
+            const nextRoles = { ...(existing.roles || {}) };
+            nextRoles[roleId] = !!enabled;
+
+            const result = framework.setAppFeatureAccess(appId, featureId, {
+                enabled: typeof existing.enabled === 'boolean' ? existing.enabled : true,
+                permissions: Array.isArray(existing.permissions) ? [...existing.permissions] : [],
+                roles: nextRoles
+            });
+
+            return { ok: true, data: result, message: `Updated feature access for ${featureId} in ${appId}` };
         },
 
         updateModule(moduleId, updates = {}) {

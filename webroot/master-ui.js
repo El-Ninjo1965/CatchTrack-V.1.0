@@ -917,16 +917,37 @@
     const defaultAppId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
       ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
       : 'catchtrack');
-    const matrix = window.AdminModule && typeof window.AdminModule.getModuleAccessMatrix === 'function'
+    const moduleMatrix = window.AdminModule && typeof window.AdminModule.getModuleAccessMatrix === 'function'
       ? window.AdminModule.getModuleAccessMatrix(defaultAppId)
       : [];
+    const featureMatrix = window.AdminModule && typeof window.AdminModule.getFeatureAccessMatrix === 'function'
+      ? window.AdminModule.getFeatureAccessMatrix(defaultAppId)
+      : [];
     const accessLookup = {};
-    matrix.forEach((roleEntry) => {
+    moduleMatrix.forEach((roleEntry) => {
       const roleId = roleEntry.role || 'user';
       (roleEntry.modules || []).forEach((entry) => {
         accessLookup[`${roleId}:${entry.id}`] = !!entry.enabled;
       });
     });
+    const featureLookup = {};
+    featureMatrix.forEach((roleEntry) => {
+      const roleId = roleEntry.role || 'user';
+      (roleEntry.features || []).forEach((entry) => {
+        featureLookup[`${roleId}:${entry.id}`] = !!entry.enabled;
+      });
+    });
+    const appFeatures = Array.isArray((window.MasterFramework && typeof window.MasterFramework.getApp === 'function'
+      ? window.MasterFramework.getApp(defaultAppId)
+      : null)?.featureTemplates) && (window.MasterFramework && typeof window.MasterFramework.getApp === 'function'
+        ? window.MasterFramework.getApp(defaultAppId)
+        : null).featureTemplates.length
+      ? (window.MasterFramework.getApp(defaultAppId)).featureTemplates
+      : [
+          { id: 'overview', label: 'Overview' },
+          { id: 'profile', label: 'Profile' },
+          { id: 'modules', label: 'Modules' }
+        ];
 
     page.innerHTML = `
       <div class="card">
@@ -989,6 +1010,35 @@
                        }).join('')}
                      </tr>
                    `).join('') : '<tr><td colspan="2">No module access data available.</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 24px;">
+            <div class="card-header"><h3 class="card-title">App feature access matrix</h3></div>
+            <div class="content-wrap">
+              <div class="small-muted">Feature areas can be grouped and controlled independently from module activation so future apps can expose different feature sets by role.</div>
+              <div class="table-wrap" style="margin-top: 18px;">
+                <table>
+                  <thead>
+                   <tr>
+                     <th>Feature</th>
+                     ${roleCatalog.map((role) => `<th>${escapeHtml(role.name || role.role || 'Role')}</th>`).join('')}
+                   </tr>
+                  </thead>
+                  <tbody>
+                   ${appFeatures.length ? appFeatures.map((feature) => `
+                     <tr>
+                       <td>${escapeHtml(feature.label || feature.name || feature.id || 'Feature')}</td>
+                       ${roleCatalog.map((role) => {
+                         const roleId = role.role || role.name || 'user';
+                         const enabled = !!featureLookup[`${roleId}:${feature.id}`];
+                         return `<td><button type="button" class="secondary" data-feature-access-toggle data-feature-id="${escapeHtml(feature.id || '')}" data-role-id="${escapeHtml(roleId)}" data-enabled="${enabled ? 'true' : 'false'}">${enabled ? 'Allow' : 'Blocked'}</button></td>`;
+                       }).join('')}
+                     </tr>
+                   `).join('') : '<tr><td colspan="2">No feature templates available.</td></tr>'}
                   </tbody>
                 </table>
               </div>
@@ -1073,6 +1123,31 @@
           statusTarget.textContent = result && result.ok
             ? `Updated ${roleId} access for ${moduleId} to ${nextEnabled ? 'allowed' : 'blocked'}.`
             : (result && result.message) || 'Role access update failed.';
+        }
+        renderAdminModules();
+      });
+    });
+
+    page.querySelectorAll('[data-feature-access-toggle]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const featureId = button.dataset.featureId;
+        const roleId = button.dataset.roleId;
+        const manager = window.AdminModule || null;
+        if (!featureId || !roleId || !manager || typeof manager.setFeatureAccessForRole !== 'function') {
+          if (statusTarget) {
+            statusTarget.className = 'message error';
+            statusTarget.textContent = 'Feature access controls are unavailable.';
+          }
+          return;
+        }
+
+        const nextEnabled = button.dataset.enabled !== 'true';
+        const result = await manager.setFeatureAccessForRole(defaultAppId, featureId, roleId, nextEnabled);
+        if (statusTarget) {
+          statusTarget.className = result && result.ok ? 'message success' : 'message error';
+          statusTarget.textContent = result && result.ok
+            ? `Updated ${roleId} access for feature ${featureId} to ${nextEnabled ? 'allowed' : 'blocked'}.`
+            : (result && result.message) || 'Feature access update failed.';
         }
         renderAdminModules();
       });

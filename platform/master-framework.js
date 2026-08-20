@@ -114,6 +114,19 @@
           ? { ...appDefinition.config.moduleAccess }
           : {});
 
+      const featureTemplates = Array.isArray(appDefinition.featureTemplates)
+        ? appDefinition.featureTemplates.map((featureDefinition) => this.normalizeFeatureTemplate(featureDefinition)).filter(Boolean)
+        : Array.isArray(appDefinition.features)
+          ? appDefinition.features.map((featureDefinition) => this.normalizeFeatureTemplate(featureDefinition)).filter(Boolean)
+          : [
+              this.normalizeFeatureTemplate({ id: 'overview', label: 'Overview', description: 'Core overview area.', permissions: ['system:view'] }),
+              this.normalizeFeatureTemplate({ id: 'profile', label: 'Profile', description: 'User profile and settings.', permissions: ['user:read'] }),
+              this.normalizeFeatureTemplate({ id: 'modules', label: 'Modules', description: 'Feature and module workspace.', permissions: ['module:read'] })
+            ].filter(Boolean);
+      const featureAccess = isPlainObject(appDefinition.featureAccess)
+        ? { ...appDefinition.featureAccess }
+        : {};
+
       const normalized = {
         appId,
         id: appId,
@@ -124,6 +137,8 @@
         status: normalizeString(appDefinition.status, appDefinition.active ? 'active' : 'inactive'),
         modules: Array.isArray(appDefinition.modules) ? [...appDefinition.modules] : [],
         moduleAccess,
+        featureTemplates,
+        featureAccess,
         config: isPlainObject(appDefinition.config) ? { ...appDefinition.config } : {},
         secrets: isPlainObject(appDefinition.secrets) ? { ...appDefinition.secrets } : {},
         runtimeState: isPlainObject(appDefinition.runtimeState) ? { ...appDefinition.runtimeState } : {},
@@ -137,6 +152,9 @@
 
       if (normalized.config && typeof normalized.config === 'object' && !normalized.config.moduleAccess) {
         normalized.config.moduleAccess = normalized.moduleAccess;
+      }
+      if (normalized.config && typeof normalized.config === 'object' && !normalized.config.featureAccess) {
+        normalized.config.featureAccess = normalized.featureAccess;
       }
 
       return normalized;
@@ -216,6 +234,125 @@
       return Object.entries(accessMap).map(([moduleId, value]) => ({
         appId: app.appId,
         moduleId,
+        ...(isPlainObject(value) ? value : {})
+      }));
+    },
+
+    normalizeFeatureTemplate(featureDefinition) {
+      if (!featureDefinition) {
+        return null;
+      }
+
+      const definition = isPlainObject(featureDefinition) ? featureDefinition : { id: String(featureDefinition) };
+      const featureId = normalizeString(definition.id || definition.featureId || definition.name, '');
+      if (!featureId) {
+        return null;
+      }
+
+      const normalized = {
+        id: featureId,
+        key: featureId,
+        label: normalizeString(definition.label || definition.name || definition.title, featureId),
+        description: normalizeString(definition.description, ''),
+        permissions: Array.isArray(definition.permissions)
+          ? [...new Set(definition.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
+          : [],
+        roles: Array.isArray(definition.roles)
+          ? [...new Set(definition.roles.filter(Boolean).map((role) => normalizeString(String(role), '')).filter(Boolean))]
+          : [],
+        group: normalizeString(definition.group, 'core'),
+        enabled: typeof definition.enabled === 'boolean' ? definition.enabled : true
+      };
+
+      return normalized;
+    },
+
+    registerFeatureTemplate(appId, templateDefinition) {
+      const app = this.getApp(appId);
+      if (!app) {
+        throw new Error(`Application not found: ${appId}`);
+      }
+
+      const normalized = this.normalizeFeatureTemplate(templateDefinition);
+      if (!normalized) {
+        throw new TypeError('Feature template definition must be an object with an id.');
+      }
+
+      const templates = Array.isArray(app.featureTemplates) ? [...app.featureTemplates] : [];
+      const existingIndex = templates.findIndex((template) => template.id === normalized.id || template.key === normalized.id);
+      if (existingIndex >= 0) {
+        templates[existingIndex] = { ...templates[existingIndex], ...normalized };
+      } else {
+        templates.push(normalized);
+      }
+      app.featureTemplates = templates;
+      if (isPlainObject(app.config)) {
+        app.config.featureTemplates = templates;
+      }
+      app.updatedAt = new Date().toISOString();
+      return { ...normalized };
+    },
+
+    setAppFeatureAccess(appId, featureId, access = {}) {
+      const app = this.getApp(appId);
+      if (!app) {
+        throw new Error(`Application not found: ${appId}`);
+      }
+
+      const featureKey = normalizeString(featureId, '');
+      if (!featureKey) {
+        throw new Error('Feature id is required.');
+      }
+
+      const source = isPlainObject(app.featureAccess) ? { ...app.featureAccess } : {};
+      const roleMatrix = isPlainObject(access.roles) ? Object.fromEntries(
+        Object.entries(access.roles).map(([role, enabled]) => [normalizeString(role, ''), !!enabled])
+          .filter(([role]) => role)
+      ) : {};
+
+      const nextEntry = {
+        enabled: typeof access.enabled === 'boolean' ? access.enabled : true,
+        permissions: Array.isArray(access.permissions)
+          ? [...new Set(access.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')))].filter(Boolean)
+          : Array.isArray(source[featureKey] && source[featureKey].permissions) ? [...source[featureKey].permissions] : [],
+        roles: roleMatrix,
+        updatedAt: new Date().toISOString()
+      };
+
+      source[featureKey] = nextEntry;
+      app.featureAccess = source;
+      if (isPlainObject(app.config)) {
+        app.config.featureAccess = source;
+      }
+      app.updatedAt = new Date().toISOString();
+      return { ...nextEntry, featureId: featureKey, appId: app.appId };
+    },
+
+    getAppFeatureAccess(appId, featureId) {
+      const app = this.getApp(appId);
+      if (!app) {
+        return null;
+      }
+
+      const featureKey = normalizeString(featureId, '');
+      if (!featureKey) {
+        return null;
+      }
+
+      const access = isPlainObject(app.featureAccess) ? app.featureAccess[featureKey] : null;
+      return access ? { ...access, featureId: featureKey, appId: app.appId } : null;
+    },
+
+    listAppFeatureAccess(appId) {
+      const app = this.getApp(appId);
+      if (!app) {
+        return [];
+      }
+
+      const accessMap = isPlainObject(app.featureAccess) ? app.featureAccess : {};
+      return Object.entries(accessMap).map(([featureId, value]) => ({
+        appId: app.appId,
+        featureId,
         ...(isPlainObject(value) ? value : {})
       }));
     },

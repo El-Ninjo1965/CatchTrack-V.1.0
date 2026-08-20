@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.6 - app-scoped module governance and role matrix
+## Version 1.1.7 - app-scoped feature governance and role matrix
 
 Status:
 - Framework core remains stable and module-driven.
@@ -13,6 +13,7 @@ Status:
 - Existing users can now be edited in the admin workspace, including username, display name, email, role, permissions, and status.
 - Modules can now be edited directly in the admin workspace through a metadata-driven governance form covering app ID, name, type, description, permissions, capabilities, and enable/disable status.
 - The framework now supports app-scoped module access control by role. Each app can block or allow individual modules by role, and the visible module navigation reacts to that matrix without requiring core rewrites.
+- App feature groups now also support a role-based access matrix so dashboard, profile, module workspaces and future feature groups can be enabled or disabled by role without touching the framework core.
 
 ### Included milestones
 - neutral framework shell
@@ -38,6 +39,7 @@ Status:
 - prepare the production layer for plain shared hosting with JSON/text files and optional SQL upgrade paths
 - extend module-to-role and app-to-module mappings for feature-level governance
 - bind app-scoped module access to real navigation and user visibility in the shell
+- extend feature-level governance to app-specific feature templates and role-based coverage in the admin matrix
 
 ### Planned next steps
 - add the next real domain module after the current core feature set

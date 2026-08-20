@@ -206,6 +206,41 @@ test('supports app-scoped module access and role mappings', () => {
   assert.equal(runtime.listAppModuleAccess('catchtrack').length, 1);
 });
 
+test('supports app feature templates and role-based feature access', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.apps.clear();
+
+  runtime.registerApp({
+    appId: 'catchtrack',
+    name: 'CatchTrack',
+    version: '1.0.0',
+    active: true,
+    features: [
+      { id: 'dashboard', label: 'Dashboard', permissions: ['system:view'], roles: ['user', 'admin'] },
+      { id: 'catch-log', label: 'Catch Log', permissions: ['user:read'], roles: ['admin', 'member'] }
+    ]
+  });
+
+  runtime.registerFeatureTemplate('catchtrack', {
+    id: 'profile',
+    label: 'Profile',
+    permissions: ['user:read'],
+    roles: ['user', 'admin']
+  });
+
+  const updated = runtime.setAppFeatureAccess('catchtrack', 'profile', {
+    enabled: true,
+    permissions: ['user:read'],
+    roles: { user: true, admin: true, developer: false }
+  });
+
+  assert.equal(updated.featureId, 'profile');
+  assert.equal(runtime.getAppFeatureAccess('catchtrack', 'profile').roles.user, true);
+  assert.equal(runtime.getAppFeatureAccess('catchtrack', 'profile').roles.developer, false);
+  assert.equal(runtime.listAppFeatureAccess('catchtrack').length >= 1, true);
+});
+
 test('registers and tests connections', async () => {
   cleanupRuntimeState();
   const runtime = Framework;
