@@ -68,4 +68,5 @@
 - Die aktive App wird zentral als eigener Konfigurations-/Runtime-Kontext verwaltet, mit eigener Storage-Namespace, Admin-Scope und isolierter Server-/UI-Konfiguration.
 - Die Server-Initialisierung nutzt jetzt einen app-spezifischen Bootstrap-Workflow statt hart codierter Global-Registrierungen.
 - Die Framework-Validierung läuft über eine gezielte Runtime-Regression zur App-Isolation, damit keine Cross-App-Kontamination mehr entsteht.
+- Der Admin hat jetzt ein eigenes App-Konfigurations-Panel für aktive App-Auswahl, App-Name, Modus und Storage-Strategie erhalten, damit Branding und Datenhaltung direkt im CMS-artigen Admin gesteuert werden können.
 - Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.

@@ -18,6 +18,7 @@ Status:
 - App template registration and creation are available in the framework and admin UI so new app variants can be generated from reusable blueprints rather than custom one-off code paths.
 - Admin audit includes filterable timeline views so administrators can review actions by actor, action, resource, result and searchable metadata.
 - App runtime isolation is now managed explicitly: each application has its own runtime context, storage namespace, admin scope and active selection without relying on a shared global app state.
+- Admin app configuration is now available in the CMS-like admin area: the active app can be selected, app branding can be changed, and the default storage mode can be set from the admin without code rewrites.
 - Architectural gate: each app, including admin and server context, must be independent and not rely on another app’s runtime state or modules.
 - Freeze gate: no additional app-dependent modules will be installed until the full base system is completed, stable and explicitly reviewed and approved by the user.
 
