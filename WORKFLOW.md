@@ -29,6 +29,7 @@
   - Generische Data-/Schema-Engine: Das Framework kann jetzt app-spezifische Entity-Schemata registrieren, Datensätze mit Validierung und Default-Werten erstellen, aktualisieren und löschen und diese Einträge über den vorhandenen Storage-Adapter persistent halten, damit spätere Module und Store-/App-Templates ohne Core-Rework entstehen können.
   - Admin-Data-UI: Im CMS-artigen Admin-Bereich existiert jetzt eine eigene "Data"-Ansicht, in der Schemata erstellt, Felder definiert, aktualisiert und Datensätze direkt im Rahmen der aktiven App verwaltet werden können.
   - Retail-Store-Template: Die Architektur wurde mit einem echten Store-Referenzmodell validiert. Das Template enthält Produkt-, Kategorie-, Kunden- und Bestell-Schemata, damit bewiesen wird, dass das neutrale Framework nicht nur für CatchTrack, sondern auch für ein echtes E-Commerce-Szenario geeignet ist.
+  - Store-UI-Module: Die Store-Referenz ist jetzt nicht nur als Schema-Blueprint, sondern auch als echte Laufzeit-UI mit Modulen für Katalog, Bestellungen und Kunden validiert, damit die generische Daten-Engine im sichtbaren App-Workflow abgesichert ist.
   - Prüfungen:
   - `npm test` wurde erfolgreich ausgeführt.
   - Validiert wurden: Auth-Reload, lokale Hash-Speicherung, zentrale App-Name-Konfiguration, GPS-Modul-Lebenszyklus, Admin-Module-Verwaltung, GPS-Admin-Aktionen und UI-Seitendarstellung.

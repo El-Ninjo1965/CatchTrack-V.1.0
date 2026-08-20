@@ -1,0 +1,28 @@
+{
+  "id": "customers",
+  "name": "Customers",
+  "displayName": "Customers",
+  "version": "1.0.0",
+  "type": "app",
+  "description": "Customer management module for a retail app template.",
+  "entry": "index.js",
+  "globalName": "CustomersModule",
+  "permissions": ["module:read", "user:read"],
+  "capabilities": ["customers", "crm", "retention"],
+  "dependencies": [],
+  "appId": "retail-demo",
+  "admin": {
+    "title": "Customer settings",
+    "description": "Controls for customer management and loyalty workflows.",
+    "settings": [
+      {
+        "key": "defaultStatus",
+        "path": "moduleSettings.customers.defaultStatus",
+        "label": "Default status",
+        "type": "text",
+        "defaultValue": "active",
+        "description": "Default customer status for newly created profiles."
+      }
+    ]
+  }
+}

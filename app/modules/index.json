@@ -54,5 +54,47 @@
     "capabilities": ["spots", "fishing", "location-planning"],
     "dependencies": ["gps"],
     "appId": "catchtrack"
+  },
+  {
+    "id": "catalog",
+    "name": "Catalog",
+    "displayName": "Catalog",
+    "version": "1.0.0",
+    "type": "app",
+    "description": "Product catalog module for a retail app template.",
+    "entry": "index.js",
+    "globalName": "CatalogModule",
+    "permissions": ["module:read", "user:read"],
+    "capabilities": ["catalog", "products", "inventory"],
+    "dependencies": [],
+    "appId": "retail-demo"
+  },
+  {
+    "id": "orders",
+    "name": "Orders",
+    "displayName": "Orders",
+    "version": "1.0.0",
+    "type": "app",
+    "description": "Order management module for a retail app template.",
+    "entry": "index.js",
+    "globalName": "OrdersModule",
+    "permissions": ["module:read", "user:write"],
+    "capabilities": ["orders", "fulfillment", "sales"],
+    "dependencies": ["catalog", "customers"],
+    "appId": "retail-demo"
+  },
+  {
+    "id": "customers",
+    "name": "Customers",
+    "displayName": "Customers",
+    "version": "1.0.0",
+    "type": "app",
+    "description": "Customer management module for a retail app template.",
+    "entry": "index.js",
+    "globalName": "CustomersModule",
+    "permissions": ["module:read", "user:read"],
+    "capabilities": ["customers", "crm", "retention"],
+    "dependencies": [],
+    "appId": "retail-demo"
   }
 ]
