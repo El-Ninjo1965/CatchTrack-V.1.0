@@ -25,6 +25,7 @@
 - Storage-/Connection-Architektur erweitert: Der Admin kann jetzt im Bereich „Connections“ zwischen Text/JSON-Dateien und SQL-Varianten wie SQLite/MySQL/PostgreSQL wechseln und die Konfiguration direkt im Framework-/Admin-Workflow persistieren.
 - Connection-Model und default Config erweitert, damit die Daten-Speicherstrategie nicht hart verdrahtet, sondern im Admin konfigurierbar ist.
 - Live-Storage-Adapter ergänzt: File-Storage nutzt jetzt echte JSON-Dateien im Server-Runtime-Verzeichnis, während SQL-Varianten als konfigurierbare, zukunftsfähige Adapter-Modelle im Admin-Workflow nutzbar sind und die Verbindung direkt validiert.
+- SQLite-Adapter implementiert: Der SQL-Pfad nutzt nun echte SQLite-Datenbanken im Runtime-Verzeichnis und unterstützt Schreiben, Lesen, Auflisten und Löschen mit persistenter Datenhaltung.
 
 ## Getestet
 - `npm test` vollständig ausgeführt.

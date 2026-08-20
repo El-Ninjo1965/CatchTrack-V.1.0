@@ -270,12 +270,17 @@ test('creates a live file storage adapter and a sql-ready adapter for admin-mana
     appId: 'catchtrack',
     storageType: 'sqlite',
     databaseType: 'sqlite',
-    databaseName: 'catchtrack.db'
+    databaseName: 'catchtrack.db',
+    storagePath: 'server/runtime/test-data'
   });
 
   assert.equal(sqlAdapter.type, 'sqlite');
   const sqlCheck = await sqlAdapter.test();
   assert.equal(sqlCheck.status, 'ready');
+  await sqlAdapter.write('sessions', 'sql-session-demo', { ok: true, appId: 'catchtrack', mode: 'sqlite' });
+  const sqlSaved = await sqlAdapter.read('sessions', 'sql-session-demo', null);
+  assert.equal(sqlSaved.appId, 'catchtrack');
+  assert.equal(sqlSaved.mode, 'sqlite');
 });
 
 test('registers a centralized role and permission catalog', () => {

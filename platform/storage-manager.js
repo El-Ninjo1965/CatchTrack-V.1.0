@@ -211,34 +211,156 @@
     const type = normalizeString(config.storageType || config.databaseType || config.type || 'sqlite', 'sqlite').toLowerCase();
     const normalizedType = (type === 'sql') ? 'sqlite' : type;
     const databaseName = normalizeString(config.databaseName || config.name || config.database || 'framework.db', 'framework.db');
+    const connectionId = normalizeString(config.connectionId || config.id || `sql-${normalizedType}`, `sql-${normalizedType}`);
+    const runtimeRoot = resolveRuntimeRoot(config);
+    const databasePath = normalizedType === 'sqlite'
+      ? (() => {
+          const path = require('node:path');
+          const fileName = databaseName.endsWith('.db') || databaseName.endsWith('.sqlite') || databaseName.endsWith('.sqlite3')
+            ? databaseName
+            : `${databaseName}.sqlite`;
+          ensureNodeDirectory(runtimeRoot);
+          return path.resolve(runtimeRoot, fileName);
+        })()
+      : '';
+
+    const ensureSqliteDatabase = () => {
+      if (normalizedType !== 'sqlite') {
+        return null;
+      }
+
+      if (typeof process === 'undefined' || !process.versions || !process.versions.node) {
+        return null;
+      }
+
+      try {
+        const { DatabaseSync } = require('node:sqlite');
+        const db = new DatabaseSync(databasePath);
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            collection TEXT NOT NULL,
+            entry_key TEXT NOT NULL,
+            value TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(collection, entry_key)
+          );
+        `);
+        return db;
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const database = normalizedType === 'sqlite' ? ensureSqliteDatabase() : null;
 
     return {
-      id: normalizeString(config.connectionId || config.id || `sql-${normalizedType}`, `sql-${normalizedType}`),
-      connectionId: normalizeString(config.connectionId || config.id || `sql-${normalizedType}`, `sql-${normalizedType}`),
+      id: connectionId,
+      connectionId,
       type: normalizedType,
       storageType: normalizedType,
       name: `${normalizedType.toUpperCase()} storage adapter`,
       databaseName,
+      databasePath,
       async test() {
+        if (normalizedType === 'sqlite') {
+          if (!database) {
+            return {
+              ok: false,
+              status: 'error',
+              mode: 'sqlite',
+              storageType: 'sqlite',
+              checkedAt: new Date().toISOString(),
+              message: 'SQLite database could not be initialized.'
+            };
+          }
+
+          try {
+            const row = database.prepare('SELECT 1 AS ok').get();
+            return {
+              ok: !!row && row.ok === 1,
+              status: 'ready',
+              mode: 'sqlite',
+              storageType: 'sqlite',
+              checkedAt: new Date().toISOString(),
+              message: 'SQLite database initialized successfully.'
+            };
+          } catch (error) {
+            return {
+              ok: false,
+              status: 'error',
+              mode: 'sqlite',
+              storageType: 'sqlite',
+              checkedAt: new Date().toISOString(),
+              message: error.message || 'SQLite validation failed.'
+            };
+          }
+        }
+
         return {
           ok: true,
           status: 'ready',
           mode: normalizedType,
           storageType: normalizedType,
           checkedAt: new Date().toISOString(),
-          message: `${normalizedType.toUpperCase()} backend is configured for future database connectivity. Adapter connection is ready for the selected SQL service.`
+          message: `${normalizedType.toUpperCase()} backend is configured for future database connectivity.`
         };
       },
-      async read() {
-        return null;
+      async read(collection, key, fallbackValue = null) {
+        if (normalizedType !== 'sqlite' || !database) {
+          return fallbackValue;
+        }
+
+        const normalizedCollection = normalizeString(collection || 'default', 'default');
+        const normalizedKey = normalizeString(key || '', 'default');
+        const row = database.prepare('SELECT value FROM records WHERE collection = ? AND entry_key = ? LIMIT 1').get(normalizedCollection, normalizedKey);
+        if (!row || row.value === null || row.value === undefined) {
+          return fallbackValue;
+        }
+
+        try {
+          return JSON.parse(row.value);
+        } catch (error) {
+          return row.value;
+        }
       },
       async write(collection, key, value) {
+        if (normalizedType !== 'sqlite' || !database) {
+          return value;
+        }
+
+        const normalizedCollection = normalizeString(collection || 'default', 'default');
+        const normalizedKey = normalizeString(key || '', 'default');
+        const payload = JSON.stringify(value);
+        const now = new Date().toISOString();
+
+        database.prepare(`
+          INSERT INTO records (collection, entry_key, value, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT(collection, entry_key)
+          DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).run(normalizedCollection, normalizedKey, payload, now, now);
+
         return value;
       },
-      async list() {
-        return [];
+      async list(collection) {
+        if (normalizedType !== 'sqlite' || !database) {
+          return [];
+        }
+
+        const normalizedCollection = normalizeString(collection || 'default', 'default');
+        const rows = database.prepare('SELECT entry_key FROM records WHERE collection = ? ORDER BY entry_key ASC').all(normalizedCollection);
+        return rows.map((row) => row.entry_key);
       },
-      async remove() {
+      async remove(collection, key) {
+        if (normalizedType !== 'sqlite' || !database) {
+          return true;
+        }
+
+        const normalizedCollection = normalizeString(collection || 'default', 'default');
+        const normalizedKey = normalizeString(key || '', 'default');
+        database.prepare('DELETE FROM records WHERE collection = ? AND entry_key = ?').run(normalizedCollection, normalizedKey);
         return true;
       }
     };
