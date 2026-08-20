@@ -49,7 +49,7 @@
 - GPS bleibt ein echtes registriertes Modul; Tracking startet erst nach explizitem Benutzer-Start.
 - Startseite und Navigation sind neutral und stabil.
 - Admin-Module können aktiv/deaktiviert werden; der GPS-Adminbereich steuert die echte Geolocation-API an.
-- Die erste produktive App-Basis (`catchtrack`) ist als modulare App-Definition aktiv.
+- Der Laufzeit-Default ist jetzt ein neutraler, generischer App-Kontext (`neutral-app`); produkt- oder domänenspezifische Beispiele wie CatchTrack oder Retail bleiben als optionale Referenz- bzw. Test-Instanzen erhalten, aber nicht als feste Standard-App des Frameworks.
 - Das Dashboard-Modul dient als erster generischer App-Home und als Vorlage für spätere Module.
 - Das Catch-Log-Modul ist die erste echte fachliche Module-Instanz mit lokalem Datensatz und einfacher Eingabe.
 - Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
@@ -75,4 +75,5 @@
 - Die generische Data-/Schema-Engine wurde ergänzt: app-spezifische Entity-Schemata, Validierung, CRUD-Operations und persistente Record-Storage folgen jetzt einem zentralen, wiederverwendbaren Muster und sind für spätere Module und Store-/App-Templates vorbereitet.
 - Die aktive App-Identität wird jetzt auch in der User-UI aus dem runtime-aktiven App-Kontext abgeleitet, statt nur aus der konfigurierten Default-Variante. Dadurch bleibt die sichtbare Navigation konsistent, auch wenn die aktive App im Admin gewechselt wurde.
 - Die finale Validierung der App-/Admin-/Server-Entkopplung wurde mit einem gezielten App-Listing-/Active-App-Test abgesichert; der aktive App-Kontext bleibt als Priorität im Framework erhalten.
+- Die Standard-App des Frameworks wurde auf einen neutralen, generischen `neutral-app`-Kontext zurückgesetzt. `Retail Demo` bleibt als Referenz-/Test-Template im Framework erhalten, ist aber nicht mehr die Standard- oder Folge-App der Laufzeit und keine dauerhafte zweite App-Architektur.
 - Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.

@@ -176,7 +176,7 @@ test('registers and activates apps', () => {
   assert.equal(runtime.getApp('weather').status, 'active');
 });
 
-test('prefers the active app in the app listing and keeps the retail app as the default working app', () => {
+test('prefers the active app in the app listing and keeps the neutral app as the default working app', () => {
   cleanupRuntimeState();
   const runtime = Framework;
   runtime.apps.clear();
@@ -184,27 +184,27 @@ test('prefers the active app in the app listing and keeps the retail app as the 
   runtime.currentAppId = null;
 
   runtime.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
+    appId: 'neutral-app',
+    name: 'Neutral App',
     version: '1.0.0',
-    active: false,
+    active: true,
     modules: ['dashboard'],
     config: { mode: 'local' }
   });
 
   runtime.registerApp({
-    appId: 'retail-demo',
-    name: 'Retail Demo',
+    appId: 'catchtrack',
+    name: 'CatchTrack',
     version: '1.0.0',
-    active: true,
-    modules: ['dashboard', 'catalog'],
-    config: { mode: 'local', defaultView: 'catalog' }
+    active: false,
+    modules: ['dashboard', 'gps'],
+    config: { mode: 'local', defaultView: 'dashboard' }
   });
 
   const appList = runtime.listApps();
-  assert.equal(appList[0].appId, 'retail-demo');
-  assert.equal(runtime.getActiveApp().appId, 'retail-demo');
-  assert.equal(runtime.getApp('retail-demo').status, 'active');
+  assert.equal(appList[0].appId, 'neutral-app');
+  assert.equal(runtime.getActiveApp().appId, 'neutral-app');
+  assert.equal(runtime.getApp('neutral-app').status, 'active');
 });
 
 test('keeps app runtime state isolated for each app instance', () => {

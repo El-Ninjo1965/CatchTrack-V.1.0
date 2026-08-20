@@ -62,7 +62,7 @@
         loadDefaultConfigs() {
             // Application Config
             this.set('app', {
-                name: 'Neutral Platform',
+                name: 'Neutral App',
                 version: '1.0.0',
                 environment: 'development',
                 debug: true,

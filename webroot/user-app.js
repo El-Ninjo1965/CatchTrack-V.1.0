@@ -108,7 +108,7 @@
       : {};
     return appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
       ? appConfig.name.trim()
-      : 'Retail Demo';
+      : 'Neutral App';
   };
 
   const getAppMark = () => {
@@ -136,7 +136,7 @@
 
     const appList = framework && typeof framework.listApps === 'function' ? framework.listApps() : [];
     const firstApp = appList.find((app) => app && app.appId);
-    return firstApp && typeof firstApp.appId === 'string' ? firstApp.appId : 'retail-demo';
+    return firstApp && typeof firstApp.appId === 'string' ? firstApp.appId : 'neutral-app';
   };
 
   const getVisibleModules = () => {

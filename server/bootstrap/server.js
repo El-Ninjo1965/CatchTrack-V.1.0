@@ -24,9 +24,9 @@ const bootstrapDefaultApps = () => {
       appId: 'catchtrack',
       name: 'CatchTrack',
       version: '1.0.0',
-      description: 'First real application shell for the CatchTrack framework.',
-      status: 'active',
-      active: true,
+      description: 'Example application shell for a future app built on the neutral framework.',
+      status: 'inactive',
+      active: false,
       modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
       config: {
         framework: 'neutral-master-framework',
@@ -42,8 +42,8 @@ const bootstrapDefaultApps = () => {
     }
   }
 
-  const preferredAppId = (process.env.DEFAULT_APP_ID || 'catchtrack').trim() || 'catchtrack';
-  const targetApp = MasterFramework.getApp(preferredAppId) || MasterFramework.getApp('neutral-app');
+  const preferredAppId = (process.env.DEFAULT_APP_ID || 'neutral-app').trim() || 'neutral-app';
+  const targetApp = MasterFramework.getApp(preferredAppId) || MasterFramework.getApp('neutral-app') || MasterFramework.getApp('catchtrack');
   if (targetApp) {
     MasterFramework.setActiveApp(targetApp.appId);
   }

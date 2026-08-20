@@ -19,12 +19,20 @@
     .replace(/'/g, '&#039;');
 
   const getConfiguredAppName = () => {
+    const framework = window.MasterFramework && typeof window.MasterFramework.getActiveApp === 'function'
+      ? window.MasterFramework
+      : null;
+    const activeApp = framework ? framework.getActiveApp() : null;
+    if (activeApp && typeof activeApp.name === 'string' && activeApp.name.trim()) {
+      return activeApp.name.trim();
+    }
+
     const appConfig = window.ConfigManager && typeof window.ConfigManager.get === 'function'
       ? window.ConfigManager.get('app', {})
       : {};
     const name = appConfig && typeof appConfig.name === 'string' && appConfig.name.trim()
       ? appConfig.name.trim()
-      : 'Neutral Platform';
+      : 'Neutral App';
     return name;
   };
 
@@ -92,9 +100,13 @@
     const currentUser = getCurrentUser();
     if (!currentUser) return [];
 
-    const activeAppId = window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
-      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
-      : 'catchtrack';
+    const framework = window.MasterFramework && typeof window.MasterFramework.getActiveApp === 'function' ? window.MasterFramework : null;
+    const activeApp = framework ? framework.getActiveApp() : null;
+    const activeAppId = activeApp && typeof activeApp.appId === 'string' && activeApp.appId.trim()
+      ? activeApp.appId.trim()
+      : (framework && typeof framework.listApps === 'function'
+        ? ((framework.listApps()[0] && (framework.listApps()[0].appId || framework.listApps()[0].id)) || 'neutral-app')
+        : 'neutral-app');
     const currentRole = Array.isArray(currentUser.roles) && currentUser.roles.length
       ? currentUser.roles[0]
       : (typeof currentUser.role === 'string' ? currentUser.role : 'user');
