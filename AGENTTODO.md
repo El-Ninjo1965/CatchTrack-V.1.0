@@ -51,14 +51,20 @@
 - Das Catch-Log-Modul ist die erste echte fachliche Module-Instanz mit lokalem Datensatz und einfacher Eingabe.
 - Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
 
+## Architektur- und Freigabe-Status
+- Grundprinzip: Jede App inklusive Admin und Server muss eigenständig und unabhängig arbeiten. Keine App darf in der Architektur von einer anderen App abhängen.
+- Keine weiteren app-abhängigen Module werden installiert, solange nicht die Kernarchitektur, Admin-Governance, Rollen-/Rechte-Logik, Storage-/Connection- und Server-/Runtime-Struktur für eine eigenständige App-Instanz vollständig durchlaufen, stabil und mit deinem Review freigegeben sind.
+- Der aktuelle Arbeitsblock ist bewusst auf Framework-Konsolidierung, App-Entkopplung und Admin-/Server-Integration ausgerichtet, nicht auf neue Domain-Module.
+
 ## Offen / Nächster Arbeitsfortschritt
-- Nächster sinnvoller Schritt: Audit-Protokolle filterbar und nach Zeit/Ergebnis im Admin als echte Timeline-Komponente darstellen, damit Veränderungen transparent und für spätere Betriebskontrolle nutzbar sind.
-- Danach: echtes SQL-Backend mit verbindlichen Anmelde-/Persistenzdiensten für den produktiven Betrieb ergänzen und die Admin-Connection-Variante endgültig auf ein reales Hosting-Muster abbilden.
-- Danach: weitere erste fachliche App-Module neben GPS, Catch Log und Dashboard, z. B. Profil-, Standort- oder Aktivitätsbereiche.
-- Die Umsetzung bleibt bewusst im neutralen Framework, damit spätere App-Varianten ohne Rework ergänzt werden können.
+- Abschluss der eigenständigen App-Architektur: jede App soll ihre eigene adminseitige Konfiguration, Benutzersysteme, Rollen, Module, Connections und Server-/Runtime-Konfiguration tragen.
+- Abschluss der systemischen Validierung: App-Setup, Server-Setup, Admin-Login, Rollen-/Rechte-Checks, Connections, Storage-Adapter und App-Template-Instanziierung müssen ohne Cross-App-Abhängigkeit sauber funktionieren.
+- Danach: erst nach freiem Review und Zustimmung, neue fachliche App-Module oder neue Server-/Admin-Features ergänzen.
+- Reale Hosting- und Deployment-Validierung: shared hosting, JSON/Text-Storage, optional SQL-Upgrade-Pfad und eigenständige App-Instanzierung nach dem vorher festgelegten Framework-Prinzip.
 
 ## Aktuell in Arbeit
 - Persistente Audit-Log-Entries im Browser-Storage ergänzt, damit Admin- und Systemaktionen nicht nur temporär im Speicher bleiben.
 - App-Template-Foundation im Master Framework ergänzt, damit neue App-Varianten aus einem definierten Blueprint erzeugt werden können.
 - Admin-UI erweitert: App-Templates können jetzt im Apps-Bereich ausgewählt und als neue Instanz kreiert werden.
 - Audit-Timeline und Filter-Ansicht im Admin ergänzt, damit Ereignisse nach Actor, Action, Resource und Result durchsuchbar sind.
+- Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.
