@@ -77,3 +77,66 @@
 - Die finale Validierung der App-/Admin-/Server-Entkopplung wurde mit einem gezielten App-Listing-/Active-App-Test abgesichert; der aktive App-Kontext bleibt als Priorität im Framework erhalten.
 - Die Standard-App des Frameworks wurde auf einen neutralen, generischen `neutral-app`-Kontext zurückgesetzt. `Retail Demo` bleibt als Referenz-/Test-Template im Framework erhalten, ist aber nicht mehr die Standard- oder Folge-App der Laufzeit und keine dauerhafte zweite App-Architektur.
 - Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.
+
+## Architekturentscheidung: /apps/ mit app-info.json als aktuelle App-Identität
+
+### 1. Ist diese Architektur für das bestehende Framework sinnvoll?
+Ja. Sie ist für die langfristige Zielarchitektur sinnvoll, weil sie die Trennung zwischen neutralem Framework und aktueller App-Instanz sauber widerspiegelt. Das widerspricht nicht dem bereits vorhandenen Design, sondern konkretisiert es: Der Core bleibt neutral; die App-Instanz bringt ihr eigenes Identitäts- und Laufzeit-Manifest mit.
+
+Die aktuelle Codebasis ist bereits in diese Richtung gedacht. Die Architektur nutzt bereits `MasterFramework.apps`, `currentAppId`, `appRuntimeState`, `getActiveApp()`, `setActiveApp()`, `registerApp()` und `appTemplates`. Das ist exakt die Grundlage für eine App-Identität, die nicht hart im Core verdrahtet sein muss.
+
+### 2. Passt sie zum aktuellen App-/Runtime-/Admin-Modell?
+Ja, grundsätzlich passt sie. Die heutige Architektur ist bereits app-spezifisch, aber noch nicht vollständig manifestbasiert. Die bestehende Laufzeit behandelt Apps als registrierte Objekte mit `appId`, `name`, `config`, `modules`, `moduleAccess` und `featureAccess`. Genau dort kann `app-info.json` als source of truth für die aktuelle App dienen.
+
+Die Admin-/Runtime-Logik erwartet bereits einen aktiven App-Kontext. Damit ist die Idee mit einer einzelnen aktiven App unter `/apps/{appId}/` konsistent. Sie ergänzt den bestehenden Ansatz, statt ihn zu sprengen.
+
+### 3. Welche bestehenden Komponenten müssten dafür angepasst werden?
+Nur die Komponenten, die aktuell noch mit hart codierten Default- oder Produktwerten arbeiten. In der aktuellen Umsetzung wären dies in erster Linie:
+
+- `server/bootstrap/server.js`: derzeit werden Default-Apps im Bootstrap registriert; dort müsste die Initialisierung von einer hardcodierten Folge von App-Definitionen zu einer Auswahl der aktuellen App aus `/apps/{appId}/app-info.json` oder einem vergleichbaren Manifest übergehen.
+- `platform/config-manager.js`: der Default-App-Name und andere product-typische Fallback-Werte sollten nicht aus einer konkreten App kommen, sondern aus dem ermittelten aktiven Manifest.
+- `webroot/user-app.js` und `webroot/master-ui.js`: sie lesen aktuell sehr robust den aktiven App-Kontext, aber der Fallback mit festen Namen muss weiterhin neutral bleiben.
+- `platform/master-framework.js`: bereits gut geeignet, weil hier das App-Registry- und Active-App-Modell existiert; es müsste die App-Manifest-Ladung und die App-ID-Resolierung als Form eines neutralen Bootstrappings annehmen.
+- Admin-UI / Config-Panel: sollte die aktive App als Manifest- oder App-Definition referenzieren und nicht auf feste Produktnamen zurückfallen.
+
+Wichtig: Der eigentliche Core muss dabei nicht umgebaut werden. Es geht vor allem um die Initialisierung und den Manifest-Lese-Pfad.
+
+### 4. Gibt es einen technischen Nachteil gegenüber der aktuell implementierten neutral-app-Lösung?
+Ja, ein realistischer Nachteil: Diese Lösung ist etwas anspruchsvoller zu booten und erfordert eine klar definierte App-Manifest-Quelle. Während die aktuelle `neutral-app`-Variante im Runtime-Kontext sehr einfach und stabil bleibt, verlangt `/apps/{appId}/app-info.json` zusätzlich:
+
+- Dateisystem-Discovery
+- Validierung/Parsing des Manifests
+- Dezidierte Auswahl der aktuell aktiven App
+- Mehr Verantwortung für die Initialisierungslogik
+
+Das ist technisch sauberer, aber auch ein bisschen weniger plug-and-play als die reine Runtime-Definition. Für ein reines Prototyping ist die neutral-app-Lösung einfacher. Für eine echte Produktarchitektur ist `/apps/ + app-info.json` besser und klarer.
+
+### 5. Gibt es aus deiner Sicht eine bessere Lösung? Wenn ja, bitte konkret begründen.
+Ja, aber nur als leicht abgewandelte Variante der von dir vorgeschlagenen Idee:
+
+Empfohlene Lösung:
+- Core bleibt neutral.
+- Es gibt genau eine aktive App-Instanz im Runtime-Kontext.
+- Die eigentliche App-Instanz lebt in `/apps/<app-id>/` und liefert ein `app-info.json` mit `id`, `name`, `description` und optionalen Metadaten.
+- Der Core liest diese Datei dynamisch und setzt daraus `currentAppId` und den App-Kontext.
+- Die Core-Registrierung selbst bleibt weiterhin eine Laufzeit-Registry, nicht ein hart codierter Produkt-Container.
+- Es gibt keine permanenten Mehrfach-App-Definitionen im Core oder im Source, sondern nur eine aktive App-Instanz pro Umgebung.
+
+Das ist besser als eine reine `neutral-app`-Lösung, weil es die App-Identität und die Laufzeit-Umgebung für echte Deployment- und App-Wechsel sauber trennt. Es ist besser als eine harte Produkt-ID-Variante, weil es die App-Identität vollständig aus dem App-Manifest bezieht.
+
+### 6. Ist die Struktur geeignet, später eine neue App zu erstellen, ohne den Core umzubauen?
+Ja, genau dafür ist sie geeignet. Die Struktur erfüllt den Hauptsatz der Vision: Der Core wird nicht für jede neue App angepasst. Die neue App liefert nur ihre eigene App-Definition, ihre Module und ggf. ihre Konfiguration. Der Core nutzt die vorhandenen Erweiterungspunkte: App-Registry, Module-Discovery, Runtime-Context, Feature-/Module-Access, Storage- und Admin-Kontexte.
+
+Die kritische Voraussetzung ist allerdings: Es darf immer nur eine aktive App in einem Runtime-Kontext geben. Mehrere parallel installierte App-Verzeichnisse unter `/apps/` sind für diese Architektur nicht sinnvoll. Das wäre eher ein Deployment- oder Multi-Instance-Szenario, nicht die aktuelle Produkt-Umsetzung.
+
+### Fazit
+Die von dir vorgeschlagene `/apps/<app-id>/app-info.json`-Struktur ist aus technischer Sicht sinnvoll und gut mit dem bestehenden Framework kompatibel. Sie ist sogar die sauberere Architektur als eine harte `neutral-app`-Default-Lösung, sofern sie als eine aktive App-Instanz pro Laufzeit verstanden wird und nicht als dauerhafte Mehrfach-App-Parallelstruktur.
+
+Der beste langfristige Ansatz ist daher:
+- neutraler Core
+- aktive App als eigenes Verzeichnis mit `app-info.json`
+- Runtime-Registry für die aktuelle App
+- keine festen Produktnamen im Core
+- keine dauerhafte zweite App-Architektur im Source
+
+Das entspricht der bereits vorhandenen App-/Runtime-/Admin-Logik und lässt zukünftige Anwendungen ohne Core-Umbau zu.
