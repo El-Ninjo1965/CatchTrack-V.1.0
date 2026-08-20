@@ -435,6 +435,27 @@
             }));
         },
 
+        getAppTemplateCatalog() {
+            if (window.MasterFramework && typeof window.MasterFramework.listAppTemplates === 'function') {
+                return window.MasterFramework.listAppTemplates();
+            }
+
+            return [];
+        },
+
+        createAppFromTemplate(templateId, overrides = {}) {
+            if (!window.MasterFramework || typeof window.MasterFramework.createAppFromTemplate !== 'function') {
+                return { ok: false, code: 'FRAMEWORK_UNAVAILABLE', message: 'Master framework is unavailable.' };
+            }
+
+            try {
+                const app = window.MasterFramework.createAppFromTemplate(templateId, overrides || {});
+                return { ok: true, data: app, message: `Application created from template: ${templateId}` };
+            } catch (error) {
+                return { ok: false, code: 'APP_TEMPLATE_ERROR', message: error && error.message ? error.message : 'Application template creation failed.' };
+            }
+        },
+
         getModuleCatalog() {
             if (!window.ModuleRegistry || typeof window.ModuleRegistry.getAll !== 'function') {
                 return [];

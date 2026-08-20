@@ -55,6 +55,7 @@
   const FrameworkRuntime = {
     version: '1.0.0',
     apps: new Map(),
+    appTemplates: new Map(),
     connections: new Map(),
     featureFlags: new Map(),
     normalizeSetupStatus,
@@ -98,7 +99,133 @@
       this.registerPermission('user:read', 'Read user data.');
       this.registerPermission('user:write', 'Create and update users.');
       this.setFeatureFlag('app-scoped-governance', true);
+      this.registerAppTemplate({
+        id: 'neutral-workspace',
+        name: 'Neutral workspace',
+        description: 'A generic multi-module workspace for a neutral app shell.',
+        version: '1.0.0',
+        defaultStatus: 'active',
+        modules: ['dashboard', 'gps'],
+        featureTemplates: [
+          { id: 'dashboard', label: 'Dashboard', description: 'Overview and workspace summary.', permissions: ['system:view'] },
+          { id: 'profile', label: 'Profile', description: 'User profile and privacy controls.', permissions: ['user:read'] },
+          { id: 'modules', label: 'Modules', description: 'Module workspace and governance.', permissions: ['module:read'] }
+        ],
+        config: {
+          mode: 'local',
+          featureSet: 'neutral-workspace'
+        }
+      });
+      this.registerAppTemplate({
+        id: 'catchtrack-starter',
+        name: 'CatchTrack starter',
+        description: 'Starter app template for fishing, tracking, and local activity workflows.',
+        version: '1.0.0',
+        defaultStatus: 'active',
+        modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
+        featureTemplates: [
+          { id: 'dashboard', label: 'Dashboard', description: 'Overview and main activities.', permissions: ['system:view'] },
+          { id: 'catch-log', label: 'Catch log', description: 'Log catches and daily sessions.', permissions: ['user:read'] },
+          { id: 'fishing-spots', label: 'Fishing spots', description: 'Favorite locations and geolocation-based spots.', permissions: ['user:read'] },
+          { id: 'profile', label: 'Profile', description: 'User profile and privacy controls.', permissions: ['user:read'] }
+        ],
+        config: {
+          mode: 'local',
+          featureSet: 'catchtrack-starter'
+        }
+      });
       return this;
+    },
+
+    normalizeAppTemplate(templateDefinition) {
+      if (!isPlainObject(templateDefinition)) {
+        throw new TypeError('Application template definition must be an object.');
+      }
+
+      const templateId = normalizeString(templateDefinition.id || templateDefinition.templateId || templateDefinition.name, 'neutral-workspace');
+      const templateName = normalizeString(templateDefinition.name || templateDefinition.label || templateId, templateId);
+      const moduleIds = Array.isArray(templateDefinition.modules)
+        ? templateDefinition.modules.map((entry) => normalizeString(String(entry), '')).filter(Boolean)
+        : [];
+      const featureTemplates = Array.isArray(templateDefinition.featureTemplates)
+        ? templateDefinition.featureTemplates.map((feature) => this.normalizeFeatureTemplate(feature)).filter(Boolean)
+        : [];
+
+      return {
+        id: templateId,
+        name: templateName,
+        label: templateName,
+        description: normalizeString(templateDefinition.description, ''),
+        version: normalizeString(templateDefinition.version, '1.0.0'),
+        defaultStatus: normalizeString(templateDefinition.defaultStatus, 'active'),
+        modules: moduleIds,
+        featureTemplates,
+        permissions: Array.isArray(templateDefinition.permissions)
+          ? [...new Set(templateDefinition.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
+          : [],
+        capabilities: Array.isArray(templateDefinition.capabilities)
+          ? [...new Set(templateDefinition.capabilities.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
+          : [],
+        config: isPlainObject(templateDefinition.config) ? { ...templateDefinition.config } : {},
+        moduleAccess: isPlainObject(templateDefinition.moduleAccess) ? { ...templateDefinition.moduleAccess } : {},
+        featureAccess: isPlainObject(templateDefinition.featureAccess) ? { ...templateDefinition.featureAccess } : {},
+        createdAt: templateDefinition.createdAt || new Date().toISOString(),
+        updatedAt: templateDefinition.updatedAt || new Date().toISOString()
+      };
+    },
+
+    registerAppTemplate(templateDefinition) {
+      const template = this.normalizeAppTemplate(templateDefinition);
+      this.appTemplates.set(template.id, template);
+      return { ...template };
+    },
+
+    getAppTemplate(templateId) {
+      const normalized = normalizeString(templateId, '');
+      if (!normalized) {
+        return null;
+      }
+      return this.appTemplates.get(normalized) || null;
+    },
+
+    listAppTemplates() {
+      return Array.from(this.appTemplates.values()).map((template) => ({ ...template }));
+    },
+
+    createAppFromTemplate(templateId, overrides = {}) {
+      const template = this.getAppTemplate(templateId);
+      if (!template) {
+        throw new Error(`Application template not found: ${templateId}`);
+      }
+
+      const appId = normalizeString(overrides.appId || overrides.id || `${template.id}-${Date.now()}`, `${template.id}-app`);
+      const appDefinition = {
+        appId,
+        id: appId,
+        name: normalizeString(overrides.name || template.name || appId, appId),
+        description: normalizeString(overrides.description || template.description, ''),
+        version: normalizeString(overrides.version || template.version, '1.0.0'),
+        active: typeof overrides.active === 'boolean' ? overrides.active : true,
+        status: normalizeString(overrides.status || template.defaultStatus || 'active', 'active'),
+        modules: Array.isArray(overrides.modules) ? [...overrides.modules] : [...(template.modules || [])],
+        permissions: Array.isArray(overrides.permissions) ? [...overrides.permissions] : [...(template.permissions || [])],
+        capabilities: Array.isArray(overrides.capabilities) ? [...overrides.capabilities] : [...(template.capabilities || [])],
+        moduleAccess: isPlainObject(overrides.moduleAccess) ? { ...overrides.moduleAccess } : { ...(template.moduleAccess || {}) },
+        featureTemplates: Array.isArray(overrides.featureTemplates)
+          ? overrides.featureTemplates.map((entry) => this.normalizeFeatureTemplate(entry)).filter(Boolean)
+          : Array.isArray(template.featureTemplates) ? template.featureTemplates.map((entry) => ({ ...entry })) : [],
+        featureAccess: isPlainObject(overrides.featureAccess) ? { ...overrides.featureAccess } : { ...(template.featureAccess || {}) },
+        config: {
+          ...(template.config || {}),
+          ...(isPlainObject(overrides.config) ? overrides.config : {})
+        },
+        ui: isPlainObject(overrides.ui) ? { ...overrides.ui } : {},
+        server: isPlainObject(overrides.server) ? { ...overrides.server } : {},
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      return this.registerApp(appDefinition);
     },
 
     normalizeApp(appDefinition) {

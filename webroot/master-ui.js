@@ -478,6 +478,35 @@
             }
           }
 
+          if (action === 'app-template-create') {
+            const manager = window.AdminModule || null;
+            if (!manager || typeof manager.createAppFromTemplate !== 'function') {
+              if (statusTarget) {
+                statusTarget.className = 'message error';
+                statusTarget.textContent = 'App template creation is unavailable.';
+              }
+              return;
+            }
+
+            const templateId = button.dataset.templateId || document.getElementById('appTemplateSelect')?.value || '';
+            const appName = document.getElementById('appTemplateName') ? document.getElementById('appTemplateName').value : '';
+            const result = manager.createAppFromTemplate(templateId, {
+              appId: '',
+              name: appName || '',
+              active: true
+            });
+
+            if (statusTarget) {
+              statusTarget.textContent = result && result.ok ? (result.message || 'App created.') : (result && result.message) || 'App template creation failed.';
+              statusTarget.className = result && result.ok ? 'message success' : 'message error';
+            }
+
+            if (result && result.ok) {
+              renderAdminApps();
+              renderPageContent();
+            }
+          }
+
           if (action === 'device-save') {
             const payload = {
               deviceId: document.getElementById('deviceIdInput') ? document.getElementById('deviceIdInput').value : '',
@@ -876,6 +905,9 @@
     const appRegistry = window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
       ? window.MasterFramework.listApps()
       : [];
+    const appTemplates = window.MasterFramework && typeof window.MasterFramework.listAppTemplates === 'function'
+      ? window.MasterFramework.listAppTemplates()
+      : [];
     const apps = appRegistry.length ? appRegistry : [{
       appId: 'neutral-app',
       name: getConfiguredAppName(),
@@ -903,6 +935,25 @@
                 `).join('')}
               </tbody>
             </table>
+          </div>
+          <div class="spacer" style="height: 14px;"></div>
+          <div class="subsection">
+            <h3 style="margin: 0 0 12px;">Create app from template</h3>
+            <div class="form-grid" style="max-width: 520px;">
+              <div class="form-field">
+                <label>Template</label>
+                <select id="appTemplateSelect">
+                  ${appTemplates.length ? appTemplates.map((template) => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.name || template.id)}</option>`).join('') : '<option value="">No templates available</option>'}
+                </select>
+              </div>
+              <div class="form-field">
+                <label>App name</label>
+                <input id="appTemplateName" type="text" placeholder="My new app" />
+              </div>
+            </div>
+            <div class="action-list" style="margin-top: 16px;">
+              <button type="button" class="primary" data-admin-action="app-template-create" ${!appTemplates.length ? 'disabled' : ''}>Create app</button>
+            </div>
           </div>
         </div>
       </div>

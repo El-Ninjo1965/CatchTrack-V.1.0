@@ -52,7 +52,12 @@
 - Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
 
 ## Offen / Nächster Arbeitsfortschritt
-- Nächster sinnvoller Schritt: app-spezifische Modul- und Rollen-Zuordnung pro Feature weiter ausbauen, damit verschiedene App-Varianten ohne Core-Rework zusätzlich aktiv werden können.
+- Nächster sinnvoller Schritt: Audit-Protokolle persistenter und übersichtlicher machen sowie app-spezifische App-Templates im Admin-Workflow ergänzen, damit mehrere App-Varianten ohne Core-Rework aus dem selben Framework entstehen können.
 - Danach: echtes SQL-Backend mit verbindlichen Anmelde-/Persistenzdiensten für den produktiven Betrieb ergänzen und die Admin-Connection-Variante endgültig auf ein reales Hosting-Muster abbilden.
 - Danach: weitere erste fachliche App-Module neben GPS, Catch Log und Dashboard, z. B. Profil-, Standort- oder Aktivitätsbereiche.
 - Die Umsetzung bleibt bewusst im neutralen Framework, damit spätere App-Varianten ohne Rework ergänzt werden können.
+
+## Aktuell in Arbeit
+- Persistente Audit-Log-Entries im Browser-Storage ergänzt, damit Admin- und Systemaktionen nicht nur temporär im Speicher bleiben.
+- App-Template-Foundation im Master Framework ergänzt, damit neue App-Varianten aus einem definierten Blueprint erzeugt werden können.
+- Admin-UI erweitert: App-Templates können jetzt im Apps-Bereich ausgewählt und als neue Instanz kreiert werden.

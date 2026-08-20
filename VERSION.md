@@ -1,6 +1,6 @@
 # VERSION
 
-## Version 1.1.7 - app-scoped feature governance and role matrix
+## Version 1.1.8 - audit persistence and reusable app templates
 
 Status:
 - Framework core remains stable and module-driven.
@@ -14,6 +14,8 @@ Status:
 - Modules can now be edited directly in the admin workspace through a metadata-driven governance form covering app ID, name, type, description, permissions, capabilities, and enable/disable status.
 - The framework now supports app-scoped module access control by role. Each app can block or allow individual modules by role, and the visible module navigation reacts to that matrix without requiring core rewrites.
 - App feature groups now also support a role-based access matrix so dashboard, profile, module workspaces and future feature groups can be enabled or disabled by role without touching the framework core.
+- Audit logging is now persisted in browser storage and accepts the real event signatures used by the rest of the platform, preventing audit entries from being lost or malformed.
+- App template registration and creation are now available in the framework and admin UI so new app variants can be created from reusable blueprints instead of custom code paths.
 
 ### Included milestones
 - neutral framework shell
@@ -30,6 +32,7 @@ Status:
 - admin-managed storage connections with file and SQL-ready storage choices
 - connection normalization for shared hosting, local JSON workflows and future SQL backends
 - admin-side module metadata editing for future-ready CMS-style module governance
+- durable audit events and reusable app blueprint creation for multi-app growth
 
 ### Current focus
 - continue the first real app rollout with additional business modules
@@ -40,6 +43,8 @@ Status:
 - extend module-to-role and app-to-module mappings for feature-level governance
 - bind app-scoped module access to real navigation and user visibility in the shell
 - extend feature-level governance to app-specific feature templates and role-based coverage in the admin matrix
+- persist and review audit events as part of a real admin governance layer
+- create app instances from reusable templates for multi-app deployment
 
 ### Planned next steps
 - add the next real domain module after the current core feature set
@@ -48,4 +53,5 @@ Status:
 - keep module templates and permission mapping in sync with future module development
 - implement the actual file- and SQL-backed adapters behind the admin-chosen connection type
 - keep the admin connection matrix aligned with the deployment target (shared hosting vs dedicated server)
-- add deeper audit trails and app-level permission templates for multi-app deployments
+- add deeper audit filters and timeline views for admin actions and app mutations
+- expand app blueprint definitions for multi-app deployments with default roles, permissions and feature sets
