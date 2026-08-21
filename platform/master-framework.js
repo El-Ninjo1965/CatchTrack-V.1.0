@@ -1259,6 +1259,28 @@
       };
     },
 
+    normalizeBackupEntry(entry = {}) {
+      if (!isPlainObject(entry)) {
+        return null;
+      }
+
+      const backupId = normalizeString(entry.backupId || entry.id || entry.name || `backup-${Date.now()}`, `backup-${Date.now()}`);
+      const now = new Date().toISOString();
+      return {
+        backupId,
+        id: backupId,
+        label: normalizeString(entry.label || entry.name || `Backup ${backupId}`, `Backup ${backupId}`),
+        providerId: normalizeString(entry.providerId || entry.provider || 'local-provider', 'local-provider'),
+        status: normalizeString(entry.status || 'completed', 'completed'),
+        filePath: normalizeString(entry.filePath || entry.path || '', ''),
+        size: Number.isFinite(entry.size) ? entry.size : 0,
+        createdAt: normalizeString(entry.createdAt, now),
+        updatedAt: normalizeString(entry.updatedAt, now),
+        lastRestoredAt: normalizeString(entry.lastRestoredAt, ''),
+        metadata: isPlainObject(entry.metadata) ? { ...entry.metadata } : {}
+      };
+    },
+
     registerProvider(providerDefinition = {}) {
       const provider = this.normalizeProvider(providerDefinition);
       this.providers.set(provider.providerId, provider);
@@ -1305,6 +1327,103 @@
         return false;
       }
       return this.providers.delete(normalized);
+    },
+
+    getBackupService() {
+      if (typeof require === 'function') {
+        try {
+          return require('../server/services/backup-service');
+        } catch (error) {
+          return null;
+        }
+      }
+      return null;
+    },
+
+    listBackups() {
+      const state = this.loadAdminState();
+      const service = this.getBackupService();
+      const persisted = service && typeof service.listBackups === 'function' ? service.listBackups() : [];
+      const source = Array.isArray(state.backups) && state.backups.length > 0 ? state.backups : persisted;
+      return Array.isArray(source)
+        ? source.map((entry) => this.normalizeBackupEntry(entry)).filter(Boolean)
+        : [];
+    },
+
+    getBackup(backupId) {
+      const normalized = normalizeString(backupId, '');
+      if (!normalized) {
+        return null;
+      }
+      const state = this.loadAdminState();
+      const found = (Array.isArray(state.backups) ? state.backups : []).find((entry) => entry.backupId === normalized || entry.id === normalized);
+      if (found) {
+        return this.normalizeBackupEntry(found);
+      }
+      const service = this.getBackupService();
+      if (service && typeof service.getBackup === 'function') {
+        const backup = service.getBackup(normalized);
+        return backup ? this.normalizeBackupEntry(backup) : null;
+      }
+      return null;
+    },
+
+    createBackup(config = {}) {
+      const service = this.getBackupService();
+      if (!service || typeof service.createBackup !== 'function') {
+        throw new Error('Backup service is not available.');
+      }
+      const backup = service.createBackup(config);
+      const state = this.loadAdminState();
+      const backups = Array.isArray(state.backups) ? [...state.backups] : [];
+      const entry = this.normalizeBackupEntry(backup);
+      if (entry) {
+        const index = backups.findIndex((candidate) => candidate.backupId === entry.backupId || candidate.id === entry.backupId);
+        if (index >= 0) {
+          backups[index] = { ...backups[index], ...entry };
+        } else {
+          backups.unshift(entry);
+        }
+        state.backups = backups;
+        state.activeBackupId = entry.backupId;
+        this.saveAdminState(state);
+      }
+      return entry || backup;
+    },
+
+    restoreBackup(backupId) {
+      const service = this.getBackupService();
+      if (!service || typeof service.restoreBackup !== 'function') {
+        throw new Error('Backup service is not available.');
+      }
+      const result = service.restoreBackup(backupId);
+      if (result && result.ok) {
+        const state = this.loadAdminState();
+        state.activeBackupId = normalizeString(result.backupId || backupId, '');
+        state.updatedAt = new Date().toISOString();
+        this.saveAdminState(state);
+      }
+      return result;
+    },
+
+    removeBackup(backupId) {
+      const service = this.getBackupService();
+      if (!service || typeof service.removeBackup !== 'function') {
+        return false;
+      }
+      const state = this.loadAdminState();
+      const normalized = normalizeString(backupId, '');
+      const removed = service.removeBackup(normalized);
+      if (removed) {
+        state.backups = Array.isArray(state.backups)
+          ? state.backups.filter((entry) => (entry.backupId || entry.id) !== normalized)
+          : [];
+        if (state.activeBackupId === normalized) {
+          state.activeBackupId = '';
+        }
+        this.saveAdminState(state);
+      }
+      return removed;
     },
 
     normalizeStorageType(value, fallback = 'file') {
@@ -1821,7 +1940,9 @@
         devices: [],
         licenses: [],
         providers: [],
+        backups: [],
         activeProviderId: null,
+        activeBackupId: null,
         updates: {
           currentVersion: this.version,
           availableVersion: null,
@@ -1899,7 +2020,11 @@
         providers: Array.isArray(source.providers)
           ? source.providers.map((provider) => this.normalizeProvider(provider)).filter(Boolean)
           : [],
+        backups: Array.isArray(source.backups)
+          ? source.backups.map((backup) => this.normalizeBackupEntry(backup)).filter(Boolean)
+          : [],
         activeProviderId: normalizeString(source.activeProviderId || '', ''),
+        activeBackupId: normalizeString(source.activeBackupId || '', ''),
         updates: this.normalizeUpdateState(source.updates || baseState.updates),
         marketplace: {
           ...baseState.marketplace,
@@ -1924,7 +2049,11 @@
         providers: Array.isArray(state.providers)
           ? state.providers.map((provider) => this.normalizeProvider(provider)).filter(Boolean)
           : [],
+        backups: Array.isArray(state.backups)
+          ? state.backups.map((backup) => this.normalizeBackupEntry(backup)).filter(Boolean)
+          : [],
         activeProviderId: normalizeString(state.activeProviderId || '', ''),
+        activeBackupId: normalizeString(state.activeBackupId || '', ''),
         updates: this.normalizeUpdateState(state.updates || {}),
         marketplace: {
           ...this.getDefaultAdminState().marketplace,

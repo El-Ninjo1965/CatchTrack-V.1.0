@@ -10,6 +10,7 @@ const roleService = require('../services/role-service');
 const settingsService = require('../services/settings-service');
 const auditService = require('../services/audit-service');
 const authService = require('../services/auth-service');
+const backupService = require('../services/backup-service');
 const authConfig = require('../config').auth;
 
 const bootstrapDefaultApps = () => {
@@ -813,6 +814,81 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
         providerId,
         status: removed ? 'deleted' : 'not_found'
       });
+      return true;
+    }
+  }
+
+  if (pathname === `${apiBase}/backups` || pathname === `${apiBase}/admin/backups`) {
+    if (req && req.method === 'GET') {
+      if (pathname.includes('/admin/') && !requireAdminAccess(req, res)) {
+        return true;
+      }
+
+      const backups = MasterFramework.listBackups();
+      sendJson(res, 200, {
+        ok: true,
+        backups,
+        status: backups.length ? 'AVAILABLE' : 'EMPTY'
+      });
+      return true;
+    }
+
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+
+      readJsonBody(req)
+        .then((payload = {}) => {
+          const backup = MasterFramework.createBackup({
+            label: payload.label || payload.name,
+            providerId: payload.providerId || payload.provider || (MasterFramework.loadAdminState && MasterFramework.loadAdminState().activeProviderId) || 'local-provider',
+            metadata: payload.metadata || {}
+          });
+          sendJson(res, 200, { ok: true, backup, status: 'created' });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_BACKUP', message: error.message || 'Backup payload invalid.' });
+        });
+      return true;
+    }
+
+    if (req && req.method === 'DELETE') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+
+      const target = (req.url || '').split('?')[0].replace(`${apiBase}/backups/`, '').replace(`${apiBase}/admin/backups/`, '').trim();
+      const backupId = target || (req.headers && req.headers['x-backup-id']) || '';
+      const removed = MasterFramework.removeBackup(backupId);
+      sendJson(res, removed ? 200 : 404, {
+        ok: removed,
+        backupId,
+        status: removed ? 'deleted' : 'not_found'
+      });
+      return true;
+    }
+  }
+
+  if (pathname === `${apiBase}/backups/restore` || pathname === `${apiBase}/admin/backups/restore`) {
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+
+      readJsonBody(req)
+        .then((payload = {}) => {
+          const backupId = payload.backupId || payload.id || payload.name || '';
+          const result = backupId ? MasterFramework.restoreBackup(backupId) : { ok: false, code: 'BACKUP_NOT_FOUND', message: 'Backup id is required.' };
+          if (!result.ok) {
+            sendJson(res, 404, result);
+            return;
+          }
+          sendJson(res, 200, { ok: true, backup: result, status: 'restored' });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_RESTORE', message: error.message || 'Backup restore payload invalid.' });
+        });
       return true;
     }
   }
