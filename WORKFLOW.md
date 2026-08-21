@@ -1526,28 +1526,26 @@ Empfohlene Produktiv-Anforderungen:
 
 Das Update-System muss von Anfang an zentral und abstrahiert konzipiert werden.
 
-Empfohlene Komponenten:
+IST-ZUSTAND:
 
-- `App` -> `Update Manager` -> `Update Provider`
-- initialer Provider: eigener Server
-- späterer Provider: Store- oder Cloud-Provider
+- Die App verfügt derzeit noch nicht über einen systematischen Update-Manager.
 
-Empfohlene Funktionen:
+GEWÜNSCHT:
 
-- Versionsprüfung
-- Module-Versionen
-- Update-Metadaten
-- Abhängigkeiten
-- Mindestversionen
-- Kompatibilitätsprüfung
-- Download
-- Integritätsprüfung
-- Signierung
-- sichere Installation
-- Fehlerbehandlung
-- Rollback soweit sinnvoll
-- Stable/Beta-Kanäle
-- Sicherheitsupdates
+- Beim Start prüft die App ihre installierte Version gegen die verfügbare Version.
+- Auch installierte Module werden beim Start auf neue Versionen geprüft.
+- Wenn ein Update verfügbar ist, erscheint ein Hinweis im Benutzer- oder Admin-Bereich: „Neue Version verfügbar – jetzt aktualisieren.“
+- Aktuelle Updatequelle: eigener Server.
+- Spätere Updatequelle: App-/Software-Store.
+
+EMPFOHLEN:
+
+- Abstrakter `Update Provider` als zentrale Schicht zwischen App und Update-Quelle.
+- Der konkrete Provider darf nicht fest in die App eingebaut werden.
+- Provider-Implementierungen für: eigener Server, Store-Provider, Cloud-/Provider-Adapter, späterer lokaler/anderer Host.
+- Eine Versions-/Abhängigkeits-Engine prüft: installierte App-Version, verfügbare Version, installierte Module, verfügbare Modulversionen, Mindestversionen, Kompatibilitätsregeln, Sicherheitsupdates.
+- Der Update-Prozess prüft zusätzlich Integrität, Signatur, fachliche Abhängigkeiten und führt ggf. ein Rollback durch, sofern sinnvoll.
+- Der Installationsvorgang soll sicher, nachvollziehbar und reversibel erfolgen; Update-Kanäle (Stable/Beta) müssen konfigurierbar bleiben.
 
 Wichtig:
 
@@ -1558,42 +1556,102 @@ Wichtig:
 
 Das Benutzer-Backup ist technisch sinnvoll und muss strikt getrennt vom System-/Admin-Backup geplant werden.
 
-Empfohlene Struktur:
+GEWÜNSCHT:
 
-- Free: kein eigenes Benutzer-Backup
-- Paid: Benutzer-Backup mit persönlicher Datensicherung
-- Fotos/Medien nur für berechtigte Bezahl-Tarife
+FREE:
 
-Der Benutzer soll in den Einstellungen später folgendes können:
+- kein Benutzer-Backup.
+
+PAID:
+
+- persönliches Backup möglich.
+- Backup dient insbesondere Gerätewechsel, Neuinstallation und Datenwiederherstellung.
+- gesichert werden: persönliche Daten, Einstellungen, Konfigurationen und notwendige Metadaten.
+- Fotos und größere Medien nur entsprechend dem bezahlten Tarif.
+
+Der Benutzer soll später über die Einstellungen folgendes tun können:
 
 - Backup erstellen
-- Backup-Status anzeigen
-- letztes Backup sehen
+- Backup-Status prüfen
+- letztes Backup einsehen
 - Backup wiederherstellen
 - Backup löschen
 
-Notwendige Sicherheitsregeln:
+Wichtige Trennung:
 
-- Backups sind nur für den jeweiligen Nutzer zugänglich
-- keine gemeinsame Freigabe von Benutzer-Backups
-- Anbieterübergreifende Speicherung über ein Backup-Provider-Interface
+- Benutzer-Backup und System-/Admin-Backup müssen strikt getrennt sein.
+- Backups müssen geschützt sein und dürfen ausschließlich dem jeweiligen Benutzer zugänglich sein.
+- Das Backup-System soll speicheranbieterunabhängig über eine Backup-Provider-Interface-Schicht aufgebaut werden.
 
 ### 14. Tarif- und Entitlement-System
 
-Empfohlene Architektur:
+GEWÜNSCHT:
+
+- Eine zentrale Entitlement-/Berechtigungsstruktur muss vorliegen.
+- Free/Paid/Premium-Funktionen dürfen nicht fest in einzelne Module verdrahtet werden.
+- Die Struktur muss spätere Tarifstufen und neue Premium-Funktionen ermöglichen.
+
+EMPFOHLEN:
 
 - zentraler Entitlement-/Berechtigungs-Manager
-- nicht fest in Module codieren
-- freie Tarifstufen (Free, Paid, Premium und spätere Varianten)
 - Entitlements als Policy statt als harte Modul-IFs
+- freie Tarifstufen (Free, Paid, Premium und spätere Varianten)
+- modulare Feature-Freigaben über zentrale Berechtigungsdefinitionen
+- spätere Tariflogik ohne Core-Umstellung
 
 Ziel:
 
-- spätere Tariflogik ohne Core-Umstellung
-- modulare Berechtigungskontrolle
-- geordnete Feature-Freigaben und Upgrade-Mechanik
+- die Modul- und App-Funktionen bleiben unabhängig von einer festen Tariflogik
+- Upgrade- und Downgrade-Transitions können später sauber verwaltet werden
 
-### 15. Systemadministration
+### 15. Infrastruktur-/Provider-Architektur
+
+GEWÜNSCHT:
+
+- Die aktuelle Infrastruktur:
+
+  cPanel
+  → FTPS
+  → FTP-Root `/`
+
+  ist nur die erste konkrete Umgebung.
+
+- Die Anwendung muss später auch andere Server, Hostinganbieter, Cloud-Speicher oder andere Infrastruktur verwenden können.
+- Dafür ist eine abstrahierte Provider-/Adapter-Struktur vorgesehen.
+- Der Admin-Bereich soll später die entsprechende Infrastruktur-Konfiguration verwalten können.
+- Keine Zugangsdaten im Quellcode.
+
+EMPFOHLEN:
+
+- `Infrastructure Provider Manager` mit Adapter-Interface
+- erste Adapter: cPanel, eigener Server, Cloud-/Provider-Adapter, lokaler Provider
+- Provider-Konfigurationen als verwaltbare Admin-Settings statt hart codierter Werte
+- Secrets und Zugangsdaten nur als Umgebungsvariablen oder verschlüsselte Provider-Config
+
+### 16. Master-/Produktiv-Trennung
+
+GEWÜNSCHT:
+
+`Neutral`
+= Master-/Entwicklungsrepository.
+
+`cPanel-meinServer`
+= reduzierte produktive Serverinstanz bzw. Archiv-/Transferrepository.
+
+Später werden nur die dafür vorgesehenen produktiven Serverdateien aus `Neutral` nach `cPanel-meinServer` übertragen und von dort per FTPS auf cPanel deployt.
+
+Nicht jede Entwicklungsdatei aus `Neutral` gehört auf den Server.
+
+Die spätere Serverdateistruktur muss deshalb eindeutig dokumentiert werden.
+
+EMPFOHLEN:
+
+- Entwicklung: `Neutral`
+- Produktiv-Source: `cPanel-meinServer`
+- Deployment: GitHub Actions + FTPS + cPanel
+- Laufzeit: produktive Serverinstanz ohne FTP-Zugriff
+
+### 17. Systemadministration
 
 Der Server muss ein echtes Admin-/Systemmanagement enthalten:
 
@@ -1610,7 +1668,9 @@ Der Server muss ein echtes Admin-/Systemmanagement enthalten:
 - Monitoring
 - Fehlerüberwachung
 
-### 16. cPanel- und Deployment-Umgebung
+### 18. cPanel- und Deployment-Umgebung
+
+GEWÜNSCHT:
 
 - FTP-/FTPS wird nur als Deployment-Mechanismus genutzt.
 - Die Anwendung selbst darf zur Laufzeit keine FTP/FTPS-Verbindungen initiieren.
@@ -1618,12 +1678,12 @@ Der Server muss ein echtes Admin-/Systemmanagement enthalten:
 - Die Serverdateien müssen sauber aus `Neutral` nach `cPanel-meinServer` ausgelagert werden.
 - `cPanel-meinServer` ist die Produktiv-Quelle, nicht die Entwicklungsbasis.
 
-Empfohlener Trennungssatz:
+EMPFOHLEN:
 
-- Entwicklung: `Neutral`
-- Produktiv-Source: `cPanel-meinServer`
-- Deployment: GitHub Actions + FTPS + cPanel
-- Laufzeit: produktive Serverinstanz ohne FTP-Zugriff
+- Produktive Serverdateien in einem separaten minimalen Delivery-Bestand halten
+- nur notwendige Server-/UI-/Config-Dateien in `cPanel-meinServer`
+- keine Tests, keine Dev-Tools, keine Secrets, keine lokalen Preview-Dateien im produktiven Transfer
+- GitHub Actions zur FTPS-Auslieferung mit cPanel-Root-Pfad `/`
 
 ## ZUKUNFT
 
