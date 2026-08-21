@@ -5,6 +5,8 @@ const { port, host, rootDir, webRootDir, apiBase } = require('../config');
 const MasterFramework = require('../../platform/master-framework');
 const persistenceService = require('../services/persistence-service');
 const inputValidation = require('../middleware/input-validation');
+const userService = require('../services/user-service');
+const auditService = require('../services/audit-service');
 
 const bootstrapDefaultApps = () => {
   const normalizeManifestValue = (value, fallback = 'neutral-app') => {
@@ -852,6 +854,115 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       modules
     });
     return true;
+  }
+
+  // User Management API - /api/admin/users
+  if (pathname === `${apiBase}/admin/users` || pathname === `${apiBase}/admin/users/`) {
+    if (!requireAdminWriteAccess(req, res)) {
+      return true;
+    }
+
+    if (req.method === 'GET') {
+      try {
+        const users = userService.getAll().map(({ passwordHash, ...user }) => user);
+        sendJson(res, 200, {
+          ok: true,
+          users
+        });
+      } catch (error) {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      }
+      return true;
+    }
+
+    if (req.method === 'POST') {
+      readJsonBody(req)
+        .then((payload) => {
+          const validationErrors = inputValidation.validateUserPayload(payload);
+          if (validationErrors.length > 0) {
+            sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', errors: validationErrors });
+            return;
+          }
+
+          const actor = getRequestRoles(req)[0] || 'admin';
+          const user = userService.create(payload, actor);
+          sendJson(res, 201, {
+            ok: true,
+            user
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'CREATE_FAILED', message: error.message });
+        });
+      return true;
+    }
+  }
+
+  // User by ID - /api/admin/users/:id
+  const userIdMatch = pathname.match(new RegExp(`^${apiBase}/admin/users/([a-z0-9\\-]+)/?$`));
+  if (userIdMatch) {
+    if (!requireAdminWriteAccess(req, res)) {
+      return true;
+    }
+
+    const userId = userIdMatch[1];
+
+    if (req.method === 'GET') {
+      try {
+        const user = userService.getById(userId);
+        if (!user) {
+          sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: `User '${userId}' not found` });
+          return true;
+        }
+
+        const { passwordHash, ...userPublic } = user;
+        sendJson(res, 200, {
+          ok: true,
+          user: userPublic
+        });
+      } catch (error) {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      }
+      return true;
+    }
+
+    if (req.method === 'PUT') {
+      readJsonBody(req)
+        .then((payload) => {
+          const actor = getRequestRoles(req)[0] || 'admin';
+          const updated = userService.update(userId, payload, actor);
+          sendJson(res, 200, {
+            ok: true,
+            user: updated
+          });
+        })
+        .catch((error) => {
+          if (error.message.includes('not found')) {
+            sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: error.message });
+          } else {
+            sendJson(res, 400, { ok: false, code: 'UPDATE_FAILED', message: error.message });
+          }
+        });
+      return true;
+    }
+
+    if (req.method === 'DELETE') {
+      try {
+        const actor = getRequestRoles(req)[0] || 'admin';
+        userService.remove(userId, actor);
+        sendJson(res, 200, {
+          ok: true,
+          message: `User '${userId}' deleted`
+        });
+      } catch (error) {
+        if (error.message.includes('not found')) {
+          sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: error.message });
+        } else {
+          sendJson(res, 400, { ok: false, code: 'DELETE_FAILED', message: error.message });
+        }
+      }
+      return true;
+    }
   }
 
   return false;
