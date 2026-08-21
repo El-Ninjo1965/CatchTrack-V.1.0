@@ -44,6 +44,19 @@ module.exports = {
   server: {
     mode: serverMode
   },
+  database: {
+    type: String(process.env.DB_TYPE || process.env.DATABASE_TYPE || process.env.MYSQL_TYPE || 'mysql').trim().toLowerCase() || 'mysql',
+    host: process.env.MYSQL_HOST || process.env.DB_HOST || '127.0.0.1',
+    port: Number(process.env.MYSQL_PORT || process.env.DB_PORT || 3306),
+    name: process.env.MYSQL_DATABASE || process.env.DB_NAME || 'neutral',
+    username: process.env.MYSQL_USER || process.env.DB_USER || process.env.MYSQL_USERNAME || '',
+    password: process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD || '',
+    charset: process.env.MYSQL_CHARSET || 'utf8mb4',
+    connectionLimit: Number(process.env.MYSQL_CONNECTION_LIMIT || 10),
+    queueLimit: Number(process.env.MYSQL_QUEUE_LIMIT || 0),
+    ssl: String(process.env.MYSQL_SSL || 'false').trim().toLowerCase() === 'true',
+    allowLocalFallback: String(process.env.DB_ALLOW_LOCAL_FALLBACK || 'true').trim().toLowerCase() !== 'false'
+  },
   provider: {
     defaultType: String(process.env.PROVIDER_TYPE || 'local').trim().toLowerCase() || 'local',
     activeProviderId: process.env.ACTIVE_PROVIDER_ID || 'local-provider'

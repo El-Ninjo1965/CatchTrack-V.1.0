@@ -1785,11 +1785,70 @@
 
     getDatabaseStatus() {
       const state = this.getDatabaseState();
+      const runtimeConfig = this.getDatabaseConfig();
+      const mysqlReady = runtimeConfig.type === 'mysql' && !!runtimeConfig.host && !!runtimeConfig.name && !!runtimeConfig.username;
+      const configured = !!state.configured || mysqlReady;
       return {
         ...state,
-        ok: state.status !== 'ERROR' && state.status !== 'NOT_CONFIGURED' ? true : !!state.configured,
-        configured: !!state.configured
+        type: runtimeConfig.type || state.type || 'mysql',
+        host: runtimeConfig.host || state.host || '',
+        name: runtimeConfig.name || state.name || '',
+        configured,
+        ok: state.status !== 'ERROR' && state.status !== 'NOT_CONFIGURED' ? true : configured,
+        ready: configured
       };
+    },
+
+    getDatabaseConfig(source = {}) {
+      if (typeof require === 'function') {
+        try {
+          const databaseModule = require('../server/database/connection');
+          if (databaseModule && typeof databaseModule.readRuntimeConfig === 'function') {
+            return databaseModule.readRuntimeConfig(source || {});
+          }
+        } catch (error) {
+          // Best effort: runtime config remains available in memory even when the
+          // database connection module has not been loaded yet.
+        }
+      }
+
+      const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
+      const config = isPlainObject(source) ? source : {};
+      const type = this.normalizeStorageType(
+        config.type || config.databaseType || config.storageType || env.DB_TYPE || env.DATABASE_TYPE || env.MYSQL_TYPE || 'mysql',
+        'mysql'
+      );
+
+      return {
+        type,
+        host: normalizeString(config.host || config.hostname || config.server || env.MYSQL_HOST || env.DB_HOST || '127.0.0.1', '127.0.0.1'),
+        port: Number(config.port || config.portNumber || env.MYSQL_PORT || env.DB_PORT || 3306),
+        name: normalizeString(config.name || config.database || config.databaseName || env.MYSQL_DATABASE || env.DB_NAME || 'neutral', 'neutral'),
+        username: normalizeString(config.username || config.user || config.userName || env.MYSQL_USER || env.DB_USER || env.MYSQL_USERNAME || '', ''),
+        password: normalizeString(config.password || config.pass || env.MYSQL_PASSWORD || env.DB_PASSWORD || '', ''),
+        charset: normalizeString(config.charset || env.MYSQL_CHARSET || 'utf8mb4', 'utf8mb4'),
+        connectionLimit: Number(config.connectionLimit || env.MYSQL_CONNECTION_LIMIT || 10),
+        queueLimit: Number(config.queueLimit || env.MYSQL_QUEUE_LIMIT || 0),
+        ssl: !!(config.ssl || env.MYSQL_SSL === 'true' || env.DB_SSL === 'true'),
+        allowLocalFallback: config.allowLocalFallback !== false && env.DB_ALLOW_LOCAL_FALLBACK !== 'false'
+      };
+    },
+
+    getDatabaseConnection(source = {}) {
+      if (typeof require === 'function') {
+        try {
+          const databaseModule = require('../server/database/connection');
+          if (databaseModule && typeof databaseModule.createDatabaseConnection === 'function') {
+            return databaseModule.createDatabaseConnection({
+              ...this.getDatabaseConfig(),
+              ...(isPlainObject(source) ? source : {})
+            });
+          }
+        } catch (error) {
+          return null;
+        }
+      }
+      return null;
     },
 
     loadSetupState() {
