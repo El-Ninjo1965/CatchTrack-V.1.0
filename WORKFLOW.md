@@ -631,7 +631,7 @@ Jede spätere externe Aufgabe muss mit genauer Definition dokumentiert werden un
 
 - Welche konkrete MySQL-Instanz und welche Berechtigungsstruktur wird in der späteren externen Produktivumgebung verwendet?
 - Welche Admin-UI-Aufteilung wird im ersten produktiven Release gewählt?
-- Welche Store-/Provider-Integration wird als erste externe Update- oder Backup-Quelle genutzt?
+- Welche Provider-Integration wird als erste externe Update- oder Backup-Quelle genutzt?
 - Welche Module gehören zum ersten produktiven Release und welche bleiben als spätere Erweiterung offen?
 
 ### 12. Abschluss
@@ -2179,9 +2179,9 @@ EMPFOHLEN:
 
 - Abstrakter `Update Provider` als zentrale Schicht zwischen App und Update-Quelle.
 - Der konkrete Provider darf nicht fest in die App eingebaut werden.
-- Provider-Implementierungen für: eigener Server, Store-Provider, Cloud-/Provider-Adapter, späterer lokaler/anderer Host.
+- Provider-Implementierungen für: eigener Server, Cloud-/Provider-Adapter, späterer lokaler/anderer Host.
 - Eine Versions-/Abhängigkeits-Engine prüft: installierte App-Version, verfügbare Version, installierte Module, verfügbare Modulversionen, Mindestversionen, Kompatibilitätsregeln, Sicherheitsupdates.
-- Der Update-Prozess prüft zusätzlich Integrität, Signatur, fachliche Abhängigkeiten und führt ggf. ein Rollback durch, sofern sinnvoll.
+- Der Update-Prozess prüft zusätzlich Integrität, Signatur, Abhängigkeiten und führt ggf. ein Rollback durch, sofern sinnvoll.
 - Der Installationsvorgang soll sicher, nachvollziehbar und reversibel erfolgen; Update-Kanäle (Stable/Beta) müssen konfigurierbar bleiben.
 
 Wichtig:
@@ -2337,7 +2337,6 @@ EMPFOHLEN:
 - Reporting und Statistiken
 - Multi-App-/Multi-Tenant-Modelle
 - externe API-Integrationen und Cloud-Speicher
-- Zahlungsanbieter und Store-Updates
 - Cloud-/Provider- und Infrastruktur-Abstraktion als Standard
 
 ## OFFENE ENTSCHEIDUNG
@@ -2726,7 +2725,7 @@ Abnahmekriterien:
 
 Warum an dieser Stelle:
 
-- spätere App- und CMS-/GPS-/Store-Module hängen an dieser Stabilität
+- spätere App- und CMS-/GPS-Module hängen an dieser Stabilität
 
 ## PHASE 6 – Security Hardening, Audit und operational readiness
 
@@ -2900,7 +2899,7 @@ Warum an dieser Stelle:
 
 - Backups sind ein Betriebs- und Notfall-Feature, nicht die erste technische Grundlage
 
-## PHASE 9 – CMS/Content, GPS und Store-Funktionen
+## PHASE 9 – CMS/Content und GPS
 
 PRIORITÄT:
 
@@ -2908,11 +2907,11 @@ PRIORITÄT:
 
 Ziel:
 
-- Anwendungen und fachliche Module dürfen auf die stabile Basis aufsetzen
+- Anwendungen und zukünftige Module können auf der stabilen Basis aufsetzen
 
 IST:
 
-- GPS-, Store- und CMS-/Data-Ansätze sind bereits sichtbar
+- GPS- und CMS-/Data-Ansätze sind bereits sichtbar
 
 ERSTE PRODUKTIVE PHASE:
 
@@ -2924,7 +2923,6 @@ Benötigte Komponenten:
 
 - Content-Modelle
 - GPS-Datenmodelle
-- Store-Schemas und Positionen
 - App-/Data-Engines
 - Modul-Definitionen
 
@@ -2934,8 +2932,8 @@ Abhängigkeiten:
 
 Sicherheitsaspekte:
 
-- Zugriff auf GPS- und Store-Daten muss app-/rollenbasiert gesteuert werden
-- sensible Daten wie Standort und Bestell-Daten müssen sauber abgesichert werden
+- Zugriff auf GPS- und Content-Daten muss app-/rollenbasiert gesteuert werden
+- sensible Daten wie Standorte müssen sauber abgesichert werden
 
 Risiken:
 
@@ -2943,7 +2941,7 @@ Risiken:
 
 Abnahmekriterien:
 
-- content, gps und store laufen als App-Module und nicht als Core-Features
+- content und gps laufen als App-Module und nicht als Core-Features
 
 Warum an dieser Stelle:
 
@@ -3070,7 +3068,6 @@ SPÄTER:
 - E-Mail-System
 - Multi-App/Multi-Tenant
 - externe API und Payment-Provider
-- Store- und App-Update-Provider
 - erweitertete Reporting-/Statistik-Module
 
 ZUKUNFT:
@@ -3199,7 +3196,7 @@ Lösung:
 
 Nutzen:
 
-- spätere Store-/App-Updates und Tarifstufen sind ohne Core-Umstellung möglich.
+- spätere App-Updates und Tarifstufen sind ohne Core-Umstellung möglich.
 
 Aufwand:
 
@@ -3250,7 +3247,7 @@ PHASE 5 – Module Registry, App-Isolation und Modul-Management
 PHASE 6 – Security Hardening, Audit und operational readiness
 PHASE 7 – Update-System und Entitlements
 PHASE 8 – Backup/Restore, Benutzer-Backup und Storage-Policies
-PHASE 9 – CMS/Content, GPS und Store-Funktionen
+PHASE 9 – CMS/Content und GPS
 PHASE 10 – Monitoring, Health, Jobs, Cron und Wartung
 PHASE 11 – Deployment, cPanel-Transfer und externe Provider
 PHASE 12 – Zukünftige Erweiterungen
@@ -3367,14 +3364,14 @@ Ergebnisse:
 - Storage-Adapter für DB, Logs, Uploads und Backups
 - Berechtigungsgrenzen für private Backup-Volumes
 
-### Phase 9 – CMS-, GPS-, Store- und Fachmodule
+### Phase 9 – CMS, GPS und optionale Module
 
 Ziel:
 - fachliche Erweiterungen nur als modulare Erweiterungen einbauen
 
 Ergebnisse:
-- klar definierte Fachmodule außerhalb des Core
-- historische Referenzmodule bleiben nur Referenz/Validierung
+- klar definierte Module außerhalb des Core
+- GPS als unabhängiges Referenz-/Testmodul
 - neue fachliche Module über Module-Interface, Permissions und Entitlements eingebunden
 
 ### Phase 10 – Monitoring, Jobs, Cron und Wartung

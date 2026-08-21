@@ -79,7 +79,7 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - Die Server-Initialisierung nutzt jetzt einen app-spezifischen Bootstrap-Workflow statt hart codierter Global-Registrierungen.
 - Die Framework-Validierung läuft über eine gezielte Runtime-Regression zur App-Isolation, damit keine Cross-App-Kontamination mehr entsteht.
 - Der Admin hat jetzt ein eigenes App-Konfigurations-Panel für aktive App-Auswahl, App-Name, Modus und Storage-Strategie erhalten, damit Branding und Datenhaltung direkt im CMS-artigen Admin gesteuert werden können.
-- Die generische Data-/Schema-Engine wurde ergänzt: app-spezifische Entity-Schemata, Validierung, CRUD-Operations und persistente Record-Storage folgen jetzt einem zentralen, wiederverwendbaren Muster und sind für spätere Module und Store-/App-Templates vorbereitet.
+- Die generische Data-/Schema-Engine wurde ergänzt: app-spezifische Entity-Schemata, Validierung, CRUD-Operations und persistente Record-Storage folgen jetzt einem zentralen, wiederverwendbaren Muster und sind für spätere Module und modulare App-Templates vorbereitet.
 - Die aktive App-Identität wird jetzt auch in der User-UI aus dem runtime-aktiven App-Kontext abgeleitet, statt nur aus der konfigurierten Default-Variante. Dadurch bleibt die sichtbare Navigation konsistent, auch wenn die aktive App im Admin gewechselt wurde.
 - Die finale Validierung der App-/Admin-/Server-Entkopplung wurde mit einem gezielten App-Listing-/Active-App-Test abgesichert; der aktive App-Kontext bleibt als Priorität im Framework erhalten.
 - Die Standard-App des Frameworks wurde auf einen neutralen, generischen `neutral-app`-Kontext zurückgesetzt.
