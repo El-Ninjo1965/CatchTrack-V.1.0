@@ -557,6 +557,184 @@ Die technische Reihenfolge sollte nicht nach Produktfunktion, sondern nach Abhä
 - security hardening
 - production validation
 
+## AKTUELLER ARBEITSSTAND (2026-08-21)
+
+### Projektstatus
+
+- Repository: `El-Ninjo1965/Neutral`
+- Branch: `main`
+- Arbeitsziel: aktuelle technische Sicherheitsverifikation und anschließende Entscheidung über die eigentliche Sicherheitsimplementation.
+- Der Codebestand enthält bereits fortgeschrittene Phase-5A-Implementierungen im Admin-/User-/Roles-/Settings-Bereich sowie die bestehende Test-Suite unter `tests/admin-api.test.js`.
+- Für den aktuellen Verifikationsschritt wurde bewusst keine neue Produkt-Implementierung angelegt; der Fokus lag auf realem Laufzeitverhalten und Sicherheitsprüfung.
+
+### Bisherige Arbeiten / Nachweis
+
+- Sicherheits-Verification Pass wurde direkt auf den laufenden Server und die kritischen Endpoints angewendet.
+- Reale HTTP-Requests wurden gegen die folgenden Pfade ausgeführt:
+  - `/api/setup*`
+  - `/api/database/status`
+  - `/api/database/*`
+  - `/api/devices*`
+  - `/api/marketplace*`
+  - `/api/admin/*`
+- Die Verifikation wurde mit folgenden Fällen durchgeführt:
+  - ohne Auth
+  - mit unbekanntem/falschem Header
+  - mit normaler User-Rolle
+  - mit Admin-Rolle
+  - mit ungültigen bzw. manipulierten Eingaben
+- Die vorhandene Test-Suite wurde ausgeführt: `npm test -- --test-reporter=spec`.
+- Relevante Laufzeitlogik und API-Entscheidungen wurden mit dem tatsächlichen Code in `server/bootstrap/server.js` abgeglichen.
+
+### Tatsächlicher Status der Sicherheitsprüfung
+
+#### Bestätigt
+
+- GET-Endpunkte wie `/api/setup`, `/api/setup/status`, `/api/database/status`, `/api/devices`, `/api/marketplace` und `/api/admin/settings` sind in der aktuellen Laufzeit ohne Auth erreichbar.
+- Die Admin-/Write-Endpunkte sind in der Regel durch eine Header-basierte Prüfung geschützt, aber diese Prüfung ist kein echtes Authentifizierungsmodell.
+- Die Rolle wird im aktuellen Code direkt aus Request-Headern gelesen (`x-framework-role`, `x-user-role`, `x-admin-role`), was eine vertrauenswürdige Header-Identität voraussetzt und damit im Sinne einer echten Sicherheit nicht robust ist.
+- Das System nutzt aktuell ein Trust-by-header-Modell statt einer verifizierten serverseitigen Authentifizierung.
+
+#### Nicht bestätigt
+
+- Dass alle kritischen Endpoints vollständig ungeschützt sind.
+- Dass die Header-Authentifizierung selbst als sicheren und produktiven Auth-Mechanismus gelten kann.
+- Dass es in der aktuellen Laufzeit bereits automatisierte Exploits oder SQLi-/Path-Traversal-Fälle mit gesicherten Nachweisen gibt.
+
+### Sicherheitsrelevante Erkenntnis
+
+- Der Kernpunkt ist nicht nur das Vorhandensein einiger öffentlich erreichbarer GET-Endpunkte, sondern die Tatsache, dass die Autorisierung derzeit nicht auf einer echten, serverseitig verifizierten Identitäts- und Rollenbasis ruht.
+- In der aktuellen Architektur ist die Sicherheit dadurch schwach, dass der Server Request-Header zur Autorisierung verwendet, ohne die Identität zu verifizieren.
+- Für die nächste produktive Umsetzung muss die Verifikation der Auth-Identität über serverseitige Session- oder Token-Mechanismen erfolgen, nicht über Roh-Header-Werte.
+
+### Arbeitsbeschränkung und Ausführungsvorgaben
+
+Der vorherige Security Verification Pass enthielt explizit die folgende Regel:
+
+- Keine Implementierung.
+- Keine neuen Middleware-Dateien.
+- Keine neuen API-Dateien.
+- Keine Änderungen an `master-ui.js`.
+- Keine Persistenz-/Runtime-Änderungen.
+- Keine Refactorings in diesem Schritt.
+- Kein Commit.
+- Kein Push.
+- Kein GitHub-Sync im Verifikationsschritt.
+
+Diese Vorgabe ist im aktuellen Stand weiterhin bindend, weil sie den klaren Zweck dieses Schrittes definiert hat: Die Sicherheitsbehauptungen wurden reproduzierbar zu prüfen oder zu widerlegen, aber keine Produktionsänderung wurde in diesem Schritt durchgeführt.
+
+### Git- und Sync-Status
+
+- Es wurde kein Commit erstellt.
+- Es wurde kein Push auf GitHub durchgeführt.
+- Es wurde kein GitHub-Sync ausgelöst.
+- Die Dokumentation in diesem Dokument dient als verifizierbarer Audit-/Arbeitsstand, nicht als produktive Codeänderung.
+
+### Nächster logischer Schritt
+
+Der nächste logische Schritt nach dem Audit ist nicht das Publizieren oder Synchronisieren auf GitHub, sondern die eigentliche Sicherheitsfix-Planung und anschließende kontrollierte Implementierung. Dazu gehören:
+
+1. echte serverseitige Authentifizierung statt Trust-by-header
+2. Zugriffsbeschränkung für öffentliche GET-Endpunkte
+3. feste Trennung zwischen public info und protected admin/system endpoints
+4. ergänzende Sicherheitstests für no-auth, wrong-header, user-role und admin-role
+5. danach kontrollierte Implementierung, Validierung und eventualer Commit/PR-Flow unter separater Freigabe
+
+### Relevante Projektdateien
+
+- `server/bootstrap/server.js`
+- `server/services/user-service.js`
+- `server/services/role-service.js`
+- `server/services/settings-service.js`
+- `server/middleware/input-validation.js`
+- `tests/admin-api.test.js`
+
+Diese Dateien dokumentieren den aktuellen technischen Status und die Nachweisbasis für die Sicherheitsprüfung.
+
+## NÄCHSTER IMPLEMENTIERUNGSPLAN (SICHERHEIT)
+
+Dieser Abschnitt beschreibt die nächste logische Umsetzung, nachdem der Audit-/Verifikationsschritt abgeschlossen wurde. Er ist ein Plan für die folgende Freigabe-Phase; er ist keine laufende Produktionsmodifikation, sondern eine strukturierte Arbeitsanweisung für die eigentliche Implementierung.
+
+### Ziel
+
+Die aktuelle Sicherheitslage soll auf ein gültiges, serverseitig verifiziertes Auth-/Rollenmodell gebracht werden, ohne öffentliche Meta-Endpoints im Rahmen von Setup, Database, Devices, Marketplace oder Admin-Settings ungeschützt zu belassen.
+
+### Priorität 1 – Echte Authentifizierung statt Header-Trust
+
+- Vermeidung aller Header-basierten Autorisierung als primäre Authentifizierungsquelle.
+- `x-framework-role`, `x-user-role`, `x-admin-role` und ähnliche Header-Werte sollten nur noch als Zusatzinformationen betrachtet werden, nicht als alleinige Autoritätsquelle.
+- Serverseitige Session- oder Token-Authentifizierung muss als primäre Quelle für Identität und Rollen dienen.
+- Die Prüfungen sollten gegen einen verifizierten Benutzerkontext laufen, nicht gegen rohe Request-Header.
+
+Empfohlene technische Schritte:
+- Session-Validierung im Server-Request-Context einführen.
+- Rollen aus einem authentifizierten Benutzerkontext ableiten.
+- Nur nach erfolgreicher Authentifizierung und Rollenauflösung Zugriff auf Admin-/Setup-/Settings-Endpoints erlauben.
+- Eine nachträgliche Token-/API-Adapter-Schicht kann später ergänzt werden, aber sie darf nicht das Standard-Auth-Modell bilden.
+
+### Priorität 2 – Public-Read-Exposure minimieren
+
+Aktuell öffentlich erreichbar:
+- `GET /api/setup`
+- `GET /api/setup/status`
+- `GET /api/database/status`
+- `GET /api/database/test`
+- `GET /api/devices`
+- `GET /api/marketplace`
+- `GET /api/marketplace/modules`
+- `GET /api/admin/settings`
+
+Nächster sinnvoller Plan:
+- Nur jene Endpoints dürfen öffentlich sein, die explizit als public-by-design definiert werden.
+- Setup-, Database-, Device-, Marketplace- und Admin-Settings-Metadaten sind in der Regel keine öffentlich freizugebenden Informationen.
+- Für administrative/systemische Informationen müssen Authentifizierung und Rollenprüfung zwingend erforderlich sein.
+
+### Priorität 3 – Write-Vorgänge exakt auf Admin/Developer rollenbasiert absichern
+
+- Für `POST`, `PUT`, `DELETE` auf Setup, Database, Devices, Marketplace, Users, Roles, Settings, Logs und admin-abhängige Ressourcen muss der Server jedes Mal den verifizierten Benutzerkontext prüfen.
+- Die Berechtigungsprüfung muss sowohl im Route-Layer als auch im Service-Layer erfolgen, damit eine UI-Umgehung oder geänderter Client keinen direkten Zugriff ermöglicht.
+- Jede route- oder service-basierte Mutationslogik benötigt einen einheitlichen Fehler- und Auditpfad.
+
+### Priorität 4 – Sicherheits-Tests ergänzen
+
+Verpflichtende Tests für die nächste Freigabe-Phase:
+- Request ohne Auth gegen alle kritischen Endpoints
+- Request mit unbekanntem/falschem Header
+- Request mit normaler User-Rolle
+- Request mit Admin-Rolle
+- Request mit manipulierten/ungültigen Inputdaten
+- Validierung auf 200/403/400/404 nach gesetztem Sicherheitsmodell
+
+Ziel:
+- Die Real-Laufzeit verifiziert durch Tests und nicht nur durch Codebetrachtung.
+- Sicherstellen, dass jede kritische Route auf den korrekten Schutzpfad fällt.
+
+### Priorität 5 – Audit-/Log- und Fehlermodus stärken
+
+- Admin-Aktionen und Sicherheitsereignisse sollen im Audit-Protokoll geführt werden.
+- Fehlerantworten sollten keine internen Details, Secrets oder Systemkonfigurationen preisgeben.
+- Keine Passwörter, Tokens oder sensiblen Secrets in Logs, Error-Responses oder UI-Antworten.
+
+### Freigabe- und Umsetzungsreihenfolge
+
+1. Authentifizierung reparieren
+2. Rollen-/Richtlinienmodell auf serverseitige Prüfung umstellen
+3. Public-Read-Exposure minimieren
+4. Write-Endpoints konsolidieren
+5. Sicherheits-Tests ergänzen
+6. Audit-/Logging harden
+7. Verifikation erneut live gegen die Server-APIs
+8. Erst danach Commit/PR/Push in einem separaten Implementierungsschritt
+
+### Wichtige Vorgabe für die nächste Phase
+
+Die Phase „Audit / Verifikation“ ist hier abgeschlossen. Die nächste Phase ist nur erlaubt, wenn sie als echte Implementierungsphase explizit freigegeben wird. In der aktuellen Phase gilt weiterhin:
+- keine neuen Dateien im Sicherheits-/API-Bereich im Sinne des Audit-Schritts
+- keine Produktionsänderung ohne Freigabe
+- kein Commit
+- kein Push
+- kein GitHub-Sync
+
 ### 8. Externe Aufgaben, die später außerhalb des Repositories eingerichtet werden müssen
 
 Jede spätere externe Aufgabe muss mit genauer Definition dokumentiert werden und darf nicht im Quellcode verankert sein.
