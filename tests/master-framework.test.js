@@ -805,14 +805,18 @@ test('supports setup, database, and activation flow', async () => {
 
   const app = ServerBootstrap.createServer();
 
-  const requestJson = (port, method, pathname, payload = null) => new Promise((resolve, reject) => {
+  const requestJson = (port, method, pathname, payload = null, role = 'admin') => new Promise((resolve, reject) => {
     const body = payload ? JSON.stringify(payload) : '';
+    const headers = body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {};
+    if (role) {
+      headers['x-framework-role'] = role;
+    }
     const req = http.request({
       host: '127.0.0.1',
       port,
       path: pathname,
       method,
-      headers: body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {}
+      headers
     }, (res) => {
       let data = '';
       res.setEncoding('utf8');

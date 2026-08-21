@@ -449,6 +449,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
   if (pathname === `${apiBase}/setup` || pathname === `${apiBase}/admin/setup` || pathname === `${apiBase}/setup/status` || pathname === `${apiBase}/admin/setup/status` || pathname === `${apiBase}/install/status`) {
     if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
       readJsonBody(req)
         .then((payload) => {
           const currentState = MasterFramework.loadSetupState();
@@ -629,6 +632,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
   if (pathname === `${apiBase}/database/status` || pathname === `${apiBase}/admin/database/status` || pathname === `${apiBase}/database/test` || pathname === `${apiBase}/admin/database/test`) {
     if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
       readJsonBody(req)
         .then((payload) => {
           const nextState = MasterFramework.loadSetupState();
