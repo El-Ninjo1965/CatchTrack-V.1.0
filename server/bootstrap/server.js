@@ -7,6 +7,7 @@ const persistenceService = require('../services/persistence-service');
 const inputValidation = require('../middleware/input-validation');
 const userService = require('../services/user-service');
 const roleService = require('../services/role-service');
+const settingsService = require('../services/settings-service');
 const auditService = require('../services/audit-service');
 
 const bootstrapDefaultApps = () => {
@@ -1070,6 +1071,48 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
           sendJson(res, 400, { ok: false, code: 'DELETE_FAILED', message: error.message });
         }
       }
+      return true;
+    }
+  }
+
+  // Settings API - /api/admin/settings
+  if (pathname === `${apiBase}/admin/settings` || pathname === `${apiBase}/admin/settings/`) {
+    if (req.method === 'GET') {
+      try {
+        const settings = settingsService.getAll();
+        sendJson(res, 200, {
+          ok: true,
+          settings
+        });
+      } catch (error) {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      }
+      return true;
+    }
+
+    if (req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+
+      readJsonBody(req)
+        .then((payload) => {
+          const validationErrors = inputValidation.validateSettingsPayload(payload);
+          if (validationErrors.length > 0) {
+            sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', errors: validationErrors });
+            return;
+          }
+
+          const actor = getRequestRoles(req)[0] || 'admin';
+          const updated = settingsService.update(payload, actor);
+          sendJson(res, 200, {
+            ok: true,
+            settings: updated
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'UPDATE_FAILED', message: error.message });
+        });
       return true;
     }
   }
