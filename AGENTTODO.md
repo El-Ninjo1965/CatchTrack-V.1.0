@@ -8,10 +8,14 @@ Die verbindlichen Architektur-, Vision- und Regelwerke liegen in `WORKFLOW.md` u
 
 ## Geltungsbereich und Korrekturen
 
-- Das Projekt bleibt ein neutrales Master-/Entwicklungsframework. Beispielmodule wie GPS, Store, Retail, Catch Log und Fishing Spots dienen nur der historischen Validierung und sind keine festen Core-Komponenten.
-- Historische Test- und Referenzmodule dürfen weiter dokumentiert werden, aber sie bilden keine zukünftige Core-Priorität und keine harte Abhängigkeit des Frameworks.
+- Das Projekt bleibt ein neutrales Master-/Entwicklungsframework.
+- Historische Test- und Referenzmodule wie GPS, Store, Retail, Catch Log und Fishing Spots dürfen weiter dokumentiert werden, aber nur als HISTORISCHE VALIDIERUNG.
+- Sie bilden keine zukünftige Core-Priorität, keine harte Abhängigkeit des Frameworks und keinen aktuellen Produktumfang.
 
 ## Erledigt
+
+Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entwicklung. Sie sind keine aktiven Bestandteile des Neutral-Core und keine laufende Produktfunktion.
+
 - GPS-Modul als registriertes, aktivierbares, persistentes User-Modul in der Registry und UI verknüpft.
 - Offline-First-Developer-Flow mit einem einzigen lokalen Auth-Zustand für Setup, Reload und Login stabilisiert.
 - Zentraler App-Name konfiguriert und in der User-UI verwendet.

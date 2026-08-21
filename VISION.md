@@ -39,7 +39,7 @@ Beispiele:
 * Angel-App
 * Camping-App
 * Wetter-App
-* beispielhafte Referenzmodule wie GPS- oder Store-Validierungen
+* modulare Referenz-/Validierungsbeispiele ohne feste Core-Anbindung
 * Foto-/Medienmodul
 * Benutzerverwaltung
 * Rollen- und Rechteverwaltung

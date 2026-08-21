@@ -9,13 +9,12 @@ Technische Architektur, Anforderungen, Entwicklungsregeln und verbindliche Gesam
 ## Version 1.1.10 - independent app architecture and approval gate
 
 - Neutral remains the neutral master/development framework.
-- Historical validation examples such as GPS, Store, Retail, Catch Log and Fishing Spots remain reference/test artifacts and are not treated as fixed core components or current product roadmap priorities.
+- Historical validation examples such as GPS, Store, Retail, Catch Log and Fishing Spots remain reference/test artifacts and are not treated as fixed core components, active product features, or current roadmap priorities.
 
 Status:
 - Framework core remains stable and module-driven.
 - User shell continues to support profile settings, feature visibility and privacy preferences.
-- GPS remains hardened against inactive module state and stays usable from real user interactions.
-- Catch Log and Fishing Spots are documented as historical validation examples in the active app context and are not treated as a required future core dependency.
+- GPS, Catch Log and Fishing Spots are documented only as historical validation examples and not as active framework functions or required future core dependencies.
 - The admin shell supports a storage/connection model for file-based and SQL-ready backends.
 - The framework remains configurable without hardcoding a single backend type.
 - Admin user creation and role-based permission checks remain fixed so developer/admin accounts can manage users without false `Access denied` results.
@@ -37,6 +36,7 @@ Status:
 - Freeze gate: no additional app-dependent modules will be installed until the full base system is completed, stable and explicitly reviewed and approved by the user.
 
 ### Included milestones
+The following items are historical validation milestones from the development period and are not current framework product scope.
 - neutral framework shell
 - module registry and lifecycle
 - admin governance (users, roles, permissions, module settings)
