@@ -2,7 +2,7 @@
   'use strict';
 
   const DEFAULT_DEVELOPER_USERNAME = 'Developer';
-  const STORAGE_KEY = 'catchtrack.local.auth.v1';
+  const STORAGE_KEY = 'neutral.local.auth.v1';
   const LEGACY_STORAGE_KEYS = [
     'platform.local.auth.developerPassword',
     'platform.local.auth.developerPasswordHash',

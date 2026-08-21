@@ -218,7 +218,7 @@
             const storageState = typeof localStorage !== 'undefined'
                 ? (() => {
                     try {
-                        const raw = localStorage.getItem('catchtrack.local.auth.v1');
+                        const raw = localStorage.getItem('neutral.local.auth.v1');
                         if (!raw) {
                             return null;
                         }
@@ -268,10 +268,10 @@
             }
 
             const defaultUsername = typeof localStorage !== 'undefined'
-                ? (localStorage.getItem('catchtrack.local.auth.v1')
+                ? (localStorage.getItem('neutral.local.auth.v1')
                     ? (() => {
                         try {
-                            const raw = JSON.parse(localStorage.getItem('catchtrack.local.auth.v1'));
+                            const raw = JSON.parse(localStorage.getItem('neutral.local.auth.v1'));
                             return raw && typeof raw.username === 'string' && raw.username.trim() ? raw.username.trim() : 'Developer';
                         } catch (error) {
                             return 'Developer';
@@ -282,7 +282,7 @@
             const passwordHash = await hashSecret(normalized);
 
             if (typeof localStorage !== 'undefined') {
-                localStorage.setItem('catchtrack.local.auth.v1', JSON.stringify({
+                localStorage.setItem('neutral.local.auth.v1', JSON.stringify({
                     username: defaultUsername,
                     passwordHash,
                     setupComplete: true,

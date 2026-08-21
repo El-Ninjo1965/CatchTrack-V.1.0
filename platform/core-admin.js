@@ -578,7 +578,7 @@
             const modules = this.getModuleCatalog();
             const normalizedAppId = typeof appId === 'string' && appId.trim() ? appId.trim() : null;
             const filteredModules = normalizedAppId
-                ? modules.filter((module) => (module.appId || module.manifest?.appId || 'catchtrack') === normalizedAppId)
+                ? modules.filter((module) => (module.appId || module.manifest?.appId || 'neutral-app') === normalizedAppId)
                 : modules;
 
             return roleCatalog.map((role) => ({
@@ -586,7 +586,7 @@
                 name: role.name || role.role || 'User',
                 modules: filteredModules.map((module) => {
                     const access = framework && typeof framework.getAppModuleAccess === 'function'
-                        ? framework.getAppModuleAccess(module.appId || normalizedAppId || module.manifest?.appId || 'catchtrack', module.id)
+                        ? framework.getAppModuleAccess(module.appId || normalizedAppId || module.manifest?.appId || 'neutral-app', module.id)
                         : null;
                     const defaultEnabled = !!(module.active || module.status === 'enabled' || module.status === 'active');
                     const roles = access && access.roles && typeof access.roles === 'object' ? access.roles : {};
@@ -609,14 +609,14 @@
                 ? framework.getRoleCatalog()
                 : this.getRoleCatalog();
             const app = framework && typeof framework.getApp === 'function'
-                ? framework.getApp(appId || 'catchtrack')
+                ? framework.getApp(appId || 'neutral-app')
                 : null;
             const templates = app && Array.isArray(app.featureTemplates) && app.featureTemplates.length
                 ? app.featureTemplates
                 : (framework && typeof framework.listApps === 'function'
-                    ? (framework.listApps().find((entry) => entry.appId === (appId || 'catchtrack')) || {}).featureTemplates || []
+                    ? (framework.listApps().find((entry) => entry.appId === (appId || 'neutral-app')) || {}).featureTemplates || []
                     : []);
-            const normalizedAppId = typeof appId === 'string' && appId.trim() ? appId.trim() : 'catchtrack';
+            const normalizedAppId = typeof appId === 'string' && appId.trim() ? appId.trim() : 'neutral-app';
 
             return roleCatalog.map((role) => ({
                 role: role.role || role.name || 'user',
@@ -879,7 +879,7 @@
                 displayName,
                 version: String(overrides.version || '1.0.0').trim() || '1.0.0',
                 type: String(overrides.type || template.type || 'app').trim() || 'app',
-                appId: String(overrides.appId || 'catchtrack').trim() || 'catchtrack',
+                appId: String(overrides.appId || 'neutral-app').trim() || 'neutral-app',
                 description: String(overrides.description || template.description || 'Generated from a framework module template').trim(),
                 permissions: Array.isArray(overrides.permissions) ? [...overrides.permissions] : Array.isArray(template.permissions) ? [...template.permissions] : ['module:read'],
                 capabilities: Array.isArray(overrides.capabilities) ? [...overrides.capabilities] : Array.isArray(template.capabilities) ? [...template.capabilities] : ['customization'],

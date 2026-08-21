@@ -27,7 +27,7 @@
 
             if (typeof localStorage !== 'undefined') {
                 try {
-                    const raw = localStorage.getItem('catchtrack.local.auth.v1');
+                    const raw = localStorage.getItem('neutral.local.auth.v1');
                     if (raw) {
                         const parsed = JSON.parse(raw);
                         if (parsed && typeof parsed === 'object') {

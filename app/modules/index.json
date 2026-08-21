@@ -1,19 +1,5 @@
 [
   {
-    "id": "dashboard",
-    "name": "Dashboard",
-    "displayName": "Dashboard",
-    "version": "1.0.0",
-    "type": "app",
-    "description": "Starter dashboard module for the first CatchTrack application shell.",
-    "entry": "index.js",
-    "globalName": "DashboardModule",
-    "permissions": ["module:read"],
-    "capabilities": ["dashboard", "overview"],
-    "dependencies": [],
-    "appId": "catchtrack"
-  },
-  {
     "id": "gps",
     "name": "GPS",
     "displayName": "GPS",
@@ -25,76 +11,6 @@
     "permissions": [],
     "capabilities": ["gps", "geolocation"],
     "dependencies": [],
-    "appId": "catchtrack"
-  },
-  {
-    "id": "catch-log",
-    "name": "Catch Log",
-    "displayName": "Catch Log",
-    "version": "1.0.0",
-    "type": "app",
-    "description": "First real CatchTrack business module for logging and tracking fishing catches in a local, modular flow.",
-    "entry": "index.js",
-    "globalName": "CatchLogModule",
-    "permissions": ["module:read"],
-    "capabilities": ["catch-log", "tracking", "data-entry"],
-    "dependencies": ["gps"],
-    "appId": "catchtrack"
-  },
-  {
-    "id": "fishing-spots",
-    "name": "Fishing Spots",
-    "displayName": "Fishing Spots",
-    "version": "1.0.0",
-    "type": "app",
-    "description": "A location-aware module for saving and managing favorite fishing areas, GPS coordinates, and notes for the CatchTrack app.",
-    "entry": "index.js",
-    "globalName": "FishingSpotsModule",
-    "permissions": ["module:read"],
-    "capabilities": ["spots", "fishing", "location-planning"],
-    "dependencies": ["gps"],
-    "appId": "catchtrack"
-  },
-  {
-    "id": "catalog",
-    "name": "Catalog",
-    "displayName": "Catalog",
-    "version": "1.0.0",
-    "type": "app",
-    "description": "Product catalog module for a retail app template.",
-    "entry": "index.js",
-    "globalName": "CatalogModule",
-    "permissions": ["module:read", "user:read"],
-    "capabilities": ["catalog", "products", "inventory"],
-    "dependencies": [],
-    "appId": "retail-demo"
-  },
-  {
-    "id": "orders",
-    "name": "Orders",
-    "displayName": "Orders",
-    "version": "1.0.0",
-    "type": "app",
-    "description": "Order management module for a retail app template.",
-    "entry": "index.js",
-    "globalName": "OrdersModule",
-    "permissions": ["module:read", "user:write"],
-    "capabilities": ["orders", "fulfillment", "sales"],
-    "dependencies": ["catalog", "customers"],
-    "appId": "retail-demo"
-  },
-  {
-    "id": "customers",
-    "name": "Customers",
-    "displayName": "Customers",
-    "version": "1.0.0",
-    "type": "app",
-    "description": "Customer management module for a retail app template.",
-    "entry": "index.js",
-    "globalName": "CustomersModule",
-    "permissions": ["module:read", "user:read"],
-    "capabilities": ["customers", "crm", "retention"],
-    "dependencies": [],
-    "appId": "retail-demo"
+    "appId": null
   }
 ]

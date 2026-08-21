@@ -368,8 +368,8 @@
             const schemaName = document.getElementById('entitySchemaNameInput') ? document.getElementById('entitySchemaNameInput').value.trim() : '';
             const fieldsValue = document.getElementById('entitySchemaFieldsInput') ? document.getElementById('entitySchemaFieldsInput').value : '[]';
             const appId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
-              ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
-              : 'catchtrack');
+              ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'neutral-app'
+              : 'neutral-app');
             if (!schemaId) {
               throw new Error('A schema ID is required.');
             }
@@ -509,7 +509,7 @@
               });
             }
             if (typeof localStorage !== 'undefined') {
-              localStorage.setItem('catchtrack.connections.v1', JSON.stringify({
+              localStorage.setItem('neutral.connections.v1', JSON.stringify({
                 defaultConnectionId: finalPayload.connectionId,
                 activeConnectionId: finalPayload.connectionId,
                 activeStorageType: finalPayload.storageType,
@@ -541,7 +541,7 @@
             const result = manager.createModuleFromTemplate(templateSelect ? templateSelect.value : '', {
               moduleId: moduleIdInput ? moduleIdInput.value : '',
               name: nameInput ? nameInput.value : '',
-              appId: appInput ? appInput.value : 'catchtrack'
+              appId: appInput ? appInput.value : 'neutral-app'
             });
 
             if (statusTarget) {
@@ -1298,8 +1298,8 @@
     if (!page) return;
 
     const appId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
-      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
-      : 'catchtrack');
+      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'neutral-app'
+      : 'neutral-app');
     const schemas = window.AdminModule && typeof window.AdminModule.getEntitySchemas === 'function'
       ? window.AdminModule.getEntitySchemas(appId)
       : [];
@@ -1529,8 +1529,8 @@
     const modules = getModuleCatalog();
     const roleCatalog = getRoleCatalog();
     const defaultAppId = (window.MasterFramework && typeof window.MasterFramework.listApps === 'function'
-      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'catchtrack'
-      : 'catchtrack');
+      ? (window.MasterFramework.listApps()[0] && (window.MasterFramework.listApps()[0].appId || window.MasterFramework.listApps()[0].id)) || 'neutral-app'
+      : 'neutral-app');
     const moduleMatrix = window.AdminModule && typeof window.AdminModule.getModuleAccessMatrix === 'function'
       ? window.AdminModule.getModuleAccessMatrix(defaultAppId)
       : [];
@@ -1801,7 +1801,7 @@
             </div>
             <div class="form-field"><label>Module ID</label><input id="moduleTemplateModuleId" type="text" placeholder="new-report-module" /></div>
             <div class="form-field"><label>Name</label><input id="moduleTemplateName" type="text" placeholder="New report module" /></div>
-            <div class="form-field"><label>App</label><input id="moduleTemplateAppId" type="text" value="catchtrack" /></div>
+            <div class="form-field"><label>App</label><input id="moduleTemplateAppId" type="text" value="neutral-app" /></div>
             <div class="action-list">
               <button type="button" class="primary" data-admin-action="module-template-create">Create module</button>
             </div>
@@ -1858,7 +1858,7 @@
           </div>
           <div class="grid">
             <div class="metric"><span class="metric-label">Module ID</span><div class="metric-value">${escapeHtml(module.id)}</div></div>
-            <div class="metric"><span class="metric-label">App</span><div class="metric-value">${escapeHtml(module.appId || module.manifest?.appId || 'catchtrack')}</div></div>
+            <div class="metric"><span class="metric-label">App</span><div class="metric-value">${escapeHtml(module.appId || module.manifest?.appId || 'neutral-app')}</div></div>
             <div class="metric"><span class="metric-label">Permissions</span><div class="metric-value" style="font-size:0.95rem;">${escapeHtml(permissionText)}</div></div>
             <div class="metric"><span class="metric-label">Capabilities</span><div class="metric-value" style="font-size:0.95rem;">${escapeHtml(capabilityText)}</div></div>
             <div class="metric"><span class="metric-label">Admin schema</span><div class="metric-value">${module.adminSettingsCount || 0}</div></div>
@@ -1868,7 +1868,7 @@
             <div class="card-header"><h3 class="card-title">Module metadata</h3></div>
             <div class="content-wrap">
               <form id="moduleMetadataForm" class="form-grid">
-                <div class="form-field"><label>App ID</label><input name="appId" value="${escapeHtml(module.appId || module.manifest?.appId || 'catchtrack')}" /></div>
+                <div class="form-field"><label>App ID</label><input name="appId" value="${escapeHtml(module.appId || module.manifest?.appId || 'neutral-app')}" /></div>
                 <div class="form-field"><label>Name</label><input name="name" value="${escapeHtml(module.name || module.id || '')}" /></div>
                 <div class="form-field"><label>Display name</label><input name="displayName" value="${escapeHtml(module.displayName || module.name || module.id || '')}" /></div>
                 <div class="form-field"><label>Type</label><input name="type" value="${escapeHtml(module.type || 'framework')}" /></div>

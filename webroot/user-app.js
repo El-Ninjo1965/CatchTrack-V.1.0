@@ -11,7 +11,7 @@
     activeModuleId: null
   };
 
-  const USER_SETTINGS_KEY = 'catchtrack.user.preferences.v1';
+  const USER_SETTINGS_KEY = 'neutral.user.preferences.v1';
 
   const defaultUserPreferences = Object.freeze({
     visibleModuleIds: null,

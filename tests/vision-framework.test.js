@@ -200,7 +200,7 @@ test('developer setup persists a hashed local password for login and admin acces
   assert.equal(typeof bootstrapConfig.passwordHash === 'string' && bootstrapConfig.passwordHash.length > 0, true);
   assert.equal(context.window.ConfigManager.get('bootstrap').developerPasswordHash, bootstrapConfig.passwordHash);
 
-  const persistedState = JSON.parse(localStorage.getItem('catchtrack.local.auth.v1'));
+  const persistedState = JSON.parse(localStorage.getItem('neutral.local.auth.v1'));
   assert.equal(typeof persistedState.passwordHash === 'string' && persistedState.passwordHash.length > 0, true);
   assert.equal(localStorage.getItem('platform.local.auth.developerPassword'), null);
   assert.equal(localStorage.getItem('core.bootstrap.developerPassword'), null);
@@ -223,7 +223,7 @@ test('developer setup persists a hashed local password for login and admin acces
     ConfigManager: {
       configs: new Map(),
       init() {
-        const raw = localStorage.getItem('catchtrack.local.auth.v1');
+        const raw = localStorage.getItem('neutral.local.auth.v1');
         if (raw) {
           const parsed = JSON.parse(raw);
           this.set('bootstrap', {

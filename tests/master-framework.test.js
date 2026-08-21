@@ -188,17 +188,17 @@ test('prefers the active app in the app listing and keeps the neutral app as the
     name: 'Neutral App',
     version: '1.0.0',
     active: true,
-    modules: ['dashboard'],
+    modules: ['gps'],
     config: { mode: 'local' }
   });
 
   runtime.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
+    appId: 'test-app',
+    name: 'Test App',
     version: '1.0.0',
     active: false,
-    modules: ['dashboard', 'gps'],
-    config: { mode: 'local', defaultView: 'dashboard' }
+    modules: ['gps'],
+    config: { mode: 'local', defaultView: 'overview' }
   });
 
   const appList = runtime.listApps();
@@ -238,8 +238,8 @@ test('keeps app runtime state isolated for each app instance', () => {
   runtime.currentAppId = null;
 
   runtime.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
+    appId: 'neutral-app',
+    name: 'Test App',
     version: '1.0.0',
     active: true,
     modules: ['gps'],
@@ -255,19 +255,19 @@ test('keeps app runtime state isolated for each app instance', () => {
     config: { mode: 'local', storageType: 'file', defaultView: 'overview' }
   });
 
-  const catchtrackRuntime = runtime.getAppRuntimeState('catchtrack');
+  const neutralAppRuntime = runtime.getAppRuntimeState('neutral-app');
   const weatherRuntime = runtime.getAppRuntimeState('weather');
 
-  assert.equal(catchtrackRuntime.appId, 'catchtrack');
+  assert.equal(neutralAppRuntime.appId, 'neutral-app');
   assert.equal(weatherRuntime.appId, 'weather');
-  assert.equal(catchtrackRuntime.storage.namespace, 'app:catchtrack:');
+  assert.equal(neutralAppRuntime.storage.namespace, 'app:neutral-app:');
   assert.equal(weatherRuntime.storage.namespace, 'app:weather:');
-  assert.equal(runtime.getActiveApp().appId, 'catchtrack');
+  assert.equal(runtime.getActiveApp().appId, 'neutral-app');
 
   runtime.setActiveApp('weather');
   assert.equal(runtime.getActiveApp().appId, 'weather');
   assert.equal(runtime.getAppRuntimeState('weather').server.status, 'active');
-  assert.equal(runtime.getAppRuntimeState('catchtrack').server.status, 'active');
+  assert.equal(runtime.getAppRuntimeState('neutral-app').server.status, 'active');
 });
 
 test('supports app-scoped module access and role mappings', () => {
@@ -276,15 +276,15 @@ test('supports app-scoped module access and role mappings', () => {
   runtime.apps.clear();
 
   runtime.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
+    appId: 'neutral-app',
+    name: 'Test App',
     version: '1.0.0',
     active: true,
-    modules: ['gps', 'catch-log'],
+    modules: ['gps', undefined],
     config: { mode: 'local' }
   });
 
-  const updated = runtime.setAppModuleAccess('catchtrack', 'gps', {
+  const updated = runtime.setAppModuleAccess('neutral-app', 'gps', {
     enabled: true,
     permissions: ['module:read'],
     roles: {
@@ -294,10 +294,10 @@ test('supports app-scoped module access and role mappings', () => {
     }
   });
 
-  assert.equal(updated.appId, 'catchtrack');
-  assert.equal(runtime.getAppModuleAccess('catchtrack', 'gps').roles.admin, true);
-  assert.equal(runtime.getAppModuleAccess('catchtrack', 'gps').roles.user, false);
-  assert.equal(runtime.listAppModuleAccess('catchtrack').length, 1);
+  assert.equal(updated.appId, 'neutral-app');
+  assert.equal(runtime.getAppModuleAccess('neutral-app', 'gps').roles.admin, true);
+  assert.equal(runtime.getAppModuleAccess('neutral-app', 'gps').roles.user, false);
+  assert.equal(runtime.listAppModuleAccess('neutral-app').length, 1);
 });
 
 test('supports app feature templates and role-based feature access', () => {
@@ -306,33 +306,33 @@ test('supports app feature templates and role-based feature access', () => {
   runtime.apps.clear();
 
   runtime.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
+    appId: 'neutral-app',
+    name: 'Test App',
     version: '1.0.0',
     active: true,
     features: [
       { id: 'dashboard', label: 'Dashboard', permissions: ['system:view'], roles: ['user', 'admin'] },
-      { id: 'catch-log', label: 'Catch Log', permissions: ['user:read'], roles: ['admin', 'member'] }
+      { id: undefined, label: 'Catch Log', permissions: ['user:read'], roles: ['admin', 'member'] }
     ]
   });
 
-  runtime.registerFeatureTemplate('catchtrack', {
+  runtime.registerFeatureTemplate('neutral-app', {
     id: 'profile',
     label: 'Profile',
     permissions: ['user:read'],
     roles: ['user', 'admin']
   });
 
-  const updated = runtime.setAppFeatureAccess('catchtrack', 'profile', {
+  const updated = runtime.setAppFeatureAccess('neutral-app', 'profile', {
     enabled: true,
     permissions: ['user:read'],
     roles: { user: true, admin: true, developer: false }
   });
 
   assert.equal(updated.featureId, 'profile');
-  assert.equal(runtime.getAppFeatureAccess('catchtrack', 'profile').roles.user, true);
-  assert.equal(runtime.getAppFeatureAccess('catchtrack', 'profile').roles.developer, false);
-  assert.equal(runtime.listAppFeatureAccess('catchtrack').length >= 1, true);
+  assert.equal(runtime.getAppFeatureAccess('neutral-app', 'profile').roles.user, true);
+  assert.equal(runtime.getAppFeatureAccess('neutral-app', 'profile').roles.developer, false);
+  assert.equal(runtime.listAppFeatureAccess('neutral-app').length >= 1, true);
 });
 
 test('registers and tests connections', async () => {
@@ -388,10 +388,10 @@ test('supports admin-configurable storage modes and connection metadata', () => 
 
   const connection = runtime.registerConnection({
     connectionId: 'primary-storage',
-    appId: 'catchtrack',
+    appId: 'neutral-app',
     storageType: 'sqlite',
     databaseType: 'sqlite',
-    databaseName: 'catchtrack.db',
+    databaseName: 'neutral-app.db',
     host: 'localhost',
     port: '3306',
     username: 'appuser',
@@ -402,30 +402,9 @@ test('supports admin-configurable storage modes and connection metadata', () => 
 
   assert.equal(connection.storageType, 'sqlite');
   assert.equal(connection.databaseType, 'sqlite');
-  assert.equal(connection.databaseName, 'catchtrack.db');
+  assert.equal(connection.databaseName, 'neutral-app.db');
   assert.equal(connection.default, true);
   assert.equal(runtime.getConnection('primary-storage').status, 'active');
-});
-
-test('provides a retail store app template with product and order entity schemas', () => {
-  cleanupRuntimeState();
-  const runtime = Framework;
-  runtime.apps.clear();
-  runtime.entitySchemas.clear();
-
-  const template = runtime.getAppTemplate('retail-store');
-  assert.ok(template);
-  assert.equal(template.modules.includes('catalog'), true);
-  assert.equal(template.entitySchemas.some((schema) => schema.id === 'products'), true);
-
-  const app = runtime.createAppFromTemplate('retail-store', {
-    appId: 'retail-demo',
-    name: 'Retail demo'
-  });
-
-  assert.equal(app.appId, 'retail-demo');
-  assert.equal(runtime.getEntitySchema('retail-demo', 'products').id, 'products');
-  assert.equal(runtime.getEntitySchema('retail-demo', 'orders').id, 'orders');
 });
 
 test('allows developer roles to pass resource-scoped user write checks', () => {
@@ -454,7 +433,7 @@ test('creates a live file storage adapter and a sql-ready adapter for admin-mana
   const runtime = Framework;
   const fileAdapter = runtime.createStorageAdapter({
     connectionId: 'file-storage',
-    appId: 'catchtrack',
+    appId: 'neutral-app',
     storageType: 'file',
     storagePath: 'server/runtime/test-data'
   });
@@ -462,25 +441,25 @@ test('creates a live file storage adapter and a sql-ready adapter for admin-mana
   assert.equal(fileAdapter.type, 'file');
   const fileCheck = await fileAdapter.test();
   assert.equal(fileCheck.ok, true);
-  await fileAdapter.write('sessions', 'session-demo', { ok: true, appId: 'catchtrack' });
+  await fileAdapter.write('sessions', 'session-demo', { ok: true, appId: 'neutral-app' });
   const saved = await fileAdapter.read('sessions', 'session-demo', null);
-  assert.equal(saved.appId, 'catchtrack');
+  assert.equal(saved.appId, 'neutral-app');
 
   const sqlAdapter = runtime.createStorageAdapter({
     connectionId: 'sql-storage',
-    appId: 'catchtrack',
+    appId: 'neutral-app',
     storageType: 'sqlite',
     databaseType: 'sqlite',
-    databaseName: 'catchtrack.db',
+    databaseName: 'neutral-app.db',
     storagePath: 'server/runtime/test-data'
   });
 
   assert.equal(sqlAdapter.type, 'sqlite');
   const sqlCheck = await sqlAdapter.test();
   assert.equal(sqlCheck.status, 'ready');
-  await sqlAdapter.write('sessions', 'sql-session-demo', { ok: true, appId: 'catchtrack', mode: 'sqlite' });
+  await sqlAdapter.write('sessions', 'sql-session-demo', { ok: true, appId: 'neutral-app', mode: 'sqlite' });
   const sqlSaved = await sqlAdapter.read('sessions', 'sql-session-demo', null);
-  assert.equal(sqlSaved.appId, 'catchtrack');
+  assert.equal(sqlSaved.appId, 'neutral-app');
   assert.equal(sqlSaved.mode, 'sqlite');
 });
 
@@ -492,15 +471,15 @@ test('registers generic entity schemas and records for app-level business data',
   runtime.entityRecords.clear();
 
   runtime.registerApp({
-    appId: 'catchtrack',
-    name: 'CatchTrack',
+    appId: 'neutral-app',
+    name: 'Test App',
     version: '1.0.0',
     active: true,
     modules: ['gps'],
     config: { mode: 'local', storageType: 'file' }
   });
 
-  runtime.registerEntitySchema('catchtrack', {
+  runtime.registerEntitySchema('neutral-app', {
     id: 'inventory',
     name: 'Inventory',
     fields: [
@@ -510,11 +489,11 @@ test('registers generic entity schemas and records for app-level business data',
     ]
   });
 
-  const schema = runtime.getEntitySchema('catchtrack', 'inventory');
+  const schema = runtime.getEntitySchema('neutral-app', 'inventory');
   assert.equal(schema.id, 'inventory');
   assert.equal(schema.fields.some((field) => field.key === 'name'), true);
 
-  const record = runtime.createEntityRecord('catchtrack', 'inventory', {
+  const record = runtime.createEntityRecord('neutral-app', 'inventory', {
     name: 'Salmon',
     quantity: 8,
     active: true
@@ -522,15 +501,15 @@ test('registers generic entity schemas and records for app-level business data',
 
   assert.equal(record.entityId, 'inventory');
   assert.equal(record.quantity, 8);
-  assert.equal(runtime.getEntityRecord('catchtrack', 'inventory', record.id).name, 'Salmon');
+  assert.equal(runtime.getEntityRecord('neutral-app', 'inventory', record.id).name, 'Salmon');
 
-  const records = runtime.listEntityRecords('catchtrack', 'inventory');
+  const records = runtime.listEntityRecords('neutral-app', 'inventory');
   assert.equal(records.length, 1);
 
-  const updated = runtime.updateEntityRecord('catchtrack', 'inventory', record.id, { quantity: 12 });
+  const updated = runtime.updateEntityRecord('neutral-app', 'inventory', record.id, { quantity: 12 });
   assert.equal(updated.quantity, 12);
 
-  const updatedSchema = runtime.updateEntitySchema('catchtrack', 'inventory', {
+  const updatedSchema = runtime.updateEntitySchema('neutral-app', 'inventory', {
     name: 'Inventory items',
     fields: [
       { key: 'name', type: 'string', required: true },
@@ -542,7 +521,7 @@ test('registers generic entity schemas and records for app-level business data',
   assert.equal(updatedSchema.name, 'Inventory items');
   assert.equal(updatedSchema.fields.some((field) => field.key === 'price'), true);
 
-  const afterDelete = runtime.deleteEntityRecord('catchtrack', 'inventory', record.id);
+  const afterDelete = runtime.deleteEntityRecord('neutral-app', 'inventory', record.id);
   assert.equal(afterDelete.length, 0);
 });
 

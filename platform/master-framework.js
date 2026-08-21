@@ -120,87 +120,9 @@
           featureSet: 'neutral-workspace'
         }
       });
-      this.registerAppTemplate({
-        id: 'catchtrack-starter',
-        name: 'CatchTrack starter',
-        description: 'Starter app template for fishing, tracking, and local activity workflows.',
-        version: '1.0.0',
-        defaultStatus: 'active',
-        modules: ['dashboard', 'gps', 'catch-log', 'fishing-spots'],
-        featureTemplates: [
-          { id: 'dashboard', label: 'Dashboard', description: 'Overview and main activities.', permissions: ['system:view'] },
-          { id: 'catch-log', label: 'Catch log', description: 'Log catches and daily sessions.', permissions: ['user:read'] },
-          { id: 'fishing-spots', label: 'Fishing spots', description: 'Favorite locations and geolocation-based spots.', permissions: ['user:read'] },
-          { id: 'profile', label: 'Profile', description: 'User profile and privacy controls.', permissions: ['user:read'] }
-        ],
-        config: {
-          mode: 'local',
-          featureSet: 'catchtrack-starter'
-        }
-      });
-      this.registerAppTemplate({
-        id: 'retail-store',
-        name: 'Retail store',
-        description: 'Reference store template for products, categories, orders, and customer workflows.',
-        version: '1.0.0',
-        defaultStatus: 'active',
-        modules: ['dashboard', 'catalog', 'orders', 'customers'],
-        featureTemplates: [
-          { id: 'dashboard', label: 'Dashboard', description: 'Overview and KPI summary.', permissions: ['system:view'] },
-          { id: 'catalog', label: 'Catalog', description: 'Product catalog and inventory management.', permissions: ['user:read'] },
-          { id: 'orders', label: 'Orders', description: 'Manage orders and fulfillment status.', permissions: ['user:write'] },
-          { id: 'customers', label: 'Customers', description: 'Customer records and retention workflows.', permissions: ['user:read'] },
-          { id: 'profile', label: 'Profile', description: 'User profile and privacy controls.', permissions: ['user:read'] }
-        ],
-        entitySchemas: [
-          {
-            id: 'products',
-            name: 'Products',
-            fields: [
-              { key: 'name', type: 'string', required: true },
-              { key: 'sku', type: 'string', required: true },
-              { key: 'category', type: 'string', required: true },
-              { key: 'price', type: 'number', required: true, defaultValue: 0 },
-              { key: 'stock', type: 'number', required: true, defaultValue: 0 },
-              { key: 'active', type: 'boolean', defaultValue: true }
-            ]
-          },
-          {
-            id: 'categories',
-            name: 'Categories',
-            fields: [
-              { key: 'name', type: 'string', required: true },
-              { key: 'description', type: 'string', required: false },
-              { key: 'active', type: 'boolean', defaultValue: true }
-            ]
-          },
-          {
-            id: 'customers',
-            name: 'Customers',
-            fields: [
-              { key: 'name', type: 'string', required: true },
-              { key: 'email', type: 'string', required: true },
-              { key: 'status', type: 'string', required: true, defaultValue: 'active' },
-              { key: 'loyaltyPoints', type: 'number', defaultValue: 0 }
-            ]
-          },
-          {
-            id: 'orders',
-            name: 'Orders',
-            fields: [
-              { key: 'customerId', type: 'string', required: true },
-              { key: 'status', type: 'string', required: true, defaultValue: 'pending' },
-              { key: 'total', type: 'number', required: true, defaultValue: 0 },
-              { key: 'currency', type: 'string', required: true, defaultValue: 'EUR' }
-            ]
-          }
-        ],
-        config: {
-          mode: 'local',
-          featureSet: 'retail-store',
-          defaultCurrency: 'EUR'
-        }
-      });
+      // Historical app templates (CatchTrack, Retail) have been removed.
+      // Neutral is a neutral framework; domain-specific app templates are defined
+      // externally or via admin UI configuration, not hardcoded in core.
       return this;
     },
 
