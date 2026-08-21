@@ -62,6 +62,9 @@ terminal.md
 # Runtime setup state
 server/runtime/
 
+# Runtime configuration files (persisted by persistence-service)
+config/*.json
+
 # Runtime Database Files
 # Schema, migrations and seed files remain tracked.
 # Only SQLite runtime sidecar files are ignored.
