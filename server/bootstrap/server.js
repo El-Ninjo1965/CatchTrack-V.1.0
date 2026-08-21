@@ -11,6 +11,8 @@ const settingsService = require('../services/settings-service');
 const auditService = require('../services/audit-service');
 const authService = require('../services/auth-service');
 const backupService = require('../services/backup-service');
+const logService = require('../services/log-service');
+const healthService = require('../services/health-service');
 const authConfig = require('../config').auth;
 
 const bootstrapDefaultApps = () => {
@@ -591,16 +593,27 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
   }
 
   if (pathname === `${apiBase}/status`) {
+    sendJson(res, 200, healthService.getRuntimeStatus());
+    return true;
+  }
+
+  if (pathname === `${apiBase}/system/info` || pathname === '/api/system/info') {
+    sendJson(res, 200, { ok: true, info: healthService.getSystemInfo() });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/logs` || pathname === '/api/logs') {
+    const filters = {};
+    const params = new URLSearchParams(url.search || '');
+    if (params.has('level')) { filters.level = params.get('level'); }
+    if (params.has('source')) { filters.source = params.get('source'); }
+    if (params.has('search')) { filters.search = params.get('search'); }
+    if (params.has('since')) { filters.since = params.get('since'); }
+    if (params.has('limit')) { filters.limit = Number(params.get('limit')) || 100; }
     sendJson(res, 200, {
       ok: true,
-      environment: process.env.NODE_ENV || 'development',
-      server: 'neutral-platform',
-      runtime: {
-        platform: process.platform,
-        arch: process.arch,
-        uptime: Math.round(process.uptime())
-      },
-      framework: MasterFramework.getDiagnostics()
+      logs: logService.getLogs(filters),
+      summary: logService.getSummary()
     });
     return true;
   }
@@ -609,6 +622,36 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     sendJson(res, 200, {
       ok: true,
       framework: MasterFramework.getDiagnostics()
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/admin/logs` || pathname === `${apiBase}/admin/logs/`) {
+    if (!requireAdminAccess(req, res)) {
+      return true;
+    }
+    const filters = {};
+    const params = new URLSearchParams(url.search || '');
+    if (params.has('level')) { filters.level = params.get('level'); }
+    if (params.has('source')) { filters.source = params.get('source'); }
+    if (params.has('search')) { filters.search = params.get('search'); }
+    if (params.has('since')) { filters.since = params.get('since'); }
+    if (params.has('limit')) { filters.limit = Number(params.get('limit')) || 100; }
+    sendJson(res, 200, {
+      ok: true,
+      logs: logService.getLogs(filters),
+      summary: logService.getSummary()
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/admin/system/health` || pathname === `${apiBase}/admin/system/health/`) {
+    if (!requireAdminAccess(req, res)) {
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      health: healthService.getAdminHealthStatus()
     });
     return true;
   }
