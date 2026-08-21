@@ -3277,3 +3277,171 @@ Diese Reihenfolge ist bewusst so gewählt, dass spätere Funktionalitäten auf s
 
 Die Gesamtarchitektur bleibt damit kompatibel mit der vorhandenen Vision, aber technisch realistischer für einen stabilen produktiven Betrieb als ein einfacher Frontend-/Admin-Mix ohne serveurits abgesicherte Grundlage.
 
+## Zusätzliche konkrete Implementierungs-Phasenfolge
+
+Die nachstehende Reihenfolge ist die operative, ausführbare Version der technischen Phasenplanung und dient als konkrete Projekt-Checkliste für die spätere Realisierung von `Neutral` als produktives Framework.
+
+### Phase 0 – Projekt-Guardrails und Architektur-Schutz
+
+Ziel:
+- Master-/Entwicklungsbasis klar definieren
+- Produktiv-Transfer in `cPanel-meinServer` sauber trennen
+- cPanel-/FTPS-Umgebung als Deployment-Kontext, nicht als Core-Abhängigkeit festlegen
+
+Ergebnisse:
+- Architekturregeln festgehalten
+- Provider-Abstraktion definiert
+- kein Produktivcode im Master-Repo ohne klare Trennung
+- keine Secrets, keine echten Zugangsdaten im Repository
+
+### Phase 1 – Server-Foundation
+
+Ziel:
+- stabilen Serverstart, Laufzeitkontext und Health-Endpunkte bauen
+
+Ergebnisse:
+- `server/bootstrap` und `server/runtime`
+- zentrale Konfiguration
+- Logger, Error-Handler, Health-Checks
+- admin shell und shell routing
+
+### Phase 2 – Persistenz und Datenmodell
+
+Ziel:
+- produktive Persistenz als technische Grundlage sichern
+
+Ergebnisse:
+- MySQL-Adapter und DB-Migrationskonzept
+- User-, Role-, Settings-, Session- und Log-Modelle
+- Storage-Namespaces
+- Produktiv- und Lokal-Umgebung sauber trennen
+
+### Phase 3 – Authentifizierung, Sessions und Rechte
+
+Ziel:
+- echte Server-Authentifizierung und Rechteprüfung ohne UI-Only-Checks
+
+Ergebnisse:
+- Password-Hashing
+- Login-/Logout-Flows
+- Session-Store
+- Role-/Permission-Engine
+- Zugriffskontrolle auf API- und Admin-Endpunkte
+
+### Phase 4 – API und Admin-Services
+
+Ziel:
+- zentrale Verwaltungs- und Betriebs-API aufbauen
+
+Ergebnisse:
+- `api/auth`, `api/users`, `api/roles`, `api/config`, `api/logs`, `api/system`
+- Admin-Übersicht
+- Dashboard, Rollenverwaltung, Nutzerverwaltung, Logs, Systemstatus
+- einheitliche Antwortformate und Fehlercodes
+
+### Phase 5 – Module und App-Isolation
+
+Ziel:
+- modularen und isolierten Runtime-Betrieb ohne Core-Kopplung
+
+Ergebnisse:
+- Module Registry
+- install/enable/disable lifecycle
+- Namespace-Isolation
+- App- und Tenant-/Modul-Kontext sauber trennen
+- Permissions und Entitlements pro Module verknüpfen
+
+### Phase 6 – Security Hardening und Audit
+
+Ziel:
+- Produktivreife durch echte Sicherheits- und Audit-Funktionen
+
+Ergebnisse:
+- CSRF-, Rate-Limit-, Input-Validation-, Secret-Handling
+- Audit-Logs und Admin-Aktivitäten
+- sicherer Secret-Management-Mechanismus
+- keine vertraulichen Daten in Logs oder Responses
+
+### Phase 7 – Updates und Entitlements
+
+Ziel:
+- Framework-Upgrade und Tariflogik zentral verwalten
+
+Ergebnisse:
+- Version-Check
+- Update-Provider-Interface
+- compatibility checks
+- Entitlement-Manager
+- Tarif- und Premium-Policy als zentrale Logik statt Module-Hardcode
+
+### Phase 8 – Backup/Restore und Storage-Policies
+
+Ziel:
+- Wiederherstellung und Betriebsfähigkeit sicherstellen
+
+Ergebnisse:
+- System-Backup und Benutzer-Backup getrennt
+- Restore-Flows und Restore-Validierung
+- Storage-Adapter für DB, Logs, Uploads und Backups
+- Berechtigungsgrenzen für private Backup-Volumes
+
+### Phase 9 – CMS-, GPS-, Store- und Fachmodule
+
+Ziel:
+- fachliche Erweiterungen nur als modulare Erweiterungen einbauen
+
+Ergebnisse:
+- klar definierte Fachmodule außerhalb des Core
+- historische Referenzmodule bleiben nur Referenz/Validierung
+- neue fachliche Module über Module-Interface, Permissions und Entitlements eingebunden
+
+### Phase 10 – Monitoring, Jobs, Cron und Wartung
+
+Ziel:
+- Betriebsstabilität und operatives Monitoring sicherstellen
+
+Ergebnisse:
+- Health-Metrics
+- Jobs und Queues
+- Cronjobs
+- Wartungsmodus
+- Alerts und Diagnose-Funktionen
+
+### Phase 11 – Deployment, Provider und externe Infrastruktur
+
+Ziel:
+- produktive Auslieferung sauber in cPanel-/Cloud-Umgebung überführen
+
+Ergebnisse:
+- Deployment-Subset in `cPanel-meinServer`
+- GitHub Actions + FTPS-Workflow
+- Provider-Adapter für cPanel, eigener Server, später Cloud-/Hoster-Provider
+- keine Laufzeit-FTP-Abhängigkeit
+
+### Phase 12 – Release-Reife und Abschluss
+
+Ziel:
+- stabile Produktivversion mit klar definierter Betriebsbasis
+
+Ergebnisse:
+- finale Release-Checks
+- Versionierung und Changelog
+- Sicherheits-Review
+- Backup-/Restore-Review
+- erste produktive Betriebskonfiguration mit externer DB und externer Secret-Config
+
+### Entscheidungslogik der Reihenfolge
+
+Die Reihenfolge ist bewusst von technischen Abhängigkeiten bestimmt:
+
+1. Server und Runtime vor Auth
+2. Persistenz vor API und Admin
+3. Auth und Rechte vor Zugriffsfunktionen
+4. Module vor fachlichen Erweiterungen
+5. Updates, Backup und Monitoring vor Release- und Betriebsreife
+6. Provider/Deployment erst nachdem Core und Betriebsarchitektur stabil sind
+
+Damit bleiben die Architektur und der spätere produktive Betrieb konsistent und vermeiden spätere Umbauten auf Basis unklarer technischer Annahmen.
+
+Diese konkrete Phasenfolge ergänzt die bereits bestehende Architekturplanung und bildet die praktische Lauf- und Umsetzungsordnung für die spätere Umsetzung von `Neutral` als produktiv nutzbare Framework-Architektur.
+
