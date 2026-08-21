@@ -1,6 +1,8 @@
 'use strict';
 
-const { test, describe, before } = require('node:test');
+const fs = require('node:fs');
+const path = require('node:path');
+const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const http = require('node:http');
 const ServerBootstrap = require('../server/bootstrap/server.js');
@@ -10,19 +12,34 @@ const ServerBootstrap = require('../server/bootstrap/server.js');
  * Tests all admin endpoints: users, roles, settings, audit
  */
 
-describe('Admin API Integration Tests', () => {
+describe('Admin API Integration Tests', { concurrency: false }, () => {
   let app;
   let port;
   let testUserId = null;
   let testRoleId = null;
 
-  // Helper to make JSON requests
-  const requestJson = (method, pathname, payload = null, role = 'admin') => new Promise((resolve, reject) => {
+  const cleanupConfigFiles = () => {
+    const configDir = path.resolve(__dirname, '../config');
+    if (!fs.existsSync(configDir)) {
+      return;
+    }
+
+    for (const filename of ['setup-state.json', 'admin-users.json', 'admin-roles.json', 'admin-settings.json', 'audit-log.json']) {
+      const filePath = path.join(configDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  };
+
+  const requestJson = (method, pathname, payload = null, role = 'admin', token = 'test-token') => new Promise((resolve, reject) => {
     const body = payload ? JSON.stringify(payload) : '';
     const headers = body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {};
     if (role) {
       headers['x-framework-role'] = role;
-      headers['x-admin-access-token'] = 'test-token';
+    }
+    if (token) {
+      headers['x-admin-access-token'] = token;
     }
 
     const req = http.request({
@@ -50,9 +67,17 @@ describe('Admin API Integration Tests', () => {
   });
 
   before(async () => {
+    cleanupConfigFiles();
     app = ServerBootstrap.createServer();
     await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
     port = app.address().port;
+  });
+
+  after(async () => {
+    cleanupConfigFiles();
+    await new Promise((resolve, reject) => {
+      app.close((error) => error ? reject(error) : resolve());
+    });
   });
 
   // ========== USER API TESTS ==========
@@ -281,29 +306,64 @@ describe('Admin API Integration Tests', () => {
   // ========== ERROR HANDLING TESTS ==========
 
   test('All admin endpoints require auth headers', async () => {
-    const result = await requestJson('GET', '/api/admin/users', null, null);
+    const result = await requestJson('GET', '/api/admin/users', null, null, null);
+    assert.equal(result.statusCode, 401);
+  });
+
+  test('x-framework-role alone does not authorize access', async () => {
+    const result = await requestJson('GET', '/api/admin/users', null, 'admin', null);
+    assert.equal(result.statusCode, 401);
+    assert.equal(result.body.code, 'AUTH_REQUIRED');
+  });
+
+  test('Invalid bearer tokens are rejected', async () => {
+    const result = await requestJson('GET', '/api/admin/settings', null, 'admin', 'bad-token');
+    assert.equal(result.statusCode, 401);
+  });
+
+  test('Authenticated viewer is forbidden on admin routes', async () => {
+    const result = await requestJson('POST', '/api/admin/settings', {
+      appName: 'Forbidden',
+      settings: {}
+    }, 'viewer', 'test-token');
     assert.equal(result.statusCode, 403);
   });
 
+  test('Setup and database status routes require auth', async () => {
+    const setupResult = await requestJson('GET', '/api/setup/status', null, null, null);
+    const databaseResult = await requestJson('GET', '/api/database/status', null, null, null);
+    assert.equal(setupResult.statusCode, 401);
+    assert.equal(databaseResult.statusCode, 401);
+  });
+
   test('Invalid JSON payload returns 400', async () => {
-    const req = http.request({
-      host: '127.0.0.1',
-      port,
-      path: '/api/admin/users',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-framework-role': 'admin',
-        'x-admin-access-token': 'test'
-      }
-    }, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        assert.ok([400, 500].includes(res.statusCode));
+    await new Promise((resolve, reject) => {
+      const req = http.request({
+        host: '127.0.0.1',
+        port,
+        path: '/api/admin/users',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-framework-role': 'admin',
+          'x-admin-access-token': 'test-token'
+        }
+      }, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          try {
+            assert.ok([400, 500].includes(res.statusCode));
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
       });
+
+      req.on('error', reject);
+      req.write('invalid json{');
+      req.end();
     });
-    req.write('invalid json{');
-    req.end();
   });
 });

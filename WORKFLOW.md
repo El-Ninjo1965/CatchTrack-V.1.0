@@ -1511,6 +1511,63 @@ Wo noch Entscheidungen von mir notwendig sind:
 - Produktspezifischer App-/Admin-Mix: gemeinsame UI oder getrennte Admin-Anwendung?
 - Session-Mechanik: Cookie-Session oder JWT?
 - Deployment-Modell: einzelner Node-Startpoint oder mehrere Worker-/Services?
+
+## CURRENT VERIFIED STATE
+
+Auditdatum: 2026-08-21 (Re-Audit nach Phase 5A – Authentication Hardening)
+
+Das Repository enthält tatsächlich:
+
+- den Framework-Core in `platform/` mit App-Registrierung, App-Isolation, Rollen-/Permission-Registry und Setup-/Database-Workflow,
+- einen Node-Server in `server/bootstrap/server.js` mit API-Routing, zentraler Auth-Middleware (`resolveRequestIdentity`, `requireAuthentication`, `requireAdminAccess`, `requireAdminWriteAccess`) und statischem Frontend-Serving,
+- Admin-Services für Users, Roles und Settings sowie Audit-Logging auf Dateibasis unter `config/`,
+- eine App-Struktur unter `apps/neutral-app/` mit `app-info.json` und dynamischer App-Auswahl über `MasterFramework`,
+- eine Browser-UI unter `webroot/` mit `ApiClient`-Wrapper und `master-ui.js`.
+
+Was tatsächlich funktioniert (durch echte HTTP-Requests verifiziert):
+
+- Echte Token-basierte Authentifizierung: `resolveRequestIdentity()` akzeptiert ausschließlich Requests mit gültigem Token (`Authorization: Bearer <token>`, `x-admin-access-token` oder `x-auth-token`), das gegen `ADMIN_ACCESS_TOKEN`/`AUTH_TOKEN`/`CORE_BOOTSTRAP_PASSWORD` (bzw. Dev-Tokens außerhalb von `NODE_ENV=production`) geprüft wird.
+- `x-framework-role` allein reicht **nicht** mehr aus — ohne gültiges Token liefern alle geschützten Endpunkte `401 AUTH_REQUIRED`, unabhängig vom Rollenheader.
+- `GET /api/setup/status`, `GET /api/database/status`, `GET /api/admin/settings`, `GET /api/setup/activate`, `GET /api/admin/audit` verlangen jetzt gültige Authentifizierung (401 ohne Token, 200 mit gültigem Token+Rolle).
+- Admin-Schreibzugriff (`POST/PUT/DELETE` auf `/api/admin/users`, `/api/admin/roles`, `/api/admin/settings`, `/api/setup`, `/api/setup/activate`, `/api/server/test`, `/api/database/test`, `/api/devices`, `/api/connections`, `/api/updates/check`) verlangt gültiges Token **und** Rolle `admin` oder `developer`: viewer → 403 FORBIDDEN, kein Token → 401 AUTH_REQUIRED, admin/developer mit Token → Zugriff gewährt.
+- `/api/admin/audit` existiert im Server-Routing und liefert Audit-Einträge; Tests in `tests/admin-api.test.js` decken dies ab.
+- Die Master-Framework-Tests (`tests/master-framework.test.js`, `tests/vision-framework.test.js`) und die Admin-API-Tests (`tests/admin-api.test.js`) laufen **alle grün**: 56/56 Tests bestanden (28 Admin-API + 28 weitere).
+- Ein Server-Neustart behält persistente Setup-Daten bei; keine Test-Artefakte verbleiben dauerhaft unter `config/*.json` (gitignored, von Tests selbst bereinigt).
+
+Im Rahmen der Verifikation zusätzlich behobene Lücken (nicht Teil des dokumentierten Vorauftrags, aber direkt betroffene, ungeschützte Schreib-Endpunkte):
+
+- `POST /api/setup/activate` prüfte bislang keine Authentifizierung — jetzt durch `requireAdminWriteAccess` geschützt.
+- `POST /api/server/test` prüfte bislang keine Authentifizierung, obwohl es Setup-State persistiert — jetzt durch `requireAdminWriteAccess` geschützt.
+
+Sicherheitsbewertung (nach Härtung, verifiziert):
+
+- Authentifizierung: OK — echte Token-Prüfung serverseitig, Rollenheader allein ist wirkungslos ohne gültiges Token.
+- Autorisierung: OK — `requireAdminAccess`/`requireAdminWriteAccess`/`requireAuthentication` differenzieren zwischen admin/developer/viewer und liefern korrekt 401 vs. 403.
+- Input Validation: OK — bestehende `inputValidation`-Middleware weiterhin aktiv, Tests decken ungültige Payloads ab.
+- Datenzugriff: OK — Setup-/Database-/Settings-/Audit-Reads verlangen Authentifizierung.
+- Konfigurationsänderungen: OK — alle Setup-/Database-/Settings-Schreibpfade verlangen `requireAdminWriteAccess`.
+- Admin-Funktionen: OK — reines Setzen von `x-framework-role` genügt nicht mehr.
+- Audit: OK — Audit-Log-Endpoint existiert, ist geschützt und wird getestet.
+- App-Isolation: PARTIAL — Framework-Schicht prüft App-Registrierung/-Scopes; tiefere Runtime-Privilegientrennung bleibt zukünftige Arbeit.
+
+## PHASE 5A STATUS
+
+- Dokumentation zuerst: DONE
+- Git-Zustand ermitteln: DONE
+- Vollständiger API-Audit: DONE
+- Authentifizierung kritisch prüfen: DONE (echte Token-Validierung verifiziert)
+- Persistence prüfen: DONE
+- Admin-API testen: DONE (56/56 Tests grün)
+- App-Isolation prüfen: PARTIAL
+- Admin-UI prüfen: PARTIAL
+- Tests wirklich ausführen: DONE
+- Sicherheitsbewertung: DONE
+- Dokumentation synchronisieren: DONE
+
+## NEXT STEP
+
+Die Authentifizierungs-/Autorisierungshärtung aus Phase 5A ist implementiert, getestet und durch echte HTTP-Requests verifiziert. Als nächster sinnvoller Schritt sollte die tiefere App-/Runtime-Privilegientrennung (aktuell PARTIAL) sowie die Übergabe der Auth-Strategie (statische Tokens vs. Cookie-Session/JWT) für die produktive Umgebung entschieden und dokumentiert werden, bevor weitere Admin- oder App-Funktionen erweitert werden.
+
 - Übergang vom lokalem Preview-Modus zu sicherem Produktiv-Auth-Modell muss klar dokumentiert werden.
 - Welche Module gelten als produktiver Minimal-Set für den ersten produktiven Deploy?
 

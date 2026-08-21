@@ -817,11 +817,14 @@ test('supports setup, database, and activation flow', async () => {
 
   const app = ServerBootstrap.createServer();
 
-  const requestJson = (port, method, pathname, payload = null, role = 'admin') => new Promise((resolve, reject) => {
+  const requestJson = (port, method, pathname, payload = null, role = 'admin', token = 'test-token') => new Promise((resolve, reject) => {
     const body = payload ? JSON.stringify(payload) : '';
     const headers = body ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } : {};
     if (role) {
       headers['x-framework-role'] = role;
+    }
+    if (token) {
+      headers['x-admin-access-token'] = token;
     }
     const req = http.request({
       host: '127.0.0.1',

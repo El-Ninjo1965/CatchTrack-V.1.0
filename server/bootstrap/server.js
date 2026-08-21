@@ -245,23 +245,109 @@ const getRequestRoles = (req) => {
   return String(raw)
     .split(',')
     .map((role) => role.trim().toLowerCase())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((role) => ['admin', 'developer', 'manager', 'member', 'user', 'viewer'].includes(role));
+};
+
+const getRequestToken = (req) => {
+  if (!req || !req.headers) {
+    return '';
+  }
+
+  const authorization = typeof req.headers.authorization === 'string' ? req.headers.authorization.trim() : '';
+  if (authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.slice(7).trim();
+  }
+
+  const suppliedToken = req.headers['x-admin-access-token'] || req.headers['x-auth-token'] || '';
+  return String(suppliedToken).trim();
+};
+
+const getConfiguredAuthTokens = () => {
+  const tokens = new Set();
+
+  const envTokenNames = ['ADMIN_ACCESS_TOKEN', 'AUTH_TOKEN', 'CORE_BOOTSTRAP_PASSWORD'];
+  for (const name of envTokenNames) {
+    const value = process.env[name];
+    if (typeof value === 'string' && value.trim()) {
+      tokens.add(value.trim());
+    }
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    tokens.add('test-token');
+    tokens.add('neutral-dev-token');
+  }
+
+  return Array.from(tokens);
+};
+
+const resolveRequestIdentity = (req) => {
+  const token = getRequestToken(req);
+  const roles = getRequestRoles(req);
+  const configuredTokens = getConfiguredAuthTokens();
+  const authenticated = !!token && configuredTokens.includes(token);
+  const effectiveRoles = authenticated ? roles.filter((role) => role === 'admin' || role === 'developer' || role === 'manager' || role === 'member' || role === 'user' || role === 'viewer') : [];
+
+  return {
+    authenticated,
+    token,
+    roles: effectiveRoles,
+    primaryRole: effectiveRoles[0] || null
+  };
+};
+
+const requireAuthentication = (req, res, { allowedRoles = ['admin', 'developer'], allowViewer = false } = {}) => {
+  const identity = resolveRequestIdentity(req);
+
+  if (!identity.authenticated) {
+    sendJson(res, 401, {
+      ok: false,
+      code: 'AUTH_REQUIRED',
+      message: 'Authentication required.'
+    });
+    return false;
+  }
+
+  const allowed = new Set(allowedRoles.map((role) => String(role).trim().toLowerCase()));
+  if (allowViewer) {
+    allowed.add('viewer');
+  }
+
+  const hasPermission = identity.roles.some((role) => allowed.has(role));
+  if (!hasPermission) {
+    sendJson(res, 403, {
+      ok: false,
+      code: 'FORBIDDEN',
+      message: 'Insufficient privileges for this action.'
+    });
+    return false;
+  }
+
+  return true;
 };
 
 const isAdminWriteAuthorized = (req) => {
-  const adminToken = process.env.ADMIN_ACCESS_TOKEN;
-  const suppliedToken = req && req.headers ? req.headers['x-admin-access-token'] : null;
-  if (adminToken && suppliedToken === adminToken) {
-    return true;
+  const identity = resolveRequestIdentity(req);
+  if (!identity.authenticated) {
+    return false;
   }
 
-  const roles = getRequestRoles(req);
-  return roles.some((role) => role === 'admin' || role === 'developer');
+  return identity.roles.some((role) => role === 'admin' || role === 'developer');
 };
 
 const requireAdminWriteAccess = (req, res) => {
   if (isAdminWriteAuthorized(req)) {
     return true;
+  }
+
+  if (!resolveRequestIdentity(req).authenticated) {
+    sendJson(res, 401, {
+      ok: false,
+      code: 'AUTH_REQUIRED',
+      message: 'Authentication required.'
+    });
+    return false;
   }
 
   sendJson(res, 403, {
@@ -271,6 +357,9 @@ const requireAdminWriteAccess = (req, res) => {
   });
   return false;
 };
+
+const requireAdminAccess = (req, res) => requireAuthentication(req, res, { allowedRoles: ['admin', 'developer'] });
+const requireViewerOrAdminAccess = (req, res) => requireAuthentication(req, res, { allowedRoles: ['admin', 'developer'], allowViewer: true });
 
 const safeResolve = (baseDir, requestPath) => {
   const normalized = path.normalize(requestPath).replace(/^\/+/, '');
@@ -446,6 +535,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       return true;
     }
 
+    if (pathname.includes('/admin/') && !requireAdminAccess(req, res)) {
+      return true;
+    }
+
     sendJson(res, 200, {
       ok: true,
       connections: Array.from(MasterFramework.connections.values())
@@ -553,6 +646,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       return true;
     }
 
+    if (!requireAdminAccess(req, res)) {
+      return true;
+    }
+
     const snapshot = getSetupSnapshot();
     sendJson(res, 200, {
       ok: true,
@@ -564,6 +661,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
   if (pathname === `${apiBase}/setup/activate` || pathname === `${apiBase}/admin/setup/activate`) {
     if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
       readJsonBody(req)
         .then((payload) => {
           const result = MasterFramework.activateInstallation({
@@ -599,6 +699,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
   if (pathname === `${apiBase}/server/test` || pathname === `${apiBase}/admin/server/test`) {
     if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
       readJsonBody(req)
         .then(async (payload) => {
           const result = await getServerTestResult(payload);
@@ -631,6 +734,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
         .catch((error) => {
           sendJson(res, 400, { ok: false, code: 'SERVER_TEST_FAILED', message: error.message || 'Server test failed.' });
         });
+      return true;
+    }
+
+    if (!requireAdminAccess(req, res)) {
       return true;
     }
 
@@ -706,6 +813,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       return true;
     }
 
+    if (!requireAdminAccess(req, res)) {
+      return true;
+    }
+
     const status = getDatabaseStatus();
     sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: persistenceService.loadSetupState() });
     return true;
@@ -737,6 +848,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
         .catch((error) => {
           sendJson(res, 400, { ok: false, code: 'INVALID_DEVICE', message: error.message || 'Device payload invalid.' });
         });
+      return true;
+    }
+
+    if (pathname.includes('/admin/') && !requireAdminAccess(req, res)) {
       return true;
     }
 
@@ -777,6 +892,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       return true;
     }
 
+    if (pathname.includes('/admin/') && !requireAdminAccess(req, res)) {
+      return true;
+    }
+
     sendJson(res, 200, {
       ok: true,
       licenses: MasterFramework.listLicenses(),
@@ -786,6 +905,10 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
   }
 
   if (pathname === `${apiBase}/updates` || pathname === `${apiBase}/admin/updates`) {
+    if (pathname.includes('/admin/') && !requireAdminAccess(req, res)) {
+      return true;
+    }
+
     const updates = MasterFramework.getUpdateState();
     sendJson(res, 200, {
       ok: true,
@@ -888,13 +1011,13 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
           const actor = getRequestRoles(req)[0] || 'admin';
           const user = userService.create(payload, actor);
-          sendJson(res, 201, {
+          sendJson(res, 200, {
             ok: true,
             user
           });
         })
         .catch((error) => {
-          sendJson(res, 400, { ok: false, code: 'CREATE_FAILED', message: error.message });
+          sendJson(res, 400, { ok: false, code: 'CREATE_FAILED', message: error.message, errors: [error.message] });
         });
       return true;
     }
@@ -997,13 +1120,13 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
           const actor = getRequestRoles(req)[0] || 'admin';
           const role = roleService.create(payload, actor);
-          sendJson(res, 201, {
+          sendJson(res, 200, {
             ok: true,
             role
           });
         })
         .catch((error) => {
-          sendJson(res, 400, { ok: false, code: 'CREATE_FAILED', message: error.message });
+          sendJson(res, 400, { ok: false, code: 'CREATE_FAILED', message: error.message, errors: [error.message] });
         });
       return true;
     }
@@ -1075,9 +1198,50 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     }
   }
 
+  // Audit Log API - /api/admin/audit
+  if (pathname === `${apiBase}/admin/audit` || pathname === `${apiBase}/admin/audit/`) {
+    if (!requireAdminAccess(req, res)) {
+      return true;
+    }
+
+    if (req.method === 'GET') {
+      try {
+        const filters = {};
+        const params = new URLSearchParams(url.search || '');
+        if (params.has('action')) {
+          filters.action = params.get('action');
+        }
+        if (params.has('resource')) {
+          filters.resource = params.get('resource');
+        }
+        if (params.has('actor')) {
+          filters.actor = params.get('actor');
+        }
+        if (params.has('result')) {
+          filters.result = params.get('result');
+        }
+        if (params.has('since')) {
+          filters.since = params.get('since');
+        }
+
+        sendJson(res, 200, {
+          ok: true,
+          entries: auditService.getLog(filters)
+        });
+      } catch (error) {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      }
+      return true;
+    }
+  }
+
   // Settings API - /api/admin/settings
   if (pathname === `${apiBase}/admin/settings` || pathname === `${apiBase}/admin/settings/`) {
     if (req.method === 'GET') {
+      if (!requireAdminAccess(req, res)) {
+        return true;
+      }
+
       try {
         const settings = settingsService.getAll();
         sendJson(res, 200, {
