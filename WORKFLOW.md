@@ -3427,3 +3427,619 @@ Damit bleiben die Architektur und der spätere produktive Betrieb konsistent und
 
 Diese konkrete Phasenfolge ergänzt die bereits bestehende Architekturplanung und bildet die praktische Lauf- und Umsetzungsordnung für die spätere Umsetzung von `Neutral` als produktiv nutzbare Framework-Architektur.
 
+---
+
+## PHASE 5 – ADMIN-CMS-Architekturanalyse und Empfehlung
+
+### 1. Ausgangslage und aktuelle Codebasis
+
+#### 1.1 Bereits vorhandene Komponenten
+
+**Core-Framework (produktiv vorhanden):**
+- `platform/core.js`: Basis-Loader und Initialisierung
+- `platform/core-auth.js`: Authentifizierung mit lokalen Sessions
+- `platform/core-access.js`: Zugriffskontrolle (Access Control)
+- `platform/core-audit.js`: Audit-Logging
+- `platform/core-admin.js`: Admin-Modul mit Settings-Schema
+- `platform/core-storage.js`: Persistente Speicherverwaltung
+- `platform/core-user.js`: Benutzerverwaltung
+- `platform/module-manager.js`: Modulverwaltung
+- `platform/module-registry.js`: Modulregistrierung
+- `platform/security.js`: Sicherheitsrichtlinien und Validierung
+- `platform/service-manager.js`: Service-Verwaltung
+
+**Admin-UI (produktiv vorhanden):**
+- `webroot/admin.html`: Admin-Shell mit Auth-Panel und Sidebar
+- `webroot/master-ui.js`: Admin-UI-Logik mit bereits definierten Menu-Items:
+  - admin:dashboard (Framework Dashboard)
+  - admin:apps (App-Verwaltung)
+  - admin:modules (Modulverwaltung)
+  - admin:data (Datenverwaltung)
+  - admin:templates (Templates)
+  - admin:users (Benutzerverwaltung)
+  - admin:roles (Rollen)
+  - admin:permissions (Berechtigungen)
+  - admin:connections (Server-/Provider-Verbindungen)
+  - admin:server (Server-Konfiguration)
+  - admin:database (Datenbank-Konfiguration)
+  - admin:settings (Framework-Einstellungen)
+  - admin:diagnostics (Diagnose)
+  - admin:audit (Audit-Logs)
+
+**Server-Infrastruktur (produktiv vorhanden):**
+- `server/server.js`: Express-Server
+- `server/api/health.js`: Health-Check-Endpoint
+- `server/services/health-service.js`: Gesundheitsstatus-Service
+- `server/bootstrap/server.js`: Server-Bootstrapping
+- `server/config/index.js`: Konfigurationsverwaltung
+- `server/middleware/notFound.js`: 404-Middleware
+
+**Test-Suite:**
+- 27 Tests (alle bestanden)
+- GPS-Modul mit 3 eigenständigen Tests
+- Authentifizierung, Rollenverwaltung, UI-Tests vorhanden
+
+#### 1.2 Analysierte Lücken und Empfehlungen
+
+**Aktuell NICHT produktiv implementiert, aber architektonisch vorbereitet:**
+
+1. **Database-Manager**: Vorhanden (`platform/database-manager.js`), aber noch nicht mit MySQL/produktiver DB verbunden
+2. **Config-Manager**: Vorhanden (`platform/config-manager.js`), Settings-Schema im Admin definiert, aber nicht alle Settings wirklich persistent
+3. **Update-System**: Framework erwähnt, aber nicht implementiert
+4. **Backup-System**: Framework erwähnt, aber nicht implementiert
+5. **Provider-Adapter**: Framework erwähnt (cPanel), aber noch nicht implementiert
+6. **Monitoring/Health**: Basis-Health-Endpoint vorhanden, erweiterte Metrics fehlen
+7. **Event-System**: `core-event-bus.js` und `core-event-ring.js` vorhanden, aber minimal genutzt
+8. **Lizenzen/Entitlements**: Nicht implementiert
+9. **Marketplace/Extensions**: Nicht implementiert
+
+### 2. Admin-CMS Funktionsübersicht
+
+#### 2.1 Bereits vorhandene Funktionen
+
+| Bereich | Status | Detailniveau |
+|---------|--------|--------------|
+| Dashboard | ✅ Basis | System-Übersicht, Module, Admin-Info |
+| Authentifizierung | ✅ Funktional | Browser-Storage (Entwicklung), lokale Sessions |
+| Benutzerverwaltung | ✅ Basis | User-CRUD, Roles zuordnen |
+| Rollen | ✅ Basis | admin, developer, viewer möglich |
+| Berechtigungen | ⚠️ Basis | ACL-System vorhanden, aber minimal konfigurierbar |
+| Module | ✅ Basis | Modul-List, Enable/Disable, GPS als Referenz |
+| Konfiguration | ✅ Basis | App-Settings, Framework-Settings (app, api, modules, security, ui, features) |
+| Einstellungen | ✅ Basis | Framework-Config UI |
+| Audit | ✅ Minimal | Event-Log-Struktur vorhanden |
+| Diagnostics | ✅ Minimal | Health-Status abrufbar |
+
+#### 2.2 Fehlende oder unvollständige Funktionen
+
+| Bereich | Status | Priorität | Grund |
+|---------|--------|-----------|-------|
+| Benutzer-Passwort-Reset | ❌ Fehlt | Hoch | Produktion notwendig |
+| Zwei-Faktor-Authentifizierung | ❌ Fehlt | Mittel | Enterprise-Sicherheit |
+| API-Token/Schlüssel | ❌ Fehlt | Hoch | Für externe Integrationen |
+| Server/Provider-Konfiguration | ⚠️ Unvollständig | Hoch | cPanel, SSH, FTPS noch nicht abstrahiert |
+| Datenbank-Verbindung | ⚠️ Unvollständig | Hoch | MySQL muss konfigurierbar sein |
+| Backup-Management | ❌ Fehlt | Hoch | Kritisch für Produktion |
+| Restore-Funktion | ❌ Fehlt | Hoch | Kritisch für Produktion |
+| Update-System | ❌ Fehlt | Hoch | Für Version-Management |
+| Monitoring-Dashboard | ⚠️ Basis | Mittel | CPU, Memory, DB-Status |
+| Log-Verwaltung | ⚠️ Minimal | Mittel | Nur Event-Log, kein Level-Filter |
+| Fehlerdiagnose | ⚠️ Minimal | Mittel | Fehler-Log vorhanden, aber begrenzt |
+| Lizenzen/Entitlements | ❌ Fehlt | Niedrig | Zukünftig, nicht für MVP |
+| Marketplace | ❌ Fehlt | Niedrig | Zukünftig, nicht für MVP |
+| Feature-Flags | ✅ Schema | Mittel | Schema vorhanden, UI-Verwaltung fehlt |
+| Wartungsmodus | ✅ Schema | Mittel | Feature-Flag vorhanden, UI-Integration fehlt |
+| Session-Management | ⚠️ Basis | Mittel | Sessions vorhanden, Admin-UI fehlt |
+| Deployment-Status | ❌ Fehlt | Mittel | cPanel-Sync-Status, Deployment-History |
+| Systembenachrichtigungen | ❌ Fehlt | Niedrig | Alert-System nicht vorhanden |
+| Konfigurationshistorie | ❌ Fehlt | Niedrig | Audit ist vorhanden, aber kein Change-History |
+
+### 3. Empfohlene Admin-Menüstruktur (zukünftig)
+
+Die bestehende Menüstruktur ist bereits sinnvoll aufgebaut. Empfehlung: **Bestehende Struktur beibehalten, aber gezielt ausbauen:**
+
+```
+📊 DASHBOARD
+├─ System-Übersicht
+├─ Active Modules
+├─ Security Status
+├─ Database Status
+├─ Last Backups
+└─ System Notifications
+
+👥 USERS & SECURITY
+├─ User Management
+│  ├─ Add/Edit/Delete User
+│  ├─ Password Reset
+│  └─ API Keys
+├─ Roles & Permissions
+│  ├─ Role Definition
+│  ├─ Permission Matrix
+│  └─ Role Assignment
+├─ Session Management
+│  ├─ Active Sessions
+│  ├─ Session Timeout Config
+│  └─ Login History
+└─ Two-Factor Authentication (zukünftig)
+
+⚙️ SYSTEM CONFIGURATION
+├─ Application Settings
+│  ├─ App Name, Version, Debug
+│  └─ Language, Theme
+├─ API Configuration
+│  ├─ Base URL
+│  ├─ Timeout, Retries
+│  └─ CORS Settings
+├─ Security Settings
+│  ├─ Session Timeout
+│  ├─ CSRF Protection
+│  └─ Password Policy
+└─ Feature Flags
+   ├─ Beta Features
+   ├─ Maintenance Mode
+   └─ Advanced Logging
+
+📦 MODULES
+├─ Module Registry
+│  ├─ Available Modules
+│  ├─ Installed Modules
+│  └─ Module Status
+├─ Module Configuration
+│  ├─ Enable/Disable
+│  ├─ Module Settings
+│  └─ Module Dependencies
+└─ GPS Module (Reference)
+   ├─ GPS Status
+   └─ GPS Data Endpoints
+
+🔗 SERVER & INFRASTRUCTURE
+├─ Database Configuration
+│  ├─ Connection Settings
+│  ├─ Test Connection
+│  ├─ Database Status
+│  └─ Performance Metrics
+├─ Provider/Server Connection
+│  ├─ cPanel Configuration
+│  │  ├─ cPanel URL
+│  │  ├─ API Token
+│  │  └─ FTPS Credentials
+│  ├─ SSH Keys (zukünftig)
+│  └─ Provider Adapter (zukünftig)
+└─ Server Status
+   ├─ API Health
+   ├─ Framework Connections
+   └─ Uptime
+
+💾 BACKUP & RECOVERY
+├─ Backup Configuration
+│  ├─ Schedule Settings
+│  ├─ Retention Policy
+│  └─ Backup Destinations
+├─ Backup History
+│  ├─ List All Backups
+│  ├─ Backup Size, Date
+│  └─ Backup Status
+└─ Recovery
+   ├─ List Restore Points
+   ├─ Restore from Backup
+   └─ Restore Progress
+
+📜 LOGS & AUDIT
+├─ Audit Log
+│  ├─ User Actions
+│  ├─ System Changes
+│  └─ Filter, Export
+├─ Error Logs
+│  ├─ Application Errors
+│  ├─ API Errors
+│  └─ Filter by Date/Level
+├─ System Logs
+│  ├─ Framework Events
+│  ├─ Module Events
+│  └─ Performance Logs
+└─ Login History
+   ├─ User Logins
+   ├─ Failed Attempts
+   └─ Session Timeline
+
+📈 MONITORING & HEALTH
+├─ System Health
+│  ├─ System Status
+│  ├─ Server Status
+│  ├─ Database Status
+│  └─ Alerts
+├─ Performance Metrics
+│  ├─ CPU, Memory, Disk
+│  ├─ API Response Times
+│  ├─ Database Queries
+│  └─ Active Connections
+└─ Health History
+   ├─ Uptime Chart
+   ├─ Performance Trend
+   └─ Alert Timeline
+
+🚀 UPDATES & DEPLOYMENT
+├─ Update Management
+│  ├─ Check for Updates
+│  ├─ Available Updates
+│  ├─ Update History
+│  └─ Automatic Update Policy
+├─ Deployment Status
+│  ├─ Deployment History
+│  ├─ Current Version
+│  ├─ Deployment Progress
+│  └─ Rollback Options
+└─ Release Notes
+   ├─ Framework Changelog
+   ├─ Module Updates
+   └─ Breaking Changes
+
+🛠️ DIAGNOSTICS & MAINTENANCE
+├─ Diagnostics
+│  ├─ System Information
+│  ├─ Configuration Dump
+│  ├─ Module Manifest
+│  └─ API Endpoints
+├─ Maintenance Mode
+│  ├─ Enable/Disable
+│  ├─ Maintenance Message
+│  └─ Exempt IPs
+├─ System Cache
+│  ├─ Clear Cache
+│  ├─ Cache Stats
+│  └─ Cache Configuration
+└─ Debug Info
+   ├─ Runtime State
+   ├─ Event Log
+   └─ Performance Profiling
+
+📊 TEMPLATES & DATA
+├─ Data Models
+│  ├─ Available Models
+│  ├─ Model Schema
+│  └─ Sample Data
+└─ Templates
+   ├─ App Templates
+   ├─ Module Templates
+   └─ Configuration Templates
+
+(Zukünftig, MVP nicht notwendig:)
+📱 ENTITLEMENTS & MARKETPLACE
+├─ License/Entitlement Management
+├─ Feature Tier Configuration
+├─ Addon Marketplace
+└─ Extension Management
+```
+
+### 4. Nächste Implementierungsphase – Konkrete Empfehlung
+
+#### 4.1 Phase 5A: Core Admin Stability & essentials (Dauer: ~2-3 Wochen)
+
+**Ziel:** Admin-CMS in einen stabilen, produktionsnahen Zustand bringen.
+
+**Zu implementieren (in dieser Reihenfolge):**
+
+1. **Database-Manager finalisieren & MySQL-Konfiguration**
+   - `platform/database-manager.js` mit vollständiger MySQL-Unterstützung
+   - Admin-UI: Database Configuration → Connection Test
+   - Config speichern in persistent storage
+   - **Notwendige Admin-Input**: MySQL-Host, Port, Username, Password, Database-Name
+
+2. **Config-Manager ausbauen**
+   - Alle Settings aus `core-admin.js` Schema wirklich persistent speichern
+   - Settings in Database oder Datei persistieren
+   - Admin-UI: Settings → Save & Load funktional
+
+3. **Server/Provider-Abstraktions-Grundlagen**
+   - `platform/provider-adapter.js` Basis-Klasse für Provider (Interface definieren)
+   - cPanel-Adapter: `platform/providers/cpanel-adapter.js` (noch nicht voll implementiert)
+   - Admin-UI: Server & Infrastructure → Provider Connection Konfiguration
+   - **Notwendige Admin-Input**: cPanel URL, API Key, FTPS-Zugang
+
+4. **Benutzer-Authentifizierung härten**
+   - Passwort-Reset-Flow implementieren
+   - Password-Hashing: bcrypt in Authentifizierung integrieren
+   - Session-Timeout Server-seitig durchsetzen
+   - Admin-UI: User Management → Password Reset, Session Management
+
+5. **Health & Monitoring erweitern**
+   - `/api/health` erweitern: Database, API, Modules Status
+   - `platform/health-service.js` mit Metrics
+   - Admin-UI: Monitoring → System Health (live Status)
+
+6. **Backup-System Grundlagen**
+   - `platform/backup-manager.js` Basis-Interface
+   - File-based Backup für Development
+   - MySQL-Dump-Support für Production
+   - Admin-UI: Backup & Recovery → Backup Now, List Backups (noch keine Restore)
+
+**Tests:**
+- DB-Connection-Test (./tests/database.test.js)
+- Provider-Adapter-Test (./tests/provider.test.js)
+- Backup-Funktion-Test (./tests/backup.test.js)
+- Security-Tests (Passwort-Hashing, Session-Timeout)
+
+**Abhängigkeiten:**
+- Keine (alle Dependencies bereits vorhanden)
+
+**Was NICHT machen:**
+- Keine Lizenzen/Entitlements
+- Keine komplexen Monitoring-Dashboards (nur Basis)
+- Keine externen Marketplace-Integrationen
+- Keine komplexe Update-Logik (nur Infra)
+
+#### 4.2 Phase 5B: Admin-UI Workspaces & Rendering (Dauer: ~1-2 Wochen)
+
+**Ziel:** Admin-UI grundlegend strukturieren, damit zukünftige Menu-Items einfach hinzufügbar sind.
+
+**Zu implementieren:**
+
+1. **Admin-View-Routing-System**
+   - `webroot/admin-routing.js`: Abstraktion für View-Routing
+   - ViewHandler-Pattern für jedes Menu-Item
+   - Lazy-Loading von View-Komponenten
+
+2. **Workspace-Template-System**
+   - Generische Workspace-Struktur (Header, Content, Sidebar, Actions)
+   - FormBuilder für Settings-Formulare
+   - DataTable-Component für Listen (Users, Modules, Logs)
+
+3. **Implementierung der High-Priority Views:**
+   - Dashboard (erweitern)
+   - User Management (CRUD, Password Reset)
+   - Roles & Permissions
+   - Database Configuration
+   - Server Configuration (Provider)
+   - Backup Management
+   - System Health
+
+4. **Error-Handling & Notifications**
+   - Toast/Alert-System im Admin
+   - Error-Boundary für Views
+   - User-Feedback bei Operationen
+
+**Tests:**
+- View-Routing-Tests
+- FormBuilder-Tests
+- Component-Tests (DataTable, Workspace)
+
+**Abhängigkeiten:**
+- Phase 5A abgeschlossen
+
+#### 4.3 Phase 5C: Produktions-Readiness (Dauer: ~1 Woche)
+
+**Ziel:** System für erste produktive Nutzung vorbereiten.
+
+**Zu implementieren:**
+
+1. **Sicherheits-Review & Hardening**
+   - CSRF-Token für alle Admin-Operationen
+   - Input-Validation & Sanitization
+   - Rate-Limiting für Login
+   - Passwort-Policy erzwingen
+
+2. **Backup & Recovery finalisieren**
+   - Restore-Funktion implementieren
+   - Restore-Validierung
+   - Backup-Scheduling
+
+3. **Logging & Audit finalisieren**
+   - Alle Admin-Operationen auditieren
+   - Passwort-Hashing-Audit
+   - Backup-Success-Audit
+
+4. **Deployment-Vorbereitung**
+   - cPanel-Konfiguration dokumentieren
+   - MySQL-Setup-Dokumentation
+   - Admin-Setup-Checklist
+
+**Tests:**
+- Security-Tests (CSRF, Input-Validation)
+- Backup & Restore End-to-End
+- Production-Configuration-Tests
+
+### 5. Offene Punkte für Admin-Input
+
+Die folgenden Informationen müssen vom Administrator **SPÄTER** bereitgestellt werden (nicht jetzt):
+
+#### A. **Datenbank-Konfiguration (für Phase 5A)**
+- MySQL-Host/IP (z. B. `mysql.example.com` oder `localhost`)
+- MySQL-Port (Standard: `3306`)
+- MySQL-Benutzername für Neutral-App
+- MySQL-Passwort (gehashed in `config.json`, nicht im Code)
+- MySQL-Datenbank-Name (z. B. `neutral_app_prod`)
+- Datenbankuser-Berechtigungen (DDL, DML oder nur DML?)
+
+#### B. **cPanel-Konfiguration (für Phase 5A)**
+- cPanel-Account-URL (z. B. `https://cPanel.meinserver.de:2083`)
+- cPanel-Benutzername (Root oder Reseller?)
+- cPanel-API-Token oder Remote-Access-Key
+- FTPS-Hostname (für `cPanel-meinServer` Deployment)
+- FTPS-Port (Standard: `990`)
+- FTPS-Benutzername (usually same as cPanel user)
+- FTPS-Passwort oder SSH-Public-Key
+
+#### C. **Sicherheits-Policy (für Phase 5C)**
+- Gewünschte Session-Timeout-Dauer (z. B. 1 Stunde, 8 Stunden?)
+- Passwort-Mindestlänge?
+- Passwort-Komplexitätsanforderungen (Großbuchstaben, Zahlen, Sonderzeichen)?
+- Maximale fehlgeschlagene Login-Versuche vor Lockout?
+- MFA erforderlich? (Nein für MVP, optional für zukünftig)
+
+#### D. **Backup-Policy (für Phase 5C)**
+- Backup-Frequenz (täglich, stündlich, on-demand)?
+- Backup-Aufbewahrung (wie viele Backups speichern?)?
+- Backup-Speicherort (lokal auf Server, externe Cloud, separate Disk)?
+- Automatische oder manuelle Backups?
+- Backup-Verschlüsselung erforderlich?
+
+### 6. Bewusst NICHT in Phase 5 implementiert
+
+Die folgenden Features sind **sinnvoll, aber nicht für MVP notwendig:**
+
+| Feature | Grund | Phase |
+|---------|-------|-------|
+| Two-Factor Authentication | Nice-to-have, erhöht Komplexität | Phase 6+ |
+| API-Token-Management | Benötigt externe API-Integration | Phase 7+ |
+| Lizenzen/Entitlements | App-spezifisches Geschäftsmodell | Phase 8+ |
+| Marketplace/Extensions | Zu früh für generische Architektur | Phase 9+ |
+| Advanced Monitoring (Grafana) | Optional, kann mit einfachen Metrics starten | Phase 10+ |
+| SSH-Schlüssel-Management | Nur wenn SSH-Zugang nötig | Phase 11+ |
+| Feature-Flag Admin-UI | Schema vorhanden, Admin-UI optional | Später |
+| Systembenachrichtigungen | Nett zu haben, nicht kritisch | Phase 8+ |
+| Konfigurationshistorie | Change-Tracking nice-to-have | Phase 9+ |
+| Load-Balancing/HA | Nur bei Scale-Out notwendig | Phase 11+ |
+
+### 7. Notwendige Architektur-Ergänzungen
+
+Damit Phase 5 technisch sauber implementiert werden kann:
+
+**7.1 Provider-Adapter-Pattern**
+
+```javascript
+// platform/providers/provider-base.js
+class ProviderAdapter {
+  async connect() { /* override */ }
+  async getStatus() { /* override */ }
+  async deploy(bundle) { /* override */ }
+  async getBackupLocation() { /* override */ }
+  // ...
+}
+
+// platform/providers/cpanel-adapter.js
+class cPanelAdapter extends ProviderAdapter {
+  // cPanel-spezifische Implementierung
+}
+```
+
+**7.2 Database-Manager erweitern**
+
+```javascript
+// platform/database-manager.js
+class DatabaseManager {
+  constructor(config) {
+    this.config = config; // { host, port, user, password, database }
+    this.connection = null;
+  }
+  
+  async connect() { /* MySQL-Connection */ }
+  async execute(sql) { /* Query ausführen */ }
+  async backup() { /* SQL-Dump */ }
+  async restore(dumpFile) { /* From dump */ }
+}
+```
+
+**7.3 Backup-Manager**
+
+```javascript
+// platform/backup-manager.js
+class BackupManager {
+  async createBackup(type) { // 'full', 'system', 'data' }
+  async listBackups() {
+  async getBackupSize(backupId) {
+  async restoreBackup(backupId) {
+  async deleteBackup(backupId) {
+}
+```
+
+**7.4 Config Persistence Layer**
+
+```javascript
+// platform/core-config.js (erweitern)
+class ConfigManager {
+  async loadConfig(key) {
+  async saveConfig(key, value) { // In DB oder persistent Storage
+  async getAllConfig() {
+  async resetConfig() {
+}
+```
+
+### 8. Tests für Phase 5
+
+Neue Test-Dateien notwendig:
+
+```
+./tests/admin/database-config.test.js
+./tests/admin/provider-adapter.test.js
+./tests/admin/backup-system.test.js
+./tests/admin/user-security.test.js
+./tests/admin/health-check.test.js
+./tests/admin/config-persistence.test.js
+./tests/admin/admin-ui-routing.test.js
+```
+
+**Gesamt-Testabdeckung Ziel für Phase 5:** 35+ neue Tests, 60+ Tests gesamt
+
+### 9. Implementierungsreihenfolge
+
+**Strikte Reihenfolge zu beachten:**
+
+1. Database-Manager + MySQL-Konfiguration (Basis)
+2. Provider-Adapter-Basis (Infrastruktur)
+3. Config-Persistence (Abhängig von 1)
+4. User-Authentifizierung härten (Unabhängig, aber kritisch)
+5. Health-Monitoring (Abhängig von 1)
+6. Backup-System (Abhängig von 1)
+7. Admin-UI Workspaces (Abhängig von 2-6)
+8. Security-Hardening (Abhängig von 7)
+
+**Parallelisierbar (unabhängig):**
+- User-Auth-Hardening (4) kann parallel zu Database-Setup (1) laufen
+- Health-Monitoring (5) kann parallel zu Provider-Adapter (2) laufen
+
+### 10. Empfohlene Commit-/Meilenstein-Strategie
+
+```
+Phase 5A-Meilenstein-1: Database & Config Manager
+  Commit: "phase5a: database manager and mysql configuration"
+
+Phase 5A-Meilenstein-2: Provider Adapter Foundation
+  Commit: "phase5a: provider adapter pattern and cpanel base"
+
+Phase 5A-Meilenstein-3: User Auth Security
+  Commit: "phase5a: password hashing and session security"
+
+Phase 5A-Meilenstein-4: Health & Monitoring
+  Commit: "phase5a: extended health monitoring"
+
+Phase 5A-Meilenstein-5: Backup System
+  Commit: "phase5a: backup manager and restore foundation"
+
+Phase 5B-Meilenstein-1: Admin UI Router
+  Commit: "phase5b: admin view routing and workspace templates"
+
+Phase 5B-Meilenstein-2: Admin Views Implementation
+  Commit: "phase5b: core admin views (users, db, server, backup)"
+
+Phase 5C-Meilenstein-1: Security Hardening
+  Commit: "phase5c: csrf protection and input validation"
+
+Phase 5C-Meilenstein-2: Production Readiness
+  Commit: "phase5c: production configuration and documentation"
+
+FINAL: Phase 5 Release
+  Tag: "phase-5-ready" (signiert mit Co-authored-by)
+```
+
+### 11. Zusammenfassung & Rückblick auf Anforderungen
+
+**Eingangsanforderungen (erfüllt?):**
+
+- ✅ Neutral bleibt fachlich neutral: Ja, keine Fachanwendung wird wieder eingeführt
+- ✅ GPS bleibt unabhängig: Ja, keine Abhängigkeiten zu Admin-System
+- ✅ MySQL als produktive DB: Ja, in Phase 5A geplant
+- ✅ Provider-Anbindung abstrahiert: Ja, Adapter-Pattern in Phase 5A
+- ✅ cPanel/FTPS zunächst: Ja, erstes Adapter-Target
+- ✅ Spätere Provider ohne Umbau: Ja, Adapter-Pattern ermöglicht das
+- ✅ Admin ist nur für Admin: Ja, ACL in Phase 5C
+- ✅ Benutzer haben primären Zugang: Ja, getrennte User-App (index.html)
+- ✅ Update/Backup architektonisch: Ja, in Phase 5A & 5C geplant
+
+**Keine unnötige Komplexität**: Lizenzen, Marketplace, MFA, externe Monitoring sind explizit ausgeschlossen
+
+**Schlanke, wartbare Architektur**: Provider-Adapter, Config-Manager, Backup-Manager sind wiederverwendbar und unabhängig
+
+---
+
+Damit ist die Architekturanalyse für Phase 5 abgeschlossen und bereit für Implementierung.
+
