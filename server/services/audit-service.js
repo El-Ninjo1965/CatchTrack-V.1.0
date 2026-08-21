@@ -74,6 +74,11 @@ module.exports = {
     ROLE_UPDATED: 'role.updated',
     ROLE_DELETED: 'role.deleted',
     SETTINGS_UPDATED: 'settings.updated',
-    SETUP_CHANGED: 'setup.changed'
+    SETUP_CHANGED: 'setup.changed',
+    LOGIN_SUCCESS: 'auth.login.success',
+    LOGIN_FAILURE: 'auth.login.failure',
+    LOGOUT: 'auth.logout',
+    SESSION_EXPIRED: 'auth.session.expired',
+    RATE_LIMITED: 'auth.rate_limited'
   }
 };

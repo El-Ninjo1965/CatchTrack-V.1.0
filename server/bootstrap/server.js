@@ -9,6 +9,8 @@ const userService = require('../services/user-service');
 const roleService = require('../services/role-service');
 const settingsService = require('../services/settings-service');
 const auditService = require('../services/audit-service');
+const authService = require('../services/auth-service');
+const authConfig = require('../config').auth;
 
 const bootstrapDefaultApps = () => {
   const normalizeManifestValue = (value, fallback = 'neutral-app') => {
@@ -282,19 +284,148 @@ const getConfiguredAuthTokens = () => {
   return Array.from(tokens);
 };
 
+// ---------------------------------------------------------------------------
+// Session-based authentication (Phase 5B)
+//
+// This sits alongside the pre-existing static-token authentication used by
+// bootstrap/recovery flows and by existing tests. Static tokens are NOT the
+// normal browser login: they remain reserved for bootstrap/recovery/admin
+// tooling. Normal interactive users authenticate via POST /api/auth/login,
+// which issues an HttpOnly session cookie resolved through AuthService.
+// ---------------------------------------------------------------------------
+
+const parseCookies = (req) => {
+  const header = req && req.headers && req.headers.cookie;
+  const cookies = {};
+  if (!header || typeof header !== 'string') {
+    return cookies;
+  }
+  header.split(';').forEach((part) => {
+    const index = part.indexOf('=');
+    if (index === -1) {
+      return;
+    }
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+    if (key) {
+      cookies[key] = decodeURIComponent(value);
+    }
+  });
+  return cookies;
+};
+
+const buildCookie = (name, value, { maxAgeMs, httpOnly = true } = {}) => {
+  const parts = [`${name}=${encodeURIComponent(value)}`];
+  parts.push('Path=/');
+  if (httpOnly) {
+    parts.push('HttpOnly');
+  }
+  parts.push(`SameSite=${authConfig.sameSite}`);
+  if (authConfig.secureCookies) {
+    parts.push('Secure');
+  }
+  if (typeof maxAgeMs === 'number') {
+    if (maxAgeMs <= 0) {
+      parts.push('Max-Age=0');
+      parts.push('Expires=Thu, 01 Jan 1970 00:00:00 GMT');
+    } else {
+      parts.push(`Max-Age=${Math.floor(maxAgeMs / 1000)}`);
+    }
+  }
+  return parts.join('; ');
+};
+
+const setResponseCookies = (res, cookies) => {
+  if (!cookies.length) {
+    return;
+  }
+  const existing = res.getHeader('Set-Cookie');
+  const merged = existing ? (Array.isArray(existing) ? existing.concat(cookies) : [existing].concat(cookies)) : cookies;
+  res.setHeader('Set-Cookie', merged);
+};
+
+/**
+ * Resolve the session-authenticated identity for a request, if any.
+ * Must be awaited before routing so the session store (which may be file- or
+ * later network-backed) has answered.
+ */
+const resolveSessionIdentity = async (req) => {
+  const cookies = parseCookies(req);
+  const sessionId = cookies[authConfig.cookieName];
+  if (!sessionId) {
+    return null;
+  }
+
+  const result = await authService.validateSession(sessionId);
+  if (!result.ok) {
+    return null;
+  }
+
+  return { sessionId, session: result.session, user: result.user };
+};
+
+const clientIp = (req) => (req.socket && req.socket.remoteAddress) || 'unknown';
+
 const resolveRequestIdentity = (req) => {
   const token = getRequestToken(req);
   const roles = getRequestRoles(req);
   const configuredTokens = getConfiguredAuthTokens();
-  const authenticated = !!token && configuredTokens.includes(token);
+  const tokenAuthenticated = !!token && configuredTokens.includes(token);
+
+  // Session-based identity (set earlier in the request lifecycle via
+  // resolveSessionIdentity()) takes precedence when present, but static
+  // tokens continue to work unchanged for bootstrap/recovery/test tooling.
+  const sessionIdentity = req && req.sessionIdentity;
+  if (sessionIdentity && sessionIdentity.session) {
+    const sessionRoles = Array.isArray(sessionIdentity.session.roles) ? sessionIdentity.session.roles : [];
+    return {
+      authenticated: true,
+      via: 'session',
+      token: '',
+      sessionId: sessionIdentity.sessionId,
+      csrfToken: sessionIdentity.session.csrfToken,
+      user: sessionIdentity.user,
+      roles: sessionRoles,
+      primaryRole: sessionRoles[0] || null
+    };
+  }
+
+  const authenticated = tokenAuthenticated;
   const effectiveRoles = authenticated ? roles.filter((role) => role === 'admin' || role === 'developer' || role === 'manager' || role === 'member' || role === 'user' || role === 'viewer') : [];
 
   return {
     authenticated,
+    via: 'token',
     token,
     roles: effectiveRoles,
     primaryRole: effectiveRoles[0] || null
   };
+};
+
+/**
+ * CSRF protection for session-cookie-authenticated, state-changing requests.
+ * Token-based (bootstrap/recovery/test) requests are unaffected: CSRF only
+ * makes sense for browser cookie sessions, since token requests do not rely
+ * on ambient browser credentials a hostile page could replay.
+ */
+const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+const requireCsrfIfSessionAuthenticated = (req, res, identity) => {
+  if (identity.via !== 'session' || !STATE_CHANGING_METHODS.has(req.method)) {
+    return true;
+  }
+
+  const suppliedToken = req.headers[authConfig.csrfHeaderName] || '';
+  if (!authService.validateCsrfToken({ csrfToken: identity.csrfToken }, suppliedToken)) {
+    sendJson(res, 403, {
+      ok: false,
+      code: 'CSRF_INVALID',
+      message: 'Missing or invalid CSRF token.'
+    });
+    return false;
+  }
+
+  return true;
 };
 
 const requireAuthentication = (req, res, { allowedRoles = ['admin', 'developer'], allowViewer = false } = {}) => {
@@ -306,6 +437,10 @@ const requireAuthentication = (req, res, { allowedRoles = ['admin', 'developer']
       code: 'AUTH_REQUIRED',
       message: 'Authentication required.'
     });
+    return false;
+  }
+
+  if (!requireCsrfIfSessionAuthenticated(req, res, identity)) {
     return false;
   }
 
@@ -337,17 +472,23 @@ const isAdminWriteAuthorized = (req) => {
 };
 
 const requireAdminWriteAccess = (req, res) => {
-  if (isAdminWriteAuthorized(req)) {
-    return true;
-  }
+  const identity = resolveRequestIdentity(req);
 
-  if (!resolveRequestIdentity(req).authenticated) {
+  if (!identity.authenticated) {
     sendJson(res, 401, {
       ok: false,
       code: 'AUTH_REQUIRED',
       message: 'Authentication required.'
     });
     return false;
+  }
+
+  if (!requireCsrfIfSessionAuthenticated(req, res, identity)) {
+    return false;
+  }
+
+  if (identity.roles.some((role) => role === 'admin' || role === 'developer')) {
+    return true;
   }
 
   sendJson(res, 403, {
@@ -467,6 +608,77 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     sendJson(res, 200, {
       ok: true,
       framework: MasterFramework.getDiagnostics()
+    });
+    return true;
+  }
+
+  // -------------------------------------------------------------------------
+  // Session-based auth endpoints (Phase 5B). These are the normal browser
+  // login path; static tokens (x-admin-access-token/x-auth-token) remain a
+  // separate bootstrap/recovery mechanism and are not replaced by this.
+  // -------------------------------------------------------------------------
+  if (pathname === `${apiBase}/auth/login` && req && req.method === 'POST') {
+    readJsonBody(req)
+      .then(async (payload) => {
+        const ip = clientIp(req);
+        const result = await authService.login({ username: payload.username, password: payload.password, ip });
+
+        if (!result.ok) {
+          const statusCode = result.code === 'RATE_LIMITED' ? 429 : 401;
+          sendJson(res, statusCode, { ok: false, code: result.code, message: result.message });
+          return;
+        }
+
+        const cookies = [
+          buildCookie(authConfig.cookieName, result.session.sessionId, { maxAgeMs: authConfig.sessionTtlMs, httpOnly: true }),
+          // CSRF cookie is intentionally NOT HttpOnly: the frontend must read
+          // it to echo it back in the x-csrf-token header (double-submit).
+          buildCookie(authConfig.csrfCookieName, result.session.csrfToken, { maxAgeMs: authConfig.sessionTtlMs, httpOnly: false })
+        ];
+        setResponseCookies(res, cookies);
+
+        sendJson(res, 200, {
+          ok: true,
+          user: result.user,
+          roles: result.session.roles,
+          expiresAt: new Date(result.session.expiresAt).toISOString()
+        });
+      })
+      .catch((error) => {
+        sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', message: error.message || 'Invalid login payload.' });
+      });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/auth/logout` && req && req.method === 'POST') {
+    const cookies = parseCookies(req);
+    const sessionId = cookies[authConfig.cookieName];
+
+    (sessionId ? authService.logout(sessionId) : Promise.resolve({ ok: true }))
+      .then(() => {
+        setResponseCookies(res, [
+          buildCookie(authConfig.cookieName, '', { maxAgeMs: 0, httpOnly: true }),
+          buildCookie(authConfig.csrfCookieName, '', { maxAgeMs: 0, httpOnly: false })
+        ]);
+        sendJson(res, 200, { ok: true });
+      })
+      .catch((error) => {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/auth/me` && req && req.method === 'GET') {
+    const identity = resolveRequestIdentity(req);
+    if (!identity.authenticated) {
+      sendJson(res, 401, { ok: false, code: 'AUTH_REQUIRED', message: 'Not authenticated.' });
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      via: identity.via,
+      user: identity.user || null,
+      roles: identity.roles
     });
     return true;
   }
@@ -1287,10 +1499,24 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer((req, res) => {
   const url = new URL(req.url, `http://${host}:${port}`);
 
-  if (routeApi(url, res, modulesDir, req)) {
-    return;
-  }
+  // Session cookie resolution must complete before routing/authorization,
+  // since routeApi()/requireAdminAccess() read req.sessionIdentity synchronously.
+  resolveSessionIdentity(req)
+    .then((sessionIdentity) => {
+      req.sessionIdentity = sessionIdentity;
 
+      if (routeApi(url, res, modulesDir, req)) {
+        return;
+      }
+
+      handleStaticRequest(url, req, res, modulesDir);
+    })
+    .catch((error) => {
+      sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message || 'Unexpected server error.' });
+    });
+});
+
+const handleStaticRequest = (url, req, res, modulesDir) => {
   let requestPath = decodeURIComponent(url.pathname);
 
   if (requestPath === '/admin.html' || requestPath === '/dev.html') {
@@ -1346,7 +1572,7 @@ const createServer = ({ modulesDir = appModulesDir } = {}) => http.createServer(
   }
 
   serveStaticFile(res, filePath);
-});
+};
 
 const server = createServer();
 

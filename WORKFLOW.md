@@ -1512,6 +1512,89 @@ Wo noch Entscheidungen von mir notwendig sind:
 - Session-Mechanik: Cookie-Session oder JWT?
 - Deployment-Modell: einzelner Node-Startpoint oder mehrere Worker-/Services?
 
+## PHASE 5B – VERIFIED
+
+Auditdatum: 2026-08-21 (Session-basierte Auth-Schicht + Infrastruktur-Vorbereitung)
+
+### Gewählte Auth-Architektur
+
+Es existieren jetzt zwei parallele, klar getrennte Authentifizierungswege:
+
+1. **Statische Tokens** (`ADMIN_ACCESS_TOKEN`/`AUTH_TOKEN`/`CORE_BOOTSTRAP_PASSWORD`, Dev-Tokens außerhalb Produktion) — unverändert aus Phase 5A. Sie sind explizit **kein** normaler Browser-Login mehr, sondern für Bootstrap-/Recovery-/Skript-/Test-Zugriffe reserviert.
+2. **Session-basierte Auth** (`server/services/auth-service.js`) — der neue produktive Login-Weg für Browser-Nutzer über `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`.
+
+`resolveRequestIdentity()` in `server/bootstrap/server.js` prüft zuerst eine gültige Session (Cookie `neutral_session`), danach fällt sie auf Token-Auth zurück. Beide Wege münden in dieselben `requireAuthentication`/`requireAdminAccess`/`requireAdminWriteAccess`-Middleware-Funktionen — Rollenprüfung ist für Token- und Session-Auth identisch.
+
+### Ebenentrennung (A–E)
+
+- **A) Authentication**: `authService.login()` prüft Benutzername/Passwort über `user-service` (Hash-Vergleich).
+- **B) Authorization**: `authService.hasRole()` / die Rollen-Sets in `requireAuthentication` prüfen ausschließlich, was eine Rolle darf — unabhängig davon, wie die Identität zustande kam.
+- **C) Session**: `authService` kennt nur die `SessionStore`-Schnittstelle (create/get/touch/destroy/count), nie den konkreten Speicherort.
+- **D) Server/Infrastruktur**: `server/config/index.js` (`SERVER_MODE`) und die bestehende `MasterFramework`-Connection-Verwaltung (`registerConnection`/`getConnection`/`createStorageAdapter`) bleiben die alleinige Stelle für Server-/Connection-Zuordnung; Auth-Code verweist nie direkt auf einen bestimmten Server.
+- **E) Persistence**: Benutzer/Rollen/Settings/Audit bleiben dateibasiert unter `config/*.json` (unverändert aus Phase 5A); Sessions liegen als eigene Ressource in `config/sessions.json` (Datei-Store) oder rein im RAM (Memory-Store), niemals vermischt mit Anwendungsdaten.
+
+### Session-Architektur
+
+- `server/services/session-store.js` definiert die `SessionStore`-Schnittstelle mit zwei Adaptern:
+  - `MemorySessionStore` — Prozess-RAM, nur Development/Test (Daten verloren bei Neustart, nicht Multi-Instance-fähig).
+  - `FileSessionStore` — persistiert Sessions in `config/sessions.json`, dieselbe Technik wie die bestehende `persistence-service`-Schicht. Das ist der aktuell produktiv nutzbare Store: Ein Server-Neustart verliert keine Sessions, mehrere Prozesse auf demselben Host mit Zugriff auf dasselbe `config/`-Verzeichnis sehen dieselben Sessions (durch Test 19 verifiziert).
+  - Ein unbekannter/`shared`-Adapter-Name fällt kontrolliert auf den File-Store zurück (mit Warnung), statt zu crashen — es wird also **kein** Redis/Cloud-Store vorzeitig erzwungen.
+- `resolveSessionStore(kind)` cached Instanzen pro Kind, `AuthService.setSessionStoreForTesting()` erlaubt Tests, den Store zu isolieren.
+- Session-Objekte sind reine Datenstrukturen (`sessionId`, `userId`, `roles`, `csrfToken`, `issuedAt`, `lastSeenAt`, `expiresAt`, `status`) — keine Node-Prozess-globalen Objekte, keine Funktionen/Closures im Session-State, damit eine spätere Serialisierung in einen zentralen Store (Redis, DB-Tabelle) ohne Strukturänderung möglich ist.
+
+### Aktueller Store vs. später
+
+- **JETZT**: `AUTH_SESSION_STORE` (Default: `local`) wählt den `FileSessionStore`. Für Tests/Entwicklung kann `memory` gesetzt werden.
+- **SPÄTER VORBEREITET**: `AUTH_SESSION_STORE=redis` (oder ein anderer kompatibler Name) kann `resolveSessionStore()` künftig auf einen echten Shared-Store routen, ohne dass `AuthService` oder die Server-Middleware geändert werden müssen — sie kennen ausschließlich die Store-Schnittstelle, nicht die Implementierung.
+
+### Server-/Connection-Abstraktion
+
+- Die bestehende `MasterFramework`-Connection-Verwaltung (`registerConnection`, `getConnection`, `listConnections`, `createStorageAdapter`, `/api/connections`) war bereits als Adapter-Schicht für Datenverbindungen (nicht Auth) vorhanden und wurde nicht umgebaut — sie bleibt die vorgesehene Stelle, um weitere Server/Storage-Ziele über Konfiguration statt Code hinzuzufügen.
+- `server/config/index.js` führt jetzt `server.mode` (`SERVER_MODE`, Default `single`) als dokumentierten, noch nicht verhaltensänderenden Konfigurationspunkt ein, an dem eine spätere Cluster-/Multi-Prozess-Betriebsart anknüpfen kann.
+
+### Vorbereitung auf hohe Last
+
+- Kein Session-State im Node-Prozess-RAM als Default (File-Store statt Memory-Store in Produktion).
+- Login-Rate-Limiting (`server/services/login-rate-limiter.js`) ist als eigenständiges Modul mit klar dokumentierter Grenze implementiert: Es zählt aktuell **pro Prozess** (RAM), was bei mehreren Instanzen zu einer pro Instanz getrennten Zählung führt (im Code-Kommentar dokumentiert) — für Multi-Instance-Betrieb müsste dieser Zähler künftig hinter denselben Store-Adapter-Mechanismus wie Sessions gezogen werden.
+- Audit-Logging bleibt dateibasiert (`audit-log.json`); für Multi-Instance-Betrieb mit hoher Schreiblast wäre dies ein Kandidat für denselben Shared-Store-Übergang, wurde aber bewusst nicht vorzeitig umgebaut.
+
+### CSRF
+
+- State-changing Requests (`POST`/`PUT`/`PATCH`/`DELETE`), die über eine Session-Cookie authentifiziert sind, verlangen einen gültigen `x-csrf-token`-Header, der gegen das im Session-Objekt gespeicherte `csrfToken` per zeitkonstantem Vergleich (`crypto.timingSafeEqual`) geprüft wird (Double-Submit-Cookie-Pattern: `neutral_csrf`-Cookie ist bewusst nicht HttpOnly, damit das Frontend es lesen und im Header zurücksenden kann).
+- Token-basierte (Bootstrap/Recovery/Test-)Requests sind von der CSRF-Prüfung ausgenommen, da sie kein ambientes Browser-Credential besitzen, das eine fremde Seite reproduzieren könnte.
+
+### Rollenmodell
+
+Unverändert aus Phase 5A: `admin`, `developer`, `manager`, `member`, `user`, `viewer`. Sessions übernehmen die Rollen des zugehörigen Benutzers zum Login-Zeitpunkt; Rollenänderungen wirken sich erst nach erneutem Login/Session-Refresh aus (kein Live-Rollen-Sync in dieser Phase — dokumentiert als offener Punkt).
+
+### Sicherheit
+
+- `x-framework-role` autorisiert weiterhin niemals allein — bestätigt durch Test 13.
+- Keine Session-ID/Passwörter/Tokens in `localStorage`; Session liegt ausschließlich in einem `HttpOnly`-Cookie.
+- Passwort-Hashing bleibt SHA-256 mit statischem Salt (`user-service.js`, unverändert aus Phase 5A) — **kein** bcrypt/Argon2-Wechsel in dieser Phase; als offener Punkt dokumentiert, da dies produktionsrelevant, aber nicht Teil des aktuellen Architekturauftrags war.
+
+### Tests
+
+19 neue Tests in `tests/session-auth.test.js` (Login erfolgreich/falsch, Session-Erstellung/-Validierung/-Ablauf/-Ungültigkeit, Logout, Rollenprüfung admin/developer/viewer, CSRF-Schutz, Rollenheader-ohne-Session, Server-Neustart mit File-Store, Store-Adapter-Austauschbarkeit, keine sensiblen Daten im Response, bestehende Admin-API weiterhin geschützt, Brute-Force-Rate-Limit, Zwei-Instanzen-gegen-denselben-Store-Test). Alle 56 bestehenden Phase-5A-Tests bleiben unverändert grün.
+
+**Gesamt: 75/75 Tests bestanden** (56 Phase 5A + 19 Phase 5B), zusätzlich durch echte HTTP-Requests gegen einen laufenden Serverprozess verifiziert (Login setzt `Set-Cookie`, `/api/auth/me` liefert Session-Identität und Rollen zurück).
+
+### JETZT FUNKTIONIERT
+
+- Session-Login/-Logout/-Validierung/-Ablauf/-Erneuerung über HttpOnly-Cookie.
+- CSRF-Schutz für session-authentifizierte, zustandsverändernde Requests.
+- Login-Rate-Limiting pro Benutzer+IP (Einzelprozess).
+- File-basierter Session-Store, der Neustarts und mehrere Prozesse auf demselben Host/Dateisystem überlebt.
+- Bestehende Token-Auth und Admin-API unverändert funktionsfähig, alle Phase-5A-Tests grün.
+
+### FÜR SPÄTER VORBEREITET (noch nicht umgesetzt)
+
+- Echter zentraler Shared-Store (Redis o. ä.) über `AUTH_SESSION_STORE=<adapter>` — Interface ist bereit, Implementierung bewusst nicht vorgezogen.
+- Rate-Limiting und Audit-Logging über mehrere Instanzen hinweg (aktuell pro Prozess/Datei, nicht instanzübergreifend synchronisiert).
+- `SERVER_MODE=cluster` als tatsächliches Multi-Prozess-/Load-Balancer-Verhalten (aktuell nur als Konfigurationsplatzhalter vorhanden).
+- Stärkeres Passwort-Hashing (bcrypt/Argon2 statt SHA-256+Salt).
+- Live-Rollen-Synchronisation für bereits aktive Sessions bei Rollenänderungen.
+
 ## CURRENT VERIFIED STATE
 
 Auditdatum: 2026-08-21 (Re-Audit nach Phase 5A – Authentication Hardening)
@@ -1566,7 +1649,7 @@ Sicherheitsbewertung (nach Härtung, verifiziert):
 
 ## NEXT STEP
 
-Die Authentifizierungs-/Autorisierungshärtung aus Phase 5A ist implementiert, getestet und durch echte HTTP-Requests verifiziert. Als nächster sinnvoller Schritt sollte die tiefere App-/Runtime-Privilegientrennung (aktuell PARTIAL) sowie die Übergabe der Auth-Strategie (statische Tokens vs. Cookie-Session/JWT) für die produktive Umgebung entschieden und dokumentiert werden, bevor weitere Admin- oder App-Funktionen erweitert werden.
+Phase 5B (session-basierte Authentifizierung, CSRF, Session-Store-Adapter, Server-/Infrastruktur-Vorbereitung) ist implementiert, getestet (75/75 grün) und durch echte HTTP-Requests verifiziert. Als nächster sinnvoller Schritt sollte das Passwort-Hashing von SHA-256+Salt auf ein produktionsübliches Verfahren (bcrypt/Argon2) migriert werden, bevor ein echter Shared-Session-Store oder Multi-Instance-Betrieb (SERVER_MODE=cluster) in Angriff genommen wird.
 
 - Übergang vom lokalem Preview-Modus zu sicherem Produktiv-Auth-Modell muss klar dokumentiert werden.
 - Welche Module gelten als produktiver Minimal-Set für den ersten produktiven Deploy?
