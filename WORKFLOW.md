@@ -1129,7 +1129,7 @@ Erforderliche Daten:
 - Feature-Flags
 - Logdaten
 - Fehler-/Audit-Events
-- optional business data (z. B. Produkt-/Kunden-/Bestell-Schemas, falls App-Funktionalität benötigt)
+- optional business data (z. B. anwendungsspezifische Datenmodelle, falls App-Funktionalität benötigt)
 
 Datenbank-/Dateistruktur:
 
@@ -1640,19 +1640,17 @@ Nutzen: hoch. Aufwand: mittel. Jetzt berücksichtigen: ja.
 
 Nutzen: mittel bis hoch. Aufwand: mittel. Jetzt berücksichtigen: ja, als Erweiterungsebene.
 
-### 2.12 GPS, Store, Systemadministration, Logs, Monitoring, Health Checks
+### 2.12 GPS, Systemadministration, Logs, Monitoring, Health Checks
 
 1. Bereits vorhanden
-   - GPS-Integration, Store-/Business-Template und Admin-Logik sind bereits als Teil des Frameworks sichtbar.
+   - GPS-Integration und Admin-Logik sind bereits als Teil des Frameworks sichtbar.
 
 2. Von uns ausdrücklich gewünscht
    - GPS als echtes App-/Modul-Funktionalität
-   - Store-Modelle mit Produkten, Kategorien, Kunden und Bestellungen
    - Systemadministration, Logs, Health-Checks, Monitoring
 
 3. Sinnvolle technische Ergänzungen
    - georeferenzierte Datenmodelle mit Geo-JSON- oder lat/lon-Fields
-   - Store-Orders mit Status-Workflows
    - Monitoring-Endpunkte für CPU, Speicher, DB, Disk, API-Fehler
    - Log-Level-Handling und Aggregation
 
@@ -2151,16 +2149,15 @@ Empfohlene Inhalte:
 
 Diese Bereiche sollen als separate Content- oder CMS-Module organisiert werden, damit sie nicht hart in den Server-Core eingebaut sind.
 
-### 11. GPS / Location / Store
+### 11. GPS / Location
 
-Die vorhandenen GPS- und Store-Modelle bleiben Teil der Architektur.
+Die vorhandenen GPS-Daten und Location-Management-Logik bleiben Teil der Architektur.
 
 Empfohlene Produktiv-Anforderungen:
 
 - GPS-Daten als eigene Datenmodelle mit Berechtigungs- und Speicherlogik
 - Standortverwaltung mit Abfragen, Berechtigungen und Datenschutz-Schutz
-- Store-Modelle mit Produkten, Kategorien, Kunden, Bestellungen, Preisen, Lagerbestand, Rechnungen und Versandstatus
-- künftige Integration von Zahlungen, Versand und Reporting über definierte Provider-Adapter
+- künftige Integration von benutzerdefinierten Datenmodellen über definierte Provider-Adapter
 
 ### 12. Update- und Versionierungssystem
 
@@ -2919,7 +2916,7 @@ IST:
 
 ERSTE PRODUKTIVE PHASE:
 
-- produktive Grundmodelle für Inhalte, GPS-Daten, Produkte, Kunden, Bestellungen
+- produktive Grundmodelle für Inhalte, GPS-Daten
 - Rechte und Storage-Namespaces sauber verankert
 - App-/Module-Logik nicht im Core, sondern im Modul-/App-Layer
 
