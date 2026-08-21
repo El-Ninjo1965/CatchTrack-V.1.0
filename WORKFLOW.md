@@ -4659,5 +4659,332 @@ Neutral/
 
 ---
 
-Damit ist die detaillierte Phase 5 Architektur-Analyse abgeschlossen.
+## PHASE 5 – VOLLSTÄNDIGER TECHNISCHER ARCHITEKTUR-AUDIT (2026-08-21)
+
+### Audit-Methodik
+
+Basierend auf systematischer Code-Analyse wurde jede Aussage der bisherigen Phase 5 Analyse kritisch gegen den tatsächlichen Codebestand verifiziert. Keine Aussage wurde blind übernommen.
+
+### KRITISCHE AUDIT-ERGEBNISSE: VERIFIKATION DER PHASE 5 AUSSAGEN
+
+#### 1. AUSSAGE: "master-ui.js ist 2600+ Zeilen Monolith mit switch-Statement"
+
+**VERIFIZIERUNG:**
+- Größe: **3187 Zeilen** (noch größer als angenommen!)
+- Struktur: **KEIN switch-Statement**, sondern **23 if-Bedingungen in Kaskade** (Zeile 2960-3040)
+- Pattern: `if (state.activeView === 'admin:users') { renderAdminUsersList(); }` repeated 23x
+- Rendering: 20+ Aufrufe zu `renderPageContent()` und `renderUserMenu()` von gleicher Stelle
+
+**STATUS:** ⚠️ **TEILWEISE KORREKT, STRUKTUR ABER ANDERS ALS ANGENOMMEN**
+
+**IMPLIKATION:** 
+- Problem ist nicht switch vs. if – beides ist imperativ und nicht modular
+- ECHTES PROBLEM: Alles in EINER IIFE, keine View-Komponenten, keine Wiederverwendbarkeit
+- **Muss aufgeteilt werden in separate View-Dateien** (users-view.js, roles-view.js etc.)
+
+---
+
+#### 2. AUSSAGE: "Keine Server-Admin-API existiert – nur Static Files"
+
+**VERIFIZIERUNG:**
+- **❌ FALSCH!** Server hat **15+ Endpoints** bereits implementiert in `/server/bootstrap/server.js` (914 Zeilen!)
+- Existierende Endpoints:
+  - `/api/health` ✅ (Line 379)
+  - `/api/status` ✅ (Line 450)
+  - `/api/framework` ✅ (Line 550)
+  - `/api/connections` (POST/GET) ✅ (Line 585)
+  - `/api/setup`, `/api/setup/activate` (POST/GET) ✅ (Line 630)
+  - `/api/server/test` (POST) ✅ (Line 690)
+  - `/api/database/status` (POST/GET) ✅ (Line 727)
+  - `/api/devices`, `/api/licenses`, `/api/updates` ✅ (Line 764+)
+  - `/api/marketplace`, `/api/modules` ✅ (Line 819+)
+
+**STATUS:** ❌ **KOMPLETT FALSCH**
+
+**IMPLIKATION:**
+- Server existiert längst! Keine Neuschreibung notwendig
+- **VIELE Admin-APIs sind ungeschützt** (keine Auth auf /api/setup*, /api/database/status, /api/devices)
+- Können nicht von vorne anfangen – müssen sichern + vervollständigen
+
+---
+
+#### 3. AUSSAGE: "Database-Manager ist nur Browser-IndexedDB, kein MySQL"
+
+**VERIFIZIERUNG:**
+- IndexedDB: **✅ KORREKT** – `/platform/database-manager.js` Line 102: `if (this.config.type !== 'indexeddb') { error }`
+- StorageManager unterstützt auch Dateisystem-Referenzen, aber nicht produktiv implementiert
+- Server speichert in **In-Memory Map**, nicht in Dateisystem/MySQL (nur bei optional Node)
+
+**STATUS:** ✅ **KORREKT FÜR PHASE 5A**
+
+**IMPLIKATION:**
+- IndexedDB für Browser ✅
+- **KEINE echte SQL-DB in Phase 5A** – richtige Entscheidung
+- Setup-Persistierung sollte zu Dateisystem (JSON) wechseln statt In-Memory
+- MySQL ist Post-5A Feature
+
+---
+
+#### 4. AUSSAGE: "Config ist nicht persistent – nur In-Memory"
+
+**VERIFIZIERUNG:**
+- **❌ TEILWEISE FALSCH!** ConfigManager IS persistent in localStorage! (`/platform/config-manager.js` Lines 28-48)
+- Client speichert zu `localStorage.getItem('neutral.local.auth.v1')`
+- **ABER**: Server hat Problem – `master-framework.saveSetupState()` (Lines 1546-1564):
+  - Speichert zu In-Memory `this.setupState`
+  - Versucht dann auch zu `/server/runtime/setup-state.json` (nur wenn Node-Context)
+  - **Problem**: `/server/runtime/` Verzeichnis existiert, wird aber bei jeder Sitzung ignoriert wenn Read-Only
+
+**STATUS:** ⚠️ **CLIENT JA, SERVER PROBLEMATISCH**
+
+**IMPLIKATION:**
+- Client: Config persistent in localStorage ✅
+- Server: Best-effort Persistierung mit Try-Catch, nicht robust
+- **Lösung für Phase 5A**: Config-Verzeichnis in `/config/` mit klarer Struktur + File-Write Garantien
+
+---
+
+#### 5. AUSSAGE: "Server ist nur 11 Zeilen"
+
+**VERIFIZIERUNG:**
+- `/server/server.js` = **11 Zeilen** ✅ (nur require wrapper)
+- `/server/bootstrap/server.js` = **914 Zeilen** ❌ (kompletter HTTP-Server + Routing + API)
+- Das ist ein **MISSVERSTÄNDNIS der Architektur** – beides zusammen ist der Server
+
+**STATUS:** ✅ **TECHNISCH KORREKT, ABER IRREFÜHREND**
+
+**IMPLIKATION:**
+- Server existiert längst – keine Neuschreibung nötig
+- Bootstrap-Server ist **monolithisch wie master-ui.js** – Router in einer Datei
+- **Beide sollten aufgeteilt werden**:
+  - `server/api/admin/users.js`, `roles.js`, `settings.js`, etc.
+  - `webroot/admin/users-view.js`, `roles-view.js`, etc.
+
+---
+
+### ZUSAMMENFASSUNG DER KORREKTUREN
+
+| Bisherige Aussage | Tatsächliche Realität | Korrektur für Phase 5A |
+|---|---|---|
+| **Kein Server existiert** | 914-Zeilen Server schon da! | Aufteilen + Sichern, nicht neu bauen |
+| **Keine Admin-APIs** | 15+ Endpoints existieren (ungeschützt) | Vervollständigen (Users, Roles, Settings) + Auth-Lücken füllen |
+| **Config nur In-Memory** | Client: persistent (localStorage), Server: problematisch | Server-Persistierung zu `/config/` verschieben |
+| **Monolith nicht zu ändern** | Beide (master-ui + bootstrap-server) SIND monolithic | Beide müssen aufgeteilt werden |
+| **MySQL würde Phase 5A brechen** | Korrekt – nur IndexedDB/Files ist sicher | Behalte das so, MySQL ist Phase 6+ |
+
+---
+
+### WAS MUSS WIRKLICH IN PHASE 5A GEBAUT WERDEN?
+
+#### BLOCKER (Make or Break):
+
+1. **FEHLT: `/api/admin/users` CRUD** (UserController + Endpoint)
+   - Existiert: Partielle UI in master-ui.js, aber kein Backend
+   - Aufwand: 300 Zeilen Code
+   - Abhängig: Auth-Middleware (teilweise vorhanden)
+
+2. **FEHLT: `/api/admin/roles` CRUD** (RoleController + Endpoint)  
+   - Existiert: Rollen sind hardcoded in core-admin.js Lines 70-84
+   - Aufwand: 250 Zeilen Code
+   - Abhängig: UserAPI, Permissions
+
+3. **FEHLT: `/api/admin/settings` GET/POST** (SettingsController)
+   - Existiert: UI-Rendering in master-ui.js, aber kein Backend
+   - Aufwand: 200 Zeilen Code
+   - Abhängig: Config-Persistierung
+
+4. **SICHERHEIT: Auth auf `/api/setup*` und `/api/database/status`**
+   - Existiert: Code vorhanden, aber KEINE Authentication!
+   - Aufwand: 50 Zeilen Middleware
+   - Abhängig: Nichts – KRITISCH SOFORT
+   - **RISIKO: Jeder kann derzeit Setup/Database ändern!**
+
+5. **SICHERHEIT: Input-Validierung auf allen Endpoints**
+   - Existiert: Null
+   - Aufwand: 150 Zeilen Validation-Middleware
+   - Abhängig: Nichts
+
+6. **PERSISTIERUNG: Setup-State zu Dateisystem statt In-Memory**
+   - Existiert: Halb implementiert (try-catch in saveSetupState)
+   - Aufwand: 100 Zeilen PersistenceService
+   - Abhängig: `/config/` Verzeichnisstruktur
+
+---
+
+### WAS EXISTIERT BEREITS (WIEDERVERWENDEN)?
+
+1. **Server-HTTP-Foundation**: `/server/bootstrap/server.js` (914 Zeilen)
+   - ✅ Routing-Logik mit URL-Parsing
+   - ✅ Static File Serving
+   - ✅ JSON Response Handler (`sendJson`)
+   - ✅ Module Discovery (`readAppModuleManifests`)
+   - ✅ Basis-API Endpoints (/health, /status, /connections)
+   - **Nur: Aufteilen in `/server/api/admin/*.js` statt monolitisch**
+
+2. **Auth-Framework**: Header-basiert in `/server/bootstrap/server.js` Lines 233-254
+   - ✅ `getRequestRoles()` – liest aus x-framework-role Header
+   - ✅ `isAdminWriteAuthorized()` – prüft Admin-Status
+   - ✅ `requireAdminWriteAccess()` – Middleware-Pattern
+   - **Nur: Auf alle /api/admin/* Endpoints anwenden**
+
+3. **Client-Framework**: 
+   - ✅ ConfigManager mit localStorage-Persistierung
+   - ✅ DatabaseManager mit IndexedDB
+   - ✅ Core-Auth mit Token-Management
+   - ✅ Module Discovery & Loading
+   - **Nur: Views (users, roles, settings) sind Shells ohne Backend**
+
+4. **Admin-UI Gerüst**: `webroot/master-ui.js` hat Struktur für alle Views
+   - ✅ HTML-Templates für users, roles, settings
+   - ✅ Form-Generierung
+   - ✅ State-Management (switch-statements können erhalten bleiben für MVP)
+   - **Nur: Keine API-Aufrufe, nur localStorage/UI-State**
+
+---
+
+### WELCHE VORHERIGEN EMPFEHLUNGEN SIND FALSCH?
+
+| Empfehlung | Status | Korrektur |
+|---|---|---|
+| "Baue kompletten Server neu" | ❌ FALSCH | Server existiert (914 Zeilen), nur aufteilen + sichern |
+| "Admin-APIs komplett fehlen" | ❌ FALSCH | 15 Endpoints da, aber unvollständig + unsicher |
+| "Config nicht persistent" | ⚠️ TEILWEISE | Client JA, Server nur best-effort, muss zu `/config/` |
+| "Keine Auth vorhanden" | ❌ FALSCH | Header-Auth existiert, aber nicht auf alle Endpoints |
+| "master-ui.js völlig monolitisch" | ✅ WAHR | Aber kann incremental aufgeteilt werden |
+| "Phase 5A ist 4 Wochen" | ⚠️ REALISTISCH | Mit existierendem Code: 2-3 Wochen machbar |
+| "Datenbank muss SQL sein" | ❌ FALSCH | File-JSON + IndexedDB reichen für MVP |
+
+---
+
+### PHASE 5A MINIMALER SCOPE (REVISED)
+
+**MUST-HAVE (Woche 1-2):**
+- ☐ Security: Auth-Check auf /api/setup* und /api/database/* (SOFORT – BLOCKER!)
+- ☐ Validation: Input-Checks auf alle POST/PUT Endpoints
+- ☐ UserAPI: /api/admin/users (CRUD)
+- ☐ RoleAPI: /api/admin/roles (CRUD)
+- ☐ SettingsAPI: /api/admin/settings (GET/POST)
+- ☐ Persistierung: Setup zu `/config/` Verzeichnis (nicht Runtime)
+
+**SHOULD-HAVE (Woche 2-3):**
+- ☐ UI: Split master-ui.js in Komponenten (users-view.js, roles-view.js, settings-view.js)
+- ☐ API-Client: Generischer HTTP-Client für master-ui.js (Retry, Error-Handling)
+- ☐ Tests: Basic Admin-API Tests (Users CRUD, Auth, Validation)
+- ☐ Dokumentation: Admin-API OpenAPI/Swagger Spec
+
+**NICE-TO-HAVE (Später):**
+- ☐ UI-Components: Button, Form, Table reusable library
+- ☐ Error-Boundary: Graceful Fallback auf UI-Fehler
+- ☐ Logging: Admin-Actions im Audit-Log
+
+---
+
+### DATEI-STRUKTUR FÜR PHASE 5A
+
+```
+server/
+├─ api/
+│  ├─ health.js           (✅ existiert)
+│  └─ admin/
+│     ├─ users.js         (NEW – CRUD Endpoints)
+│     ├─ roles.js         (NEW – CRUD Endpoints)
+│     ├─ settings.js      (NEW – GET/POST)
+│     └─ auth.js          (NEW – Auth Checks für alle Admin-Endpoints)
+├─ controllers/
+│  └─ admin/
+│     ├─ user-controller.js   (NEW – Business Logic)
+│     ├─ role-controller.js   (NEW – Business Logic)
+│     └─ settings-controller.js (NEW – Business Logic)
+├─ middleware/
+│  ├─ admin-auth.js       (NEW – Requires Admin Token/Role)
+│  ├─ input-validation.js (NEW – Validates POST/PUT Payloads)
+│  └─ error-handler.js    (NEW – Consistent Error Responses)
+├─ services/
+│  ├─ health-service.js   (✅ existiert)
+│  ├─ persistence-service.js (NEW – File-based Config I/O)
+│  └─ audit-service.js    (NEW – Log Admin Actions)
+└─ bootstrap/
+   └─ server.js           (REFACTOR – Extract Routes to api/admin/*.js)
+
+webroot/
+├─ master-ui.js           (REFACTOR – Split Views, add API calls)
+├─ api-client.js          (NEW – Fetch Wrapper with Auth Header)
+└─ admin/
+   ├─ users-view.js       (NEW – User CRUD UI)
+   ├─ roles-view.js       (NEW – Role CRUD UI)
+   ├─ settings-view.js    (NEW – Settings GET/POST UI)
+   └─ common.js           (NEW – Form, Table, Modal Components)
+
+config/
+├─ setup-state.json       (NEW – Persistent Setup State)
+├─ admin-users.json       (NEW – Local Admin Users)
+└─ admin-settings.json    (NEW – System Settings)
+
+tests/
+└─ admin/
+   ├─ users.api.test.js   (NEW – API Tests)
+   ├─ roles.api.test.js   (NEW – API Tests)
+   └─ auth.test.js        (NEW – Auth Middleware Tests)
+```
+
+---
+
+### KRITISCHE ABHÄNGIGKEITEN
+
+```
+┌─ SECURITY (WOCHE 1, BLOCKER) ─────────────────┐
+│                                               │
+│  • Admin-Auth auf /api/setup*                │
+│  • Admin-Auth auf /api/database/*            │
+│  • Input-Validation auf POST/PUT             │
+│                                               │
+│  → OHNE DIES: Ganz Framework ist offen!      │
+└─────────────────────────────────────────────┘
+                     ↓
+         ┌─ CONFIG PERSISTIERUNG ──────┐
+         │  /config/ Verzeichnis       │
+         │  setup-state.json           │
+         │  + Backup-Strategie         │
+         └─────────────────────────────┘
+                     ↓
+   ┌─ USERS/ROLES CRUD ENDPOINTS ──┐
+   │  /api/admin/users             │
+   │  /api/admin/roles             │
+   │  Beide abh. von: Auth + Persist│
+   └───────────────────────────────┘
+                     ↓
+        ┌─ SETTINGS ENDPOINT ────┐
+        │  /api/admin/settings   │
+        │  GET/POST              │
+        └────────────────────────┘
+                     ↓
+         ┌─ UI KOMPONENTEN ────────┐
+         │  Split master-ui.js     │
+         │  Add API Calls          │
+         │  User/Role/Settings     │
+         └─────────────────────────┘
+```
+
+---
+
+### TIMING UND PRIORISIERUNG
+
+**KRITISCH (Day 1-2):** Security auf ungeschützten Endpoints
+- `/api/setup*` – Jeder kann derzeit Framework neu konfigurieren!
+- `/api/database/status` – Jeder kann Datenbank-Info auslesen!
+- **Risk**: Unbedingt ZUERST adressieren
+
+**HOCHPRIORITÄR (Day 3-5):**
+- Config-Persistierung (ohne dies: Setup geht bei Restart verloren)
+- User-API (Basis für Admin-UI)
+- Input-Validation
+
+**NORMALPRIORITÄT (Week 2):**
+- Roles-API (Erweiterung von User-Verwaltung)
+- Settings-API (Config-Verwaltung)
+- UI-Refactoring (kann in Parallelteam laufen)
+
+---
+
+Damit ist die VOLLSTÄNDIGE PHASE 5A IMPLEMENTIERUNGSSPEZIFIKATION abgeschlossen, basierend auf verifiziertem Codebestand.
 
