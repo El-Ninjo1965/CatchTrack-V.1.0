@@ -39,7 +39,7 @@ Beispiele:
 * Angel-App
 * Camping-App
 * Wetter-App
-* GPS-Modul
+* beispielhafte Referenzmodule wie GPS- oder Store-Validierungen
 * Foto-/Medienmodul
 * Benutzerverwaltung
 * Rollen- und Rechteverwaltung
@@ -50,6 +50,8 @@ Beispiele:
 * Informationsaustausch
 * Community-Funktionen
 * weitere zukünftige Anwendungen und Fachmodule
+
+Diese Beispiele dienen der Architektur- und Funktionsidee. Historische Validierungsbeispiele wie GPS, Store, Catch Log oder Fishing Spots sind keine verbindliche Produkt- oder Roadmap-Priorität und kein Bestandteil des neutralen Core.
 
 Der Core soll dafür nicht jedes Mal grundlegend verändert werden müssen.
 

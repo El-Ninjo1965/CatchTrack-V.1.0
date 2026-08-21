@@ -14,13 +14,16 @@
    - Das Framework darf keine einzelne Fach-Anwendung, kein fertiges Produkt und keine konkrete Modul-Implementierung als Standardhardcodierung festschreiben.
    - Die eigentliche Kernfunktion ist die modulare Grund- und Entwicklungsplattform, nicht eine einzelne Produktanwendung.
 
-2. GPS, Store und Retail-Template
-   - GPS, Store und Retail-Template sind Referenz-, Test- oder Beispielmodule und bleiben keine festen Bestandteile des neutralen Core.
-   - Sie dienen der Architekturvalidierung, nicht der Standard-Produktlogik des Frameworks.
+2. GPS, Store, Retail, Catch Log, Fishing Spots und andere konkrete Fachmodule
+   - Diese Module sind historische Referenz-, Test- und Validierungsbeispiele. Sie dürfen in der Dokumentation weiterhin erwähnt werden, aber nur als vergangene Beispiele und nicht als zukünftige Entwicklungspriorität oder Core-Bestandteil.
+   - Keine weitere fachliche Entwicklung dieser Module im neutralen Core.
+   - Keine Festverdrahtung in der Framework-Architektur.
+   - Keine Abhängigkeit des Core von diesen Modulen.
    - Spätere Fachmodule sollen eigenständig auf dem Framework aufbauen und nur die notwendige Modul-Infrastruktur nutzen.
 
 3. Datenbank
    - Für den späteren produktiven Server ist grundsätzlich MySQL vorgesehen.
+   - SQLite darf ausschließlich als lokale Test-/Entwicklungsoption erwähnt werden, niemals als gleichwertige produktive Zielarchitektur.
    - Die konkrete Einrichtung erfolgt außerhalb des Repository-Standorts und wird nicht im Quellcode dokumentiert.
    - Für spätere Umsetzung müssen exakt diese Angaben dokumentiert werden: Datenbankname, Benutzername, benötigte Berechtigungen, benötigte Einstellungen, Standort der Zugangsdaten, sowie die konkrete Betriebsumgebung und Provider-/Server-Konfiguration.
    - Keine Zugangsdaten im Quellcode und keine Datenbank-Initialisierung im Repository selbst.
@@ -153,7 +156,8 @@ Ich würde die Architektur in vier Schichten aufbauen:
    - Event- und Lifecycle-Handling
 
 4. Persistenzschicht
-   - SQLite für lokale/kleine produktive Deployments oder MySQL für cPanel-Umgebung
+   - MySQL als produktive Standard-DB für Serverbetrieb und Multi-User-Umgebungen
+   - SQLite nur als lokale Test-/Entwicklungsoption und nicht als gleichwertige produktive Zielarchitektur
    - Dateien für Konfigurations- und Log-Ausgaben
    - optional Session-Store im DB-Backend statt reinem Browser-Storage
 
@@ -162,7 +166,7 @@ Empfohlene grundlegende Technologie:
 - Node.js LTS
 - CommonJS (mit dem bestehenden Projekt kompatibel)
 - Express oder ein minimalistischer eigener HTTP-Router je nach vorhandener Codebasis
-- SQLite für Einfachheit und cPanel-Kompatibilität, alternativ MySQL falls cPanel-MySQL bereits bereitsteht
+- MySQL als primäre produktive Datenbankarchitektur; SQLite nur für lokale Test-/Entwicklungs-Setups
 - Serverseitige Session-Cookies mit HttpOnly, Secure, SameSite
 - Password-Hashing mit bcrypt oder Argon2 (nicht SHA-256 allein für Produktivpasswörter)
 - Konfigurationsdateien über `.env` + sichere Umgebungsvariablen
@@ -695,7 +699,7 @@ Was eine technische Schlussfolgerung ist:
 Was zusätzlich vorgeschlagen wird:
 
 - echte serverseitige Session- und Permission-Schicht
-- SQLite/MySQL-Adapter statt rein lokalem Runtime-State
+- DB-/File-Adapter statt rein lokalem Runtime-State, mit klarer produktiver MySQL-Standardstrategie
 - standardsichere Passwort-Hashing-Strategie (`bcrypt`/`argon2`)
 - sauber geschichtete API- und Service-Layer
 - separate Produktiv-Deployment-Struktur für `cPanel-meinServer`
@@ -703,7 +707,7 @@ Was zusätzlich vorgeschlagen wird:
 
 Wo noch Entscheidungen von mir notwendig sind:
 
-- Ist die produktive Laufzeit auf cPanel mit SQLite oder mit MySQL geplant?
+- Welche konkrete MySQL-Instanz, Provider-Umgebung und Berechtigungsstruktur wird in der späteren externen Produktivumgebung ausgewählt?
 - Sollen die App- und Admin-Bereiche in einer und derselben UI bleiben oder getrennt bereitgestellt werden?
 - Ist ein Cookie-basiertes Session-Model oder ein Token-Model bevorzugt?
 - Soll `Neutral` nur als Basis dienen oder direkt auch Teil des produktiven Server-Deploys werden?
@@ -744,12 +748,12 @@ Wo noch Entscheidungen von mir notwendig sind:
 
 ## OFFENE ENTSCHEIDUNGEN
 
-- Produktive Datenbank: SQLite oder MySQL?
+- Welche konkrete MySQL-Instanz, welche Berechtigungen und welcher Provider-/Server-Kontext werden in der späteren externen Produktivumgebung verwendet?
 - Produktspezifischer App-/Admin-Mix: gemeinsame UI oder getrennte Admin-Anwendung?
 - Session-Mechanik: Cookie-Session oder JWT?
 - Deployment-Modell: einzelner Node-Startpoint oder mehrere Worker-/Services?
 - Übergang vom lokalem Preview-Modus zu sicherem Produktiv-Auth-Modell muss klar dokumentiert werden.
-- Welche Module gelten als produktiver Minimal-Set für den ersten cPanel-Deploy?
+- Welche Module gelten als produktiver Minimal-Set für den ersten produktiven Deploy?
 
 Fazit:
 
@@ -949,7 +953,7 @@ Nutzen: hoch. Aufwand: mittel. Jetzt berücksichtigen: ja.
 
 1. Bereits vorhanden
    - Framework hat generische Data-/Schema-Engine, Storage-Adapter und lokale Persistenzkonzepte.
-   - File-Storage, SQLite-Modelle und plattformspezifische Variationen sind in der aktuellen Umsetzung sichtbar.
+   - File-Storage, lokale Test-/Entwicklungs-Varianten und allgemeine Storage-Abstraktion sind in der aktuellen Umsetzung sichtbar.
 
 2. Von uns ausdrücklich gewünscht
    - persistente Datenspeicherung für Users, Sessions, Logs, Roles, Modules, Config
@@ -957,9 +961,9 @@ Nutzen: hoch. Aufwand: mittel. Jetzt berücksichtigen: ja.
    - Trennung von Laufzeit-/Konfigurationsdaten und produktiven Businessdaten
 
 3. Sinnvolle technische Ergänzungen
-   - SQLite als erste produktive Standard-Option für cPanel
-   - MySQL als bevorzugte Option bei höherer Last, Mehrbenutzerbetrieb oder Shared-Hosting-Constraints
-   - klare Storage-Adapter-Definition: file, sqlite, mysql, future redis
+   - MySQL als primäre produktive Standard-DB für den Serverbetrieb
+   - SQLite nur als lokale Test-/Entwicklungsoption, nicht als produktive Zielarchitektur
+   - klare Storage-Adapter-Definition: file, mysql, future redis; SQLite nur für lokale Entwicklungs- und Test-Setups
    - Monetarisierung/Backup-Strategien für DBs und Dateien
 
 4. Für später architektonisch vorzusehende Funktionen
@@ -1232,15 +1236,16 @@ cPanel-meinServer/
 Empfehlung:
 
 - App-Konfiguration und Systemeinstellungen in DB oder JSON-Konfigurationsdateien, je nach Deployment-Umfeld.
-- User, Sessions, Roles, Permissions, Logs und Audit-Events in Datenbank.
+- User, Sessions, Roles, Permissions, Logs und Audit-Events in der produktiven Datenbank.
 - Uploads und Medien in `storage/uploads`.
 - Backups in `storage/backups`.
 - Datei- bzw. JSON-Formate nur dort einsetzen, wo cPanel-Umgebung oder Umfang eine einfache Lösung erfordert.
 
-Wenn man auf cPanel reell fahren will, ist die pragmatischste Bodenstrategie:
+Produktive Standardstrategie:
 
-- SQLite für erste produktive Version und kleine Betriebsumgebungen.
-- MySQL als späteres Upgrade, wenn App-Last, Mehrbenutzerbetrieb oder verteilte Datenintegration nötig werden.
+- MySQL ist die primäre produktive Zielarchitektur für den Serverbetrieb.
+- SQLite bleibt nur als lokale Test-/Entwicklungsoption zulässig und darf nicht als gleichwertige produktive Zielarchitektur gelten.
+- Ein späteres Upgrade auf MySQL ist keine neue Architekturentscheidung, sondern die konsistente produktive Standardumgebung des Frameworks.
 
 ## 8. API-Konzept
 
@@ -1298,15 +1303,16 @@ Empfohlener Ablauf:
 
 ## 10. cPanel-Kompatibilität
 
-Die Struktur ist grundsätzlich cPanel-kompatibel, sofern Node.js im Hosting aktiviert ist. Für den produktiven Betrieb ist entscheidend:
+Die Struktur ist grundsätzlich cPanel-kompatibel, sofern Node.js im Hosting aktiviert ist. cPanel + FTPS ist die erste konkrete Provider-Umgebung, aber keine feste Architekturbindung. Für den produktiven Betrieb ist entscheidend:
 
 - Node-LTS verfügbar
 - Schreibrechte auf den Serverordner
 - Umgebungsvariablen oder `.env` nutzbar
 - keine rein lokalen Browser-Session-Mechaniken als einzige Autorität
 - stabile App-Shell, API-Endpunkte und DB-Persistence
+- Provider-/Infrastruktur-Schicht abstrahiert genug, damit spätere Server, Hosting-Umgebungen oder Cloud-Systeme einfach eingebunden werden können
 
-Damit ist der Architekturplan für cPanel als realistisch und umsetzbar einzuordnen.
+Damit ist der Architekturplan für cPanel als realistisch und umsetzbar einzuordnen, ohne dass cPanel zur dauerhaften Standardarchitektur wird.
 
 ## 11. Funktional-Ergänzungen, die sinnvoll sind, aber bisher nicht im Fokus lagen
 
@@ -1331,7 +1337,7 @@ Bewertung:
 
 Die bestehende Architektur in `Neutral` ist nicht nur grundsätzlich geeignet, sondern bereits inhaltlich sehr nah an einer produktiven serverseitigen Basis. Die wichtigsten Lücken betreffen nicht den Grundgedanken, sondern die Produktiv-Qualität: echte serverseitige Auth, robuste Sessions, robuste Datenspeicherung, Backups, Audit-Logs, Monitoring, Security-Policies und cleanes Deployment-Subset für `cPanel-meinServer`.
 
-Die technische Machbarkeit ist gegeben. Die richtige Architektur ist klar definiert. Die wichtigste Entscheidung, die noch von uns getroffen werden muss, ist die konkrete Produktiv-Umgebung auf dem cPanel-Server: SQLite oder MySQL, Cookie-Session oder Token-basierte API-Session, gemeinsame UI oder getrennte Admin-Ansicht, und wie umfangreich die erste produktive Version sein soll.
+Die technische Machbarkeit ist gegeben. Die richtige Architektur ist klar definiert. Die wichtigste Entscheidung, die noch von uns getroffen werden muss, ist die konkrete extern zu betreibende Produktiv-Umgebung: die genaue MySQL-Instanz, die Provider-/Server-Konfiguration, das Session-Design, die Admin-/UI-Aufteilung und der Umfang des ersten produktiven Release-Setups.
 
 Fazit:
 
@@ -1493,8 +1499,8 @@ Empfohlene Grundidee:
 
 Empfohlener Real-Stack:
 
-- SQLite als erste produktive, cPanel-taugliche Lösung
-- MySQL als robustere produktive Option bei größerem Last- und Multi-User-Betrieb
+- MySQL als primäre produktive Standardarchitektur für Serverbetrieb, Mehrbenutzer- und Verwaltungsszenarien
+- SQLite nur als lokale Test-/Entwicklungsoption, nicht als produktive Zielarchitektur
 
 Wichtige Storage-Bereiche:
 
@@ -1758,7 +1764,7 @@ EMPFOHLEN:
 
 ## OFFENE ENTSCHEIDUNG
 
-- SQLite oder MySQL als Standardproduktiver DB-Provider?
+- Welche konkrete MySQL-Instanz, Berechtigungsstruktur und Provider-/Server-Konfiguration werden in der späteren externen Produktivumgebung genutzt?
 - Cookie-Session oder tokenbasierte Session-Mechanik?
 - gemeinsame Admin-UI oder getrennte Admin-Anwendung?
 - welche Module müssen im ersten produktiven Release zwingend enthalten sein?
@@ -1958,7 +1964,7 @@ Risiken:
 
 OFFENE ENTSCHEIDUNG:
 
-- SQLite oder MySQL als erste produktive Standard-DB
+- Welche konkrete MySQL-Instanz, Berechtigungsstruktur und Provider-/Server-Konfiguration werden in der späteren externen Produktivumgebung genutzt?
 
 Abnahmekriterien:
 
@@ -2509,7 +2515,7 @@ Abnahmekriterien:
 
 Diese Entscheidungen müssen vor der Implementierung bewusst getroffen werden, obwohl sie technisch durch Abstraktionen offen gehalten werden können:
 
-- SQLite oder MySQL als erste produktive DB-Variante
+- Welche konkrete MySQL-Instanz, Berechtigungsstruktur und Provider-/Server-Konfiguration werden in der späteren externen Produktivumgebung genutzt?
 - Cookie-Session oder tokenbasierte Sessions
 - gemeinsame Admin-UI oder separate Admin-Anwendung
 - genaue Free-/Paid-Funktionsaufteilung
@@ -2518,7 +2524,7 @@ Diese Entscheidungen müssen vor der Implementierung bewusst getroffen werden, o
 
 EMPFOHLEN:
 
-- SQLite als erste produktive Lösung für erste stabile cPanel-Umgebung
+- MySQL als primäre produktive Lösung für die erste stabile Server-/Admin-Umgebung
 - Cookie-Session mit serverseitigem Store als erste produktive Standard-Variante, solange nicht ein echtes Token-API-Design erforderlich ist
 - Provider-Abstraktion und Adapter-Interface früh absichern, damit die erste Infrastruktur nicht hart kodiert bleibt
 - gemeinsame Admin-UI im ersten Release, wenn nicht ein klarer technischer Grund für separate Admin-Anwendung vorliegt

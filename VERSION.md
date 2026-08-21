@@ -9,13 +9,13 @@ Technische Architektur, Anforderungen, Entwicklungsregeln und verbindliche Gesam
 ## Version 1.1.10 - independent app architecture and approval gate
 
 - Neutral remains the neutral master/development framework.
-- Example modules and templates such as GPS, Store, and Retail remain reference/test artifacts and are not treated as fixed core components.
+- Historical validation examples such as GPS, Store, Retail, Catch Log and Fishing Spots remain reference/test artifacts and are not treated as fixed core components or current product roadmap priorities.
 
 Status:
 - Framework core remains stable and module-driven.
 - User shell continues to support profile settings, feature visibility and privacy preferences.
 - GPS remains hardened against inactive module state and stays usable from real user interactions.
-- Catch Log and Fishing Spots remain the first real product domain modules in the active app.
+- Catch Log and Fishing Spots are documented as historical validation examples in the active app context and are not treated as a required future core dependency.
 - The admin shell supports a storage/connection model for file-based and SQL-ready backends.
 - The framework remains configurable without hardcoding a single backend type.
 - Admin user creation and role-based permission checks remain fixed so developer/admin accounts can manage users without false `Access denied` results.

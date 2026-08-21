@@ -8,7 +8,8 @@ Die verbindlichen Architektur-, Vision- und Regelwerke liegen in `WORKFLOW.md` u
 
 ## Geltungsbereich und Korrekturen
 
-- Das Projekt bleibt ein neutrales Master-/Entwicklungsframework. Beispielmodule wie GPS, Store oder Retail-Template dienen nur der Validierung und sind keine festen Core-Komponenten.
+- Das Projekt bleibt ein neutrales Master-/Entwicklungsframework. Beispielmodule wie GPS, Store, Retail, Catch Log und Fishing Spots dienen nur der historischen Validierung und sind keine festen Core-Komponenten.
+- Historische Test- und Referenzmodule dürfen weiter dokumentiert werden, aber sie bilden keine zukünftige Core-Priorität und keine harte Abhängigkeit des Frameworks.
 
 ## Erledigt
 - GPS-Modul als registriertes, aktivierbares, persistentes User-Modul in der Registry und UI verknüpft.
