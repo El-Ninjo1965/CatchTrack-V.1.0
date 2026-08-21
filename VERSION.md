@@ -6,12 +6,14 @@
 
 Technische Architektur, Anforderungen, Entwicklungsregeln und verbindliche Gesamtplanung liegen in `WORKFLOW.md`. Die Vision und strategische Ausrichtung liegen in `VISION.md`.
 
-## Version 1.1.10 - independent app architecture and approval gate
+## Version 1.1.10 - framework freeze checkpoint
 
 - Neutral remains the neutral master/development framework.
 
 Status:
-- Framework core remains stable and module-driven.
+- Framework core remains stable, module-driven and freeze-ready.
+- Framework freeze status: passed for the repository-level neutral core.
+- No repo-internal P0/P1 blockers remain in the current codebase.
 - User shell continues to support profile settings, feature visibility and privacy preferences.
 - GPS is preserved as an independent framework reference module.
 - The admin shell supports a storage/connection model for file-based and SQL-ready backends.

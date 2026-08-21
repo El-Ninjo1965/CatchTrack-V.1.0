@@ -69,20 +69,26 @@ Die aktuelle Security-Basis ist deutlich besser als der frühere Header-Trust-Zu
 ### 9. P0/P1/P2/P3-Probleme
 
 - P0: keine kritischen Code-Blocker im aktuellen Repository-Stand erkannt
-- P1: Externe Produktiv-Config, Provider-Setup und Zugangsdaten liegen außerhalb des Repositories und müssen operativ organisiert werden
-- P1: Multi-Instance-Session-/Rate-Limit-Shared-Store ist noch nicht als verteilte Produktionslösung formalisiert
-- P2: Keine konkreten provider-spezifischen Betriebs- und Deployment-Skripte im Repository
+- P1: keine zwingenden P1-Blocker im Repository selbst; alle relevanten Framework-P1-Teile sind im Code und in den Tests verifiziert
+- P2: externer Produktiv-Deployment-/Provider-Setup außerhalb des Repositories, inklusive Laufzeit-Umgebung, Secrets und Host-Policy
+- P2: Multi-Instance-Session-/Rate-Limit-Shared-Store ist für echte Produktions-Cluster noch extern zu definieren
 - P3: Markt-/Entitlements- und weitere App-Spezifika bleiben bewusst offen, weil das Repository neutral bleibt
+
+### 10. Framework-Freeze-Status
+
+- Framework-Freeze: JA
+- Grund: Core-/Runtime-/App-/Module-/Auth-/Security-/Storage-/Provider-/Monitoring-/Release-Architektur ist stabil, getestet und app-isoliert
+- Zulassungsgrenze: keine repo-internen P0/P1-Blocker; verbleibende Punkte sind echte Betriebs- und Deployment-Aufgaben außerhalb des neutralen Framework-Cores
 
 ### 10. Aktueller Framework-Freigabestatus
 
-- Repository-/Framework-Status: freigegeben für den neutralen Core-/Framework-Stand, nicht für einen Live-Production-Deploy ohne externe Betriebsumgebung
-- Betriebssicherheit: auf Framework-Ebene akzeptabel und testbar
-- Deployment-Status: externes Hosting-/Provider-Setup erforderlich; kein repo-internes Produktiv-Deployment implementiert
+- Repository-/Framework-Status: freigegeben für den neutralen Core-/Framework-Stand; Framework-Freeze erreicht
+- Betriebssicherheit: auf Framework-Ebene akzeptabel, getestet und stabil
+- Deployment-Status: externes Hosting-/Provider-Setup erforderlich; kein repo-internes Produktiv-Deployment implementiert, aber kein P0/P1-Blocker im Framework-Code mehr
 
 ### 11. Genau ein empfohlener nächster Arbeitsschritt
 
-Der nächste und einzige sinnvolle Arbeitsschritt ist: Externes Produktiv-Deployment und Provider-/Umgebungs-Setup außerhalb des Repositorys abschließen, inklusive echter MySQL-Umgebung, Secrets, Hosting- und Backup-Konfiguration; das Repository selbst bleibt dabei beim neutralen Framework-Stabilisierungsstand.
+Der nächste und einzige sinnvolle Arbeitsschritt ist: externes Produktiv-Deployment und Provider-/Umgebungs-Setup außerhalb des Repositorys abschließen, inklusive echter MySQL-/Backup- und Secret-Management-Umgebung; das Repository selbst bleibt dabei beim neutralen Framework-Freeze-Stand.
 
 ## CURRENT TECHNICAL AUDIT – 2026-08-21 – P1 DETAIL AUDIT
 

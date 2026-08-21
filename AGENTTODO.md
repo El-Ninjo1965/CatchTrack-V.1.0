@@ -65,6 +65,9 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 
 ## Architektur- und Freigabe-Status
 - Grundprinzip: Jede App inklusive Admin und Server muss eigenständig und unabhängig arbeiten. Keine App darf in der Architektur von einer anderen App abhängen.
+- Framework-Freeze: JA
+- Repo-intern: keine P0/P1-Blocker mehr; App-Isolation, Module, Security, Setup, Monitoring und Release-Status sind durch die Test-Suite validiert.
+- Externe Produktiv-Umgebung bleibt separat zu organisieren; sie ist keine Framework-Code-Verpflichtung und kein P0/P1-Problem im neutralen Core.
 - Keine weiteren app-abhängigen Module werden installiert, solange nicht die Kernarchitektur, Admin-Governance, Rollen-/Rechte-Logik, Storage-/Connection- und Server-/Runtime-Struktur für eine eigenständige App-Instanz vollständig durchlaufen, stabil und mit deinem Review freigegeben sind.
 - Der aktuelle Arbeitsblock ist bewusst auf Framework-Konsolidierung, App-Entkopplung und Admin-/Server-Integration ausgerichtet, nicht auf neue Domain-Module.
 
