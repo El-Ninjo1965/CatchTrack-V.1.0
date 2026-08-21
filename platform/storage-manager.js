@@ -9,6 +9,24 @@
     return trimmed || fallback;
   };
 
+  const normalizeStorageType = (value, fallback = 'file') => {
+    const normalized = normalizeString(typeof value === 'string' ? value : String(value || fallback), fallback).toLowerCase();
+    const aliases = {
+      text: 'file',
+      json: 'file',
+      file: 'file',
+      filesystem: 'file',
+      local: 'file',
+      sqlite: 'sqlite',
+      sql: 'sqlite',
+      database: 'sqlite',
+      mysql: 'mysql',
+      postgres: 'postgresql',
+      postgresql: 'postgresql'
+    };
+    return aliases[normalized] || fallback;
+  };
+
   const isPlainObject = (value) => !!value && typeof value === 'object' && !Array.isArray(value);
 
   const resolveRuntimeRoot = (config = {}) => {
@@ -208,7 +226,7 @@
   };
 
   const createSqlAdapter = (config = {}) => {
-    const type = normalizeString(config.storageType || config.databaseType || config.type || 'sqlite', 'sqlite').toLowerCase();
+    const type = normalizeStorageType(config.storageType || config.databaseType || config.type || 'sqlite', 'sqlite').toLowerCase();
     const normalizedType = (type === 'sql') ? 'sqlite' : type;
     const databaseName = normalizeString(config.databaseName || config.name || config.database || 'framework.db', 'framework.db');
     const connectionId = normalizeString(config.connectionId || config.id || `sql-${normalizedType}`, `sql-${normalizedType}`);
@@ -371,14 +389,14 @@
       return createFileAdapter({ connectionId: 'file-storage' });
     }
 
-    const mode = normalizeString(config.storageType || config.type || config.databaseType || 'file', 'file').toLowerCase();
+    const mode = normalizeStorageType(config.storageType || config.type || config.databaseType || 'file', 'file');
 
     if (mode === 'file') {
       return createFileAdapter(config);
     }
 
-    if (['sqlite', 'mysql', 'postgresql', 'sql'].includes(mode)) {
-      return createSqlAdapter(config);
+    if (['sqlite', 'mysql', 'postgresql'].includes(mode)) {
+      return createSqlAdapter({ ...config, storageType: mode });
     }
 
     return createFileAdapter(config);
@@ -434,6 +452,7 @@
   };
 
   const StorageManager = {
+    supportedTypes: ['file', 'sqlite', 'mysql', 'postgresql'],
     resolveStorageAdapter,
     createFileAdapter,
     createSqlAdapter,
@@ -441,13 +460,8 @@
     getRuntimeAdapter() {
       return resolveStorageAdapter(getConnectionDefinitionFromRuntime());
     },
-    normalizeStorageType: (value, fallback = 'file') => {
-      const normalized = normalizeString(value || fallback, fallback).toLowerCase();
-      if (normalized === 'text') {
-        return 'file';
-      }
-      return normalized;
-    }
+    normalizeStorageType: (value, fallback = 'file') => normalizeStorageType(value, fallback),
+    isSupportedStorageType: (value) => StorageManager.supportedTypes.includes(normalizeStorageType(value, 'file'))
   };
 
   if (typeof module !== 'undefined' && module.exports) {

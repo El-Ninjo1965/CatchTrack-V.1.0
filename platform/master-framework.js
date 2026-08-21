@@ -57,6 +57,7 @@
     apps: new Map(),
     appTemplates: new Map(),
     connections: new Map(),
+    providers: new Map(),
     featureFlags: new Map(),
     normalizeSetupStatus,
     permissions: new Map(),
@@ -120,6 +121,23 @@
           featureSet: 'neutral-workspace'
         }
       });
+
+      if (!this.getProvider('local-provider')) {
+        this.registerProvider({
+          providerId: 'local-provider',
+          name: 'Local Provider',
+          type: 'local',
+          status: 'ready',
+          active: true,
+          default: true,
+          endpoint: 'local://workspace'
+        });
+      }
+
+      if (!this.listProviders().some((provider) => !!provider.active)) {
+        this.setActiveProvider('local-provider');
+      }
+
       // App templates are defined externally or via admin UI configuration, not hardcoded in core.
       return this;
     },
@@ -1054,8 +1072,8 @@
       const appId = normalizeString(connectionDefinition.appId || connectionDefinition.app, 'default-app');
       const serverUrl = normalizeString(connectionDefinition.serverUrl || connectionDefinition.url || connectionDefinition.serverAddress, 'http://localhost');
       const apiBase = normalizeString(connectionDefinition.apiBase || connectionDefinition.basePath || '/api', '/api');
-      const storageType = normalizeString(connectionDefinition.storageType || connectionDefinition.type || connectionDefinition.databaseType || connectionDefinition.connectionType || 'file', 'file');
-      const databaseType = normalizeString(connectionDefinition.databaseType || connectionDefinition.sqlType || ((storageType === 'sql' || storageType === 'sqlite' || storageType === 'mysql' || storageType === 'postgresql') ? storageType : ''), '');
+      const storageType = this.normalizeStorageType(connectionDefinition.storageType || connectionDefinition.type || connectionDefinition.databaseType || connectionDefinition.connectionType || 'file', 'file');
+      const databaseType = this.normalizeStorageType(connectionDefinition.databaseType || connectionDefinition.sqlType || ((storageType === 'sql' || storageType === 'sqlite' || storageType === 'mysql' || storageType === 'postgresql') ? storageType : ''), '');
       const databaseName = normalizeString(connectionDefinition.databaseName || connectionDefinition.name || connectionDefinition.database || '', '');
       const storagePath = normalizeString(connectionDefinition.storagePath || connectionDefinition.filePath || connectionDefinition.path || '', '');
       const host = normalizeString(connectionDefinition.host || '', '');
@@ -1169,13 +1187,146 @@
       return null;
     },
 
+    getProviderManager() {
+      if (typeof globalThis !== 'undefined' && globalThis.ProviderManager && typeof globalThis.ProviderManager.normalizeProviderDefinition === 'function') {
+        return globalThis.ProviderManager;
+      }
+
+      if (typeof require === 'function') {
+        try {
+          return require('./provider-manager');
+        } catch (error) {
+          return null;
+        }
+      }
+
+      return null;
+    },
+
+    normalizeProviderType(value, fallback = 'local') {
+      const manager = this.getProviderManager();
+      if (manager && typeof manager.normalizeProviderType === 'function') {
+        return manager.normalizeProviderType(value, fallback);
+      }
+
+      const normalized = normalizeString(String(value || fallback), fallback).toLowerCase();
+      const aliases = {
+        local: 'local',
+        server: 'server',
+        ownserver: 'server',
+        cloud: 'cloud',
+        cpanel: 'cpanel',
+        ftps: 'cpanel'
+      };
+      return aliases[normalized] || fallback;
+    },
+
+    normalizeProvider(providerDefinition = {}) {
+      const manager = this.getProviderManager();
+      if (manager && typeof manager.normalizeProviderDefinition === 'function') {
+        return manager.normalizeProviderDefinition(providerDefinition);
+      }
+
+      if (!isPlainObject(providerDefinition)) {
+        throw new TypeError('Provider definition must be an object.');
+      }
+
+      const providerId = normalizeString(providerDefinition.providerId || providerDefinition.id || providerDefinition.name || 'local-provider', 'local-provider');
+      const type = this.normalizeProviderType(providerDefinition.type || providerDefinition.providerType || providerDefinition.kind || 'local', 'local');
+      const now = new Date().toISOString();
+
+      return {
+        providerId,
+        id: providerId,
+        name: normalizeString(providerDefinition.name || providerDefinition.label || providerId, providerId),
+        type,
+        providerType: type,
+        status: normalizeString(providerDefinition.status, 'unconfigured'),
+        active: !!providerDefinition.active,
+        default: !!providerDefinition.default,
+        endpoint: normalizeString(providerDefinition.endpoint || providerDefinition.url || providerDefinition.host || '', ''),
+        host: normalizeString(providerDefinition.host || providerDefinition.hostname || '', ''),
+        region: normalizeString(providerDefinition.region || '', ''),
+        path: normalizeString(providerDefinition.path || providerDefinition.rootPath || '', ''),
+        apiBase: normalizeString(providerDefinition.apiBase || providerDefinition.basePath || '/api', '/api'),
+        authType: normalizeString(providerDefinition.authType || 'none', 'none'),
+        username: normalizeString(providerDefinition.username || '', ''),
+        password: normalizeString(providerDefinition.password || '', ''),
+        credentialsRef: normalizeString(providerDefinition.credentialsRef || '', ''),
+        metadata: isPlainObject(providerDefinition.metadata) ? { ...providerDefinition.metadata } : {},
+        createdAt: normalizeString(providerDefinition.createdAt, now),
+        updatedAt: normalizeString(providerDefinition.updatedAt, now)
+      };
+    },
+
+    registerProvider(providerDefinition = {}) {
+      const provider = this.normalizeProvider(providerDefinition);
+      this.providers.set(provider.providerId, provider);
+      return { ...provider, metadata: { ...(provider.metadata || {}) } };
+    },
+
+    getProvider(providerId) {
+      const normalized = normalizeString(providerId, '');
+      if (!normalized) {
+        return null;
+      }
+      return this.providers.has(normalized)
+        ? { ...this.providers.get(normalized), metadata: { ...(this.providers.get(normalized).metadata || {}) } }
+        : null;
+    },
+
+    listProviders() {
+      return Array.from(this.providers.values()).map((provider) => ({ ...provider, metadata: { ...(provider.metadata || {}) } }));
+    },
+
+    setActiveProvider(providerId) {
+      const normalized = normalizeString(providerId, '');
+      if (!normalized) {
+        throw new Error('Provider id is required.');
+      }
+
+      const provider = this.getProvider(normalized);
+      if (!provider) {
+        throw new Error(`Provider not found: ${normalized}`);
+      }
+
+      for (const existing of this.providers.values()) {
+        existing.active = false;
+      }
+      provider.active = true;
+      provider.status = provider.status || 'ready';
+      this.providers.set(provider.providerId, provider);
+      return { ...provider, metadata: { ...(provider.metadata || {}) } };
+    },
+
+    removeProvider(providerId) {
+      const normalized = normalizeString(providerId, '');
+      if (!normalized) {
+        return false;
+      }
+      return this.providers.delete(normalized);
+    },
+
     normalizeStorageType(value, fallback = 'file') {
       const manager = this.getStorageManager();
       if (manager && typeof manager.normalizeStorageType === 'function') {
         return manager.normalizeStorageType(value, fallback);
       }
+
       const normalized = normalizeString(String(value || fallback), fallback).toLowerCase();
-      return normalized === 'text' ? 'file' : normalized;
+      const aliases = {
+        text: 'file',
+        json: 'file',
+        file: 'file',
+        filesystem: 'file',
+        sqlite: 'sqlite',
+        sql: 'sqlite',
+        database: 'sqlite',
+        mysql: 'mysql',
+        postgres: 'postgresql',
+        postgresql: 'postgresql'
+      };
+      return aliases[normalized] || fallback;
     },
 
     createStorageAdapter(connectionDefinition = {}) {
@@ -1669,6 +1820,8 @@
       return {
         devices: [],
         licenses: [],
+        providers: [],
+        activeProviderId: null,
         updates: {
           currentVersion: this.version,
           availableVersion: null,
@@ -1743,6 +1896,10 @@
         ...source,
         devices: Array.isArray(source.devices) ? source.devices.map((device) => this.normalizeDevice(device)).filter(Boolean) : [],
         licenses: Array.isArray(source.licenses) ? source.licenses.map((license) => this.normalizeLicense(license)).filter(Boolean) : [],
+        providers: Array.isArray(source.providers)
+          ? source.providers.map((provider) => this.normalizeProvider(provider)).filter(Boolean)
+          : [],
+        activeProviderId: normalizeString(source.activeProviderId || '', ''),
         updates: this.normalizeUpdateState(source.updates || baseState.updates),
         marketplace: {
           ...baseState.marketplace,
@@ -1764,6 +1921,10 @@
         ...state,
         devices: Array.isArray(state.devices) ? state.devices.map((device) => this.normalizeDevice(device)).filter(Boolean) : [],
         licenses: Array.isArray(state.licenses) ? state.licenses.map((license) => this.normalizeLicense(license)).filter(Boolean) : [],
+        providers: Array.isArray(state.providers)
+          ? state.providers.map((provider) => this.normalizeProvider(provider)).filter(Boolean)
+          : [],
+        activeProviderId: normalizeString(state.activeProviderId || '', ''),
         updates: this.normalizeUpdateState(state.updates || {}),
         marketplace: {
           ...this.getDefaultAdminState().marketplace,

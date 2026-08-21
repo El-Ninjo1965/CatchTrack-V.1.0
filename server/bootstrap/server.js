@@ -758,6 +758,65 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     return true;
   }
 
+  if (pathname === `${apiBase}/providers` || pathname === `${apiBase}/admin/providers`) {
+    if (req && req.method === 'GET') {
+      if (!requireViewerOrAdminAccess(req, res)) {
+        return true;
+      }
+
+      const providers = MasterFramework.listProviders();
+      const activeProviderId = MasterFramework.getDefaultAdminState().activeProviderId || (providers[0] && providers[0].providerId) || 'local-provider';
+      sendJson(res, 200, {
+        ok: true,
+        providers,
+        activeProviderId,
+        status: providers.length ? 'ready' : 'not_configured'
+      });
+      return true;
+    }
+
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+
+      readJsonBody(req)
+        .then((payload = {}) => {
+          const provider = MasterFramework.registerProvider(payload);
+          if (payload.active || !MasterFramework.listProviders().some((entry) => !!entry.active)) {
+            MasterFramework.setActiveProvider(provider.providerId);
+          }
+          const state = MasterFramework.loadAdminState();
+          state.providers = MasterFramework.listProviders();
+          if (provider.active || payload.active) {
+            state.activeProviderId = provider.providerId;
+          }
+          MasterFramework.saveAdminState(state);
+          sendJson(res, 200, { ok: true, provider, status: 'created' });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_PROVIDER', message: error.message || 'Provider payload invalid.' });
+        });
+      return true;
+    }
+
+    if (req && req.method === 'DELETE') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+
+      const target = (req.url || '').split('?')[0].replace(`${apiBase}/providers/`, '').replace(`${apiBase}/admin/providers/`, '').trim();
+      const providerId = target || (req.headers && req.headers['x-provider-id']) || '';
+      const removed = MasterFramework.removeProvider(providerId);
+      sendJson(res, removed ? 200 : 404, {
+        ok: removed,
+        providerId,
+        status: removed ? 'deleted' : 'not_found'
+      });
+      return true;
+    }
+  }
+
   if (pathname === `${apiBase}/setup` || pathname === `${apiBase}/admin/setup` || pathname === `${apiBase}/setup/status` || pathname === `${apiBase}/admin/setup/status` || pathname === `${apiBase}/install/status`) {
     if (req && req.method === 'POST') {
       if (!requireAdminWriteAccess(req, res)) {
@@ -1214,7 +1273,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
     if (req.method === 'POST') {
       readJsonBody(req)
-        .then((payload) => {
+        .then(async (payload) => {
           const validationErrors = inputValidation.validateUserPayload(payload);
           if (validationErrors.length > 0) {
             sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', errors: validationErrors });
@@ -1222,7 +1281,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
           }
 
           const actor = getRequestRoles(req)[0] || 'admin';
-          const user = userService.create(payload, actor);
+          const user = await userService.create(payload, actor);
           sendJson(res, 200, {
             ok: true,
             user
@@ -1265,9 +1324,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
 
     if (req.method === 'PUT') {
       readJsonBody(req)
-        .then((payload) => {
+        .then(async (payload) => {
           const actor = getRequestRoles(req)[0] || 'admin';
-          const updated = userService.update(userId, payload, actor);
+          const updated = await userService.update(userId, payload, actor);
           sendJson(res, 200, {
             ok: true,
             user: updated
@@ -1284,20 +1343,22 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     }
 
     if (req.method === 'DELETE') {
-      try {
-        const actor = getRequestRoles(req)[0] || 'admin';
-        userService.remove(userId, actor);
-        sendJson(res, 200, {
-          ok: true,
-          message: `User '${userId}' deleted`
-        });
-      } catch (error) {
-        if (error.message.includes('not found')) {
-          sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: error.message });
-        } else {
-          sendJson(res, 400, { ok: false, code: 'DELETE_FAILED', message: error.message });
+      (async () => {
+        try {
+          const actor = getRequestRoles(req)[0] || 'admin';
+          await userService.remove(userId, actor);
+          sendJson(res, 200, {
+            ok: true,
+            message: `User '${userId}' deleted`
+          });
+        } catch (error) {
+          if (error.message.includes('not found')) {
+            sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: error.message });
+          } else {
+            sendJson(res, 400, { ok: false, code: 'DELETE_FAILED', message: error.message });
+          }
         }
-      }
+      })();
       return true;
     }
   }

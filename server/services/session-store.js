@@ -1,29 +1,22 @@
 'use strict';
 
 /**
- * Session Store Adapter
+ * SessionStore adapter contract.
  *
- * SessionStore is the abstraction between AuthService and wherever session
- * state actually lives. It intentionally exposes a small, storage-agnostic
- * interface (create/get/touch/destroy/count) so the concrete backend can be
- * swapped through configuration only, without changing AuthService.
+ * The contract intentionally abstracts the storage backend so AuthService does
+ * not depend on whether session state is in memory, on disk, or a future
+ * shared backend such as Redis/Valkey.
  *
- *   AuthService -> SessionStore interface -> MemoryStore | FileStore | (future) SharedStore
+ * Required operations:
+ * - create(session)
+ * - get(sessionId)
+ * - update(sessionId, patch)
+ * - delete(sessionId)
+ * - count()
  *
- * Two adapters are implemented today:
- *  - MemoryStore: process-local Map. Fast, but sessions do not survive a
- *    restart and are not visible to other processes. Development/test only.
- *  - FileStore: persists sessions as JSON under config/sessions.json. This is
- *    the current production-usable default for a single-server deployment: a
- *    restart keeps sessions alive because state lives on disk rather than in
- *    process RAM.
- *
- * Neither adapter is a true multi-instance shared store (a FileStore backed
- * by local disk does not help once instances run on different machines).
- * The interface is deliberately storage-agnostic so a later "shared" adapter
- * (e.g. Redis, a database table) can be dropped in behind the same contract
- * (create/get/touch/destroy) with only a configuration change
- * (AUTH_SESSION_STORE=shared) and no AuthService rewrite.
+ * The current default is a file-backed store. A memory store is still exposed
+ * for tests/dev. A future shared adapter can be inserted behind the same API
+ * without any AuthService or API code changes.
  */
 
 const fs = require('node:fs');
@@ -47,18 +40,30 @@ class MemorySessionStore {
     return session ? { ...session } : null;
   }
 
-  async touch(sessionId, updates) {
+  async update(sessionId, changes = {}) {
     const existing = this.sessions.get(sessionId);
     if (!existing) {
       return null;
     }
-    const next = { ...existing, ...updates };
+    const next = { ...existing, ...changes };
     this.sessions.set(sessionId, next);
     return { ...next };
   }
 
-  async destroy(sessionId) {
+  async renew(sessionId, changes = {}) {
+    return this.update(sessionId, changes);
+  }
+
+  async touch(sessionId, changes = {}) {
+    return this.update(sessionId, changes);
+  }
+
+  async delete(sessionId) {
     return this.sessions.delete(sessionId);
+  }
+
+  async destroy(sessionId) {
+    return this.delete(sessionId);
   }
 
   async count() {
@@ -126,19 +131,27 @@ class FileSessionStore {
     return session ? { ...session } : null;
   }
 
-  async touch(sessionId, updates) {
+  async update(sessionId, changes = {}) {
     const all = this._readAll();
     const existing = all[sessionId];
     if (!existing) {
       return null;
     }
-    const next = { ...existing, ...updates };
+    const next = { ...existing, ...changes };
     all[sessionId] = next;
     this._writeAll(all);
     return { ...next };
   }
 
-  async destroy(sessionId) {
+  async renew(sessionId, changes = {}) {
+    return this.update(sessionId, changes);
+  }
+
+  async touch(sessionId, changes = {}) {
+    return this.update(sessionId, changes);
+  }
+
+  async delete(sessionId) {
     const all = this._readAll();
     if (!(sessionId in all)) {
       return false;
@@ -146,6 +159,10 @@ class FileSessionStore {
     delete all[sessionId];
     this._writeAll(all);
     return true;
+  }
+
+  async destroy(sessionId) {
+    return this.delete(sessionId);
   }
 
   async count() {
@@ -159,11 +176,6 @@ class FileSessionStore {
 
 const instances = new Map();
 
-/**
- * Resolve a session store instance for the given adapter kind.
- * Kinds are cached by kind+configDir so repeated calls (e.g. per request)
- * reuse the same underlying store instead of re-reading files needlessly.
- */
 const resolveSessionStore = (kind = 'local', options = {}) => {
   const normalizedKind = String(kind || 'local').trim().toLowerCase();
   const cacheKey = `${normalizedKind}:${options.configDir || ''}`;
@@ -178,9 +190,6 @@ const resolveSessionStore = (kind = 'local', options = {}) => {
   } else if (normalizedKind === 'local' || normalizedKind === 'file') {
     store = new FileSessionStore(options);
   } else {
-    // Unknown/unconfigured "shared" adapters fall back to the file store so
-    // the application keeps working; a real shared adapter (e.g. Redis)
-    // should be registered here in the future via AUTH_SESSION_STORE.
     console.warn(`[session-store] Unknown AUTH_SESSION_STORE "${kind}", falling back to local file store.`);
     store = new FileSessionStore(options);
   }
@@ -193,6 +202,5 @@ module.exports = {
   MemorySessionStore,
   FileSessionStore,
   resolveSessionStore,
-  // Exposed for tests that need a fully isolated store without the module cache.
   _resetCache: () => instances.clear()
 };

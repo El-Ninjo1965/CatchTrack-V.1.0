@@ -69,7 +69,7 @@ const login = async ({ username, password, ip = 'unknown' } = {}) => {
   }
 
   const user = userService.getByUsername(identifier);
-  const passwordValid = !!user && !!user.passwordHash && userService.verifyPassword(password, user.passwordHash);
+  const passwordValid = !!user && !!user.passwordHash && await userService.verifyPassword(password, user.passwordHash);
 
   if (!user || !passwordValid) {
     const rateState = loginRateLimiter.registerFailure(identifier, ip);

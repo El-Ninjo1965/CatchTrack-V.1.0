@@ -1,6 +1,8 @@
 'use strict';
 
-const persistenceService = require('./persistence-service');
+const { resolveAuditStore } = require('./audit-store');
+
+let store = resolveAuditStore(process.env.AUDIT_STORE || 'file', { configDir: require('node:path').join(__dirname, '../../config') });
 
 const log = (action, resource, resourceId, actor, details = {}, result = 'success') => {
   try {
@@ -15,20 +17,7 @@ const log = (action, resource, resourceId, actor, details = {}, result = 'succes
       result
     };
 
-    const auditLog = persistenceService.readJsonFile('audit-log.json', { entries: [] });
-    if (!Array.isArray(auditLog.entries)) {
-      auditLog.entries = [];
-    }
-
-    auditLog.entries.push(auditEntry);
-
-    // Keep only last 1000 entries to avoid huge files
-    if (auditLog.entries.length > 1000) {
-      auditLog.entries = auditLog.entries.slice(-1000);
-    }
-
-    persistenceService.writeJsonFile('audit-log.json', auditLog);
-    return auditEntry;
+    return store.append(auditEntry);
   } catch (error) {
     console.error('[audit-service] Failed to log audit entry:', error.message);
     return null;
@@ -37,26 +26,7 @@ const log = (action, resource, resourceId, actor, details = {}, result = 'succes
 
 const getLog = (filters = {}) => {
   try {
-    const auditLog = persistenceService.readJsonFile('audit-log.json', { entries: [] });
-    let entries = Array.isArray(auditLog.entries) ? auditLog.entries : [];
-
-    if (filters.action) {
-      entries = entries.filter((e) => e.action === filters.action);
-    }
-    if (filters.resource) {
-      entries = entries.filter((e) => e.resource === filters.resource);
-    }
-    if (filters.actor) {
-      entries = entries.filter((e) => e.actor === filters.actor);
-    }
-    if (filters.result) {
-      entries = entries.filter((e) => e.result === filters.result);
-    }
-    if (filters.since) {
-      entries = entries.filter((e) => new Date(e.timestamp) >= new Date(filters.since));
-    }
-
-    return entries;
+    return store.list(filters || {});
   } catch (error) {
     console.error('[audit-service] Failed to read audit log:', error.message);
     return [];
@@ -66,6 +36,11 @@ const getLog = (filters = {}) => {
 module.exports = {
   log,
   getLog,
+  getStore: () => store,
+  setStore: (nextStore) => {
+    store = nextStore;
+    return store;
+  },
   actions: {
     USER_CREATED: 'user.created',
     USER_UPDATED: 'user.updated',

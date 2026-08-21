@@ -3,17 +3,12 @@
 const crypto = require('node:crypto');
 const persistenceService = require('./persistence-service');
 const auditService = require('./audit-service');
+const { hashPassword, verifyPassword } = require('./password-hash');
 
 const generateUserId = () => `user-${crypto.randomBytes(4).toString('hex')}`;
 
-const hashPassword = (password) => {
-  // Simple hash for local development - use bcrypt in production
-  return crypto.createHash('sha256').update(password + 'framework-salt').digest('hex');
-};
-
-const verifyPassword = (password, hash) => {
-  return hashPassword(password) === hash;
-};
+const isModernPasswordHash = (hash) => typeof hash === 'string' && (hash.startsWith('$argon2') || hash.startsWith('scrypt$'));
+const isLegacyPasswordHash = (hash) => typeof hash === 'string' && hash.trim() && !isModernPasswordHash(hash);
 
 const getAll = () => {
   try {
@@ -45,7 +40,42 @@ const getByUsername = (username) => {
   }
 };
 
-const create = (userData, actor = 'system') => {
+const migrateLegacyPasswordIfNeeded = async (userId, password) => {
+  if (!userId || !password) {
+    return false;
+  }
+
+  const user = getById(userId);
+  if (!user || !user.passwordHash) {
+    return false;
+  }
+
+  if (isModernPasswordHash(user.passwordHash)) {
+    return false;
+  }
+
+  if (!isLegacyPasswordHash(user.passwordHash)) {
+    return false;
+  }
+
+  if (!(await verifyPassword(password, user.passwordHash))) {
+    return false;
+  }
+
+  const replacementHash = await hashPassword(password);
+  const users = getAll();
+  const index = users.findIndex((candidate) => candidate.id === userId);
+  if (index < 0) {
+    return false;
+  }
+
+  users[index].passwordHash = replacementHash;
+  users[index].updatedAt = new Date().toISOString();
+  persistenceService.saveAdminUsers({ users });
+  return true;
+};
+
+const create = async (userData, actor = 'system') => {
   try {
     const validation = validateUserData(userData, { isNew: true });
     if (!validation.valid) {
@@ -73,7 +103,7 @@ const create = (userData, actor = 'system') => {
       permissions: Array.isArray(userData.permissions) ? userData.permissions : [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      passwordHash: userData.password ? hashPassword(userData.password) : null
+      passwordHash: userData.password ? await hashPassword(userData.password) : null
     };
 
     const users = getAll();
@@ -86,7 +116,6 @@ const create = (userData, actor = 'system') => {
       role: user.role
     });
 
-    // Don't return passwordHash
     const { passwordHash, ...userPublic } = user;
     return userPublic;
   } catch (error) {
@@ -97,7 +126,7 @@ const create = (userData, actor = 'system') => {
   }
 };
 
-const update = (userId, updates, actor = 'system') => {
+const update = async (userId, updates, actor = 'system') => {
   try {
     const user = getById(userId);
     if (!user) {
@@ -109,7 +138,6 @@ const update = (userId, updates, actor = 'system') => {
       throw new Error(validation.errors.join(', '));
     }
 
-    // Check email uniqueness
     if (updates.email && updates.email !== user.email) {
       const existingByEmail = getAll().find((u) => u.email === updates.email);
       if (existingByEmail) {
@@ -128,7 +156,7 @@ const update = (userId, updates, actor = 'system') => {
     };
 
     if (updates.password) {
-      updated.passwordHash = hashPassword(updates.password);
+      updated.passwordHash = await hashPassword(updates.password);
     }
 
     const users = getAll();
@@ -153,7 +181,7 @@ const update = (userId, updates, actor = 'system') => {
   }
 };
 
-const remove = (userId, actor = 'system') => {
+const remove = async (userId, actor = 'system') => {
   try {
     const user = getById(userId);
     if (!user) {
@@ -179,8 +207,7 @@ const remove = (userId, actor = 'system') => {
 
 const validateUserData = (userData, options = {}) => {
   const errors = [];
-
-  const { isNew = false, isUpdate = false } = options;
+  const { isNew = false } = options;
 
   if (isNew || userData.username !== undefined) {
     if (!userData.username || typeof userData.username !== 'string' || userData.username.trim().length < 3) {
@@ -237,5 +264,7 @@ module.exports = {
   remove,
   verifyPassword,
   validateUserData,
-  generateUserId
+  generateUserId,
+  migrateLegacyPasswordIfNeeded,
+  hashPassword
 };

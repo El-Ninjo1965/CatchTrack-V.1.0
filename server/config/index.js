@@ -43,5 +43,9 @@ module.exports = {
   },
   server: {
     mode: serverMode
+  },
+  provider: {
+    defaultType: String(process.env.PROVIDER_TYPE || 'local').trim().toLowerCase() || 'local',
+    activeProviderId: process.env.ACTIVE_PROVIDER_ID || 'local-provider'
   }
 };
