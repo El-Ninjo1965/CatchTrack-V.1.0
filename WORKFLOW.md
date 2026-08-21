@@ -67,6 +67,588 @@ Beispiel-Formulierung:
    - Tariflogik darf nicht direkt in einzelne Fachmodule eingebaut werden.
    - Update-Checks, Backup-/Restore-Prozesse und Entitlement-Entscheidungen sind als Framework-/Service-Schicht zu modellieren, nicht als fachliche App-Logik.
 
+## IMPLEMENTIERUNGSPLAN FÜR DAS NEUTRALE FRAMEWORK
+
+### 1. Zielarchitektur
+
+Das Zielsystem ist ein neutraler, modularer Framework-Stack mit klarer Trennung zwischen Core, Runtime, Admin-CMS, API-Services und produktiver Infrastruktur. Historische Referenzmodule wie GPS, Store, Retail, Catch Log oder Fishing Spots bleiben nur als Validierungsbeispiele dokumentiert; sie sind keine aktuellen Framework-Bestandteile und keine Produktprioritäten.
+
+#### Core
+
+- Verantwortlich für die grundlegenden technischen Garantien:
+  - App-/Runtime-Isolation
+  - Module-System
+  - Rollen-/Permission-Engine
+  - Auth- und Sitzungsschicht
+  - Konfigurations- und Settings-Management
+  - Storage-Abstraktion
+  - Provider-/Infrastructure-Abstraktion
+  - Update-/Release-Management
+  - Backup-/Restore-Management
+  - Log-/Audit-/Monitoring-Schicht
+  - API-Routing und Security-Hardening
+- Der Core darf keine fachliche App-Logik enthalten.
+- Alle fachlichen Funktionen werden als eigenständige Module oder Service-Schichten ergänzt.
+
+#### Framework Services
+
+- `core/runtime` – App-Initialisierung, Context, Lifecycle, Runtime-Registry
+- `core/auth` – Login, Session-Validation, Rolle-Resolver, Access Control
+- `core/permissions` – central policy engine, scopes, resource checks
+- `core/modules` – registry, install, enable, disable, version checks
+- `core/config` – system settings, app configuration, env mapping
+- `core/entitlements` – feature gating, premium rules, tier checks
+- `core/updater` – version check, compatibility, update orchestration
+- `core/backup` – user and system backup orchestration
+- `core/storage` – adapter layer for file, database and future cloud storage
+- `core/providers` – infrastructure adapters for cPanel, own server, cloud, DNS/hoster
+- `core/logging` – audit logs, system logs, activity streams
+- `core/monitoring` – health checks, metrics, alerts
+
+#### Admin-/CMS-System
+
+Der Admin-Bereich bleibt zentraler, CMS-artiger Bereich des Frameworks und kein separater fachlicher Product-Code.
+
+Zielstruktur:
+- Dashboard
+  - Systemstatus
+  - Health status
+  - active app and runtime summary
+  - audit signal overview
+- Navigation
+  - hierarchy: System > Users > Roles > Modules > Entitlements > Storage > Backup > Updates > Provider > Monitoring > Settings
+- Seiten-/Menüstruktur
+  - Dashboard
+  - Benutzer
+  - Rollen/Rechte
+  - Sicherheit
+  - Module
+  - Entitlements/Tarife
+  - Updates
+  - Backup/Restore
+  - Storage
+  - Logs
+  - Monitoring
+  - Provider/Server
+  - Wartung
+  - Einstellungen
+- Trennung:
+  - Admin Views und Admin Services bleiben im Framework, nicht in Fachmodulen.
+  - Fachmodule liefern nur ihre eigenen Views und Services, aber nicht die zentrale Admin-Logik.
+
+#### Benutzerverwaltung
+
+- User-Model mit ID, username, display name, email, status, role, app scopes
+- Profile, session link, last seen, created/updated timestamps
+- Self-service profile settings separated from system admin actions
+- Admin actions: create, edit, disable, enable, delete, reset password, assign roles and permissions
+- User-level access must be enforced server-side, not only in UI
+
+#### Rollen/Rechte
+
+- Central role catalog with base roles such as admin, developer, manager, member, user
+- Permission policy with resource scopes, not only UI flags
+- Example permission layers:
+  - `system:view`, `system:write`
+  - `user:read`, `user:write`
+  - `module:read`, `module:write`
+  - `config:read`, `config:write`
+  - `backup:read`, `backup:write`
+  - `updates:read`, `updates:write`
+  - `provider:read`, `provider:write`
+  - `entitlement:read`, `entitlement:write`
+- Permissions are checked in the API layer and by service layer; UI checks remain helper-only
+
+#### Authentifizierung
+
+- Password hashing with bcrypt or Argon2
+- Secure admin and user login flows with server-side validation
+- Authentication separated from app logic
+- Additional API authentication model allowed later via token-based adapter, but not as the default for the core implementation
+- Authentication references must not be hardcoded into concrete modules
+
+#### Sessions
+
+- Server-side session store
+- HttpOnly, Secure, SameSite cookies
+- TTL and absolute timeout configuration
+- Session invalidation on logout, password change, role changes, admin disable
+- Session storage in DB-backed session layer; browser-only storage remains only a local preview convenience, not a productive authority
+
+#### API
+
+- HTTP API as neutral product layer for admin, user and runtime operations
+- Route groups:
+  - `/api/health`
+  - `/api/auth/*`
+  - `/api/users/*`
+  - `/api/roles/*`
+  - `/api/modules/*`
+  - `/api/config/*`
+  - `/api/logs/*`
+  - `/api/system/*`
+  - `/api/backup/*`
+  - `/api/updates/*`
+  - `/api/providers/*`
+  - `/api/entitlements/*`
+- Standard response envelope:
+  - ok
+  - data
+  - meta
+  - error
+- Standard error codes: AUTH_REQUIRED, AUTH_INVALID, FORBIDDEN, VALIDATION_ERROR, NOT_FOUND, CONFLICT, INTERNAL_ERROR, PROVIDER_ERROR, UPDATE_CHECK_FAILED
+- API versioning required from first production design phase
+
+#### Module-System
+
+- Module registry with app-scoped metadata and version metadata
+- Module lifecycle: install, enable, disable, uninstall, update
+- Each module owns:
+  - metadata
+  - routes or UI surface
+  - config
+  - permissions
+  - entitlement requirements
+  - storage namespace
+  - optional migration scripts
+- Module boundaries are enforced by namespace, access control and runtime contracts
+- Historical examples like GPS, Store or Retail remain examples only; they do not define the live module inventory
+
+#### Entitlements
+
+- Central entitlement manager
+- Free / Paid / Premium model as policy layer
+- Capability-based decisions for feature gate, storage cap, backup availability, premium modules and update channels
+- Entitlements must be checked centrally and not hardcoded into modules
+
+#### Update-System
+
+- At startup: check installed framework version, app version, installed module versions, available versions and compatibility
+- Validate compatibility, security status and dependency constraints before applying update
+- Show update notices in admin and user context where appropriate
+- Update source abstraction: own server, provider-managed store, other future sources
+- Rollback strategy defined for critical system updates or failed installs
+
+#### Backup/Restore
+
+- Split between system backup and user backup
+- System backup: server config, DB structure, admin data, logs, runtime config
+- User backup: personal data, settings, metadata, optional media according to entitlement
+- User backup never exposed to other users; strict ownership and isolation required
+- Backup provider abstraction for local, provider, cloud or archive storage
+
+#### Storage
+
+- Productive storage model is MySQL for system data and app data
+- File storage remains for uploads, temporary files and export artifacts
+- Storage abstraction must define a consistent interface for DB, file, session and future adapter layers
+- Each app keeps its own namespaces and isolation boundaries
+
+#### Provider/Infrastructure
+
+- Setup and runtime infrastructure are abstracted behind provider adapters
+- First concrete provider: cPanel + FTPS for deployment only
+- Future providers must be interchangeable without core changes
+- Secrets and connection details remain outside repository and must be loaded by environment or provider config
+
+#### Logging/Audit
+
+- Central system log for access, auth, admin actions, configuration changes, backups, updates and security incidents
+- Audit trail for who did what, when, and against which resource
+- No passwords, tokens or secrets stored in logs
+
+#### Monitoring
+
+- Health endpoints, runtime status, storage status, DB connectivity, session status, module status
+- Alerts for failed auth, elevated error rate, storage or provider issues
+- Monitoring integrates with admin dashboard and system operations
+
+#### Security
+
+- Central security layer across auth, API, admin controllers, storage and update endpoints
+- CSRF, input validation, output encoding, rate limiting, privilege checks, secret handling
+- Security defaults must be enforced before exposing any admin or app functionality
+
+### 2. Admin-CMS-Konzept
+
+Der Admin-Bereich ist ein CMS-artiges System mit klaren, abrechenbaren Bereichen.
+
+#### Menüstruktur
+
+- Dashboard
+- Benutzer
+  - Liste
+  - Profil
+  - Rollen
+  - Status
+  - Aktivitätslog
+- Rollen/Rechte
+  - Rollen definieren
+  - Berechtigungen verbinden
+  - Scope-Modelle verwalten
+- Sicherheit
+  - Session-Status
+  - Login-Events
+  - Fehlversuche
+  - Password reset flows
+- System
+  - Runtime status
+  - App status
+  - Env overview
+  - health summary
+- Module
+  - install
+  - enable/disable
+  - update
+  - metadata edit
+  - permission mapping
+- Entitlements
+  - tariffs
+  - feature bundles
+  - user assignment
+  - upgrade workflow
+- Updates
+  - version check
+  - pending release queue
+  - deployment log
+  - rollback status
+- Backup/Restore
+  - system backup
+  - user backup
+  - restore log
+- Storage
+  - DB overview
+  - file overview
+  - upload storage
+  - quota information
+- Server/Provider
+  - provider config
+  - connection status
+  - environment values
+  - deployment config
+- Logs
+  - app log
+  - admin log
+  - audit log
+- Monitoring
+  - health summary
+  - uptime
+  - resource summary
+  - issue list
+- Wartung
+  - maintenance mode
+  - cleanup jobs
+  - queue tasks
+- Einstellungen
+  - general app settings
+  - default modes
+  - default themes
+  - feature defaults
+
+#### Bereiche mit eigenen Services/Modulen
+
+Die zentralen Admin-Services sollten separat von fachlichen Modulen existieren. Empfehlung:
+- `admin/dashboard-service`
+- `admin/user-service`
+- `admin/role-service`
+- `admin/security-service`
+- `admin/module-service`
+- `admin/entitlement-service`
+- `admin/update-service`
+- `admin/backup-service`
+- `admin/storage-service`
+- `admin/provider-service`
+- `admin/log-service`
+- `admin/monitoring-service`
+- `admin/settings-service`
+
+Fachliche Module wie Store, GPS oder andere Produkte liefern ihre eigene Oberfläche und eigene Datenmodelle, aber sie dürfen nicht die zentrale Admin-Struktur des Frameworks ersetzen.
+
+### 3. Serverarchitektur
+
+#### Produktiver Server
+
+- Node.js runtime with LTS
+- API layer for auth, users, roles, modules, config, updates and storage
+- Admin UI served from the framework’s templated frontend layer
+- MySQL as default production database
+- File system as storage layer for logs, uploads, backups and cache artifacts
+- No direct FTP/FTPS inside runtime logic
+
+#### Provider-Abstraktion
+
+- `provider-manager` and `provider-adapter` layer
+- default provider interfaces:
+  - cPanel deployment adapter
+  - own-server adapter
+  - cloud provider adapter
+  - local provider adapter
+- provider config is handled by admin and env config, not by direct source-code assumptions
+
+#### cPanel/FTPS-Umgebung
+
+- cPanel + FTPS is the first concrete infrastructure used for deployment
+- FTPS is a deployment transport, not part of the runtime architecture
+- Runtime code must not depend on cPanel-specific implementation details
+- Deployment must remain separable from the framework core
+
+#### Sichere API-Kommunikation
+
+- server-side session validation
+- secure cookies and API route protection
+- route-based permission enforcement
+- no client-side-only authorization checks
+- protected admin and system routes by role and scope
+
+#### Serverkonfiguration über Admin-Bereich
+
+- active app ID
+- default storage mode
+- app name and display config
+- provider connection settings
+- update source settings
+- backup configuration
+- notification and logging defaults
+- security defaults
+- maintenance settings
+
+### 4. App- und Update-System
+
+#### Laufzeitablauf beim Start
+
+1. App startet
+2. Framework initialisiert Runtime-Context und App-Isolation
+3. Konfiguration wird geladen
+4. aktive App und aktive Module werden bestimmt
+5. Versionen werden geprüft
+6. Module- und Dependency-Checks werden ausgeführt
+7. Update-Quelle wird aufgelöst
+8. verfügbare Updates werden geprüft
+9. Kompatibilitätsregeln werden validiert
+10. Nutzer/Admin erhalten Hinweis bei Aktualisierungen
+11. Update wird nur nach freigegebenem Richtlinien- und Sicherheitscheck durchgeführt
+
+#### Update-Provider-Architektur
+
+- Provider interface for source selection
+- current provider can be same server or managed provider
+- later provider sources may include store or external marketplace
+- update plan must tolerate provider changes without code rewrites
+
+#### Update-Policy
+
+- stable / beta channels configurable
+- critical update checks before normal updates
+- compatibility check for module dependencies
+- signed package or hash validation where applicable
+- rollback path for failed updates
+
+### 5. Benutzer-Backup-Design
+
+Das Backup-System bleibt schlank und klar getrennt.
+
+#### Persönliche Daten
+
+- user profile settings
+- personal configuration
+- app states relevant to the user
+- required metadata for recovery
+- user-scoped exports
+
+#### Fotos/Medien
+
+- included only when entitlement allows it
+- optional upload and restore quota per plan
+- no media exposure beyond the user scope
+
+#### Wiederherstellung
+
+- restore selected backup set
+- device change support
+- restore step-by-step with validation
+- no system-wide override without admin approval
+
+#### Freie / Bezahlte Funktionen
+
+- Free: minimal or no personal backup
+- Paid: personal backups enabled according to entitlement policy
+- system backup and user backup remain separate domains
+
+### 6. Modularität und spätere Fachmodule
+
+Neue Fachmodule werden später unabhängig hinzugefügt, ohne den Core umzubauen.
+
+Jedes Fachmodul muss sein:
+- eigene Oberfläche
+- eigene Konfiguration
+- eigene Datenstrukturen oder Daten-Namespaces
+- eigene Berechtigungen
+- eigene Entitlement-Anforderungen
+- eigene Update-/Version-Policy
+
+Technische Regeln:
+- keine harte Core-Abhängigkeit
+- modulare Discovery-API
+- registriertes Modul mit metadata and lifecycle
+- restricted cross-module communication via contracts
+- no direct rewrite of core components
+
+### 7. Reihenfolge der Umsetzung
+
+Die technische Reihenfolge sollte nicht nach Produktfunktion, sondern nach Abhängigkeiten gebaut werden.
+
+#### Phase 1 – Fundament
+
+- stable runtime bootstrap
+- environment and configuration
+- health endpoints and logger
+- application and runtime isolation
+- admin shell skeleton
+
+#### Phase 2 – Security/Auth
+
+- password hashing
+- login flow
+- role resolution
+- server-side session handling
+- admin access enforcement
+- secure API route protection
+
+#### Phase 3 – Daten/API
+
+- MySQL and DB adapter layer
+- users, roles, config storage
+- API routes and response format
+- audit event model
+
+#### Phase 4 – Module-System
+
+- registry
+- metadata schema
+- enable/disable lifecycle
+- version checks
+- permission mapping
+
+#### Phase 5 – Admin-CMS
+
+- dashboard
+- user management
+- roles and permissions
+- logs and security views
+- module governance
+- configuration pages
+
+#### Phase 6 – Storage/Provider
+
+- storage interfaces
+- backup storage adapter
+- provider abstraction
+- cPanel deployment adapter
+- cloud/local provider adapters
+
+#### Phase 7 – Updates
+
+- version checks
+- compatibility validation
+- update notifications
+- rollback logic
+
+#### Phase 8 – Backup
+
+- system backup and user backup flows
+- restore logic
+- entitlement checks
+
+#### Phase 9 – Monitoring/Hardening
+
+- health checks
+- alerts
+- audit review
+- rate limiting
+- security hardening
+- production validation
+
+### 8. Externe Aufgaben, die später außerhalb des Repositories eingerichtet werden müssen
+
+Jede spätere externe Aufgabe muss mit genauer Definition dokumentiert werden und darf nicht im Quellcode verankert sein.
+
+#### 1. MySQL-Datenbank
+- Zweck: produktive Datenhaltung für users, roles, sessions, config, modules, logs, audit and app data
+- benötigte Werte: DB host, port, database name, username, password, charset, timezone
+- Berechtigungen: CREATE, ALTER, INSERT, UPDATE, DELETE, SELECT, INDEX, REFERENCES
+- Eintragungsort: .env, provider config, external deployment environment
+
+#### 2. MySQL-Benutzer / Datenbankbenutzer
+- Zweck: getrennte Produktiv- und Admin-Zugriffskontrolle
+- benötigte Werte: username, password, privileges, host restrictions
+- Berechtigungen: application-only permissions, no root rights
+- Eintragungsort: deployment secret store or provider config
+
+#### 3. cPanel-Umgebung
+- Zweck: deployment and hosting environment for first live provider
+- benötigte Werte: domain, root path, Node runtime, app directory, deployment user, FTP/FTPS access details
+- Berechtigungen: web file write permissions, environment configuration access, restart permission if applicable
+- Eintragungsort: provider admin panel and environment variables
+
+#### 4. Secrets / Zugangsdaten
+- Zweck: DB passwords, provider credentials, API keys, signing keys
+- benötigte Werte: names, scopes, expiration, owner, rotation plan
+- Berechtigungen: minimal secret scope per service/user
+- Eintragungsort: environment variables, secret manager, deployment config backend
+
+#### 5. API-Keys / Provider-Keys
+- Zweck: external updater, backup provider, monitoring, storage provider
+- benötigte Werte: key id, secret, scopes, regions, endpoint URLs
+- Berechtigungen: minimal required scopes only
+- Eintragungsort: provider secret store or environment variables
+
+#### 6. DNS / Domain / SSL
+- Zweck: public routing and secure HTTPS access
+- benötigte Werte: domain name, DNS records, SSL certificate target, wildcard status
+- Berechtigungen: domain control and DNS management rights
+- Eintragungsort: domain registrar and provider admin panel
+
+#### 7. Storage- und Backup-Provider
+- Zweck: file objects, snapshots, user backups and provider-managed storage
+- benötigte Werte: provider name, endpoint, bucket or path, access key, secret, region
+- Berechtigungen: read/write for backup target only, not root-level host access
+- Eintragungsort: provider config and env variables
+
+#### 8. Monitoring / Alertsystem
+- Zweck: uptime and issue detection
+- benötigte Werte: endpoint, alert channels, thresholds, notification addresses
+- Berechtigungen: read access to runtime status, alert configuration access
+- Eintragungsort: monitoring provider configuration and admin system
+
+### 9. EMPFOHLEN
+
+- Provider-Abstraktion früh einführen, damit cPanel nicht zur hardcoded Core-Dependency wird.
+- MySQL als Default-Produktivdatenbank reservieren; SQLite nur als lokale Entwicklungsoption.
+- Cookie-basierte Session-Validierung als Standard, erweitert durch Token-Adapter nur als Option.
+- Separate backend- and admin-service layer from app and module layers.
+- Strict separation of user backup and system backup.
+- Version check and compatibility gates before any update or module install.
+
+### 10. ZUKUNFT
+
+- SSO/OAuth integrations
+- two-factor login and security policies
+- advanced monitoring and alert routing
+- modular plugin marketplace with signed packages
+- more advanced entitlement policy automation
+- provider marketplace with multiple deployment targets
+
+### 11. OFFENE ENTSCHEIDUNG
+
+- Welche konkrete MySQL-Instanz und welche Berechtigungsstruktur wird in der späteren externen Produktivumgebung verwendet?
+- Welche Admin-UI-Aufteilung wird im ersten produktiven Release gewählt?
+- Welche Store-/Provider-Integration wird als erste externe Update- oder Backup-Quelle genutzt?
+- Welche Module gehören zum ersten produktiven Release und welche bleiben als spätere Erweiterung offen?
+
+### 12. Abschluss
+
+Dieser Implementierungsplan dokumentiert den Übergang von der aktuellen neutralen Framework-Basis zu einer stabilen produktiven Server-/Admin-Architektur. Er bleibt konsistent mit der Vision und mit den grundlegenden Dokumentationsregeln: Neutral bleibt das neutrale Master-/Entwicklungsframework; historische Module bleiben Validierungsbeispiele; der produktive Umfang ist Core, Admin-CMS, Auth, Rollen, API, Storage, Updates, Backups, Provider- und Sicherheitsarchitektur sowie modulare Erweiterungen ohne harte Core-Abhängigkeit.
+
 ## EMPFOHLEN / ZUKUNFT / OFFENE ENTSCHEIDUNG
 
 - EMPFOHLEN: Eine saubere Provider-Abstraktion mit einem klaren Interface für Server-Config, Storage, Backup und Auth-Adapter wird als beste langfristige Lösung empfohlen. Damit bleibt das Framework neutral, ohne Hardcodierungen auf cPanel, FTP oder ein einzelnes Hosting-Umfeld.
