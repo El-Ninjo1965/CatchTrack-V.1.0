@@ -4,6 +4,7 @@ const path = require('node:path');
 const { port, host, rootDir, webRootDir, apiBase } = require('../config');
 const MasterFramework = require('../../platform/master-framework');
 const persistenceService = require('../services/persistence-service');
+const inputValidation = require('../middleware/input-validation');
 
 const bootstrapDefaultApps = () => {
   const normalizeManifestValue = (value, fallback = 'neutral-app') => {
@@ -455,6 +456,12 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       }
       readJsonBody(req)
         .then((payload) => {
+          const validationErrors = inputValidation.validateSetupPayload(payload);
+          if (validationErrors.length > 0) {
+            sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', errors: validationErrors });
+            return;
+          }
+
           const currentState = persistenceService.loadSetupState();
           const configuration = { ...(currentState.configuration || {}), ...(payload.configuration || {}) };
           const serverConfig = {
@@ -638,6 +645,12 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       }
       readJsonBody(req)
         .then((payload) => {
+          const validationErrors = inputValidation.validateDatabasePayload(payload);
+          if (validationErrors.length > 0) {
+            sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', errors: validationErrors });
+            return;
+          }
+
           const nextState = persistenceService.loadSetupState();
           const databaseConfig = {
             ...(nextState.databaseState || {}),
