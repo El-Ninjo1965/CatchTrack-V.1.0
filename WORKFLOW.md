@@ -84,6 +84,118 @@ Die aktuelle Security-Basis ist deutlich besser als der frühere Header-Trust-Zu
 
 Der nächste und einzige sinnvolle Arbeitsschritt ist: Externes Produktiv-Deployment und Provider-/Umgebungs-Setup außerhalb des Repositorys abschließen, inklusive echter MySQL-Umgebung, Secrets, Hosting- und Backup-Konfiguration; das Repository selbst bleibt dabei beim neutralen Framework-Stabilisierungsstand.
 
+## CURRENT TECHNICAL AUDIT – 2026-08-21 – P1 DETAIL AUDIT
+
+- Audit-Datum: 2026-08-21
+- Repository: El-Ninjo1965/Neutral
+- Branch: main
+- Audit-Typ: vollständiger technischer Repository-/Architektur-Audit mit P1-Detailprüfung
+- Ergebnis: tatsächlicher technischer Stand, nicht Soll-Stand aus der Vision
+
+### Überblick
+
+Der aktuelle Codebestand auf `main` ist bereits ein funktionierender neutraler Framework-Kern. Die Architektur ist modularer Core, App-/Runtime-Isolation, Admin-/CMS-Layer, Auth-/Session-Sicherheit, Storage-Abstraktion und Monitoring/Release-Status. Ein vollständiger produktiver Rahmen mit Deployment-/Provider-/App-Hosting-Umgebung bleibt jedoch extern und ist nicht im Repository als Live-Server-Stack implementiert.
+
+Die sieben P1-Bereiche sind nicht alle im gleichen Reifegrad vorhanden. Einige sind real vorhanden und funktional, aber nur als minimale Architekturgrundlage; andere sind vorhanden, aber nicht vollständig ausgereift; und einige sind noch echte Lücken gegenüber der langfristigen Vision.
+
+### Prüfungsbasis
+
+- Tatsächlicher Code: `platform/*.js`, `server/*.js`, `webroot/*.js`, `tests/*.js`
+- Tatsächlich ausgeführte Tests: `node --test`
+- Vergleichsquellen: `WORKFLOW.md`, `VISION.md`, `AGENTTODO.md`, `VERSION.md`
+
+### P1-Ergebnis-Tabelle
+
+| P1 | Bereich | Code vorhanden | Funktionsfähig | Vision erfüllt | Freeze erforderlich | Fehlende Teile |
+| --- | --- | --- | --- | --- | --- | --- |
+| P1-01 | Theme | Ja | Teilweise | Teilweise | Nein | Kein installierbares Theme-System, keine Theme-Discovery-/Asset-Isolation und kein wirklich modularer Theme-Lifecycle außerhalb des Client-Theme-Engines |
+| P1-02 | Modul-Lifecycle | Ja | Teilweise | Teilweise | Ja | Keine vollständige Manifest-/Lifecycle-Validierung für Versionen, Konfiguration, Update- und Deinstallationsregeln, keine vollständige Rollback-/Migrationsverstärkung |
+| P1-03 | Dependencies/Migration/Rollback | Teilweise | Teilweise | Teilweise | Ja | Keine vollständige SemVer-/Abhängigkeitsprüfung, keine Konflikt-/Zyklus-Erkennung, kein echtes Rollback, keine persistente Migrations-Logik mit Wiederherstellung |
+| P1-04 | Offline/Online/Sync | Teilweise | Nein | Nein | Nein | Keine echte Sync-Queue, keine Retry-/Conflict-Strategie, keine lokale/Server-Datentrennung mit bidirektionaler Synchronisation |
+| P1-05 | Server-Konfiguration | Teilweise | Teilweise | Teilweise | Nein | Keine sichere, in-app konfigurierte Server-/Auth-/Secret-Management-Schicht als echtes Deployment-Interface |
+| P1-06 | Notifications | Nein | Nein | Nein | Nein | Kein Framework-weites Notification-System mit Event-Integration, Priorität, Read/Unread, UI und Admin-UI |
+| P1-07 | Medien/Bilder | Ja | Teilweise | Teilweise | Nein | Keine vollständige Bildverarbeitungs- und Admin-Konfigurationspipeline inklusive EXIF, Rotation, Thumbnails, Preview, Server-Storage und persistierter Parameter |
+
+### P1-01 – Theme-/Design-System
+
+- Vorhanden: `platform/theme-engine.js`
+- Tatsächlich vorhanden: Default-Theme, Theme-Registrierung, Aktivierung, CSS-Variablen-Anwendung und Theme-Event-Handling.
+- Tatsächlich getestet: `tests/vision-framework.test.js` validiert Theme-Registrierung und Theme-Wechsel.
+- Bewertung: Teilweise implementiert.
+- Die Funktion ist modularer als eine feste UI-Hardcodierung, aber kein vollständiger Theme-Lifecycle wie Discovery, Installation, Deaktivierung, Asset-Management oder Multi-App-Theme-Installation.
+- Eine zweite Anwendung kann mit einem anderen Theme gestartet werden, aber nicht durch ein vollständiges eigenständiges Theme-Installations- und Asset-Management-System ohne Core-Anpassung.
+
+### P1-02 – Vollständiger Modul-Lifecycle
+
+- Vorhanden: `platform/module-interface.js`, `platform/module-registry.js`, `platform/module-manager.js`
+- Tatsächlich vorhanden: `discover`, `register`, `install`, `initialize`, `enable`, `disable`, `update`, `uninstall`, `activate`, `deactivate`.
+- Tatsächlich getestet: App-/Module-Lifecycle und GPS-Module-Validierung in `tests/master-framework.test.js`.
+- Bewertung: Teilweise implementiert.
+- Der Lifecycle existiert als Technik-API, aber die vollständige Semantik für Module als eigenständige installierbare Einheiten ist noch nicht abgeschlossen: keine durchgängige Version-/Abhängigkeitsprüfung, keine Konflikt- und Zyklenlogik, keine vollständigen Installations-/Deinstallations- und Rollback-Daten.
+
+### P1-03 – Dependencies / Migrationen / Rollback
+
+- Vorhanden: `registerMigration()` und `applyMigrations()` in `platform/master-framework.js`.
+- Tatsächlich getestet: Migrationslauf in `tests/master-framework.test.js`.
+- Bewertung: Teilweise implementiert.
+- Abhängigkeiten werden nur rudimentär überprüft: `module.dependencies` wird nur auf Vorhandensein geprüft, aber keine Versionsregeln, optionale Abhängigkeiten, Konflikte oder Zyklen werden verwaltet.
+- Migrationen werden ausgeführt, aber nicht als persistente, prüfbare Migrations-Logik mit Status-/Rollback-Mechanismus geführt.
+- Ein echtes Rollback fehlt: keine Backups vor Änderungen, keine Wiederherstellung vorheriger Zustände, keine Migrations-States mit Wiederherstellungspfad.
+
+### P1-04 – Offline-/Online-Architektur
+
+- Vorhanden: `platform/core-context.js` erkennt `navigator.onLine`, `config/index.js` enthält `offline-first: true`.
+- Tatsächlich getestet: keine echte Offline-/Sync-Logik in den Tests; nur lokale Offline-Flags und lokale Auth-/Runtime-State-Behandlung.
+- Bewertung: Nicht implementiert.
+- Es gibt keine echte Trennung `LOCAL DATA` vs `SERVER DATA`, keine Sync-Queue, kein Retry-Mechanismus, keine Konfliktlösung, kein Sync-Status und keine bidirektionale Synchronisation.
+- Das ist ein klarer Unterschied zwischen Storage-Existenz und echter Offline-/Online-Synchronisationsarchitektur.
+
+### P1-05 – Serververbindung innerhalb der Anwendung
+
+- Vorhanden: Setup-/Server-/Database-Status-Endpunkte und Konfigurationsdaten in `server/bootstrap/server.js` sowie Provider-/Connection-Abstraktion in `platform/master-framework.js` und `platform/provider-manager.js`.
+- Tatsächlich getestet: Admin-Setup-/Database-/Provider-/Status-Workflows in vorhandenen Test-Suites.
+- Bewertung: Teilweise implementiert.
+- Für die Framework-Architektur gibt es eine Konfigurationsschicht und einen Server-/Provider-Status, aber keine vollständige sichere in-app Konfiguration mit sicheren Secret-Storage-Mechanismen, Verbindungstest, Fehlerdiagnose und provider-neutralem Setup-UI als echtes Produkt-Feature.
+- Die Verbindung ist als Konfigurationsmodell erkennbar; sie ist nicht als vollständige, sichere, direkte Betriebs- und Setup-Umgebung im Rahmen der Anwendung umgesetzt.
+
+### P1-06 – Generisches Notification-System
+
+- Vorhanden: kein Framework-weites Notification-System.
+- Tatsächlich geprüft: keine Dateien mit `NotificationService`, `notify()`, `read/unread`, Priority- oder Admin-Notification-API; keine relevanten Tests.
+- Bewertung: Nicht implementiert.
+- Eine einfache `console.log` oder ein UI-Hinweis zählt nicht als Framework-weites Notification-System.
+
+### P1-07 – Medien-/Bild-Subsystem
+
+- Vorhanden: `platform/media-manager.js`
+- Tatsächlich getestet: `tests/vision-framework.test.js` prüft Bildoptimierung mit Qualitäts-/Resize-Regeln.
+- Bewertung: Teilweise implementiert.
+- Die vorhandene Funktion optimiert lokale Bild-Uploads im Browser vor dem Versand mit Größen-/Qualitäts-/Dateigrößenbegrenzungen. Das ist ein echter funktionaler Fortschritt.
+- Fehlend bleiben jedoch: vollständige EXIF-/Rotation-/Thumbnail-/Preview-Pipeline, serverseitige Verarbeitung, admin-konfigurierbare Medienparameter über persistierte Settings, Storage-Integration und Offline-Handling für gröbere Upload-Flows.
+
+### P0/P1/P2/P3-Priorisierung
+
+- P0: keine kritischen Code-Blocker im aktuellen Repository-Stand erkannt
+- P1 (vor Framework-Freeze zwingend erforderlich):
+  - Modul-Lifecycle-Verifikation und Stabilisierung
+  - Dependency-/Migration-/Rollback-Vertrag für Module und Framework-Updates
+- P2 (wichtig, aber nicht Freeze-blockierend):
+  - Theme-System Vertiefung und Asset-Isolation
+  - Server-/Provider-Konfiguration im App-Kontext
+  - Medien-/Bild-Subsystem Ausbau und Admin-Settings
+  - Event-/Notification-System als allgemeiner Framework-Teil
+- P3 (spätere Erweiterungen):
+  - echte Offline-/Online-Sync-Engine mit Queue, Retry, Conflict Handling und bidirektionaler Datenkonsistenz
+  - erweiterte Deploy-/Hosting-/Provider-Integration in der operativen Betriebsumgebung
+
+### Entscheidung: Vor dem Framework-Freeze erforderlich
+
+Vor dem Framework-Freeze muss das Framework mindestens einen sauberen und verifizierbaren Modul-/Migrations-/Rollback-Vertrag besitzen. Die aktuelle Struktur ist ein brauchbarer Grundstein, aber noch nicht vollständig genug, um als tragfähige, langfristige Framework-Grundlage für installierbare Module und modulare Updates zu gelten.
+
+### Genau ein empfohlener nächster Entwicklungsblock
+
+Der einzige sinnvollste nächste Entwicklungsblock ist: vollständiger Modul-Dependency-/Migration-/Rollback-Vertrag für das Framework, inklusive Versionen, Konfliktprüfung, persistenter Migrations-Statuslogik und sicherer Wiederherstellung bei fehlgeschlagenen Updates.
+
 ## Verbindliche Korrekturen
 
 ### HISTORISCH / REFERENZ / VALIDIERUNG
