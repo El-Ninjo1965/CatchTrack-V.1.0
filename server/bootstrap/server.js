@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { port, host, rootDir, webRootDir, apiBase } = require('../config');
 const MasterFramework = require('../../platform/master-framework');
+const persistenceService = require('../services/persistence-service');
 
 const bootstrapDefaultApps = () => {
   const normalizeManifestValue = (value, fallback = 'neutral-app') => {
@@ -454,7 +455,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       }
       readJsonBody(req)
         .then((payload) => {
-          const currentState = MasterFramework.loadSetupState();
+          const currentState = persistenceService.loadSetupState();
           const configuration = { ...(currentState.configuration || {}), ...(payload.configuration || {}) };
           const serverConfig = {
             ...(currentState.serverState || {}),
@@ -528,7 +529,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
             updatedAt: new Date().toISOString()
           };
 
-          const saved = MasterFramework.saveSetupState(merged);
+          const saved = persistenceService.saveSetupState(merged);
           sendJson(res, 200, {
             ok: true,
             status: MasterFramework.getInstallationStatus ? MasterFramework.getInstallationStatus(saved) : saved.status,
@@ -590,7 +591,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       readJsonBody(req)
         .then(async (payload) => {
           const result = await getServerTestResult(payload);
-          const setupState = MasterFramework.loadSetupState();
+          const setupState = persistenceService.loadSetupState();
           const nextState = {
             ...setupState,
             currentStep: 'server-test',
@@ -613,7 +614,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
             installation: { ...(setupState.installation || {}), state: result.ok ? 'CONFIGURATION_REQUIRED' : 'ERROR' },
             updatedAt: new Date().toISOString()
           };
-          MasterFramework.saveSetupState(nextState);
+          persistenceService.saveSetupState(nextState);
           sendJson(res, 200, { ok: result.ok, result });
         })
         .catch((error) => {
@@ -637,7 +638,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       }
       readJsonBody(req)
         .then((payload) => {
-          const nextState = MasterFramework.loadSetupState();
+          const nextState = persistenceService.loadSetupState();
           const databaseConfig = {
             ...(nextState.databaseState || {}),
             type: payload.type || nextState.databaseState?.type || 'indexeddb',
@@ -678,9 +679,9 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
             currentStep: 'framework-initialization',
             updatedAt: new Date().toISOString()
           };
-          MasterFramework.saveSetupState(setup);
+          persistenceService.saveSetupState(setup);
           const status = getDatabaseStatus();
-          sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
+          sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: persistenceService.loadSetupState() });
         })
         .catch((error) => {
           sendJson(res, 400, { ok: false, code: 'INVALID_DATABASE', message: error.message || 'Database configuration invalid.' });
@@ -689,7 +690,7 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
     }
 
     const status = getDatabaseStatus();
-    sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: MasterFramework.loadSetupState() });
+    sendJson(res, 200, { ok: status.ok, status: status.status, database: status, setup: persistenceService.loadSetupState() });
     return true;
   }
 
