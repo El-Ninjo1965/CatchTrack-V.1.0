@@ -19,6 +19,18 @@ const cleanupRuntimeState = () => {
       fs.unlinkSync(filePath);
     }
   }
+
+  // Also clean up config directory (used by persistence service)
+  const configDir = path.resolve(__dirname, '../config');
+  if (fs.existsSync(configDir)) {
+    const configFiles = ['setup-state.json', 'admin-users.json', 'admin-roles.json', 'admin-settings.json', 'audit-log.json'];
+    for (const filename of configFiles) {
+      const filePath = path.join(configDir, filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  }
 };
 
 const loadScriptIntoContext = (context, filePath) => {
