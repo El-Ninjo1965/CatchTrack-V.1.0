@@ -26,10 +26,6 @@ Entscheidend ist ausschließlich, dass das definierte Endziel technisch sauber, 
 
 `Neutral` ist das grundlegende, neutrale und wiederverwendbare Framework, auf dem spätere Anwendungen und Module aufbauen können.
 
-`Neutral` bleibt das Master-/Entwicklungsframework. GPS, Store, Retail-Template und ähnliche Beispiel- oder Referenzmodule sind keine festen Bestandteile des Core, sondern optional nutzbare Architektur- und Test-Instanzen.
-
-`Neutral` bleibt das Master-/Entwicklungsframework. GPS, Store, Retail-Template und ähnliche Beispiel- oder Referenzmodule sind keine festen Bestandteile des Core, sondern optionale Architektur- und Test-Instanzen aus der Entwicklungsphase.
-
 Von diesem Zeitpunkt an sollen zukünftige Anwendungen und Funktionen möglichst ausschließlich als Module bzw. eigenständige Erweiterungen hinzugefügt werden.
 
 Beispiele:
@@ -49,7 +45,7 @@ Beispiele:
 * Community-Funktionen
 * weitere zukünftige Anwendungen und Fachmodule
 
-Diese Beispiele dienen der Architektur- und Funktionsidee. Historische Validierungsbeispiele wie GPS, Store, Catch Log oder Fishing Spots sind keine verbindliche Produkt- oder Roadmap-Priorität und kein Bestandteil des neutralen Core.
+Diese Beispiele dienen der Architektur- und Funktionsidee zukünftiger Anwendungen.
 
 Der Core soll dafür nicht jedes Mal grundlegend verändert werden müssen.
 

@@ -9,7 +9,7 @@ Die verbindlichen Architektur-, Vision- und Regelwerke liegen in `WORKFLOW.md` u
 ## Geltungsbereich und Korrekturen
 
 - Das Projekt bleibt ein neutrales Master-/Entwicklungsframework.
-- Historische Test- und Referenzmodule wie GPS, Store, Retail, Catch Log und Fishing Spots dürfen weiter dokumentiert werden, aber nur als HISTORISCHE VALIDIERUNG.
+- Historische Test- und Referenzmodule wurden während der Entwicklung verwendet und sind nicht mehr Bestandteil des Neutral-Core.
 - Sie bilden keine zukünftige Core-Priorität, keine harte Abhängigkeit des Frameworks und keinen aktuellen Produktumfang.
 
 ## Erledigt
@@ -28,9 +28,7 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - Workflow-Dokumentation mit dem aktuellen stabilen Zwischenstand aktualisiert.
 - Zentrale Rollen-/Rechte-Registrierung für framework-overarching governance ergänzt.
 - Erste App-Basis als neutraler Starter-Application-Shell angelegt (historische Validierung).
-- Erstes Dashboard-Modul als modulare Landing-/Overview-Funktion erstellt.
-- Zusätzliches Business-Modul `catch-log` erstellt und in die erste App-Shell integriert.
-- Zweites Business-Modul `fishing-spots` als GPS-gestützter Lage-/Favoriten-Manager ergänzt.
+- Framework-Module und -Funktionen erweitert: Modulare Systemkomponenten für App-Administration, Benutzerprofile, Storage-Adapter und Entity-Schemata waren Teil der Entwicklungsvalidierung.
 - `VERSION.md` als Versionierungs- und Zustandsdokument eingeführt.
 - Generische Module-Templates im Admin hinzugefügt, damit neue Module aus vorgefertigten Schemata erstellt werden können.
 - Modul-/Rollen-Permissions-Ansicht erweitert, sodass systemweite und modulare Rechte zusammen sichtbar sind.
@@ -48,8 +46,6 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - App-spezifische Modul-Zugriffskontrolle ergänzt: Jede App kann jetzt pro Modul und pro Rolle explizit festlegen, ob ein Modul für bestimmte Rollen freigegeben oder blockiert ist. Das wirkt sich in der User-UI direkt auf die sichtbaren Module aus und bildet die Grundlage für modulare App-Varianten ohne Core-Rework.
 - App-spezifische Feature-Zugriffskontrolle ergänzt: Neben Modulen gibt es jetzt auch eine app- und rollenbasierte Feature-Matrix, damit Feature-Gruppen wie Dashboard, Profile, Module oder zukünftige Module-Bereiche für einzelne Rollen frei- oder gesperrt werden können, ohne das Core-Framework anzufassen.
 - Generische Daten-/Schema-Engine im Admin ergänzt: Der Admin hat jetzt eine eigene "Data"-Ansicht, in der Entity-Schemata angelegt, Felder definiert, bearbeitet und Record-Einträge per Formular erstellt und gelöscht werden können, ohne das Core-Framework manuell zu erweitern.
-- Retail-Store-Template als echte Referenz-App für die Framework-Validierung ergänzt: Ein neues App-Template mit Produkt-, Kategoriens-, Kunden- und Bestell-Schemata wurde eingeführt, damit das neutrale Framework mit einem realen Business-Szenario geprüft wird, ohne das Core hardcoded an ein Einzelprodukt zu binden.
-- Store-UI-Module ergänzt: Für das Retail-Store-Template wurden echte Laufzeitmodule für Katalog, Bestellungen und Kunden hinzugefügt, sodass die neutralen Entity-Schemas jetzt auch in einer sichtbaren, realen Shopping-/CRM-UI genutzt werden.
 
 ## Getestet
 - `node --test tests/master-framework.test.js` erfolgreich ausgeführt.
@@ -64,9 +60,7 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - GPS bleibt ein echtes registriertes Modul; Tracking startet erst nach explizitem Benutzer-Start.
 - Startseite und Navigation sind neutral und stabil.
 - Admin-Module können aktiv/deaktiviert werden; der GPS-Adminbereich steuert die echte Geolocation-API an.
-- Der Laufzeit-Default ist jetzt ein neutraler, generischer App-Kontext (`neutral-app`). Historische Test- und Referenzmodule wie CatchTrack oder Retail (gelöscht in Phase 2) dienten der Framework-Validierung, sind aber nicht mehr Bestandteil der Neutral-Architektur.
-- Das Dashboard-Modul (gelöscht Phase 2) diente als erster generischer App-Home und als Vorlage für spätere Module.
-- Das Catch-Log-Modul (gelöscht Phase 2) war die erste echte fachliche Module-Instanz mit lokalem Datensatz und einfacher Eingabe.
+- Der Laufzeit-Default ist jetzt ein neutraler, generischer App-Kontext (`neutral-app`).
 - Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
 
 ## Architektur- und Freigabe-Status
@@ -77,9 +71,7 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 ## Offen / Nächster Arbeitsfortschritt
 - Abschluss der eigenständigen App-Architektur: Jede App trägt ihren eigenen Runtime-/Admin-Kontext, Rollen-/Permission-Scope und Storage-/Server-Kontext, ohne auf andere Apps zuzugreifen.
 - Abschluss der systemischen Validierung: App-Setup, Server-Setup, Admin-Login, Rollen-/Rechte-Checks, Connections, Storage-Adapter und App-Template-Instanziierung müssen ohne Cross-App-Abhängigkeit sauber funktionieren.
-- Nächster logischer Schritt: eine generische Daten-/Schema-Engine für app-lokale Business-Objekte, damit Module und spätere App-Varianten (z. B. Store, CRM, Booking, Portal) mit einheitlichen Schema-, CRUD- und Rechte-Mechaniken arbeiten, ohne das Core-Framework für jede neue App hart zu erweitern.
 - Danach: erst nach freiem Review und Zustimmung, neue fachliche App-Module oder neue Server-/Admin-Features ergänzen.
-- Reale Hosting- und Deployment-Validierung: shared hosting, JSON/Text-Storage, optional SQL-Upgrade-Pfad und eigenständige App-Instanzierung nach dem vorher festgelegten Framework-Prinzip.
 
 ## Aktuell in Arbeit
 - App-Umgebung und Runtime-Context wurden auf eigenständige App-Instanzen umgestellt.
@@ -90,7 +82,7 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - Die generische Data-/Schema-Engine wurde ergänzt: app-spezifische Entity-Schemata, Validierung, CRUD-Operations und persistente Record-Storage folgen jetzt einem zentralen, wiederverwendbaren Muster und sind für spätere Module und Store-/App-Templates vorbereitet.
 - Die aktive App-Identität wird jetzt auch in der User-UI aus dem runtime-aktiven App-Kontext abgeleitet, statt nur aus der konfigurierten Default-Variante. Dadurch bleibt die sichtbare Navigation konsistent, auch wenn die aktive App im Admin gewechselt wurde.
 - Die finale Validierung der App-/Admin-/Server-Entkopplung wurde mit einem gezielten App-Listing-/Active-App-Test abgesichert; der aktive App-Kontext bleibt als Priorität im Framework erhalten.
-- Die Standard-App des Frameworks wurde auf einen neutralen, generischen `neutral-app`-Kontext zurückgesetzt. `Retail Demo` bleibt als Referenz-/Test-Template im Framework erhalten, ist aber nicht mehr die Standard- oder Folge-App der Laufzeit und keine dauerhafte zweite App-Architektur.
+- Die Standard-App des Frameworks wurde auf einen neutralen, generischen `neutral-app`-Kontext zurückgesetzt.
 - Architektur- und Freigabe-Block aktiv: keine neuen appabhängigen Module mehr bis zur vollständigen, geprüften Eigenständigkeit der App-/Admin-/Server-Instanz.
 
 ## Architekturentscheidung: /apps/ mit app-info.json als aktuelle App-Identität

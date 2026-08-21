@@ -120,9 +120,7 @@
           featureSet: 'neutral-workspace'
         }
       });
-      // Historical app templates (CatchTrack, Retail) have been removed.
-      // Neutral is a neutral framework; domain-specific app templates are defined
-      // externally or via admin UI configuration, not hardcoded in core.
+      // App templates are defined externally or via admin UI configuration, not hardcoded in core.
       return this;
     },
 

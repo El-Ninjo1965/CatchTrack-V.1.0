@@ -12,16 +12,7 @@
 
 ### HISTORISCH / REFERENZ / VALIDIERUNG
 
-- GPS, Store, Retail, Catch Log, Fishing Spots und ähnliche konkrete Fachmodule sind historische Referenz-, Test- und Validierungsbeispiele.
-- Sie dürfen in der Dokumentation erwähnt werden, sofern klar erkennbar ist, dass sie nur als vergangene Architekturvalidierung dienen.
-- Sie gehören nicht zum Neutral-Core, sie sind keine laufende Produktfunktion von Neutral, keine aktuelle Priorität und keine zwingende Voraussetzung für die zukünftige Framework-Architektur.
-- Keine weitere fachliche Entwicklung dieser Module im neutralen Core.
-- Keine Festverdrahtung in der Framework-Architektur.
-- Keine Abhängigkeit des Core von diesen Modulen.
-
-Beispiel-Formulierung:
-
-- Das GPS-Modul wurde während der Framework-Entwicklung verwendet, um die Modulregistrierung und Geolocation-Integration zu validieren. Es gehört nicht zum Neutral-Core und ist kein Bestandteil des produktiven Frameworkumfangs.
+- GPS ist ein unabhängiges Framework-Referenzmodul und wird im Repository beibehalten.
 
 ### AKTUELL / VERBINDLICH
 
@@ -33,10 +24,9 @@ Beispiel-Formulierung:
    - Das Framework darf keine einzelne Fach-Anwendung, kein fertiges Produkt und keine konkrete Modul-Implementierung als Standardhardcodierung festschreiben.
    - Die eigentliche Kernfunktion ist die modulare Grund- und Entwicklungsplattform, nicht eine einzelne Produktanwendung.
 
-2. GPS, Store, Retail, Catch Log, Fishing Spots und andere konkrete Fachmodule
-   - Diese Module werden nur noch als historische Validierungs- und Referenzbeispiele dokumentiert.
-   - Sie sind nicht Teil des verbindlichen Frameworkumfanges und werden nicht als aktuelle Produktfunktion oder als Kernarchitektur behandelt.
-   - Spätere Fachmodule sollen eigenständig auf dem Framework aufbauen und nur die notwendige Modul-Infrastruktur nutzen.
+2. GPS-Modul
+   - GPS ist ein unabhängiges Framework-Referenzmodul (appId: null)
+   - Es wird nicht als Produktfunktion, sondern als Validierungsbeispiel behandelt
 
 3. Datenbank
    - Für den späteren produktiven Server ist grundsätzlich MySQL vorgesehen.
@@ -71,7 +61,7 @@ Beispiel-Formulierung:
 
 ### 1. Zielarchitektur
 
-Das Zielsystem ist ein neutraler, modularer Framework-Stack mit klarer Trennung zwischen Core, Runtime, Admin-CMS, API-Services und produktiver Infrastruktur. Historische Referenzmodule wie GPS, Store, Retail, Catch Log oder Fishing Spots bleiben nur als Validierungsbeispiele dokumentiert; sie sind keine aktuellen Framework-Bestandteile und keine Produktprioritäten.
+Das Zielsystem ist ein neutraler, modularer Framework-Stack mit klarer Trennung zwischen Core, Runtime, Admin-CMS, API-Services und produktiver Infrastruktur.
 
 #### Core
 
@@ -212,7 +202,6 @@ Zielstruktur:
   - storage namespace
   - optional migration scripts
 - Module boundaries are enforced by namespace, access control and runtime contracts
-- Historical examples like GPS, Store or Retail remain examples only; they do not define the live module inventory
 
 #### Entitlements
 
@@ -362,7 +351,7 @@ Die zentralen Admin-Services sollten separat von fachlichen Modulen existieren. 
 - `admin/monitoring-service`
 - `admin/settings-service`
 
-Fachliche Module wie Store, GPS oder andere Produkte liefern ihre eigene Oberfläche und eigene Datenmodelle, aber sie dürfen nicht die zentrale Admin-Struktur des Frameworks ersetzen.
+Die zentrale Admin-Struktur des Frameworks darf nicht von App-spezifischen Modulen ersetzt werden.
 
 ### 3. Serverarchitektur
 
@@ -667,7 +656,6 @@ Dieser Implementierungsplan dokumentiert den Übergang von der aktuellen neutral
   - Offline/Online-Handling: lokal stabilisiert und für den internen Preview-Workflow nutzbar.
   - Marketplace/Advertising: bewusst offen gelassen; keine separate Produktfunktion.
   - Fachlich konkrete App-Logik: bewusst nicht im Core hardcodiert; sie bleibt neutral im Framework und in Modulen.
-  - Historische Validierungsbeispiele wie GPS, Store, Retail, Catch Log und Fishing Spots werden nicht als aktueller Frameworkumfang interpretiert.
 - Geregelte Anforderungen und Korrekturen:
   - App-Name zentralisiert: Der sichtbare Name wird aus der zentralen Konfiguration gelesen und nicht mehr lokal hart codiert.
   - Startseite neutral: Beim Aufruf von `webroot/index.html` erscheint keine „Modules“-Seite als Hauptinhalt; stattdessen eine neutrale Startseite mit öffnbaren Modulen.
@@ -679,14 +667,13 @@ Dieser Implementierungsplan dokumentiert den Übergang von der aktuellen neutral
   - App-Isolation: Jede App besitzt jetzt einen eigenen Runtime-/Admin-Context, eigene Storage-Namespace und eigene aktive App-Auswahl, damit keine App über einen globalen Shared-State mit anderen Apps kollidiert.
   - App-Konfiguration im Admin: Der Admin kann jetzt aktive App, App-Name, Modus und Standard-Speicherstrategie direkt über ein CMS-artiges Konfigurationspanel setzen, statt das Framework per hardcoded Code zu ergänzen.
   - App-Name-Resolution: Die User-UI liest den sichtbaren App-Namen jetzt aus dem runtime-aktiven App-Kontext, sodass nach einem App-Wechsel im Admin die sichtbare Oberfläche konsistent zur gewählten App bleibt und nicht an einer veralteten Default-Konfiguration hängen bleibt.
-  - Neutraler Default-Context: Die Laufzeit startet jetzt mit einem generischen `neutral-app`-Kontext statt einer festverdrahteten Retail- oder Produkt-ID. `Retail Demo` bleibt als Referenz-/Test-Template erhalten, ist aber keine Standard-App und keine zweite dauerhafte Parallel-Architektur.
+  - Neutraler Default-Context: Die Laufzeit startet mit einem generischen `neutral-app`-Kontext.
   - Server-Bootstrap: Die Initialisierung verwendet jetzt einen pro-App-Setup-Flow statt hart codierter Global-Registrierungen; die aktive App wird nach Priorität des App-IDs-Setups initialisiert.
   - Generische Data-/Schema-Engine: Das Framework kann jetzt app-spezifische Entity-Schemata registrieren, Datensätze mit Validierung und Default-Werten erstellen, aktualisieren und löschen und diese Einträge über den vorhandenen Storage-Adapter persistent halten, damit spätere Module und App-/Template-Patterns ohne Core-Rework entstehen können.
   - Admin-Data-UI: Im CMS-artigen Admin-Bereich existiert jetzt eine eigene "Data"-Ansicht, in der Schemata erstellt, Felder definiert, aktualisiert und Datensätze direkt im Rahmen der aktiven App verwaltet werden können.
-  - Historische Validierung: Referenzmodule wie GPS, Store, Retail, Catch Log und Fishing Spots wurden im Entwicklungsprozess genutzt, um Modulregistrierung, Datenmodelle, Geolocation- und UI-Integration zu validieren. Sie sind keine aktiven Bestandteile des Neutral-Core und keine Produktfunktion des Frameworks.
   - Prüfungen:
   - `npm test` wurde erfolgreich ausgeführt.
-  - HISTORISCHE VALIDIERUNG: Auth-Reload, lokale Hash-Speicherung, zentrale App-Name-Konfiguration, GPS-Modul-Lebenszyklus, Admin-Module-Verwaltung, GPS-Admin-Aktionen und UI-Seitendarstellung. Diese Punkte dokumentieren vergangene Architektur- und Modulvalidierung, nicht den aktuellen Frameworkumfang.
+  - Framework-Komponentenvalidierung: App-Isolation, Auth-Workflow, Benutzerprofile, Storage-Adapter, Entity-Schemata und Admin-Funktionen.
 - Abschluss:
   - Der Repository-Stand ist für den aktuellen Vision-Zwischenstand konsistent und stabil.
   - Es liegen keine kritischen offenen Implementierungsblocker für den aktuellen Stand vor.

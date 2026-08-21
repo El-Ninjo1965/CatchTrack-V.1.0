@@ -9,12 +9,11 @@ Technische Architektur, Anforderungen, Entwicklungsregeln und verbindliche Gesam
 ## Version 1.1.10 - independent app architecture and approval gate
 
 - Neutral remains the neutral master/development framework.
-- Historical validation examples such as GPS, Store, Retail, Catch Log and Fishing Spots remain reference/test artifacts and are not treated as fixed core components, active product features, or current roadmap priorities.
 
 Status:
 - Framework core remains stable and module-driven.
 - User shell continues to support profile settings, feature visibility and privacy preferences.
-- GPS, Catch Log and Fishing Spots are documented only as historical validation examples and not as active framework functions or required future core dependencies.
+- GPS is preserved as an independent framework reference module.
 - The admin shell supports a storage/connection model for file-based and SQL-ready backends.
 - The framework remains configurable without hardcoding a single backend type.
 - Admin user creation and role-based permission checks remain fixed so developer/admin accounts can manage users without false `Access denied` results.
@@ -23,27 +22,23 @@ Status:
 - The framework supports app-scoped module access control by role, with UI-level visibility updates without rewrites of the core system.
 - Feature groups support a role-based access matrix for dashboard, profile, modules and other app areas without changing the framework core.
 - Active app naming now follows the runtime-selected app context in the user UI, so the visible app identity remains in sync after an app switch from the admin configuration screen.
-- The framework default app is now neutral and generic (`neutral-app`) instead of a product-specific retail identity; the retail store remains as a validation-template example and not as a permanent second app architecture.
+- The framework default app is now neutral and generic (`neutral-app`).
 - Audit logging is persisted in browser storage and accepts the real event signatures used by the platform, preventing audit entries from being lost or malformed.
 - App template registration and creation are available in the framework and admin UI so new app variants can be generated from reusable blueprints rather than custom one-off code paths.
 - Admin audit includes filterable timeline views so administrators can review actions by actor, action, resource, result and searchable metadata.
 - App runtime isolation is now managed explicitly: each application has its own runtime context, storage namespace, admin scope and active selection without relying on a shared global app state.
 - Admin app configuration is now available in the CMS-like admin area: the active app can be selected, app branding can be changed, and the default storage mode can be set from the admin without code rewrites.
 - The admin workspace now includes a Data section for schema creation, schema editing, and entity record management, allowing app-local data models to be defined and edited without custom core code paths.
-- A retail store reference template was added to validate the framework against a real commerce app domain, including products, categories, customers, and orders as generic entity schemas without hardcoding the core.
-- The store template now includes real runtime modules for catalog, orders, and customers so the generic schema engine is not only backend-valid but also proven in a user-facing commerce workflow.
 - Architectural gate: each app, including admin and server context, must be independent and not rely on another app’s runtime state or modules.
 - Freeze gate: no additional app-dependent modules will be installed until the full base system is completed, stable and explicitly reviewed and approved by the user.
 
 ### Included milestones
-The following items are historical validation milestones from the development period and are not current framework product scope.
+The following items represent validated framework components and architecture patterns.
 - neutral framework shell
 - module registry and lifecycle
 - admin governance (users, roles, permissions, module settings)
 - GPS module with working geolocation flow
-- first app scaffolding and starter dashboard module
-- first real business module: Catch Log
-- second business module: Fishing Spots
+- app scaffolding and configuration patterns
 - user profile settings for visible functions and privacy choices
 - module template scaffolding for future app modules
 - expanded module and permission matrix in the admin workspace
