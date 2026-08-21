@@ -27,7 +27,7 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - GPS-Button-Labels in der Benutzeroberfläche auf die konkreten Vorgänge korrigiert (`Get Current Position`, `Start Tracking`, `Stop Tracking`).
 - Workflow-Dokumentation mit dem aktuellen stabilen Zwischenstand aktualisiert.
 - Zentrale Rollen-/Rechte-Registrierung für framework-overarching governance ergänzt.
-- Erste App-Basis für CatchTrack als neutraler Starter-Application-Shell angelegt.
+- Erste App-Basis als neutraler Starter-Application-Shell angelegt (historische Validierung).
 - Erstes Dashboard-Modul als modulare Landing-/Overview-Funktion erstellt.
 - Zusätzliches Business-Modul `catch-log` erstellt und in die erste App-Shell integriert.
 - Zweites Business-Modul `fishing-spots` als GPS-gestützter Lage-/Favoriten-Manager ergänzt.
@@ -64,9 +64,9 @@ Die folgenden Einträge dokumentieren HISTORISCHE VALIDIERUNG der Framework-Entw
 - GPS bleibt ein echtes registriertes Modul; Tracking startet erst nach explizitem Benutzer-Start.
 - Startseite und Navigation sind neutral und stabil.
 - Admin-Module können aktiv/deaktiviert werden; der GPS-Adminbereich steuert die echte Geolocation-API an.
-- Der Laufzeit-Default ist jetzt ein neutraler, generischer App-Kontext (`neutral-app`); produkt- oder domänenspezifische Beispiele wie CatchTrack oder Retail bleiben als optionale Referenz- bzw. Test-Instanzen erhalten, aber nicht als feste Standard-App des Frameworks.
-- Das Dashboard-Modul dient als erster generischer App-Home und als Vorlage für spätere Module.
-- Das Catch-Log-Modul ist die erste echte fachliche Module-Instanz mit lokalem Datensatz und einfacher Eingabe.
+- Der Laufzeit-Default ist jetzt ein neutraler, generischer App-Kontext (`neutral-app`). Historische Test- und Referenzmodule wie CatchTrack oder Retail (gelöscht in Phase 2) dienten der Framework-Validierung, sind aber nicht mehr Bestandteil der Neutral-Architektur.
+- Das Dashboard-Modul (gelöscht Phase 2) diente als erster generischer App-Home und als Vorlage für spätere Module.
+- Das Catch-Log-Modul (gelöscht Phase 2) war die erste echte fachliche Module-Instanz mit lokalem Datensatz und einfacher Eingabe.
 - Der Admin kann jetzt Module aus Templates generieren und die Rechte-/Modulmatrix präventiv verwalten.
 
 ## Architektur- und Freigabe-Status

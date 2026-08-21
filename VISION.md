@@ -10,7 +10,7 @@ Sie ersetzt langfristig die bisher verteilten Einzelbeschreibungen, sofern deren
 
 Dieses Dokument beschreibt das gewünschte Endziel des Systems. Es ist keine Einschränkung auf den derzeit vorhandenen Entwicklungsstand.
 
-`Neutral` ist das allgemeine Master-/Entwicklungsframework. `CatchTrack` ist lediglich ein konkretes Beispiel einer späteren Anwendung, die auf diesem Framework aufsetzen kann. Das Framework selbst soll nicht als eine einzelne Fachanwendung festgeschrieben werden.
+`Neutral` ist das allgemeine Master-/Entwicklungsframework für modulare Anwendungen. Das Framework selbst soll nicht als eine einzelne Fachanwendung festgeschrieben werden.
 
 Der aktuelle Codebestand ist als Ausgangspunkt zu betrachten. Wenn die bestehende Architektur geändert, erweitert oder teilweise ersetzt werden muss, ist dies ausdrücklich zulässig.
 
@@ -28,9 +28,7 @@ Entscheidend ist ausschließlich, dass das definierte Endziel technisch sauber, 
 
 `Neutral` bleibt das Master-/Entwicklungsframework. GPS, Store, Retail-Template und ähnliche Beispiel- oder Referenzmodule sind keine festen Bestandteile des Core, sondern optional nutzbare Architektur- und Test-Instanzen.
 
-Eine konkrete Anwendung wie `CatchTrack` kann als erste Beispiel- oder Referenz-App entstehen, darf aber nicht mit dem Framework selbst verwechselt werden.
-
-Der fertige Core bildet gemeinsam mit den grundlegenden User- und Administrationsfunktionen das Final Framework.
+`Neutral` bleibt das Master-/Entwicklungsframework. GPS, Store, Retail-Template und ähnliche Beispiel- oder Referenzmodule sind keine festen Bestandteile des Core, sondern optionale Architektur- und Test-Instanzen aus der Entwicklungsphase.
 
 Von diesem Zeitpunkt an sollen zukünftige Anwendungen und Funktionen möglichst ausschließlich als Module bzw. eigenständige Erweiterungen hinzugefügt werden.
 
@@ -239,7 +237,7 @@ Jede Anwendung bzw. jedes größere Modul soll ein eigenes Design bzw. Theme ver
 
 Beispiele:
 
-* CatchTrack Fishing Design
+* Fishing-Domain Design
 * Camping Design
 * Weather Design
 * zukünftige App Designs
@@ -273,10 +271,6 @@ Am Ende soll ein Entwickler in der Lage sein, eine neue Anwendung möglichst nac
 Core auswählen → benötigte Module hinzufügen → eigenes Design hinzufügen → konfigurieren → Anwendung betreiben
 
 Ohne für jede neue Anwendung den Core neu entwickeln zu müssen.
-
-CatchTrack ist die erste konkrete Anwendung, aber nicht die Grenze des Frameworks.
-
-Die endgültige Architektur soll deshalb nicht auf eine Angel-App optimiert werden, sondern auf ein generisches, modulares App-Framework, das CatchTrack lediglich als erste reale Anwendung nutzt.
 
 ⸻
 
@@ -652,8 +646,7 @@ FINAL FRAMEWORK
 │   └── weitere optionale Framework-Bereiche
 │
 └── APPLICATION MODULES
-    ├── CatchTrack
-    ├── GPS
+    ├── GPS (historisches Test-Referenzmodul)
     ├── Camping
     ├── Weather
     ├── Marketplace
@@ -737,7 +730,7 @@ Nicht aktivierte oder nicht installierte Module dürfen keine funktionslosen Men
 
 Jede Anwendung darf ihr eigenes Menü besitzen.
 
-Beispielsweise könnte CatchTrack andere Menüpunkte verwenden als eine zukünftige Camping-App.
+Beispielsweise könnten eine Fishing-App und eine Camping-App unterschiedliche Menüpunkte verwenden.
 
 Der Core stellt lediglich die technische Navigation bereit.
 
@@ -1025,13 +1018,13 @@ Benachrichtigungen können beispielsweise ausgelöst werden durch:
 
 Beispiel:
 
-CatchTrack – Neue Registrierung
+Neue Benutzer-Registrierung
 
 oder
 
-CatchTrack – Fehler bei der Synchronisation
+Fehler bei der Daten-Synchronisation
 
-Das Benachrichtigungssystem soll nicht auf CatchTrack beschränkt sein.
+Das Benachrichtigungssystem soll nicht auf eine einzelne Anwendung beschränkt sein.
 
 ⸻
 
@@ -2051,7 +2044,7 @@ Neue Benutzerregistrierungen können Benachrichtigungen erzeugen.
 
 Beispielsweise:
 
-CatchTrack – Neue Benutzerregistrierung
+Neue Benutzerregistrierung erfolgreich
 
 Der Administrator soll die Benachrichtigung über das integrierte Benachrichtigungssystem erhalten können.
 
@@ -2186,7 +2179,7 @@ Kapitel 7 – Administration, Konfiguration und Systemverwaltung
 
 Der integrierte Admin-Bereich soll eine zentrale Verwaltungsoberfläche für das gesamte Framework bereitstellen.
 
-Er soll nicht auf CatchTrack spezialisiert sein.
+Er soll neutral gegenüber verschiedenen Anwendungen sein.
 
 Die Administration muss grundsätzlich in der Lage sein, unterschiedliche zukünftige Anwendungen und Module zu verwalten.
 
@@ -2558,7 +2551,7 @@ Beispiele:
 * Datenschutz
 * Updateverhalten
 
-Diese Einstellungen müssen nicht fachlich an CatchTrack gebunden sein.
+Diese Einstellungen müssen nicht fachlich an eine spezifische Anwendung gebunden sein.
 
 7.23 Theme-Verwaltung
 
@@ -2581,7 +2574,7 @@ Wenn mehrere Anwendungen oder App-Konfigurationen unterstützt werden, soll für
 
 Beispielsweise:
 
-* CatchTrack → CatchTrack Theme
+* Fishing-Domain → Fishing Theme
 * Camping → Camping Theme
 * Weather → Weather Theme
 
@@ -2657,7 +2650,7 @@ Die konkrete Funktionalität kann durch Module erweitert werden.
 
 7.30 Grundziel
 
-Der Admin-Bereich soll nicht nur für die aktuelle CatchTrack-Anwendung funktionieren.
+Der Admin-Bereich soll nicht nur für eine einzelne Anwendung funktionieren.
 
 Er soll die Verwaltungsgrundlage für zukünftige Anwendungen bilden.
 
@@ -3748,7 +3741,7 @@ Das Ziel ist eine möglichst klare Trennung zwischen:
 
 Der Core soll vollständig neutral gegenüber einzelnen Fachanwendungen sein.
 
-Er darf keine unnötige Abhängigkeit zu CatchTrack oder einer anderen konkreten Anwendung enthalten.
+Er darf keine unnötige Abhängigkeit zu einer bestimmten Anwendung enthalten.
 
 Der Core stellt allgemeine Fähigkeiten bereit, die von beliebigen zukünftigen Anwendungen verwendet werden können.
 
@@ -4554,7 +4547,7 @@ Das Medienmodul soll von verschiedenen Fachmodulen verwendet werden können.
 
 Beispielsweise:
 
-* CatchTrack
+* Fishing-Domain
 * Angeltreffen
 * Benutzerprofile
 * Marketplace
@@ -4724,13 +4717,13 @@ Der Developer bzw. Administrator soll wichtige Ereignisse erhalten können.
 
 Beispiele:
 
-CatchTrack – Neue Registrierung
+Neue Benutzerregistrierung
 
-CatchTrack – Server nicht erreichbar
+Server nicht erreichbar
 
-CatchTrack – Fehler erkannt
+Fehler erkannt
 
-CatchTrack – Update verfügbar
+Update verfügbar
 
 13.14 Benachrichtigungsprioritäten
 
@@ -5308,9 +5301,7 @@ Eine Fachanwendung wird anschließend als Modul bzw. als Kombination mehrerer Mo
 
 Der Core darf keine unnötige Abhängigkeit zu einer konkreten Anwendung enthalten.
 
-Insbesondere darf die Core-Architektur nicht von CatchTrack abhängig sein.
-
-CatchTrack ist lediglich eine Anwendung, die auf dem Framework aufbaut.
+Der Core ist unabhängig von spezifischen Fachanwendungen und stellt nur allgemeine Infrastruktur bereit.
 
 15.4 Vollständiger technischer Funktionsumfang
 
