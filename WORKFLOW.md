@@ -1284,3 +1284,393 @@ Fazit:
 
 `Neutral` erfüllt bereits die Grundlage für die spätere Server-/Admin-Anwendung. Die produktive Serverversion kann sauber, modular und cPanel-kompatibel geplant werden. Die eigentliche Transfer-Architektur nach `cPanel-meinServer` ist damit technisch machbar und organisatorisch sauber zu trennen.
 
+# Konsolidierte Server- und Infrastrukturplanung (Aktualisiert)
+
+## IST-ZUSTAND
+
+- `Neutral` ist die Master-/Entwicklungsumgebung.
+- `cPanel-meinServer` ist die spätere produktive Server-/Deployment-Quelle.
+- Die aktuelle cPanel-/FTPS-Infrastruktur funktioniert bereits.
+- Die vorhandene Architektur enthält bereits Framework-Kerne, App-/Module-Registry, Admin-/User-UI, App-Isolation, Runtime-Kontext, Rollen-/Permission-Logik und Offline-First-Konzepte.
+- Die produktive Server-Architektur wurde bisher als Planungsbasis definiert, aber noch nicht als finales, deploybares Server-Repository implementiert.
+- Die Anwendung selbst ist nicht als FTP-Client für ihre eigenen Serverdateien gedacht; der FTP-/FTPS-Transfer ist ausschließlich ein Deploymentweg.
+
+## GEWÜNSCHT
+
+- Späterer Ablauf: `Neutral` -> fertige Serverdateien -> `cPanel-meinServer` -> GitHub Actions -> FTPS -> cPanel.
+- Die Anwendung darf zur Laufzeit nicht auf ihren eigenen Dateien per FTP oder FTPS zugreifen.
+- FTPS ist ausschließlich für Deployment und nicht für Laufzeit- oder Betriebskommunikation.
+- Die cPanel-Infrastruktur ist heute die erste konkrete Hosting-Umgebung, aber die Anwendung muss später nicht an diese Infrastruktur gebunden sein.
+- Die Infrastruktur-/Provider-Schicht muss abstrahiert werden, damit später andere Server, Verzeichnisse, APIs, Protokolle, Cloud-Umgebungen oder lokale Betriebsumgebungen verbunden werden können.
+- Der Admin-Bereich soll die Infrastruktur-Konfiguration verwalten können.
+- Sensitive Zugangsdaten müssen niemals im Quellcode liegen.
+
+## EMPFOHLEN
+
+### 1. Projektarchitektur
+
+Empfohlener übergeordneter Stil:
+
+- `Neutral` = Master-/Entwicklungsbasis und Architektur-Referenz
+- `cPanel-meinServer` = produktive Delivery-Quelle
+- `server/` = produktiver Servercode
+- `public/` oder `webroot/` = produktive Auslieferungsoberfläche
+- `config/` = Laufzeit- und Provider-Konfigurationen
+- `storage/` = Daten, Logs, Backups, Uploads, Sessions
+- `scripts/` = Deploy- und Restore-Skripte
+
+### 2. Infrastruktur-/Provider-Abstraktion
+
+Empfohlene Struktur:
+
+- `infrastructure/provider-manager`
+- `infrastructure/adapter/interface`
+- `infrastructure/adapter/cpanel`
+- `infrastructure/adapter/custom-server`
+- `infrastructure/adapter/cloud-provider`
+- `infrastructure/adapter/local`
+
+Ziel:
+
+- Deployment- und Anbieter-Konfiguration müssen als Konfiguration verwaltbar sein.
+- Der Admin-Bereich kann später zwischen Provider-Konfigurationen wechseln, ohne feste Hardcoded-Referenzen im Code zu benötigen.
+- Der Anwendungsbetrieb bleibt provider-agnostisch, auch wenn der erste reale Provider cPanel ist.
+
+### 3. Admin-Bereich (verbindlich zu berücksichtigen)
+
+Der Admin-Bereich soll umfassen:
+
+- Dashboard
+- Benutzerverwaltung
+- Rollen
+- Berechtigungen
+- Login/Logout
+- Sessions
+- Passwortverwaltung
+- Sicherheitsverwaltung
+- Systemstatus
+- Konfiguration
+- Logs
+- Audit-Log
+- Wartung
+- Diagnose
+- Modulverwaltung
+- Backup/Restore
+- Tarif-/Funktionsberechtigungen
+- Infrastruktur-/Provider-Konfiguration
+
+### 4. Authentifizierung und Sicherheit
+
+Empfohlene Basissicherheitslage:
+
+- sichere Passwortspeicherung mit `bcrypt` oder `argon2`
+- serverseitige Session-Validierung
+- HttpOnly-, Secure- und SameSite-Cookies
+- Rollen-/Rechteprüfung auf jeder geschützten Anfrage
+- CSRF-Schutz für Form- und Cookie-basierte Interaktionen
+- XSS-Schutz über sichere Rendering- und Sanitizing-Strategien
+- Injection-Schutz durch validierte Eingaben und parametrisierte Datenbankzugriffe
+- Rate Limiting für Login, API-Calls und Admin-Aktionen
+- Login-Überwachung, Auditierung, fehlgeschlagene Versuche und Anomalie-Erkennung
+- Secrets nur in Umgebungsvariablen oder Provider-Umgebung, niemals im Source-Code
+- API-Authentifizierung durch Session-, Token- oder API-Key-Systeme mit Scope- und Rollprüfung
+- Updateprüfung mit Signatur-/Integritätsprüfung und sichere Installationslogik
+
+### 5. API-Konzept
+
+Empfohlene Grundstruktur:
+
+- `/api/health`
+- `/api/auth/login`
+- `/api/auth/logout`
+- `/api/auth/session`
+- `/api/users`
+- `/api/roles`
+- `/api/modules`
+- `/api/config`
+- `/api/logs`
+- `/api/system/info`
+- `/api/backups`
+- `/api/updates`
+- `/api/providers`
+- `/api/webhooks`
+- `/api/sync`
+
+Empfohlene Response-Form:
+
+```json
+{
+  "ok": true,
+  "data": { "items": [] },
+  "meta": { "timestamp": "2026-08-21T00:00:00Z" },
+  "error": null
+}
+```
+
+Empfohlene Fehlercodes:
+
+- `AUTH_REQUIRED`
+- `AUTH_INVALID`
+- `FORBIDDEN`
+- `VALIDATION_ERROR`
+- `NOT_FOUND`
+- `CONFLICT`
+- `INTERNAL_ERROR`
+- `PROVIDER_ERROR`
+- `UPDATE_CHECK_FAILED`
+
+Zusätzlich wichtig:
+
+- API-Versionierung
+- API-Key-/Token-Scopes
+- Webhook-Mechanik als spätere Erweiterung
+- externe API-Anbindungen über abstrakte Provider-Adapter
+
+### 6. Daten und Storage
+
+Empfohlene Grundidee:
+
+- Nutzer, Rollen, Rechte, Sessions, Logs, Config und App-Status in einer Datenbank
+- App-/Module-Daten über definierte Storage-Adapter verwalten
+- App-Isolation und Storage-Namespaces beibehalten
+- Export/Import für Konfiguration und Daten
+- Migrationen als erste Produktiv-Notwendigkeit
+- Backup/Restore als verbindlicher Server-Bestandteil
+- spätere Skalierung durch Storage-Adapter oder DB-Backend-Austausch
+
+Empfohlener Real-Stack:
+
+- SQLite als erste produktive, cPanel-taugliche Lösung
+- MySQL als robustere produktive Option bei größerem Last- und Multi-User-Betrieb
+
+Wichtige Storage-Bereiche:
+
+- `storage/data` – systemische und appbezogene Daten
+- `storage/logs` – Error-, Access-, Admin-, Login-Logs
+- `storage/uploads` – Medien und Uploads
+- `storage/backups` – System- und Benutzer-Backups
+- `storage/sessions` – falls sessionbasierte Dateispeicherung gewählt wird
+
+### 7. Modulsystem
+
+Das bestehende Modulkonzept muss als produktive Serverfunktion weiterentwickelt werden:
+
+- Module Registry
+- Module Manager
+- Aktivierung/Deaktivierung
+- Konfigurations- und Meta-Management
+- Versionen und Update-Checks
+- Abhängigkeiten
+- Rechte-/Entitlement-Checks
+- Plugin-/Extension-Mechanik als spätere Erweiterung
+
+Empfohlene Regeln:
+
+- Module bekommen ihren eigenen Namespace und Verwaltungskontext.
+- Module dürfen nicht direkt eine zentrale App- oder Server-Komponente überschreiben.
+- Module sollten nur über definierte Schnittstellen mit Core und Server interagieren.
+
+### 8. Offline-First und Synchronisation
+
+Die Offline-First-Architektur bleibt zentral.
+
+Empfohlene Funktionen:
+
+- lokale Datenhaltung und Arbeits-Queue
+- Online-/Offline-Status-Erkennung
+- Wiederaufnahme unterbrochener Synchronisation
+- Konfliktbehandlung mit priorisierten Regeln
+- Serverabgleich mit deterministischer Sequenzierung
+- lokale Einträge, die nur nach erfolgreichem Sync als serverseitig autoritativ gelten
+
+### 9. App-Isolation und Multi-App/Multi-Tenant
+
+- Jede App bleibt eigenständig.
+- Jede App verwendet eigene Daten-/Namespace-/Config-Bereiche.
+- Berechtigungen und Modulrechte sind app-spezifisch.
+- Eine spätere Multi-App-/Multi-Tenant-Erweiterung soll architektonisch offen bleiben.
+
+Empfohlene Implementierung:
+
+- `appId` als primärer Runtime- und Namespace-Key
+- separate Daten-/Konfigurationsräume pro App
+- appbezogene Rollen-/Permission-Policy
+- klar definierte tenant- oder app-übergreifende Grenzen
+
+### 10. CMS / Content / Seiten / Medien
+
+Empfohlene Inhalte:
+
+- Seiten
+- Inhalte
+- Medien
+- Navigation
+- Templates
+- Content-Verwaltung
+- Konfigurationen
+
+Diese Bereiche sollen als separate Content- oder CMS-Module organisiert werden, damit sie nicht hart in den Server-Core eingebaut sind.
+
+### 11. GPS / Location / Store
+
+Die vorhandenen GPS- und Store-Modelle bleiben Teil der Architektur.
+
+Empfohlene Produktiv-Anforderungen:
+
+- GPS-Daten als eigene Datenmodelle mit Berechtigungs- und Speicherlogik
+- Standortverwaltung mit Abfragen, Berechtigungen und Datenschutz-Schutz
+- Store-Modelle mit Produkten, Kategorien, Kunden, Bestellungen, Preisen, Lagerbestand, Rechnungen und Versandstatus
+- künftige Integration von Zahlungen, Versand und Reporting über definierte Provider-Adapter
+
+### 12. Update- und Versionierungssystem
+
+Das Update-System muss von Anfang an zentral und abstrahiert konzipiert werden.
+
+Empfohlene Komponenten:
+
+- `App` -> `Update Manager` -> `Update Provider`
+- initialer Provider: eigener Server
+- späterer Provider: Store- oder Cloud-Provider
+
+Empfohlene Funktionen:
+
+- Versionsprüfung
+- Module-Versionen
+- Update-Metadaten
+- Abhängigkeiten
+- Mindestversionen
+- Kompatibilitätsprüfung
+- Download
+- Integritätsprüfung
+- Signierung
+- sichere Installation
+- Fehlerbehandlung
+- Rollback soweit sinnvoll
+- Stable/Beta-Kanäle
+- Sicherheitsupdates
+
+Wichtig:
+
+- Die konkrete Updatequelle darf nicht fest in die Anwendung eingebaut werden.
+- Die Update-Logik muss über eine Provider- und Adapter-Schicht konfigurierbar sein.
+
+### 13. Benutzer-Backup
+
+Das Benutzer-Backup ist technisch sinnvoll und muss strikt getrennt vom System-/Admin-Backup geplant werden.
+
+Empfohlene Struktur:
+
+- Free: kein eigenes Benutzer-Backup
+- Paid: Benutzer-Backup mit persönlicher Datensicherung
+- Fotos/Medien nur für berechtigte Bezahl-Tarife
+
+Der Benutzer soll in den Einstellungen später folgendes können:
+
+- Backup erstellen
+- Backup-Status anzeigen
+- letztes Backup sehen
+- Backup wiederherstellen
+- Backup löschen
+
+Notwendige Sicherheitsregeln:
+
+- Backups sind nur für den jeweiligen Nutzer zugänglich
+- keine gemeinsame Freigabe von Benutzer-Backups
+- Anbieterübergreifende Speicherung über ein Backup-Provider-Interface
+
+### 14. Tarif- und Entitlement-System
+
+Empfohlene Architektur:
+
+- zentraler Entitlement-/Berechtigungs-Manager
+- nicht fest in Module codieren
+- freie Tarifstufen (Free, Paid, Premium und spätere Varianten)
+- Entitlements als Policy statt als harte Modul-IFs
+
+Ziel:
+
+- spätere Tariflogik ohne Core-Umstellung
+- modulare Berechtigungskontrolle
+- geordnete Feature-Freigaben und Upgrade-Mechanik
+
+### 15. Systemadministration
+
+Der Server muss ein echtes Admin-/Systemmanagement enthalten:
+
+- Systeminformationen
+- Speicherplatz
+- Prozesse
+- Logs
+- Health Checks
+- Wartungsmodus
+- Diagnose
+- Cronjobs
+- Scheduled Tasks
+- Jobs/Queues
+- Monitoring
+- Fehlerüberwachung
+
+### 16. cPanel- und Deployment-Umgebung
+
+- FTP-/FTPS wird nur als Deployment-Mechanismus genutzt.
+- Die Anwendung selbst darf zur Laufzeit keine FTP/FTPS-Verbindungen initiieren.
+- Der FTP-Benutzer soll direkt im gewünschten Neutral-Verzeichnis landen und damit `/` als FTP-Root nutzen.
+- Die Serverdateien müssen sauber aus `Neutral` nach `cPanel-meinServer` ausgelagert werden.
+- `cPanel-meinServer` ist die Produktiv-Quelle, nicht die Entwicklungsbasis.
+
+Empfohlener Trennungssatz:
+
+- Entwicklung: `Neutral`
+- Produktiv-Source: `cPanel-meinServer`
+- Deployment: GitHub Actions + FTPS + cPanel
+- Laufzeit: produktive Serverinstanz ohne FTP-Zugriff
+
+## ZUKUNFT
+
+- 2FA/MFA als optionale Sicherheitsstufe
+- Benutzergruppen mit robustem Rechte- und Teammodell
+- feinere Rechte und Ressourcen-Scopes
+- API-Key-Verwaltung mit Rotation, Scope und Revocation
+- Webhooks und Event-Systeme
+- Benachrichtigungen und E-Mail-Systeme
+- Monitoring und Alerting
+- automatische Backups
+- Plugin-System mit Versions-/Abhängigkeitskontrolle
+- Job-/Queue-System
+- Reporting und Statistiken
+- Multi-App-/Multi-Tenant-Modelle
+- externe API-Integrationen und Cloud-Speicher
+- Zahlungsanbieter und Store-Updates
+- Cloud-/Provider- und Infrastruktur-Abstraktion als Standard
+
+## OFFENE ENTSCHEIDUNG
+
+- SQLite oder MySQL als Standardproduktiver DB-Provider?
+- Cookie-Session oder tokenbasierte Session-Mechanik?
+- gemeinsame Admin-UI oder getrennte Admin-Anwendung?
+- welche Module müssen im ersten produktiven Release zwingend enthalten sein?
+- welche Features sind Free, welche Paid?
+- wie streng sollen Start-/Setup-/Migration-Checks und Sicherheitsupdates im ersten Release sein?
+- welche Provider-/Infrastruktur-Adapter werden als erste produktive Implementierung umgesetzt?
+- wie wird der erste echte Backup-/Restore-Prozess für Benutzer und System konzeptionell geregelt?
+
+## Schlussfolgerung
+
+Die vorhandene Architektur in `Neutral` bildet bereits eine solide technische Grundlage für eine spätere produktive Server-/Admin-Anwendung. Die wichtigsten Lücken sind nicht in der Gesamtidee, sondern in der Produktivreife: serverseitige Authentifizierung, Session-Sicherheit, Datenbank-/Storage-Qualität, Audit-Logs, Auslieferung für cPanel, Backup/Restore, API-Sicherheit, Update-Strategie und Provider-Abstraktion.
+
+Die Dokumentation in `WORKFLOW.md` sollte deshalb nicht als reine Prototyp-Notiz verstanden werden, sondern als dauerhafte technische Grundlage für alle späteren Implementierungsschritte. Aus ihr muss ein Agent bei jedem zukünftigen Arbeitsschritt eindeutig erkennen können:
+
+- was das Projekt ist
+- welche Architektur vorgesehen ist
+- was bereits existiert
+- was umgesetzt werden soll
+- wie der Server funktioniert
+- wie Updates funktionieren
+- wie Backups funktionieren
+- welche Funktionen tarifabhängig sind
+- wie die aktuelle cPanel-Infrastruktur funktioniert
+- wie spätere andere Infrastruktur angebunden werden kann
+- welche Punkte noch offen sind
+
+Diese Dokumentation bildet damit die Grundlage für die spätere produktive Serverarchitektur und die saubere Auslagerung in `cPanel-meinServer`.
+
