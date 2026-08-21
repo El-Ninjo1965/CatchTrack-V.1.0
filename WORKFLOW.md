@@ -1734,3 +1734,891 @@ Die Dokumentation in `WORKFLOW.md` sollte deshalb nicht als reine Prototyp-Notiz
 
 Diese Dokumentation bildet damit die Grundlage für die spätere produktive Serverarchitektur und die saubere Auslagerung in `cPanel-meinServer`.
 
+# Prioritäten- und Umsetzungsplanung für die spätere produktive Server-/Admin-Architektur
+
+## Grundsatz
+
+Die bisherige Architektur ist bereits ein sinnvoller Ausgangspunkt, aber die produktive Serverplattform muss in klarer Reihenfolge gebaut werden, damit spätere Funktionen die Grundlage nicht zerstören oder unnötig umbauen. Die zentrale Reihenfolge lautet:
+
+1. stabile Kern-Grundlagen
+2. Persistenz und Authentifizierung
+3. API und Admin-Services
+4. Module- und App-Management
+5. Sicherheit, Backups, Updates und Monitoring
+6. Deployment und cPanel-Transfer
+7. spätere Erweiterungen und Stores/Provider-Integration
+
+Diese Reihenfolge wird bewusst nicht von Produktfunktionen, sondern von technischen Abhängigkeiten bestimmt.
+
+## PHASE 0 – Architektur- und Projekt-Guardrails
+
+IST:
+
+- `Neutral` ist die Master-/Entwicklungsbasis.
+- Die Architektur enthält bereits Core-, App-, Module-, Runtime- und Admin-Konzepte.
+- Das Deployment mit cPanel/FTPS ist grundsätzlich bekannt.
+
+ERSTE PRODUKTIVE PHASE:
+
+- klare Trennung zwischen Entwicklungsbasis und produktiver Serverbasis
+- `Neutral` bleibt Master-Repo; `cPanel-meinServer` wird die reduzierte produktive Serverquelle
+- Deployment-Pfad: `Neutral` -> `cPanel-meinServer` -> GitHub Actions -> FTPS -> cPanel
+- keine produktive Laufzeitlogik als FTP-Client
+
+EMPFOHLEN:
+
+- Provider-/Adapter-Schicht früh einführen, auch wenn nur der erste Provider `cPanel` aktiv ist
+- `infrastructure/provider-manager` und `infrastructure/adapter/*` als frühe Abstraktion, nicht als spätere Korrektur
+
+Benötigte Komponenten:
+
+- Provider-Interface
+- Provider-Konfigurationsmodul
+- Env-/Config-Loader
+- Deployment-Definitionen
+
+Abhängigkeiten:
+
+- erfordert keine Module, aber die spätere Produktivplattform hängt davon ab
+
+Sicherheitsaspekte:
+
+- Keine Secrets im Code
+- Zugangsdaten nur in Umgebungsvariablen oder verschlüsselten Provider-Configs
+
+Risiken:
+
+- harte Bindung an cPanel oder FTP wird später kostspielig
+
+Abnahmekriterien:
+
+- Produktive Serverstruktur ist dokumentiert
+- Provider-Abstraktion ist konzeptionell vorhanden
+- cPanel-Deployment ist klar abgegrenzt
+
+Warum an dieser Stelle:
+
+- spätere Schichten werden sonst an cPanel- und Deployment-Annahmen hängen bleiben
+
+## PHASE 1 – Server-Basis und Runtime-Grundlagen
+
+PRIORITÄT:
+
+- sehr hoch
+
+Ziel:
+
+- die Server-Umgebung muss stabil, testbar und produktiv nutzbar sein
+
+IST:
+
+- Node.js-Server und Framework-Kern existieren bereits in Grundzügen
+- Server-Bootstrap und Runtime-Kontext sind vorhanden
+
+ERSTE PRODUKTIVE PHASE:
+
+- produktiver HTTP-Server mit sauberem Bootstrap
+- zentrale Konfigurationsschicht
+- Logger, Error-Handler, Health-Check-Endpunkte
+- Status- und Diagnostik-Endpoint
+- sauber abgegrenzte Server-/App-/Runtime-Initialisierung
+
+Benötigte Komponenten:
+
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `config/index.js`
+- `server/utils/logger.js`
+- `server/utils/errors.js`
+- `server/utils/validator.js`
+- `server/middleware/errors.js`
+- `server/api/health.js`
+
+Abhängigkeiten:
+
+- benötigt die allgemeine Runtime- und App-Registrierung, aber noch keine Module- oder User-Logik im Detail
+
+Sicherheitsaspekte:
+
+- zentrale Fehlerbehandlung ohne Stack-Trace-Leckage
+- keine vertraulichen Details in Laufzeit- oder Health-Responses
+
+Risiken:
+
+- schlechte grundlegende Serverstruktur führt zu spätem Rework bei Auth, API und Monitoring
+
+Abnahmekriterien:
+
+- Server startet sauber
+- Health endpoint meldet Status
+- Fehler werden zentral behandelt
+- Konfiguration und Env-Variablen funktionieren
+
+Warum an dieser Stelle:
+
+- Auth, API, Module und Admin werden auf dieser Grundlage aufbauen
+
+## PHASE 2 – Persistenz und Datenmodell
+
+PRIORITÄT:
+
+- sehr hoch
+
+Ziel:
+
+- der Server bekommt eine verlässliche, sichere Datenbasis
+
+IST:
+
+- generische Data-/Schema-Engine und Storage-Adapter sind bereits teilweise vorhanden
+
+ERSTE PRODUKTIVE PHASE:
+
+- Datenbank-Abstraktion einführen
+- Standard-DB-Provider festlegen oder abstrahieren
+- Tabellen-/Schema-Entwurf für Users, Sessions, Roles, Permissions, Config, Logs, Module, App-Daten
+- Migrationslogik und Validierung
+- separate Datenräume pro App und pro Namespace
+
+Benötigte Komponenten:
+
+- `storage/data/*`
+- `platform/core-storage.js`
+- `platform/storage-manager.js`
+- `server/services/*` für Data-Layer
+- DB-Adapter: sqlite/mysql abstraction
+
+Abhängigkeiten:
+
+- benötigt Phase 1 als Serverbasis
+- Voraussetzung für Auth, Sessions und Admin-Logik
+
+Sicherheitsaspekte:
+
+- keine Plaintext-Passwörter
+- keine unvalidierten Daten in DB
+- Datenzugriff nur über Adapter/Services
+
+Risiken:
+
+- falsche DB-Auswahl bei frühen Designentscheidungen verschiebt spätere Skalierung
+
+OFFENE ENTSCHEIDUNG:
+
+- SQLite oder MySQL als erste produktive Standard-DB
+
+Abnahmekriterien:
+
+- Datenmodelle definiert
+- Migrations- und Validierungslogik existiert
+- App-Isolation und Namespace-Abgrenzung sind dokumentiert
+
+Warum an dieser Stelle:
+
+- Auth, Sessions, App-Konfiguration und Module benötigen belastbare Persistenz als Grundlage
+
+## PHASE 3 – Authentifizierung, Sessions, Rollen und Rechte
+
+PRIORITÄT:
+
+- sehr hoch
+
+Ziel:
+
+- ein sicherer und nachvollziehbarer Auth- und Berechtigungs-Layer
+
+IST:
+
+- Rollen-/Permission-Konzept und Login-Logik existieren bereits in Ansätzen
+- Browser-Storage-Session-Modelle existieren lokal
+
+ERSTE PRODUKTIVE PHASE:
+
+- serverseitige Session-/Auth-Kernlogik
+- Passwort-Hashing mit `bcrypt`/`argon2`
+- Login-/Logout-/Refresh-Flow
+- Rollen- und Berechtigungsprüfung auf Backend-Ebene
+- Session-Timeout und Server-Validierung
+- Audit-Events bei login/logout/rollenwechseln
+
+Benötigte Komponenten:
+
+- `platform/core-auth.js`
+- `server/api/auth.js`
+- `server/services/auth-service.js`
+- `server/middleware/auth.js`
+- `platform/security.js`
+- `server/api/users.js`
+- `server/api/roles.js`
+
+Abhängigkeiten:
+
+- Phase 1 + Phase 2 erforderlich
+
+Sicherheitsaspekte:
+
+- HttpOnly/Secure/SameSite Cookies
+- kein Client-only Auth-Trust
+- Rate Limiting auf Login und Admin-Aktionen
+- Rollen- und Rechteprüfung serverseitig, nie nur im Frontend
+
+OFFENE ENTSCHEIDUNG:
+
+- Cookie-Session oder tokenbasierte Sessions
+
+EMPFOHLEN:
+
+- für cPanel- und Standard-Web-Deploys zuerst Cookie-Session mit serverseitigem Store bevorzugen, da es im Shared-/cPanel-Umfeld meist sicherer und einfacher ist
+- Token-Ansatz trotzdem als Abstraktion/Provider-Option offen lassen
+
+Risiken:
+
+- Browser-Storage-only Sessions sind für produktiven Betrieb unverlässlich und unsicher
+
+Abnahmekriterien:
+
+- Login/-Logout-/Refresh-Flow funktioniert
+- Rollen-/Permission-Checks werden serverseitig durchgesetzt
+- Auth-Augenschein aus Sicht API und Admin-Bereich stabil
+
+Warum an dieser Stelle:
+
+- alle späteren Admin-, Module-, Update- und Backup-Funktionen brauchen verlässliche Identität und Rechte
+
+## PHASE 4 – API, Admin-Funktionen und Systemservices
+
+PRIORITÄT:
+
+- sehr hoch
+
+Ziel:
+
+- das Produktiv-Backend muss admin- und systemfähig sein
+
+IST:
+
+- API- und Admin-Konzepte sind bereits in der Architektur vorhanden
+
+ERSTE PRODUKTIVE PHASE:
+
+- API für Auth, Users, Roles, Config, Modules, Logs, Health
+- Admin UI / API Integration
+- Systemstatus, Logs, Userverwaltung, Modulverwaltung, Konfiguration
+- Audit-Logs und Sicherheitsansichten
+
+Benötigte Komponenten:
+
+- `server/api/*`
+- `server/services/*`
+- `webroot/admin.html` + admin-Scripts
+- `server/middleware/rate-limit.js`
+- `server/middleware/csrf.js`
+
+Abhängigkeiten:
+
+- Phase 1, 2 und 3 erforderlich
+
+Sicherheitsaspekte:
+
+- Admin-Endpunkte grundsätzlich mit Auth + Rollenprüfung
+- CSRF für cookiebasierte interaktive Formulare
+- Log-Sanitization
+
+Risiken:
+
+- Admin-API ohne harte Rechte-Checks ist ein kritischer Sicherheitsfehler
+
+Abnahmekriterien:
+
+- Admin-Bereich kann Nutzer, Rollen und Module verwalten
+- Logs und Health-Endpunkte funktionieren
+- Systemstatus und Config-Ansichten sind erreichbar
+
+Warum an dieser Stelle:
+
+- das Admin-Bereich-Management ist eine zentrale Betriebsfunktion und später nicht ohne auth-safe API nutzbar
+
+## PHASE 5 – Module Registry, App-Isolation und Modul-Management
+
+PRIORITÄT:
+
+- hoch
+
+Ziel:
+
+- die Architektur bleibt modular und produktiv erweiterbar
+
+IST:
+
+- Module-Registry, Module-Manager und App-Isolation sind bereits vorhanden
+
+ERSTE PRODUKTIVE PHASE:
+
+- zentrale Modul-Definitionen mit Manifesten und Status
+- Aktivieren/Deaktivieren, Rechteprüfung, Versionsstatus, Abhängigkeiten
+- App-Isolation und Storage-Namespaces verankern
+- Module-API und Admin-UI für Modulseite
+
+Benötigte Komponenten:
+
+- `platform/module-registry.js`
+- `platform/module-manager.js`
+- `platform/core-runtime.js`
+- `app/modules/index.json`
+- `server/api/modules.js`
+- `server/services/module-service.js`
+
+Abhängigkeiten:
+
+- benötigt Phase 2 (Persistenz) und Phase 4 (Admin-API)
+
+Sicherheitsaspekte:
+
+- Modul-Rechte müssen nicht nur UI-seitig, sondern serverseitig geprüft werden
+- Module dürfen keine Sicherheits- oder Data-Namespaces überschreiben
+
+Risiken:
+
+- Module werden zu früh anhardt und spätere Rechte- oder App-Logik wird schwer
+
+Abnahmekriterien:
+
+- Module können aktiviert/deaktiviert und konfiguriert werden
+- App-Isolation funktioniert für Datensätze und Konfigurationen
+- Modul-Abhängigkeiten sind definiert
+
+Warum an dieser Stelle:
+
+- spätere App- und CMS-/GPS-/Store-Module hängen an dieser Stabilität
+
+## PHASE 6 – Security Hardening, Audit und operational readiness
+
+PRIORITÄT:
+
+- hoch
+
+Ziel:
+
+- produktiver Betrieb muss sicher und überwacht werden
+
+IST:
+
+- Grundideen zu Sicherheit und Audit existieren
+
+ERSTE PRODUKTIVE PHASE:
+
+- Rate Limiting
+- Audit-Logs für Login, Rollenänderung, Module, Admin-Aktionen
+- Login-Überwachung und Security-Events
+- XSS-/CSRF-/Injection-Policies
+- zentrale Security-Header
+- Log-Level und Fehler-Diagnostik
+
+Benötigte Komponenten:
+
+- `platform/security.js`
+- `server/middleware/csrf.js`
+- `server/middleware/rate-limit.js`
+- `server/services/log-service.js`
+- `storage/logs/*`
+- `server/api/logs.js`
+
+Abhängigkeiten:
+
+- Phase 2–5
+
+Sicherheitsaspekte:
+
+- kritisch für Produktivbetrieb
+- alle Sicherheitsfunktionen müssen serverseitig durchgesetzt werden
+
+Risiken:
+
+- Sicherheitslücken lassen sich schwer nachträglich sauber einbauen, ohne viel Rework
+
+Abnahmekriterien:
+
+- Audit-/Security-Logs vorhanden
+- Rate-Limits und CSRF aktiv
+- keine sensiblen Daten in Logs
+
+Warum an dieser Stelle:
+
+- Sicherheit ist nicht ein separater Spiegel, sondern notwendige Grundlage für alle produktiven Funktionen
+
+## PHASE 7 – Update-System und Entitlements
+
+PRIORITÄT:
+
+- hoch
+
+Ziel:
+
+- App-, Module- und Feature-Updates sollen kontrolliert und sicher erfolgen
+
+IST:
+
+- generische Update- und Entitlement-Idee ist vorhanden, aber keine feste produktive Implementierung
+
+ERSTE PRODUKTIVE PHASE:
+
+- `Update Manager` + `Update Provider`-Architektur
+- App-/Module-Check bei Start
+- Update-Hinweis: „Neue Version verfügbar – jetzt aktualisieren.“
+- Abhängigkeits- und Kompatibilitätsprüfung
+- Integritäts-/Signaturprüfung
+- Rollback-Mechanik, soweit sinnvoll
+
+Benötigte Komponenten:
+
+- `server/api/updates.js`
+- `server/services/update-service.js`
+- Provider-Adapter-Schicht
+- Version- und Manifest-Checks
+- Entitlement-Manager
+
+Abhängigkeiten:
+
+- Phase 2, 3, 4, 5, 6
+
+Sicherheitsaspekte:
+
+- Update-Provider darf nicht hart eingebaut sein
+- Kryptografische Signatur und Integritätsprüfung erforderlich
+- keine aus dem Internet ohne Prüfung installierten Packages
+
+OFFENE ENTSCHEIDUNG:
+
+- späterer Store oder eigener Server als Standardprovider
+
+Abnahmekriterien:
+
+- Update-Prüfung beim Start funktioniert
+- Module-Updates werden erkannt
+- Sicherheits- und Kompatibilitätsprüfung läuft korrekt
+
+Warum an dieser Stelle:
+
+- Updates und Entitlements hängen an der Produktivbasis, aber sie dürfen die Kernarchitektur nicht überladen
+
+## PHASE 8 – Backup/Restore, Benutzer-Backup und Storage-Policies
+
+PRIORITÄT:
+
+- hoch
+
+Ziel:
+
+- Produktiver Betrieb braucht Wiederherstellbarkeit und Datensicherung
+
+IST:
+
+- allgemeine Backup-/Restore-Strategie ist geplant, aber noch nicht produktiv definiert
+
+ERSTE PRODUKTIVE PHASE:
+
+- System-/Admin-Backups
+- DB- und Datei-Backups
+- Restore-Skripte und Wiederherstellungsprozedur
+- Benutzer-Backups nur für Paid-/Premium-Tarife
+- getrennte Sicherung von System- und Nutzerdaten
+
+Benötigte Komponenten:
+
+- `storage/backups/*`
+- `scripts/backup.sh`
+- `scripts/restore.sh`
+- `server/api/backups.js`
+- `server/services/backup-service.js`
+
+Abhängigkeiten:
+
+- Phase 2, 5, 6, 7
+
+Sicherheitsaspekte:
+
+- Benutzer-Backups müssen schlüsselgebunden und nicht global zugänglich sein
+- Backups müssen mit Rechte- und Provider-Policies geschützt werden
+
+GEWÜNSCHT:
+
+FREE:
+
+- kein Benutzer-Backup
+
+PAID:
+
+- persönliches Backup mit gezielter Wiederherstellung
+
+Risiken:
+
+- Backups ohne klare Rechte- und Provider-Abstraktion werden in der Praxis problematisch
+
+Abnahmekriterien:
+
+- Backup-/Restore-Prozess ist dokumentiert und testbar
+- Benutzer-Backups sind getrennt von Admin-/System-Backups
+
+Warum an dieser Stelle:
+
+- Backups sind ein Betriebs- und Notfall-Feature, nicht die erste technische Grundlage
+
+## PHASE 9 – CMS/Content, GPS und Store-Funktionen
+
+PRIORITÄT:
+
+- mittel bis hoch
+
+Ziel:
+
+- Anwendungen und fachliche Module dürfen auf die stabile Basis aufsetzen
+
+IST:
+
+- GPS-, Store- und CMS-/Data-Ansätze sind bereits sichtbar
+
+ERSTE PRODUKTIVE PHASE:
+
+- produktive Grundmodelle für Inhalte, GPS-Daten, Produkte, Kunden, Bestellungen
+- Rechte und Storage-Namespaces sauber verankert
+- App-/Module-Logik nicht im Core, sondern im Modul-/App-Layer
+
+Benötigte Komponenten:
+
+- Content-Modelle
+- GPS-Datenmodelle
+- Store-Schemas und Positionen
+- App-/Data-Engines
+- Modul-Definitionen
+
+Abhängigkeiten:
+
+- Phase 2, 3, 5, 7 erforderlich
+
+Sicherheitsaspekte:
+
+- Zugriff auf GPS- und Store-Daten muss app-/rollenbasiert gesteuert werden
+- sensible Daten wie Standort und Bestell-Daten müssen sauber abgesichert werden
+
+Risiken:
+
+- fachliche Module werden zu früh gebaut und binden sich an generische Strukturen
+
+Abnahmekriterien:
+
+- content, gps und store laufen als App-Module und nicht als Core-Features
+
+Warum an dieser Stelle:
+
+- fachliche Funktionen erst dann sinnvoll, wenn Auth, Rechte, Module und Storage stabil sind
+
+## PHASE 10 – Monitoring, Health, Jobs, Cron und Wartung
+
+PRIORITÄT:
+
+- mittel
+
+Ziel:
+
+- Betriebssicherheit und langfristige Wartbarkeit
+
+IST:
+
+- Health und Monitoring sind grundsätzlich eingeordnet
+
+ERSTE PRODUKTIVE PHASE:
+
+- Health-Checks
+- Server-/DB-/Disk-/Memory-Monitoring
+- Job-/Queue-/Cron-Systeme
+- Wartungsmodus
+- Diagnose- und Fehler-Alerts
+
+Benötigte Komponenten:
+
+- `server/api/health.js`
+- `server/services/health-service.js`
+- `server/jobs/*`
+- monitoring endpoints
+- scheduled tasks
+
+Abhängigkeiten:
+
+- Phase 1–9
+
+Sicherheitsaspekte:
+
+- keine sensitive Systeminformation ungeschützt ausgeben
+- Monitoring darf keine Security-Details exponieren
+
+Risiken:
+
+- fehlendes Monitoring erzeugt sehr hohe Wartungs- und Ausfallkosten
+
+Abnahmekriterien:
+
+- Health-Checks laufen
+- Systemstatus und Fehlerüberwachung sind sichtbar
+- Cron-/Job-Systeme sind dokumentiert
+
+Warum an dieser Stelle:
+
+- Monitoring ist wichtig, aber erst nach stabiler Produktivbasis sinnvoll
+
+## PHASE 11 – Deployment, cPanel-Transfer und externe Provider
+
+PRIORITÄT:
+
+- hoch, aber nach technischer Basis
+
+Ziel:
+
+- produktive Auslieferung soll stabil, reproduzierbar und provider-agnostisch sein
+
+IST:
+
+- cPanel-/FTPS-Pfad ist vorhanden
+- Transfer- und Deployment-Konzepte sind dokumentiert
+
+ERSTE PRODUKTIVE PHASE:
+
+- `cPanel-meinServer` als reduzierte Laufzeit-/Product-Source
+- GitHub Actions/FTPS-Flow
+- cPanel-Root `/` als FTP-Root
+- produktive Datei- und Ordnerstruktur sauber trennt
+
+Benötigte Komponenten:
+
+- `scripts/*`
+- `config/*`
+- produktive `server/`, `public/`, `storage/`, `config/`-Struktur
+
+Abhängigkeiten:
+
+- Phase 1–10 erforderlich
+
+Sicherheitsaspekte:
+
+- keine Secrets in Git
+- keine produktive Datei in Dev-Repo automatisch nicht exportiert
+
+Risiken:
+
+- falsche Auslieferung führt zu Sicherheits- und Integritätsproblemen
+
+Abnahmekriterien:
+
+- nur produktive Dateien im Delivery-Repo
+- Deployment ist reproduzierbar und sicher
+
+Warum an dieser Stelle:
+
+- Deploy ist der letzte technische Haken, nicht der erste
+
+## PHASE 12 – Zukünftige Erweiterungen
+
+PRIORITÄT:
+
+- später
+
+Ziel:
+
+- Erweiterbarkeit ohne Architektur-Rework
+
+SPÄTER:
+
+- 2FA/MFA
+- Webhooks
+- Notifications
+- E-Mail-System
+- Multi-App/Multi-Tenant
+- externe API und Payment-Provider
+- Store- und App-Update-Provider
+- erweitertete Reporting-/Statistik-Module
+
+ZUKUNFT:
+
+- Cloud-Speicher-Provider
+- externe Worker-/Queue-Cluster
+- Auto-Scaling-Ansätze
+- Tenant- und Mandanten-Umgebungen
+
+Risiken:
+
+- zu frühe Einführung komplexer Features verschiebt kritische Grundlagen
+
+Abnahmekriterien:
+
+- Erweiterungen laufen über definierte Interfaces
+- keine hardcodierten Funktionen im Core
+
+## OFFENE ENTSCHEIDUNGEN
+
+Diese Entscheidungen müssen vor der Implementierung bewusst getroffen werden, obwohl sie technisch durch Abstraktionen offen gehalten werden können:
+
+- SQLite oder MySQL als erste produktive DB-Variante
+- Cookie-Session oder tokenbasierte Sessions
+- gemeinsame Admin-UI oder separate Admin-Anwendung
+- genaue Free-/Paid-Funktionsaufteilung
+- Module des ersten produktiven Releases
+- erste Infrastruktur-/Provider-Adapter
+
+EMPFOHLEN:
+
+- SQLite als erste produktive Lösung für erste stabile cPanel-Umgebung
+- Cookie-Session mit serverseitigem Store als erste produktive Standard-Variante, solange nicht ein echtes Token-API-Design erforderlich ist
+- Provider-Abstraktion und Adapter-Interface früh absichern, damit die erste Infrastruktur nicht hart kodiert bleibt
+- gemeinsame Admin-UI im ersten Release, wenn nicht ein klarer technischer Grund für separate Admin-Anwendung vorliegt
+
+## EMPFEHLUNGEN DES AGENTS
+
+### 1. Provider-Abstraktion nicht später, sondern früh
+
+Problem:
+
+- Die aktuelle cPanel-Umgebung ist nur die erste konkrete Infrastruktur. Wenn der Provider-Code später hart eingebaut wird, kann die Anwendung nicht elegant zwischen Hosting-Umgebungen wechseln.
+
+Lösung:
+
+- `infrastructure/provider-manager` und `adapter`-Schicht schon beim ersten Produktiv-Build einführen.
+
+Nutzen:
+
+- späterer Wechsel zwischen Hosting, Clouds, lokalen Instanzen und Servern ohne Rework des App-Cores.
+
+Aufwand:
+
+- mittel
+
+Zeitpunkt:
+
+- PHASE 0 oder PHASE 1
+
+Begründung:
+
+- cPanel ist nur der erste echte Provider, keine langfristige technische Bindung.
+
+### 2. Authentifizierung als erste echte Produktivschicht behandeln
+
+Problem:
+
+- Browser-Storage-Auth in Entwicklung ist leicht zu missverstehen; in Produktion ist sie ein Sicherheitsfehler, wenn sie allein als Auth-Mechanismus dient.
+
+Lösung:
+
+- serverseitige Session-Logik, Passwort-Hashing und Rollen-/Permission-Checks früh und strikt einführen.
+
+Nutzen:
+
+- schützt Admin-, User- und API-Bereiche schon in der frühen Betriebssicherheit.
+
+Aufwand:
+
+- mittel
+
+Zeitpunkt:
+
+- PHASE 3
+
+Begründung:
+
+- Auth ist die zentrale Grundlage aller späteren Systemfunktionen.
+
+### 3. Sicherheits-Hardening nicht am Ende nachholen
+
+Problem:
+
+- spätere Security-Anforderungen führen häufig zu Rework und Produktivblockern.
+
+Lösung:
+
+- zentrale Security-Basis in Phase 6 mitgehen lassen, nicht als separates „nice-to-have“ am Ende.
+
+Nutzen:
+
+- reduziert Risiken und verhindert kritische spätere Repositories-Änderungen.
+
+Aufwand:
+
+- mittel
+
+Zeitpunkt:
+
+- PHASE 6
+
+Begründung:
+
+- Admin-, Session- und API-Funktionen sind ohne strenge Security nicht produktiv nutzbar.
+
+### 4. Update-/Entitlement-Logik nicht in Module verdrahten
+
+Problem:
+
+- Tarife und Updates werden sonst in Modul- oder Feature-Code fest verdrahtet und später kaum austauschbar.
+
+Lösung:
+
+- zentrale Entitlement- und Update-Manager-Schicht mit Provider-Adapter.
+
+Nutzen:
+
+- spätere Store-/App-Updates und Tarifstufen sind ohne Core-Umstellung möglich.
+
+Aufwand:
+
+- mittel
+
+Zeitpunkt:
+
+- PHASE 7
+
+Begründung:
+
+- Entitlements und Updates sind systemweite Funktionen und sollten im Framework nicht app- oder modulspezifisch verschwinden.
+
+### 5. Backups als Betriebsfeature, nicht als Nebensache behandeln
+
+Problem:
+
+- nach einem Datenverlust ist die Wiederherstellung oft aufwendiger als die ursprüngliche Implementierung.
+
+Lösung:
+
+- System- und Benutzer-Backups in der Produktivarchitektur als eigene Service-Schicht definieren.
+
+Nutzen:
+
+- Wiederherstellbarkeit, Benutzer- und System-Sicherheit, Reduktion von Ausfallzeiten.
+
+Aufwand:
+
+- mittel
+
+Zeitpunkt:
+
+- PHASE 8
+
+Begründung:
+
+- Produktiver Betrieb ohne Recovery-Konzept ist unvollständig.
+
+## Zusammenfassung der Phasenfolge
+
+PHASE 0 – Architektur- und Projekt-Guardrails
+PHASE 1 – Server-Basis und Runtime-Grundlagen
+PHASE 2 – Persistenz und Datenmodell
+PHASE 3 – Authentifizierung, Sessions, Rollen und Rechte
+PHASE 4 – API, Admin-Funktionen und Systemservices
+PHASE 5 – Module Registry, App-Isolation und Modul-Management
+PHASE 6 – Security Hardening, Audit und operational readiness
+PHASE 7 – Update-System und Entitlements
+PHASE 8 – Backup/Restore, Benutzer-Backup und Storage-Policies
+PHASE 9 – CMS/Content, GPS und Store-Funktionen
+PHASE 10 – Monitoring, Health, Jobs, Cron und Wartung
+PHASE 11 – Deployment, cPanel-Transfer und externe Provider
+PHASE 12 – Zukünftige Erweiterungen
+
+Diese Reihenfolge ist bewusst so gewählt, dass spätere Funktionalitäten auf stabilen technischen Grundlagen aufbauen und das Framework nicht durch produktive Zusatzfunktionen an grundlegenden Designentscheidungen blockiert wird.
+
+Die Gesamtarchitektur bleibt damit kompatibel mit der vorhandenen Vision, aber technisch realistischer für einen stabilen produktiven Betrieb als ein einfacher Frontend-/Admin-Mix ohne serveurits abgesicherte Grundlage.
+
