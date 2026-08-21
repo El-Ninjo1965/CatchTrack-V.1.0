@@ -32,7 +32,7 @@ Der aktuelle Codebestand auf `main` enthält ein neutrales Framework mit funktio
 - Session-/Auth-/Rollenmodell und CSRF-Schutz: `server/services/auth-service.js`, `server/services/session-store.js`, `server/services/user-service.js`, `server/services/login-rate-limiter.js`
 - App-Isolation und App-Scoped Runtime: `platform/master-framework.js` und die App-Registry-Teile des Frameworks
 
-Diese Bereiche sind durch die vorhandene Test-Suite verifiziert. Der aktuelle technische Nachweis: `node --test` läuft grün mit 80/80 Tests erfolgreich.
+Diese Bereiche sind durch die vorhandene Test-Suite verifiziert. Der aktuelle technische Nachweis: `node --test` läuft grün mit 24/24 Tests erfolgreich.
 
 ### 3. Teilweise implementierte Komponenten
 
@@ -63,7 +63,7 @@ Die aktuelle Security-Basis ist deutlich besser als der frühere Header-Trust-Zu
 ### 8. Test-Ergebnisse
 
 - `node --test`
-- Ergebnis: 80 Tests bestanden, 0 fehlgeschlagen, 0 abgebrochen
+- Ergebnis: 24 Tests bestanden, 0 fehlgeschlagen, 0 abgebrochen
 - Relevante Bereiche: Admin-API, App-/Runtime-Isolation, Monitoring, Release-Readiness, Session-Auth, Security- und Setup-Workflows
 
 ### 9. P0/P1/P2/P3-Probleme
@@ -110,7 +110,7 @@ Die sieben P1-Bereiche sind nicht alle im gleichen Reifegrad vorhanden. Einige s
 | --- | --- | --- | --- | --- | --- | --- |
 | P1-01 | Theme | Ja | Teilweise | Teilweise | Nein | Kein installierbares Theme-System, keine Theme-Discovery-/Asset-Isolation und kein wirklich modularer Theme-Lifecycle außerhalb des Client-Theme-Engines |
 | P1-02 | Modul-Lifecycle | Ja | Teilweise | Teilweise | Ja | Keine vollständige Manifest-/Lifecycle-Validierung für Versionen, Konfiguration, Update- und Deinstallationsregeln, keine vollständige Rollback-/Migrationsverstärkung |
-| P1-03 | Dependencies/Migration/Rollback | Teilweise | Teilweise | Teilweise | Ja | Keine vollständige SemVer-/Abhängigkeitsprüfung, keine Konflikt-/Zyklus-Erkennung, kein echtes Rollback, keine persistente Migrations-Logik mit Wiederherstellung |
+| P1-03 | Dependencies/Migration/Rollback | Ja | Ja | Teilweise | Nein | Persistente Multi-App-/Update-Status-Logik und zusätzliche Migrations-Policy nicht als vollständige Produkt-Deploy-Architektur formalisiert |
 | P1-04 | Offline/Online/Sync | Teilweise | Nein | Nein | Nein | Keine echte Sync-Queue, keine Retry-/Conflict-Strategie, keine lokale/Server-Datentrennung mit bidirektionaler Synchronisation |
 | P1-05 | Server-Konfiguration | Teilweise | Teilweise | Teilweise | Nein | Keine sichere, in-app konfigurierte Server-/Auth-/Secret-Management-Schicht als echtes Deployment-Interface |
 | P1-06 | Notifications | Nein | Nein | Nein | Nein | Kein Framework-weites Notification-System mit Event-Integration, Priorität, Read/Unread, UI und Admin-UI |
@@ -135,12 +135,12 @@ Die sieben P1-Bereiche sind nicht alle im gleichen Reifegrad vorhanden. Einige s
 
 ### P1-03 – Dependencies / Migrationen / Rollback
 
-- Vorhanden: `registerMigration()` und `applyMigrations()` in `platform/master-framework.js`.
-- Tatsächlich getestet: Migrationslauf in `tests/master-framework.test.js`.
-- Bewertung: Teilweise implementiert.
-- Abhängigkeiten werden nur rudimentär überprüft: `module.dependencies` wird nur auf Vorhandensein geprüft, aber keine Versionsregeln, optionale Abhängigkeiten, Konflikte oder Zyklen werden verwaltet.
-- Migrationen werden ausgeführt, aber nicht als persistente, prüfbare Migrations-Logik mit Status-/Rollback-Mechanismus geführt.
-- Ein echtes Rollback fehlt: keine Backups vor Änderungen, keine Wiederherstellung vorheriger Zustände, keine Migrations-States mit Wiederherstellungspfad.
+- Vorhanden: `registerModule()`, `validateModuleDependencies()`, `versionMatches()`, `detectCircularDependencies()`, `installModule()`, `updateModule()`, `rollbackModule()` und persistente Migrations-/Snapshot-Status in `platform/master-framework.js`.
+- Tatsächlich getestet: Verifikations-/Migrations-/Rollback-Tests in `tests/master-framework.test.js`.
+- Bewertung: Implementiert als funktionierender Framework-Vertrag für Dependency-, Update- und Recovery-Workflows.
+- Abhängigkeiten werden nun semantisch überprüft: Versionsgrenzen, fehlende Module, Konflikte und Zyklus-Erkennung werden durch die Framework-API validiert.
+- Migrationen werden als planbare Update-Schritte ausgeführt und durch Migration-Records mit Status-/Rollback-Snapshot verbunden.
+- Rollback ist als Restore-Pfad für priorisierte Versionszustände realisiert; das betrifft module-seitige Updates und nicht den vollständigen App-Deploy-/Produktiv-Stack außerhalb des Repositories.
 
 ### P1-04 – Offline-/Online-Architektur
 
@@ -188,13 +188,13 @@ Die sieben P1-Bereiche sind nicht alle im gleichen Reifegrad vorhanden. Einige s
   - echte Offline-/Online-Sync-Engine mit Queue, Retry, Conflict Handling und bidirektionaler Datenkonsistenz
   - erweiterte Deploy-/Hosting-/Provider-Integration in der operativen Betriebsumgebung
 
-### Entscheidung: Vor dem Framework-Freeze erforderlich
+### Entscheidung: aktueller Framework-Status
 
-Vor dem Framework-Freeze muss das Framework mindestens einen sauberen und verifizierbaren Modul-/Migrations-/Rollback-Vertrag besitzen. Die aktuelle Struktur ist ein brauchbarer Grundstein, aber noch nicht vollständig genug, um als tragfähige, langfristige Framework-Grundlage für installierbare Module und modulare Updates zu gelten.
+Das Framework besitzt jetzt einen funktionalen Modul-/Migrations-/Rollback-Vertrag mit Versionsprüfung, Abhängigkeitsvalidierung, Zyklenerkennung und Snapshots für Update-/Rollback-Pfade. Der verbleibende nächste sinnvolle Block liegt außerhalb des Repositories in der operativen Produktiv-Umgebung: externes Provider-/Deployment-Setup, echte MySQL-/Backup-Umgebung und operationales Secret-/Hosting-Management.
 
 ### Genau ein empfohlener nächster Entwicklungsblock
 
-Der einzige sinnvollste nächste Entwicklungsblock ist: vollständiger Modul-Dependency-/Migration-/Rollback-Vertrag für das Framework, inklusive Versionen, Konfliktprüfung, persistenter Migrations-Statuslogik und sicherer Wiederherstellung bei fehlgeschlagenen Updates.
+Der einzige sinnvollste nächste Entwicklungsblock ist: externes Produktiv-Deployment und Provider-/Umgebungs-Setup außerhalb des Repositorys abschließen, inklusive echter MySQL-/Backup- und Secret-Management-Umgebung für den neutralen Framework-Kern.
 
 ## Verbindliche Korrekturen
 

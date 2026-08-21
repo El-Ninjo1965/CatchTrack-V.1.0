@@ -53,7 +53,12 @@
                     : '',
                 dependencies: Array.isArray(manifest.dependencies)
                     ? manifest.dependencies.filter(Boolean).map(String)
-                    : [],
+                    : manifest.dependencies && typeof manifest.dependencies === 'object'
+                        ? Object.entries(manifest.dependencies).map(([dependencyId, requirement]) => {
+                            const normalizedRequirement = requirement && typeof requirement === 'string' ? requirement : '*';
+                            return normalizedRequirement === '*' ? dependencyId : `${dependencyId}@${normalizedRequirement}`;
+                        })
+                        : [],
                 permissions: Array.isArray(manifest.permissions)
                     ? manifest.permissions.filter(Boolean).map(String)
                     : [],

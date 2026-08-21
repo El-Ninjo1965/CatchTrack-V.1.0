@@ -134,9 +134,28 @@
                 throw new Error(`Module not found: ${moduleId}`);
             }
 
-            const missingDependencies = (module.dependencies || []).filter(
-                (dependency) => !this.registry.has(dependency)
-            );
+            const framework = (typeof window !== 'undefined' && window.MasterFramework)
+                ? window.MasterFramework
+                : (typeof globalThis !== 'undefined' && globalThis.MasterFramework ? globalThis.MasterFramework : null);
+
+            if (framework && typeof framework.validateModuleDependencies === 'function') {
+                const result = framework.validateModuleDependencies(moduleId);
+                if (!result.ok) {
+                    throw new Error(result.errors.join(' '));
+                }
+                return true;
+            }
+
+            const dependencyEntries = Array.isArray(module.dependencies)
+                ? module.dependencies
+                : module.dependencies && typeof module.dependencies === 'object'
+                    ? Object.entries(module.dependencies).map(([dependencyId, requirement]) => requirement && requirement !== '*' ? `${dependencyId}@${requirement}` : dependencyId)
+                    : [];
+
+            const missingDependencies = dependencyEntries.filter((dependency) => {
+                const dependencyId = String(dependency).split('@')[0];
+                return !this.registry.has(dependencyId);
+            });
 
             if (missingDependencies.length > 0) {
                 throw new Error(`Missing module dependencies for "${module.id}": ${missingDependencies.join(', ')}`);

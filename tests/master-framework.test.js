@@ -393,6 +393,59 @@ test('supports feature flags, permissions, and migrations', async () => {
   assert.equal(result.applied, 1);
 });
 
+test('evaluates dependency requirements and circular module references', () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.modules.clear();
+
+  runtime.registerModule({ id: 'shared-lib', version: '2.1.0', appId: 'neutral-app' });
+  runtime.registerModule({ id: 'core-module', version: '1.5.0', appId: 'neutral-app', dependencies: { 'shared-lib': '>=2.0.0' } });
+
+  const dependencyResult = runtime.validateModuleDependencies('core-module');
+  assert.equal(dependencyResult.ok, true);
+  assert.deepEqual(dependencyResult.missing, []);
+
+  runtime.registerModule({ id: 'alpha-module', version: '1.0.0', appId: 'neutral-app', dependencies: { 'beta-module': '>=1.0.0' } });
+  runtime.registerModule({ id: 'beta-module', version: '1.0.0', appId: 'neutral-app', dependencies: { 'alpha-module': '>=1.0.0' } });
+
+  const circularResult = runtime.validateModuleDependencies('alpha-module');
+  assert.equal(circularResult.ok, false);
+  assert.equal(Array.isArray(circularResult.circular) && circularResult.circular.length > 0, true);
+});
+
+test('supports module migration rollback snapshots and version updates', async () => {
+  cleanupRuntimeState();
+  const runtime = Framework;
+  runtime.modules.clear();
+
+  runtime.registerModule({
+    id: 'audit-addon',
+    version: '1.0.0',
+    appId: 'neutral-app',
+    status: 'installed',
+    enabled: false,
+    active: false
+  });
+
+  const snapshot = runtime.createModuleSnapshot('audit-addon');
+  assert.equal(snapshot.version, '1.0.0');
+
+  const updateResult = await runtime.updateModule('audit-addon', '2.0.0', {
+    migrations: [{
+      id: 'audit-addon-migration',
+      run: async () => ({ ok: true, message: 'migration applied' })
+    }]
+  });
+
+  assert.equal(updateResult.ok, true);
+  assert.equal(runtime.getModule('audit-addon').version, '2.0.0');
+  assert.equal(runtime.getModuleMigrations('audit-addon').length >= 1, true);
+
+  const rollbackResult = runtime.rollbackModule('audit-addon', snapshot);
+  assert.equal(rollbackResult.ok, true);
+  assert.equal(runtime.getModule('audit-addon').version, '1.0.0');
+});
+
 test('supports admin-configurable storage modes and connection metadata', () => {
   cleanupRuntimeState();
   const runtime = Framework;

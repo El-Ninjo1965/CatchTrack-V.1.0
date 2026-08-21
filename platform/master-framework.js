@@ -62,6 +62,9 @@
     normalizeSetupStatus,
     permissions: new Map(),
     roles: new Map(),
+    modules: new Map(),
+    moduleMigrations: new Map(),
+    moduleSnapshots: new Map(),
     migrations: [],
     appRuntimeState: new Map(),
     currentAppId: null,
@@ -1506,6 +1509,459 @@
 
     listFeatureFlags() {
       return Array.from(this.featureFlags.entries()).map(([name, value]) => ({ name, value, status: createStatusSnapshot(name, value) }));
+    },
+
+    coerceVersion(value, fallback = '0.0.0') {
+      const raw = normalizeString(String(value || fallback), fallback);
+      const match = raw.match(/\d+(?:\.\d+){0,2}/);
+      if (!match) {
+        return this.coerceVersion(fallback, fallback);
+      }
+      const parts = match[0].split('.').map((entry) => Number.parseInt(entry, 10) || 0);
+      while (parts.length < 3) {
+        parts.push(0);
+      }
+      return parts.slice(0, 3).join('.');
+    },
+
+    compareVersions(leftVersion, rightVersion) {
+      const left = this.coerceVersion(leftVersion, '0.0.0').split('.').map((entry) => Number.parseInt(entry, 10) || 0);
+      const right = this.coerceVersion(rightVersion, '0.0.0').split('.').map((entry) => Number.parseInt(entry, 10) || 0);
+
+      for (let index = 0; index < 3; index += 1) {
+        if (left[index] < right[index]) {
+          return -1;
+        }
+        if (left[index] > right[index]) {
+          return 1;
+        }
+      }
+      return 0;
+    },
+
+    versionMatches(version, requirement) {
+      const current = this.coerceVersion(version, '0.0.0');
+      const normalizedRequirement = normalizeString(String(requirement || '*'), '*');
+      if (normalizedRequirement === '*' || normalizedRequirement === 'latest') {
+        return true;
+      }
+
+      const match = normalizedRequirement.match(/^\s*(<=|>=|==|=|<|>|\^|~)?\s*(\d+(?:\.\d+){0,2})\s*$/i);
+      if (!match) {
+        return current === this.coerceVersion(normalizedRequirement, current);
+      }
+
+      const operator = match[1] || '=';
+      const target = this.coerceVersion(match[2], '0.0.0');
+      const comparison = this.compareVersions(current, target);
+
+      if (operator === '=' || operator === '==') {
+        return comparison === 0;
+      }
+      if (operator === '>') {
+        return comparison > 0;
+      }
+      if (operator === '>=') {
+        return comparison >= 0;
+      }
+      if (operator === '<') {
+        return comparison < 0;
+      }
+      if (operator === '<=') {
+        return comparison <= 0;
+      }
+      if (operator === '^') {
+        const targetParts = target.split('.').map((entry) => Number.parseInt(entry, 10) || 0);
+        const upperBound = [targetParts[0] + 1, 0, 0].join('.');
+        return comparison >= 0 && this.compareVersions(current, upperBound) < 0;
+      }
+      if (operator === '~') {
+        const targetParts = target.split('.').map((entry) => Number.parseInt(entry, 10) || 0);
+        const upperBound = [targetParts[0], targetParts[1] + 1, 0].join('.');
+        return comparison >= 0 && this.compareVersions(current, upperBound) < 0;
+      }
+      return comparison === 0;
+    },
+
+    normalizeModuleDependencyMap(dependencies = []) {
+      const source = Array.isArray(dependencies)
+        ? dependencies
+        : isPlainObject(dependencies)
+          ? Object.entries(dependencies)
+          : typeof dependencies === 'string'
+            ? [dependencies]
+            : [];
+
+      const normalized = {};
+      source.forEach((entry) => {
+        if (typeof entry === 'string') {
+          normalized[normalizeString(entry, '')] = '*';
+          return;
+        }
+
+        if (isPlainObject(entry)) {
+          const name = normalizeString(entry.name || entry.moduleId || entry.id || '', '');
+          if (!name) {
+            return;
+          }
+          normalized[name] = normalizeString(entry.version || entry.range || entry.requirement || '*', '*');
+          return;
+        }
+
+        if (Array.isArray(entry)) {
+          const [name, requirement = '*'] = entry;
+          const depName = normalizeString(String(name || ''), '');
+          if (depName) {
+            normalized[depName] = normalizeString(String(requirement || '*'), '*');
+          }
+        }
+
+        if (isPlainObject(source) && typeof entry === 'object' && entry !== null && !Array.isArray(entry)) {
+          // noop: handled earlier via Object.entries validation
+        }
+      });
+
+      if (isPlainObject(dependencies)) {
+        Object.entries(dependencies).forEach(([name, requirement]) => {
+          const depName = normalizeString(name, '');
+          if (!depName) {
+            return;
+          }
+          normalized[depName] = normalizeString(String(requirement || '*'), '*');
+        });
+      }
+
+      return Object.fromEntries(Object.entries(normalized).filter(([key]) => !!key));
+    },
+
+    normalizeModuleDefinition(moduleDefinition = {}) {
+      if (!isPlainObject(moduleDefinition)) {
+        throw new TypeError('Module definition must be an object.');
+      }
+
+      const moduleId = normalizeString(moduleDefinition.id || moduleDefinition.moduleId || moduleDefinition.name || '', '');
+      if (!moduleId) {
+        throw new Error('Module id is required.');
+      }
+
+      const appId = normalizeString(moduleDefinition.appId || moduleDefinition.app || 'default-app', 'default-app');
+      const version = normalizeString(moduleDefinition.version || '1.0.0', '1.0.0');
+      const dependencies = this.normalizeModuleDependencyMap(moduleDefinition.dependencies || {});
+      const optionalDependencies = this.normalizeModuleDependencyMap(moduleDefinition.optionalDependencies || {});
+      const conflicts = Array.isArray(moduleDefinition.conflicts)
+        ? moduleDefinition.conflicts.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean)
+        : [];
+      const permissions = Array.isArray(moduleDefinition.permissions)
+        ? [...new Set(moduleDefinition.permissions.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
+        : [];
+
+      return {
+        id: moduleId,
+        name: normalizeString(moduleDefinition.name || moduleId, moduleId),
+        version,
+        appId,
+        status: normalizeString(moduleDefinition.status || 'available', 'available'),
+        enabled: !!moduleDefinition.enabled,
+        active: !!moduleDefinition.active,
+        description: normalizeString(moduleDefinition.description || '', ''),
+        dependencies,
+        optionalDependencies,
+        conflicts,
+        permissions,
+        capabilities: Array.isArray(moduleDefinition.capabilities)
+          ? [...new Set(moduleDefinition.capabilities.filter(Boolean).map((entry) => normalizeString(String(entry), '')).filter(Boolean))]
+          : [],
+        coreVersion: normalizeString(moduleDefinition.coreVersion || '', ''),
+        source: normalizeString(moduleDefinition.source || moduleDefinition.modulePath || '', ''),
+        config: isPlainObject(moduleDefinition.config) ? { ...moduleDefinition.config } : {},
+        manifest: isPlainObject(moduleDefinition.manifest) ? { ...moduleDefinition.manifest } : {},
+        createdAt: normalizeString(moduleDefinition.createdAt || new Date().toISOString(), new Date().toISOString()),
+        updatedAt: normalizeString(moduleDefinition.updatedAt || new Date().toISOString(), new Date().toISOString())
+      };
+    },
+
+    getModule(moduleId) {
+      const normalized = normalizeString(moduleId, '');
+      if (!normalized) {
+        return null;
+      }
+      return this.modules.has(normalized) ? { ...this.modules.get(normalized), dependencies: { ...(this.modules.get(normalized).dependencies || {}) }, optionalDependencies: { ...(this.modules.get(normalized).optionalDependencies || {}) }, permissions: [...(this.modules.get(normalized).permissions || [])], capabilities: [...(this.modules.get(normalized).capabilities || [])], conflicts: [...(this.modules.get(normalized).conflicts || [])] } : null;
+    },
+
+    listModules() {
+      return Array.from(this.modules.values()).map((module) => ({ ...module, dependencies: { ...(module.dependencies || {}) }, optionalDependencies: { ...(module.optionalDependencies || {}) }, permissions: [...(module.permissions || [])], capabilities: [...(module.capabilities || [])], conflicts: [...(module.conflicts || [])] }));
+    },
+
+    registerModule(moduleDefinition = {}) {
+      const normalized = this.normalizeModuleDefinition(moduleDefinition);
+      this.modules.set(normalized.id, normalized);
+      const key = `${normalized.appId}:${normalized.id}`;
+      const snapshot = this.moduleSnapshots.get(key) || { version: normalized.version, status: normalized.status, installedAt: new Date().toISOString() };
+      this.moduleSnapshots.set(key, { ...snapshot, version: normalized.version, status: normalized.status, updatedAt: new Date().toISOString() });
+      return this.getModule(normalized.id);
+    },
+
+    detectCircularDependencies(moduleId, graph = null, visited = new Set(), stack = []) {
+      const targetId = normalizeString(moduleId, '');
+      if (!targetId) {
+        return [];
+      }
+      const dependencyGraph = graph || new Map(Array.from(this.modules.values()).map((module) => [module.id, Object.keys(module.dependencies || {})]));
+      const currentStack = [...stack, targetId];
+      const currentModule = dependencyGraph.get(targetId) || [];
+
+      for (const dependency of currentModule) {
+        if (currentStack.includes(dependency)) {
+          return [...currentStack, dependency];
+        }
+        if (!visited.has(dependency) && dependencyGraph.has(dependency)) {
+          visited.add(dependency);
+          const cycle = this.detectCircularDependencies(dependency, dependencyGraph, visited, currentStack);
+          if (cycle.length > 0) {
+            return cycle;
+          }
+        }
+      }
+      return [];
+    },
+
+    validateModuleDependencies(moduleId) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return { ok: false, code: 'MODULE_NOT_FOUND', errors: ['Module not found.'], missing: [], invalidVersions: [], conflicts: [] };
+      }
+
+      const errors = [];
+      const missing = [];
+      const invalidVersions = [];
+      const conflicts = [];
+
+      if (module.coreVersion && this.compareVersions(this.version, module.coreVersion) < 0) {
+        errors.push(`Framework version ${this.version} does not satisfy required core version ${module.coreVersion}.`);
+      }
+
+      const cycle = this.detectCircularDependencies(module.id);
+      if (cycle.length > 0) {
+        errors.push(`Circular dependency detected: ${cycle.join(' -> ')}`);
+      }
+
+      Object.entries(module.dependencies || {}).forEach(([dependencyId, requirement]) => {
+        const dependency = this.getModule(dependencyId);
+        if (!dependency) {
+          missing.push(dependencyId);
+          errors.push(`Missing dependency: ${dependencyId}.`);
+          return;
+        }
+
+        const dependencyRequirement = normalizeString(String(requirement || '*'), '*');
+        if (!this.versionMatches(dependency.version, dependencyRequirement)) {
+          invalidVersions.push({ moduleId: dependencyId, requirement: dependencyRequirement, actual: dependency.version });
+          errors.push(`Dependency ${dependencyId} version ${dependency.version} does not satisfy ${dependencyRequirement}.`);
+        }
+      });
+
+      (module.conflicts || []).forEach((conflictId) => {
+        if (this.getModule(conflictId)) {
+          conflicts.push(conflictId);
+          errors.push(`Module conflict detected: ${module.id} conflicts with ${conflictId}.`);
+        }
+      });
+
+      return {
+        ok: errors.length === 0,
+        code: errors.length === 0 ? 'OK' : 'DEPENDENCY_ERROR',
+        errors,
+        missing,
+        invalidVersions,
+        conflicts,
+        circular: cycle
+      };
+    },
+
+    installModule(moduleDefinition = {}) {
+      const module = this.normalizeModuleDefinition(moduleDefinition);
+      const dependencyState = this.validateModuleDependencies(module.id);
+      if (!dependencyState.ok) {
+        return { ok: false, code: 'DEPENDENCY_ERROR', errors: dependencyState.errors, module, dependencyState };
+      }
+
+      const current = this.getModule(module.id);
+      if (current) {
+        const updatedModule = { ...current, ...module, status: 'installed', enabled: !!module.enabled, active: !!module.active, updatedAt: new Date().toISOString() };
+        this.modules.set(module.id, updatedModule);
+        return { ok: true, code: 'UPDATED', module: this.getModule(module.id) };
+      }
+
+      const installedModule = { ...module, status: 'installed', enabled: false, active: false, updatedAt: new Date().toISOString() };
+      this.modules.set(installedModule.id, installedModule);
+      return { ok: true, code: 'INSTALLED', module: this.getModule(installedModule.id) };
+    },
+
+    enableModule(moduleId) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+      }
+
+      const dependencyState = this.validateModuleDependencies(module.id);
+      if (!dependencyState.ok) {
+        return { ok: false, code: 'DEPENDENCY_ERROR', message: dependencyState.errors.join(' '), dependencyState };
+      }
+
+      const enabledModule = { ...module, status: 'enabled', enabled: true, active: true, updatedAt: new Date().toISOString() };
+      this.modules.set(enabledModule.id, enabledModule);
+      return { ok: true, code: 'ENABLED', module: this.getModule(enabledModule.id) };
+    },
+
+    disableModule(moduleId) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+      }
+
+      const updatedModule = { ...module, status: 'disabled', enabled: false, active: false, updatedAt: new Date().toISOString() };
+      this.modules.set(updatedModule.id, updatedModule);
+      return { ok: true, code: 'DISABLED', module: this.getModule(updatedModule.id) };
+    },
+
+    uninstallModule(moduleId) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+      }
+
+      if (module.enabled || module.active) {
+        return { ok: false, code: 'MODULE_ACTIVE', message: `Module ${moduleId} is still active and cannot be uninstalled.` };
+      }
+
+      this.modules.delete(module.id);
+      return { ok: true, code: 'UNINSTALLED', moduleId: module.id };
+    },
+
+    getModuleDependencyGraph() {
+      return new Map(Array.from(this.modules.values()).map((module) => [module.id, Object.keys(module.dependencies || {})]));
+    },
+
+    getModuleMigrations(moduleId) {
+      const normalized = normalizeString(moduleId, '');
+      if (!normalized) {
+        return [];
+      }
+      const state = this.moduleMigrations.get(normalized) || new Map();
+      return Array.from(state.values());
+    },
+
+    recordModuleMigration(moduleId, migrationRecord = {}) {
+      const normalizedId = normalizeString(moduleId, '');
+      if (!normalizedId) {
+        throw new Error('Module id is required for migration tracking.');
+      }
+      const entry = {
+        id: normalizeString(migrationRecord.id || `migration-${Date.now()}`, `migration-${Date.now()}`),
+        moduleId: normalizedId,
+        version: normalizeString(migrationRecord.version || '1.0.0', '1.0.0'),
+        status: normalizeString(migrationRecord.status || 'pending', 'pending'),
+        appliedAt: normalizeString(migrationRecord.appliedAt || '', ''),
+        rolledBackAt: normalizeString(migrationRecord.rolledBackAt || '', ''),
+        metadata: isPlainObject(migrationRecord.metadata) ? { ...migrationRecord.metadata } : {}
+      };
+
+      const current = this.moduleMigrations.get(normalizedId) || new Map();
+      current.set(entry.id, entry);
+      this.moduleMigrations.set(normalizedId, current);
+      return entry;
+    },
+
+    createModuleSnapshot(moduleId) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return null;
+      }
+      const snapshot = {
+        moduleId: module.id,
+        appId: module.appId,
+        version: module.version,
+        status: module.status,
+        enabled: !!module.enabled,
+        active: !!module.active,
+        createdAt: new Date().toISOString(),
+        data: { ...module }
+      };
+      this.moduleSnapshots.set(`${module.appId}:${module.id}`, snapshot);
+      return snapshot;
+    },
+
+    rollbackModule(moduleId, snapshot = null) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+      }
+
+      const currentSnapshot = snapshot || this.moduleSnapshots.get(`${module.appId}:${module.id}`) || null;
+      if (!currentSnapshot) {
+        return { ok: false, code: 'NO_SNAPSHOT', message: `No rollback snapshot found for module ${moduleId}.` };
+      }
+
+      const restoredModule = {
+        ...module,
+        version: normalizeString(currentSnapshot.version || module.version, module.version),
+        status: normalizeString(currentSnapshot.status || 'available', 'available'),
+        enabled: !!currentSnapshot.enabled,
+        active: !!currentSnapshot.active,
+        updatedAt: new Date().toISOString()
+      };
+
+      this.modules.set(restoredModule.id, restoredModule);
+      const migrationRecord = this.recordModuleMigration(moduleId, {
+        id: `rollback-${Date.now()}`,
+        version: restoredModule.version,
+        status: 'rolled_back',
+        rolledBackAt: new Date().toISOString(),
+        metadata: { restoredFrom: currentSnapshot.version }
+      });
+
+      return { ok: true, code: 'ROLLED_BACK', module: this.getModule(moduleId), migration: migrationRecord };
+    },
+
+    async updateModule(moduleId, nextVersion, options = {}) {
+      const module = this.getModule(moduleId);
+      if (!module) {
+        return { ok: false, code: 'MODULE_NOT_FOUND', message: `Module not found: ${moduleId}` };
+      }
+
+      const targetVersion = normalizeString(nextVersion || module.version, module.version);
+      const snapshot = this.createModuleSnapshot(module.id) || { moduleId: module.id, appId: module.appId, version: module.version, status: module.status, enabled: module.enabled, active: module.active };
+      const migrationPlan = Array.isArray(options.migrations) && options.migrations.length > 0 ? options.migrations : (Array.isArray(module.migrations) ? module.migrations : []);
+
+      for (const migration of migrationPlan) {
+        const migrationEntry = isPlainObject(migration) ? migration : { id: `migration-${Date.now()}` };
+        const migrationResult = await (typeof migrationEntry.run === 'function'
+          ? migrationEntry.run({ moduleId, fromVersion: module.version, toVersion: targetVersion, snapshot, appId: module.appId })
+          : { ok: true, skipped: true, id: migrationEntry.id || `migration-${Date.now()}` });
+
+        if (migrationResult && migrationResult.ok === false) {
+          const rollbackResult = this.rollbackModule(moduleId, snapshot);
+          return { ok: false, code: 'MIGRATION_FAILED', message: migrationResult.message || 'Migration failed.', migrationResult, rollbackResult };
+        }
+      }
+
+      const updatedModule = {
+        ...module,
+        version: targetVersion,
+        status: 'updated',
+        enabled: !!module.enabled,
+        active: !!module.active,
+        updatedAt: new Date().toISOString()
+      };
+      this.modules.set(updatedModule.id, updatedModule);
+      this.recordModuleMigration(moduleId, {
+        id: `update-${Date.now()}`,
+        version: targetVersion,
+        status: 'applied',
+        appliedAt: new Date().toISOString(),
+        metadata: { fromVersion: module.version, toVersion: targetVersion }
+      });
+      return { ok: true, code: 'UPDATED', module: this.getModule(moduleId), snapshot };
     },
 
     registerRole(roleId, roleDefinition = {}) {
