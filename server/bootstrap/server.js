@@ -6,6 +6,7 @@ const MasterFramework = require('../../platform/master-framework');
 const persistenceService = require('../services/persistence-service');
 const inputValidation = require('../middleware/input-validation');
 const userService = require('../services/user-service');
+const roleService = require('../services/role-service');
 const auditService = require('../services/audit-service');
 
 const bootstrapDefaultApps = () => {
@@ -953,6 +954,114 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
         sendJson(res, 200, {
           ok: true,
           message: `User '${userId}' deleted`
+        });
+      } catch (error) {
+        if (error.message.includes('not found')) {
+          sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: error.message });
+        } else {
+          sendJson(res, 400, { ok: false, code: 'DELETE_FAILED', message: error.message });
+        }
+      }
+      return true;
+    }
+  }
+
+  // Role Management API - /api/admin/roles
+  if (pathname === `${apiBase}/admin/roles` || pathname === `${apiBase}/admin/roles/`) {
+    if (!requireAdminWriteAccess(req, res)) {
+      return true;
+    }
+
+    if (req.method === 'GET') {
+      try {
+        const roles = roleService.getAll();
+        sendJson(res, 200, {
+          ok: true,
+          roles
+        });
+      } catch (error) {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      }
+      return true;
+    }
+
+    if (req.method === 'POST') {
+      readJsonBody(req)
+        .then((payload) => {
+          const validationErrors = inputValidation.validateRolePayload(payload);
+          if (validationErrors.length > 0) {
+            sendJson(res, 400, { ok: false, code: 'INVALID_PAYLOAD', errors: validationErrors });
+            return;
+          }
+
+          const actor = getRequestRoles(req)[0] || 'admin';
+          const role = roleService.create(payload, actor);
+          sendJson(res, 201, {
+            ok: true,
+            role
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'CREATE_FAILED', message: error.message });
+        });
+      return true;
+    }
+  }
+
+  // Role by ID - /api/admin/roles/:id
+  const roleIdMatch = pathname.match(new RegExp(`^${apiBase}/admin/roles/([a-z0-9\\-]+)/?$`));
+  if (roleIdMatch) {
+    if (!requireAdminWriteAccess(req, res)) {
+      return true;
+    }
+
+    const roleId = roleIdMatch[1];
+
+    if (req.method === 'GET') {
+      try {
+        const role = roleService.getById(roleId);
+        if (!role) {
+          sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: `Role '${roleId}' not found` });
+          return true;
+        }
+
+        sendJson(res, 200, {
+          ok: true,
+          role
+        });
+      } catch (error) {
+        sendJson(res, 500, { ok: false, code: 'SERVER_ERROR', message: error.message });
+      }
+      return true;
+    }
+
+    if (req.method === 'PUT') {
+      readJsonBody(req)
+        .then((payload) => {
+          const actor = getRequestRoles(req)[0] || 'admin';
+          const updated = roleService.update(roleId, payload, actor);
+          sendJson(res, 200, {
+            ok: true,
+            role: updated
+          });
+        })
+        .catch((error) => {
+          if (error.message.includes('not found')) {
+            sendJson(res, 404, { ok: false, code: 'NOT_FOUND', message: error.message });
+          } else {
+            sendJson(res, 400, { ok: false, code: 'UPDATE_FAILED', message: error.message });
+          }
+        });
+      return true;
+    }
+
+    if (req.method === 'DELETE') {
+      try {
+        const actor = getRequestRoles(req)[0] || 'admin';
+        roleService.remove(roleId, actor);
+        sendJson(res, 200, {
+          ok: true,
+          message: `Role '${roleId}' deleted`
         });
       } catch (error) {
         if (error.message.includes('not found')) {
