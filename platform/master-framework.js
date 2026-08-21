@@ -1993,6 +1993,51 @@
       return this.saveSetupState(nextState);
     },
 
+    getReleaseDefaults() {
+      return {
+        version: this.version,
+        environment: (typeof process !== 'undefined' && process.env && process.env.NODE_ENV) ? process.env.NODE_ENV : 'development',
+        status: 'not_ready',
+        maintenanceMode: false,
+        maintenanceReason: '',
+        checkedAt: new Date().toISOString(),
+        checks: {
+          database: { ok: false, status: 'not_configured', message: 'Database is not configured.' },
+          server: { ok: false, status: 'not_configured', message: 'Server status is not configured.' },
+          framework: { ok: false, status: 'not_configured', message: 'Framework runtime is not initialized.' },
+          security: { ok: true, status: 'ready', message: 'Security baseline is active.' }
+        }
+      };
+    },
+
+    getReleaseState() {
+      if (typeof require === 'function') {
+        try {
+          const releaseService = require('../server/services/release-service');
+          if (releaseService && typeof releaseService.getReleaseStatus === 'function') {
+            return releaseService.getReleaseStatus();
+          }
+        } catch (error) {
+          return this.getReleaseDefaults();
+        }
+      }
+      return this.getReleaseDefaults();
+    },
+
+    setMaintenanceMode(enabled = false, reason = '') {
+      if (typeof require === 'function') {
+        try {
+          const releaseService = require('../server/services/release-service');
+          if (releaseService && typeof releaseService.setMaintenanceMode === 'function') {
+            return releaseService.setMaintenanceMode(enabled, reason);
+          }
+        } catch (error) {
+          return { ok: false, status: 'error' };
+        }
+      }
+      return { ok: false, status: 'error' };
+    },
+
     getDefaultAdminState() {
       const now = new Date().toISOString();
       return {

@@ -13,6 +13,7 @@ const authService = require('../services/auth-service');
 const backupService = require('../services/backup-service');
 const logService = require('../services/log-service');
 const healthService = require('../services/health-service');
+const releaseService = require('../services/release-service');
 const authConfig = require('../config').auth;
 
 const bootstrapDefaultApps = () => {
@@ -623,6 +624,48 @@ const routeApi = (url, res, modulesDir = appModulesDir, req = null) => {
       ok: true,
       framework: MasterFramework.getDiagnostics()
     });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/release/status` || pathname === '/api/release/status') {
+    sendJson(res, 200, {
+      ok: true,
+      release: releaseService.getReleaseStatus()
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/admin/release/status` || pathname === `${apiBase}/admin/release/status/`) {
+    if (!requireAdminAccess(req, res)) {
+      return true;
+    }
+    sendJson(res, 200, {
+      ok: true,
+      release: releaseService.getReleaseStatus()
+    });
+    return true;
+  }
+
+  if (pathname === `${apiBase}/admin/release/maintenance` || pathname === `${apiBase}/admin/release/maintenance/`) {
+    if (req && req.method === 'POST') {
+      if (!requireAdminWriteAccess(req, res)) {
+        return true;
+      }
+      readJsonBody(req)
+        .then((payload = {}) => {
+          const enabled = payload.maintenanceMode !== undefined ? !!payload.maintenanceMode : !!payload.enabled;
+          const result = releaseService.setMaintenanceMode(enabled, payload.reason || payload.message || '');
+          sendJson(res, 200, {
+            ok: true,
+            maintenance: result,
+            release: releaseService.getReleaseStatus()
+          });
+        })
+        .catch((error) => {
+          sendJson(res, 400, { ok: false, code: 'INVALID_RELEASE_STATE', message: error.message || 'Maintenance payload invalid.' });
+        });
+      return true;
+    }
     return true;
   }
 

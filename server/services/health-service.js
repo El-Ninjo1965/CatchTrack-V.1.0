@@ -1,6 +1,7 @@
 'use strict';
 
 const packageJson = require('../../package.json');
+const releaseService = require('./release-service');
 
 let frameworkRuntime = null;
 try {
@@ -50,7 +51,8 @@ const getHealthStatus = () => ({
   environment: process.env.NODE_ENV || 'development',
   uptime: Math.round(process.uptime()),
   database: getDatabaseHealth(),
-  framework: getFrameworkHealth()
+  framework: getFrameworkHealth(),
+  release: releaseService.getReleaseStatus()
 });
 
 const getRuntimeStatus = () => ({
@@ -63,7 +65,8 @@ const getRuntimeStatus = () => ({
     uptime: Math.round(process.uptime())
   },
   database: getDatabaseHealth(),
-  framework: getFrameworkHealth()
+  framework: getFrameworkHealth(),
+  release: releaseService.getReleaseStatus()
 });
 
 const getSystemInfo = () => ({
@@ -78,7 +81,8 @@ const getSystemInfo = () => ({
   nodeVersion: process.version,
   timestamp: new Date().toISOString(),
   database: getDatabaseHealth(),
-  framework: getFrameworkHealth()
+  framework: getFrameworkHealth(),
+  release: releaseService.getReleaseStatus()
 });
 
 const getAdminHealthStatus = () => ({
@@ -89,13 +93,15 @@ const getAdminHealthStatus = () => ({
   summary: {
     server: 'healthy',
     database: getDatabaseHealth().status || 'NOT_CONFIGURED',
-    framework: getFrameworkHealth().status || 'unknown'
+    framework: getFrameworkHealth().status || 'unknown',
+    release: releaseService.getReleaseStatus().status || 'not_ready'
   },
   environment: process.env.NODE_ENV || 'development',
   runtime: getRuntimeStatus(),
   system: getSystemInfo(),
   database: getDatabaseHealth(),
-  framework: getFrameworkHealth()
+  framework: getFrameworkHealth(),
+  release: releaseService.getReleaseStatus()
 });
 
 module.exports = {
