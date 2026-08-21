@@ -1,5 +1,15 @@
 # AGENTTODO
 
+## Zweck dieses Dokuments
+
+`AGENTTODO.md` ist kein Architektur- oder Design-Masterdokument. Es dokumentiert den operativen Arbeitsstand, durchgeführte Aufgaben, Tests, Umsetzungen und zugehörige Ergebnisse.
+
+Die verbindlichen Architektur-, Vision- und Regelwerke liegen in `WORKFLOW.md` und `VISION.md`. Dieses Dokument ergänzt sie und darf keine neuen fachlichen Grundentscheidungen gegen diese Quellen definieren.
+
+## Geltungsbereich und Korrekturen
+
+- Das Projekt bleibt ein neutrales Master-/Entwicklungsframework. Beispielmodule wie GPS, Store oder Retail-Template dienen nur der Validierung und sind keine festen Core-Komponenten.
+
 ## Erledigt
 - GPS-Modul als registriertes, aktivierbares, persistentes User-Modul in der Registry und UI verknüpft.
 - Offline-First-Developer-Flow mit einem einzigen lokalen Auth-Zustand für Setup, Reload und Login stabilisiert.

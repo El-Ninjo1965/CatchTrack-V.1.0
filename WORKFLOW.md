@@ -1,5 +1,58 @@
 # Workflow
 
+## Dokumentenrollen und verbindliche Quellen
+
+- `WORKFLOW.md` ist die verbindliche technische Quelle für Architektur, Anforderungen, Entwicklungsregeln und den aktuellen technischen Status.
+- `VISION.md` beschreibt die strategische Projektvision und das langfristige Zielbild des neutralen Frameworks.
+- `AGENTTODO.md` ist ein operativer Arbeits- und Prüfprotokoll; es dokumentiert erledigte Schritte, Tests und den konkreten Arbeitsstand, aber keine Architekturentscheidung als Primärquelle.
+- `VERSION.md` dokumentiert Versionsstand, Meilensteine und aktuelle Freigabe-/Fokuspunkte; hier werden keine fachlichen Architekturregeln neu definiert.
+- Doppelte oder widersprüchliche Festlegungen werden vermieden. Bei inhaltlichen Abweichungen gilt immer `WORKFLOW.md` als die verbindliche technische Grundlage.
+
+## Verbindliche Korrekturen
+
+1. Neutral bleibt ein neutrales Master-/Entwicklungsframework.
+   - Das Framework darf keine einzelne Fach-Anwendung, kein fertiges Produkt und keine konkrete Modul-Implementierung als Standardhardcodierung festschreiben.
+   - Die eigentliche Kernfunktion ist die modulare Grund- und Entwicklungsplattform, nicht eine einzelne Produktanwendung.
+
+2. GPS, Store und Retail-Template
+   - GPS, Store und Retail-Template sind Referenz-, Test- oder Beispielmodule und bleiben keine festen Bestandteile des neutralen Core.
+   - Sie dienen der Architekturvalidierung, nicht der Standard-Produktlogik des Frameworks.
+   - Spätere Fachmodule sollen eigenständig auf dem Framework aufbauen und nur die notwendige Modul-Infrastruktur nutzen.
+
+3. Datenbank
+   - Für den späteren produktiven Server ist grundsätzlich MySQL vorgesehen.
+   - Die konkrete Einrichtung erfolgt außerhalb des Repository-Standorts und wird nicht im Quellcode dokumentiert.
+   - Für spätere Umsetzung müssen exakt diese Angaben dokumentiert werden: Datenbankname, Benutzername, benötigte Berechtigungen, benötigte Einstellungen, Standort der Zugangsdaten, sowie die konkrete Betriebsumgebung und Provider-/Server-Konfiguration.
+   - Keine Zugangsdaten im Quellcode und keine Datenbank-Initialisierung im Repository selbst.
+
+4. Admin-Bereich
+   - Der Admin-Bereich ist ein zentraler, CMS-artiger Bestandteil des neutralen Frameworks.
+   - Er umfasst moderne Dashboard-, Navigations- und Menüstruktur, inklusive hierarchischer, modularer und responsiver Verwaltung.
+   - Normale Benutzer dürfen niemals Zugriff auf die eigentlichen Admin-/Systemdateien erhalten.
+   - Diese Trennung muss technisch durch Authentifizierung, Rollen und Berechtigungen erzwungen werden.
+
+5. Provider-/Infrastruktur-Architektur
+   - Provider- und Infrastruktur-Details müssen als Konfigurations- und Integrationsschicht modelliert werden, nicht als harte Codierung im Core.
+   - Eine feste Bindung an cPanel, FTP, einzelne Hosting-Umgebungen oder einen einzigen Provider ist nicht als Standard-Architektur vorgesehen.
+   - Für spätere produktive Bereitstellungen müssen Provider, Server, Domain-, Storage- und Backup-Parameter als genaue Betriebs- und Konfigurationsaufgabe extern dokumentiert werden.
+
+6. Produktivtrennung
+   - `Neutral` bleibt die Master-/Entwicklungsbasis.
+   - Produktive Server-/App-Instanzen müssen getrennt und reduziert in einer eigenen produktiven Umgebung laufen.
+   - Es werden keine produktiven Serverdateien in diesem Repository angelegt und keine Dateien nach `cPanel-meinServer` übertragen.
+   - Dies ist eine spätere Betriebsaufgabe und kein Teil der aktuellen Repository-Implementierung.
+
+7. Update, Backup und Entitlements
+   - Das Framework erhält eine neutrale Entitlement-Struktur für Funktionen, Module, Dienste, Speicher, Backups und Premiumfunktionen.
+   - Tariflogik darf nicht direkt in einzelne Fachmodule eingebaut werden.
+   - Update-Checks, Backup-/Restore-Prozesse und Entitlement-Entscheidungen sind als Framework-/Service-Schicht zu modellieren, nicht als fachliche App-Logik.
+
+## EMPFOHLEN / ZUKUNFT / OFFENE ENTSCHEIDUNG
+
+- EMPFOHLEN: Eine saubere Provider-Abstraktion mit einem klaren Interface für Server-Config, Storage, Backup und Auth-Adapter wird als beste langfristige Lösung empfohlen. Damit bleibt das Framework neutral, ohne Hardcodierungen auf cPanel, FTP oder ein einzelnes Hosting-Umfeld.
+- ZUKUNFT: Für die produktive API-Authentifizierung sollte eine eigene tokenbasierte Auth-Schicht als separates Adapterkonzept ergänzt werden, parallel und sauber getrennt von serverseitigen Cookie-Sessions.
+- OFFENE ENTSCHEIDUNG: Die genaue produktive Datenbank-Instanz, das Berechtigungsmodell, der Provider-Setup und die konkret zu verwendenden Betriebs- und Zugangsdaten müssen erst im späteren Deployment-Kontext abgeschlossen werden; sie gehören nicht in das Repository als Quellcode oder Secret-Logik.
+
 - Ergebnis: Die bestehende Offline-First-Architektur wurde weiter stabilisiert, die sichtbare User-UI gemäß der neutralen Plattformanforderung korrigiert und die Admin-/GPS-Verwaltung realisiert.
 - Entscheidungslog: `VISION.md` bleibt unverändert. Es wurden keine grundlegenden Neuarchitekturen eingeführt; die vorhandene Offline-First-Struktur wurde konsolidiert, die Auth-/Session-Abläufe, die app-übergreifende App-Identifikation und die Module-Management-UI in den bestehenden Rahmen integriert und dokumentiert.
 - Architekturstatus:

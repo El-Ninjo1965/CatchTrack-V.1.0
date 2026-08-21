@@ -1,6 +1,15 @@
 # VERSION
 
+## Zweck dieses Dokuments
+
+`VERSION.md` dokumentiert den aktuellen Versionsstand, Meilensteine und den Freigabe-/Fokusstatus des Projekts. Es ist kein technisches Architektur- oder Regelwerk.
+
+Technische Architektur, Anforderungen, Entwicklungsregeln und verbindliche Gesamtplanung liegen in `WORKFLOW.md`. Die Vision und strategische Ausrichtung liegen in `VISION.md`.
+
 ## Version 1.1.10 - independent app architecture and approval gate
+
+- Neutral remains the neutral master/development framework.
+- Example modules and templates such as GPS, Store, and Retail remain reference/test artifacts and are not treated as fixed core components.
 
 Status:
 - Framework core remains stable and module-driven.

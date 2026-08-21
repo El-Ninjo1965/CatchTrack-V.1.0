@@ -4,11 +4,13 @@ Kapitel 1 – Ziel und Grundvision
 
 1.1 Zweck dieses Dokuments
 
-Diese Datei ist die zentrale Master-Vision für das CatchTrack Framework.
+Diese Datei ist die zentrale Master-Vision für das neutrale Framework `Neutral`.
 
 Sie ersetzt langfristig die bisher verteilten Einzelbeschreibungen, sofern deren Inhalte vollständig in diese Vision übernommen und konsolidiert wurden.
 
 Dieses Dokument beschreibt das gewünschte Endziel des Systems. Es ist keine Einschränkung auf den derzeit vorhandenen Entwicklungsstand.
+
+`Neutral` ist das allgemeine Master-/Entwicklungsframework. `CatchTrack` ist lediglich ein konkretes Beispiel einer späteren Anwendung, die auf diesem Framework aufsetzen kann. Das Framework selbst soll nicht als eine einzelne Fachanwendung festgeschrieben werden.
 
 Der aktuelle Codebestand ist als Ausgangspunkt zu betrachten. Wenn die bestehende Architektur geändert, erweitert oder teilweise ersetzt werden muss, ist dies ausdrücklich zulässig.
 
@@ -20,9 +22,13 @@ Entscheidend ist ausschließlich, dass das definierte Endziel technisch sauber, 
 
 1.2 Die eigentliche Vision
 
-CatchTrack soll nicht lediglich eine einzelne Angel-App werden.
+`Neutral` soll nicht lediglich eine einzelne Fach-App werden.
 
-CatchTrack soll als erste konkrete Anwendung auf einem vollständig neutralen, modularen und wiederverwendbaren Framework-Core aufgebaut werden.
+`Neutral` ist das grundlegende, neutrale und wiederverwendbare Framework, auf dem spätere Anwendungen und Module aufbauen können.
+
+`Neutral` bleibt das Master-/Entwicklungsframework. GPS, Store, Retail-Template und ähnliche Beispiel- oder Referenzmodule sind keine festen Bestandteile des Core, sondern optional nutzbare Architektur- und Test-Instanzen.
+
+Eine konkrete Anwendung wie `CatchTrack` kann als erste Beispiel- oder Referenz-App entstehen, darf aber nicht mit dem Framework selbst verwechselt werden.
 
 Der fertige Core bildet gemeinsam mit den grundlegenden User- und Administrationsfunktionen das Final Framework.
 
