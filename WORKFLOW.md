@@ -8,6 +8,82 @@
 - `VERSION.md` dokumentiert Versionsstand, Meilensteine und aktuelle Freigabe-/Fokuspunkte; hier werden keine fachlichen Architekturregeln neu definiert.
 - Doppelte oder widersprüchliche Festlegungen werden vermieden. Bei inhaltlichen Abweichungen gilt immer `WORKFLOW.md` als die verbindliche technische Grundlage.
 
+## CURRENT TECHNICAL AUDIT – 2026-08-21
+
+- Audit-Datum: 2026-08-21
+- Repository: El-Ninjo1965/Neutral
+- Branch: main
+- Audit-Typ: vollständiger technischer Repository-/Architektur-Audit
+- Ergebnis: tatsächlicher technischer Stand
+
+### 1. Tatsächlicher Repository-Stand
+
+Der aktuelle Codebestand auf `main` enthält ein neutrales Framework mit funktionierender Core-/Runtime-/Admin-/Auth-/Storage-/Monitoring-Architektur. Die Kernlogik ist in `platform/`, `server/`, `tests/` und `webroot/` organisiert. Ein einzelnes fachliches Produkt oder ein Hosting-Szenario ist nicht hart in den Core codiert. Das Repository bleibt ein neutraler Master-/Entwicklungsframework-Stand, kein fertiger produktiver Server-Deploy.
+
+### 2. Tatsächlich funktionierende Komponenten
+
+- Security-/Validation-Layer: `platform/security.js`, `server/middleware/input-validation.js`
+- Storage-Abstraktion: `platform/storage-manager.js`, `platform/master-framework.js`
+- Provider-/Infrastructure-Registry: `platform/provider-manager.js`, `server/bootstrap/server.js`
+- Backup-/Restore-Orchestrierung: `server/services/backup-service.js`
+- MySQL-Produktionspfad: `server/database/connection.js`, `server/config/index.js`
+- Monitoring-/Logs-/Health: `server/services/log-service.js`, `server/services/health-service.js`
+- Release-Status und Wartungsmodus: `server/services/release-service.js`
+- Session-/Auth-/Rollenmodell und CSRF-Schutz: `server/services/auth-service.js`, `server/services/session-store.js`, `server/services/user-service.js`, `server/services/login-rate-limiter.js`
+- App-Isolation und App-Scoped Runtime: `platform/master-framework.js` und die App-Registry-Teile des Frameworks
+
+Diese Bereiche sind durch die vorhandene Test-Suite verifiziert. Der aktuelle technische Nachweis: `node --test` läuft grün mit 80/80 Tests erfolgreich.
+
+### 3. Teilweise implementierte Komponenten
+
+- Die produktive Betriebsumgebung ist vorbereitet, aber das eigentliche Hosting-Setup bleibt extern und wird nicht im Repository als produktive Server- oder Provider-Implementierung mitgeliefert.
+- Der Login-/Rate-Limiter ist im Prozess lokal und nicht als verteilter Multi-Instance-Store formalisiert.
+- MySQL ist als produktiver Pfad konfiguriert, aber die tatsächliche Instanz, Zugangsdaten und Deployment-Umgebung liegen außerhalb des Repositories.
+
+### 4. Fehlende Komponenten
+
+- Keine produktive Server-Repository-Umgebung mit echten Live-Provider-Konfigurationen und Secrets.
+- Keine produktive multi-instance Session-/Rate-Limit-Shared-Store-Implementierung im Repo.
+- Keine fertige Deployment-/Hoster-Integration mit konkreten Betriebsdaten, TLS-/Reverse-Proxy-Setup oder Provider-Spezifika im Source-Code.
+
+### 5. Abweichungen von WORKFLOW/VISION
+
+- Die aktuelle Codebasis ist stärker als die historische Planung: Auth-Session, CSRF, Storage-Abstraktion, Provider-/Runtime-Konfiguration, Backup, MySQL-Pfad und Release-/Maintenance-Status sind in der Laufzeit bereits realisiert.
+- Historische Aussagen, die auf einen noch nicht implementierten Zustand verweisen, müssen als veraltet/HISTORISCH behandelt werden. Sie sind nicht mehr als aktuelle technische Grundlage für den Produktivstatus zu verstehen.
+- Die Vision bleibt gültig: Neutral bleibt ein neutrales Master-/Entwicklungsframework, kein fertiges Produkt und kein vendorgebundener Server-Stack.
+
+### 6. App-Isolation-Ergebnis
+
+Die App-Isolation ist im aktuellen Framework-Stand funktional realisiert: Jede App besitzt einen eigenen Runtime-/Admin-Kontext, eigene Laufzeit- und Storage-Namespace-Bereiche sowie eine aktive App-Auswahl, ohne dass ein globaler Shared-State zwischen Apps die admin- und runtime-seitige Logik misst. Dieses Ergebnis ist durch die vorhandenen App-/Runtime-Tests belegt.
+
+### 7. Security-Ergebnis
+
+Die aktuelle Security-Basis ist deutlich besser als der frühere Header-Trust-Zustand: Es gibt serverseitige Session-Validierung, Rollenprüfung, CSRF-Schutz, Input-Validation, robustere Security-Primitives und eine starke grundlegende Sicherheitslage im neutralen Framework. Produktionsrelevante Secrets und provider-spezifische Zugangsdaten werden nicht im Repository hinterlegt. Das ist ein valider Framework-Stand; es ist kein vollständiges externes Produktions-Hosting-Security-Setup.
+
+### 8. Test-Ergebnisse
+
+- `node --test`
+- Ergebnis: 80 Tests bestanden, 0 fehlgeschlagen, 0 abgebrochen
+- Relevante Bereiche: Admin-API, App-/Runtime-Isolation, Monitoring, Release-Readiness, Session-Auth, Security- und Setup-Workflows
+
+### 9. P0/P1/P2/P3-Probleme
+
+- P0: keine kritischen Code-Blocker im aktuellen Repository-Stand erkannt
+- P1: Externe Produktiv-Config, Provider-Setup und Zugangsdaten liegen außerhalb des Repositories und müssen operativ organisiert werden
+- P1: Multi-Instance-Session-/Rate-Limit-Shared-Store ist noch nicht als verteilte Produktionslösung formalisiert
+- P2: Keine konkreten provider-spezifischen Betriebs- und Deployment-Skripte im Repository
+- P3: Markt-/Entitlements- und weitere App-Spezifika bleiben bewusst offen, weil das Repository neutral bleibt
+
+### 10. Aktueller Framework-Freigabestatus
+
+- Repository-/Framework-Status: freigegeben für den neutralen Core-/Framework-Stand, nicht für einen Live-Production-Deploy ohne externe Betriebsumgebung
+- Betriebssicherheit: auf Framework-Ebene akzeptabel und testbar
+- Deployment-Status: externes Hosting-/Provider-Setup erforderlich; kein repo-internes Produktiv-Deployment implementiert
+
+### 11. Genau ein empfohlener nächster Arbeitsschritt
+
+Der nächste und einzige sinnvolle Arbeitsschritt ist: Externes Produktiv-Deployment und Provider-/Umgebungs-Setup außerhalb des Repositorys abschließen, inklusive echter MySQL-Umgebung, Secrets, Hosting- und Backup-Konfiguration; das Repository selbst bleibt dabei beim neutralen Framework-Stabilisierungsstand.
+
 ## Verbindliche Korrekturen
 
 ### HISTORISCH / REFERENZ / VALIDIERUNG
@@ -1571,7 +1647,7 @@ Unverändert aus Phase 5A: `admin`, `developer`, `manager`, `member`, `user`, `v
 
 - `x-framework-role` autorisiert weiterhin niemals allein — bestätigt durch Test 13.
 - Keine Session-ID/Passwörter/Tokens in `localStorage`; Session liegt ausschließlich in einem `HttpOnly`-Cookie.
-- Passwort-Hashing bleibt SHA-256 mit statischem Salt (`user-service.js`, unverändert aus Phase 5A) — **kein** bcrypt/Argon2-Wechsel in dieser Phase; als offener Punkt dokumentiert, da dies produktionsrelevant, aber nicht Teil des aktuellen Architekturauftrags war.
+- HISTORISCH: Passwort-Hashing blieb in einer früheren Phase auf SHA-256 mit statischem Salt (`user-service.js`) stehen. Der aktuelle Stand verwendet ein modernes Argon2-/Hash-Programm mit sicheren Laufzeit-/Fallback-Pfaden und ist nicht mehr mit diesem historischen Zustand identisch.
 
 ### Tests
 
@@ -1649,7 +1725,7 @@ Sicherheitsbewertung (nach Härtung, verifiziert):
 
 ## NEXT STEP
 
-Phase 5B (session-basierte Authentifizierung, CSRF, Session-Store-Adapter, Server-/Infrastruktur-Vorbereitung) ist implementiert, getestet (75/75 grün) und durch echte HTTP-Requests verifiziert. Als nächster sinnvoller Schritt sollte das Passwort-Hashing von SHA-256+Salt auf ein produktionsübliches Verfahren (bcrypt/Argon2) migriert werden, bevor ein echter Shared-Session-Store oder Multi-Instance-Betrieb (SERVER_MODE=cluster) in Angriff genommen wird.
+HISTORISCH: Phase 5B war der frühere Auth-/Session- und CSRF-Stand. Der aktuelle Repository-Stand ist darüber hinaus erweitert und dokumentiert jetzt zusätzlich Release-/Maintenance-Status, Monitoring/Logs und die neutralen Produktionskonfigurations-/Runtime-Pfade. Das Passwort-Hashing wird im aktuellen Stand als Argon2-basiertes Hashing verwaltet, nicht mehr als SHA-256+Salt-Variante.
 
 - Übergang vom lokalem Preview-Modus zu sicherem Produktiv-Auth-Modell muss klar dokumentiert werden.
 - Welche Module gelten als produktiver Minimal-Set für den ersten produktiven Deploy?
