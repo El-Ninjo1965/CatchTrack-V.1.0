@@ -5972,3 +5972,55 @@ Begründung:
 - `webroot/` ist vollständig notwendig.
 - Noch kein Deployment wurde durchgeführt.
 
+## FTPS-Vorabcheck / Server-Transfer-Prüfung (2026-08-22)
+
+### 1. FTP-Zielordner-Inhalt
+
+- Letzter erfolgreicher read-only FTPS-Check auf dem TurboLikes-Zielordner: nur folgende zwei Dateien waren vorhanden:
+  - `.ftpquota`
+  - `ftp-deploy-sync-state.json`
+- Keine zusätzliche Datei wurde im letzten erfolgreichen FTPS-Check als Teil des Zielordners erkannt.
+- In der aktuellen Session konnte der FTPS-Host aus dem Container nicht erneut aufgelöst werden (`no address associated with hostname`); deshalb bleibt die gültige Remote-Basis für diesen Vorab-Check der zuletzt erfolgreiche FTPS-Lesecheck, nicht eine neue Serveränderung.
+
+### 2. Ergebnis des lokalen SERVER-DEPLOY-Checks
+
+Geprüfte lokale Pfade:
+- `package.json`
+- `config/index.js`
+- `platform/`
+- `server/`
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `server/config/index.js`
+- `app/`
+- `apps/`
+- `webroot/`
+
+Ergebnis:
+- 10 von 10 erwarteten SERVER-DEPLOY-Pfade vorhanden.
+- Keine fehlenden Dateien im lokalen SERVER-DEPLOY-Paket.
+
+### 3. Vergleichsergebnis
+
+- Remote-Zielordner (letzter erfolgreicher FTPS-Check): `.ftpquota`, `ftp-deploy-sync-state.json`
+- Lokales SERVER-DEPLOY-Paket: `package.json`, `config/index.js`, `platform/`, `server/`, `app/`, `apps/`, `webroot/`
+- Erwartete Abweichung: Der Server-Zielordner enthält nur FTP-Bookkeeping-/Sync-Dateien und keine lokale deploybare Runtime-Struktur. Das lokale Deploy-Paket ist technisch wesentlich größer und wurde in diesem Schritt nicht übertragen.
+
+### 4. Fehlende Dateien
+
+- Im lokalen SERVER-DEPLOY-Paket: keine.
+- Im Remote-Zielordner: keine zusätzlich erwartete Deploy-Datei wurde in der letzten erfolgreichen FTPS-Liste identifiziert.
+
+### 5. Unerwartete Dateien
+
+- Im Remote-Zielordner: keine, sofern nur die beiden bekannten FTPS-Bookkeeping-Dateien betrachtet werden.
+- Im lokalen SERVER-DEPLOY-Paket: keine unerwarteten Dateien im Sinne eines produktiven Deploy-Pakets; die vorhandenen Dateien entsprechen dem aktuellen Framework-Stand.
+
+### 6. Bestätigung
+
+- Kein Deployment durchgeführt.
+- Keine Datei übertragen.
+- Keine Datei gelöscht.
+- Keine Änderung am Server vorgenommen.
+- Der FTP-Zielordner wurde nur gelesen; die beiden bekannten Dateien `.ftpquota` und `ftp-deploy-sync-state.json` wurden nicht gelöscht oder verändert.
+
