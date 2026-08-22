@@ -1322,6 +1322,79 @@ NOCH ZU IMPLEMENTIEREN
 
 Die aktuelle Lage ist: Die App ist bereit für einen generischen, konfigurierbaren Remote-Server-Connector, aber die konkrete TurboLikes-Anbindung fehlt noch vollständig. Die nötigen Konfigurations- und Secret-Values müssen extern bereitgestellt werden; im Repository selbst gibt es keine produktiven TurboLikes-Daten oder Endpoints.
 
+## ÖFFENTLICHE ERREICHBARKEIT UND ADMIN-BEREICH (22.08.2026)
+
+### 1. Tatsächlicher Node-Entrypoint
+
+- Der aktive Node-Serverstartpunkt ist in `server/server.js` definiert:
+  - `server.listen(process.env.PORT || 3000, process.env.HOST || '127.0.0.1', ...)`
+- `server/server.js` selbst requiret nur `./bootstrap/server` und startet den Server mit `module.exports = server`.
+- Der eigentliche HTTP-Stack und die Routen liegen in `server/bootstrap/server.js`.
+- Der echte Einstiegspunkt für die Laufzeit ist also:
+  - `server/server.js`
+  - `server/bootstrap/server.js`
+
+### 2. Host- und Port-Konfiguration
+
+- Die Laufzeit erwartet nach dem vorhandenen Code:
+  - `HOST = process.env.HOST || '127.0.0.1'`
+  - `PORT = Number(process.env.PORT || 3000)`
+- Sie ist also bewusst lokal-/host-konfigurierbar und nicht hart auf eine öffentliche Domain oder einen externen Host festgelegt.
+- Der App-Server bindet sich intern an den konfigurierten Host/Port, nicht an eine im Repository definierte öffentliche URL.
+
+### 3. Admin-/Setup-Pfad im Browser
+
+- Die statischen Frontend-Pfade im vorhandenen Code sind:
+  - `/` und `/index.html` -> Standard-App-Startseite
+  - `/setup` und `/setup.html` -> Setup-/Installation-Bereich
+  - `/admin.html` -> Admin-Bereich
+  - `/dev.html` -> Developer-/Debug-Bereich
+- In `server/bootstrap/server.js` gilt:
+  - Wenn `isSetupRequired()` wahr ist, wird `/` bzw. `/index.html` auf `webroot/setup.html` umgeleitet.
+  - `requestPath === '/setup' || requestPath === '/setup.html'` -> `webroot/setup.html`
+  - `requestPath === '/admin.html' || requestPath === '/dev.html'` -> nur dann erlaubt, wenn der Server ein gültiges `x-admin-access-token` mitsendet und `ADMIN_ACCESS_TOKEN` gesetzt ist.
+
+### 4. Wie die Anwendung öffentlich erreichbar wird
+
+- Auf cPanel-Ebene ist die öffentliche Erreichbarkeit nicht im Repo selbst definiert.
+- Die Neutral-App ist eine Node-Anwendung, die auf `host:port` lauscht. Sie kennt keine feste öffentliche URL im Code.
+- Damit die App im Browser erreichbar ist, muss auf cPanel eine Domain oder Subdomain bzw. ein Reverse-Proxy-/Pass-through auf den Node-Port (standard: 3000) konfiguriert sein.
+- Das Repo selbst enthält keine im Code hinterlegte öffentliche Domain, keine `turbolikes.com`-URL und keine konkrete Subdomain-Bindung.
+
+### 5. Bestehende Domain/Subdomain oder Reverse-Proxy-Konfiguration
+
+- Im vorhandenen Deployment-Paket und in den gestellten Serverdateien konnte keine konkrete öffentliche Domain/Subdomain-Konfiguration ermittelt werden.
+- Es gibt keine im Code hinterlegte URL wie `https://.../admin.html` oder `https://.../setup.html`.
+- Es gibt auch keine im Repository gespeicherte Reverse-Proxy-Konfiguration, die die Node-Anwendung als cPanel-Domain direkt anbindet.
+- Die einzige sichere Feststellung ist: Wenn cPanel die Domain/Subdomain auf den Node-Port zeigt, dann ist die öffentliche Struktur:
+  - `https://<konfigurierte-domain>/`
+  - `https://<konfigurierte-domain>/admin.html`
+  - `https://<konfigurierte-domain>/setup` oder `/setup.html`
+
+### 6. Konkrete URL, die im Browser geöffnet werden kann
+
+- Eine konkrete öffentliche URL konnte aus dem vorhandenen Code und der bereits übertragenen cPanel-/Server-Konfiguration nicht verlässlich ermittelt werden.
+- Es gibt keinen im Package hinterlegten, produktiven TurboLikes-Host oder öffentlich genutzten Produktionspfad.
+- Deshalb ist die fachlich korrekte Feststellung:
+  - Die Neutral-App ist nur dann öffentlich erreichbar, wenn in cPanel eine Domain/Subdomain oder eine Reverse-Proxy-Regel auf den Node-Service verweist.
+  - Der Browser-Einstieg ist dann `https://<configuriertes-cPanel-Domain>/`.
+  - Der Admin-/Setup-Einstieg ist `https://<configuriertes-cPanel-Domain>/admin.html` bzw. `https://<configuriertes-cPanel-Domain>/setup.html`.
+
+### 7. Was auf cPanel noch konfiguriert werden muss
+
+Wenn die Anwendung zwar läuft, aber noch keine öffentliche URL zugeordnet ist, fehlt genau diese cPanel-Konfiguration:
+
+- eine Domain oder Subdomain, die auf den Node-Server zeigt
+- eine Reverse-Proxy-/Pass-Through- oder App-Bindung auf den Node-Port `3000` (oder den gesetzten `PORT`)
+- gegebenenfalls die `ADMIN_ACCESS_TOKEN`-Umgebung für den geschützten Admin-Bereich
+- ggf. die serverseitige `HOST`/`PORT`-Umgebung, falls der Node-Process nicht auf dem Standard-Port bindet
+
+### 8. Klarer Abschluss
+
+- Der Node-Entrypoint ist vorhanden und läuft auf dem konfigurierten Host/Port.
+- Der Browser-Einstiegspfad ist über das statische Frontend im `webroot`-Verzeichnis definiert, aber die konkrete öffentliche cPanel-URL ist nicht im Paket hinterlegt und daher nicht aus dem Repository selbst ableitbar.
+- Das fehlende Element ist nicht eine neue App- oder API-Datei, sondern die cPanel-URL-/Reverse-Proxy-Bindung und die eventuelle Admin-Token-Konfiguration.
+
 ## TATSÄCHLICHER API-CHECK FÜR TURBOLIKES (22.08.2026)
 
 ### Prüfungsbasis
