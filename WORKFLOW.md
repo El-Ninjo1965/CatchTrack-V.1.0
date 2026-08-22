@@ -1322,7 +1322,246 @@ NOCH ZU IMPLEMENTIEREN
 
 Die aktuelle Lage ist: Die App ist bereit für einen generischen, konfigurierbaren Remote-Server-Connector, aber die konkrete TurboLikes-Anbindung fehlt noch vollständig. Die nötigen Konfigurations- und Secret-Values müssen extern bereitgestellt werden; im Repository selbst gibt es keine produktiven TurboLikes-Daten oder Endpoints.
 
-# Machbarkeitsprüfung: Server-/Admin-Anwendung für Neutral -> cPanel-meinServer
+## TATSÄCHLICHER API-CHECK FÜR TURBOLIKES (22.08.2026)
+
+### Prüfungsbasis
+
+- Nur der aktuelle Stand vom 22.08.2026 wurde geprüft.
+- Es wurde kein Code angepasst.
+- Es wurde kein Deployment oder Transfer ausgelöst.
+- Es wurden keine Secrets, Passwörter oder Token ausgegeben.
+- Die Prüfung erfolgte ausschließlich anhand des Repository-Standes und der vorhandenen FTPS-/Deploy-Konfiguration.
+
+### Reale Feststellungen
+
+1. Im Repository gibt es keine konkrete TurboLikes-API-Spezifikation, keinen konkreten TurboLikes-Host, keinen Live-Endpoint, kein Health-Contract und keine Auth-Dokumentation.
+2. Die vorhandene Deploy-Konfiguration in `.env.deploy` ist nur ein Platzhalter-Template. Der konfigurierte Host ist `ftp.example.com` und das ist kein tatsächlicher TurboLikes-Produktionsserver.
+3. Ein tatsächlicher DNS-Lookup dieses Hostnamens war im aktuellen Container nicht erfolgreich (`ENOTFOUND`). Damit ist der FTPS-/Deploy-Target aus der aktuellen Umgebung nicht erreichbar.
+4. Die vorhandene FTPS-Umgebung dient laut Repository ausschließlich dem Deployment-Transport; sie ist nicht die Laufzeitverbindung der Neutral-App zum TurboLikes-Server.
+5. Die App selbst enthält nur generische Laufzeitkonfigurationen (`HOST`, `PORT`, `SERVER_URL`, `apiBase: '/api'`), aber keine Betriebskonfiguration für eine echte TurboLikes-Instanz.
+6. Es gibt keine im Repository dokumentierte TurboLikes-API-Basis-URL, keine konkrete Endpunktliste, kein Auth-Token- oder API-Key-Muster und keine Daten-/Sync-Route mit TurboLikes-Namen.
+7. Die generische Connection-/Provider-Infrastruktur in `platform/master-framework.js`, `platform/provider-manager.js`, `server/bootstrap/server.js` und `webroot/api-client.js` ist vorhanden, aber sie ist noch unkonkret und noch nicht auf eine echte TurboLikes-API konfiguriert.
+
+### Gefundene tatsächliche API / vorhandene Endpunkte
+
+Es wurde keinerlei reale TurboLikes-API im Repository oder über die vorhandene FTPS-/Deploy-Konfiguration gefunden.
+
+Gefundene reale Endpunkte im heutigen Stand:
+- Keine echte TurboLikes-API-Basis-URL
+- Keine echte TurboLikes-Health-/Status-Route
+- Keine echte TurboLikes-Auth-Route
+- Keine echte TurboLikes-Sync-/Queue-Route
+- Keine echte TurboLikes-Versionierungs- oder Update-API
+
+Die nur vorhandenen Schnittstellen sind generische Framework-Mechanismen der Neutral-App, z. B.:
+- `/api/status`
+- `/api/health`
+- `/api/setup`
+- `/api/database/status`
+- `/api/providers`
+- `/api/connections`
+- `/api/admin/settings`
+
+Diese sind Framework- und Admin-Endpunkte, nicht die TurboLikes-API.
+
+### Authentifizierungsmodell
+
+Es gibt kein tatsächliches TurboLikes-Authentifizierungsmodell im Repository.
+
+Die einzige vorhandene Auth-Architektur ist neutral/generisch:
+- Token-/Header-basierte lokale Bootstrap-Authentifizierung (`ADMIN_ACCESS_TOKEN`, `AUTH_TOKEN`, `CORE_BOOTSTRAP_PASSWORD`)
+- Session-/Cookie-Authentifizierung für browserseitige Serverinteraktion
+- Rollen-/Admin-Prüfungen innerhalb des Frameworks
+
+Diese Mechanismen sind nicht als konkrete TurboLikes-API-Authentifizierung verifiziert. Es gibt keine reale TurboLikes-Token-, API-Key- oder Session-Definition mit nachweisbarem Live-Server-Verhalten.
+
+### Neutral → TurboLikes-Zuordnung
+
+Da keine reale TurboLikes-API ermittelt wurde, kann keine konkrete Neutral→TurboLikes-Zuordnung für produktiven Betrieb erstellt werden.
+
+Nur als generischer Entwurf, nicht als tatsächliche Live-Zuordnung:
+- Neutral-Health-Check → TurboLikes-Health-/Status-Endpoint (falls vorhanden, aber nicht ermittelt)
+- Neutral-Data Sync → TurboLikes-Daten-/Sync-Endpoint (falls vorhanden, aber nicht ermittelt)
+- Neutral-Update Check → TurboLikes-Update- oder Versionierungs-Endpoint (falls vorhanden, aber nicht ermittelt)
+- Neutral-Provider-Config → TurboLikes-Remote-Connection-Kontext (noch separat zu definieren)
+
+Diese Zuordnungen sind keine echte Anbindung, sondern nur eine technische Designvorstellung ohne live API-Vertrag.
+
+### Vorhandene bzw. fehlende Komponenten
+
+Vorhanden:
+- generische Server-/API-Architektur
+- generische Provider-/Connection-Struktur
+- generische Health-/Status-/Setup-/Admin-API-Modelle
+- FTPS-Deployment-Konfiguration als separates Transport-Konzept
+
+Fehlend bzw. noch nicht verifiziert:
+- reale TurboLikes-API-Basis-URL
+- reale TurboLikes-Endpoint-Definition
+- echte Health-/Status-Routen des TurboLikes-Servers
+- echtes Authentifizierungsmodell für TurboLikes
+- konkrete Request-Header und Cookie-/Token-Angaben
+- echte Sync-/Queue-/Update-Endpunkte
+- Validierung des Runtime-Provider-Adapters für den realen TurboLikes-Server
+
+### Entscheidung
+
+Kategorie: D) API kann nicht ermittelt werden
+
+Begründung:
+- Keine reale TurboLikes-API im Repository gefunden.
+- Die vorhandene FTPS-/Deploy-Konfiguration zeigt nur einen Platzhalter-Host (`ftp.example.com`) und ist nicht real erreichbar.
+- Es liegen keine verifizierbaren Live-API-Details für TurboLikes vor.
+- Der aktuelle Stand erlaubt keine echte Produktiv-Anbindung ohne weitere Informationen vom produktiven TurboLikes-Server.
+
+### Offene Punkte
+
+- tatsächliche TurboLikes-Server-URL des produktiven Systems
+- tatsächliche API-Basis-URL oder Service-Endpoint-Map
+- tatsächlicher Health-/Status-Endpunkt
+- Authentifizierungsmodell (Token, API-Key, Session, custom header usw.)
+- benötigte Header / Cookies / Request-Policy
+- konkrete Daten-/Sync-/Update-Endpunkte
+- reale Provider-/Connection- und Secret-Konfiguration
+- Freigabe eines lesbaren, produktiven Remote-Zugangs ohne Geheimnisse im Repository
+
+### Dokumentation der Nichtänderung
+
+- Keine Codeänderung durchgeführt.
+- Kein Deployment oder Transfer ausgeführt.
+- Keine Remote-Dateien verändert.
+- Keine Secret-Werte oder sichtbaren Zugangsdaten ausgegeben.
+- Keine URL wurde erfunden oder als echte TurboLikes-URL in den Code übernommen.
+
+## FTPS-READ-ONLY-PRÜFUNG AUF DEM TURBOLIKES-CPANEL-SERVER (22.08.2026)
+
+### Durchgeführte Prüfung
+
+- Es wurde ausschließlich ein lesender FTPS-/FTP-Check gegen den in `.env.deploy` konfigurierten Zielhost versucht.
+- Es wurde keine Datei geöffnet, übertragen, bearbeitet oder gelöscht.
+- Es wurde keinerlei Deployment-/Upload-Aktion ausgelöst.
+
+### Reales Ergebnis
+
+- Die Verbindung konnte in der aktuellen Umgebung nicht hergestellt werden.
+- Der DNS-Lookup für den konfigurierten FTPS-Host war fehlgeschlagen: `ENOTFOUND` / `No address associated with hostname`.
+- Dadurch war keine Remote-Verzeichnisauflistung, keine Identifizierung von Server-/API-Dateien und keine Analyse des tatsächlichen TurboLikes-Serverbaums möglich.
+- Der Remote-Typ, die tatsächliche Serveranwendung und die realen API-Dateien konnten deshalb aus dieser Umgebung nicht verifiziert werden.
+
+### Ursache
+
+- Der in der vorhandenen Konfiguration hinterlegte FTPS-Host ist aus dem aktuellen Container nicht auflösbar.
+- Es liegt keine erreichbare Live-Umgebung in dieser Session vor, mit der der Serverbaum lesend geprüft werden könnte.
+
+### Erkennungsstand
+
+- Erkennter Server-/Stack-Stand: nicht erreichbar, keine Live-Dateien lesbar.
+- Erkennter API-Stand: nicht verifizierbar aus dieser Session.
+- Erkennbare Authentifizierung: nicht verifizierbar, da keine erfolgreiche Verbindung hergestellt wurde.
+- Erkennbarer Remote-Ordner-/App-Bestand: nicht verfügbar.
+
+### Verbindungsschritt-Check (nur Ergebnis, keine Geheimwerte)
+
+- FTP_SERVER: OK
+- FTP_PORT: OK
+- FTP_PROTOCOL: OK
+- FTP_TARGET_DIR: OK
+- Benutzername vorhanden: OK
+- Passwort vorhanden: OK
+- DNS-Auflösung: FEHLER
+- TCP-Erreichbarkeit: FEHLER
+- FTPS-Verbindungsaufbau: FEHLER
+- Login: FEHLER
+- Zugriff auf FTP_TARGET_DIR: FEHLER
+
+Technische Fehlerursache:
+- Der konfigurierten Hostname konnte nicht aufgelöst werden.
+- Dadurch war der TCP-Port nicht erreichbar.
+- Daraus folgt: kein FTPS-Handshake, kein Login, kein Zugriff auf den Zielordner.
+
+### Vergleich zum früheren erfolgreichen FTPS-Test
+
+- Ein früherer erfolgreicher FTPS-Test in dieser Session kann hier nicht erneut reproduziert werden, weil der aktuelle Host aus der aktuellen Umgebung nicht erreichbar ist.
+- Es ist nicht verifiziert, ob Hostname, Port, Protokoll, Zielpfad oder Konfigurationsquelle zwischenzeitlich verändert wurden.
+- Angegeben ist nur der aktuelle Stand aus der vorhandenen Local-Config: der Hostname ist aus der aktuellen Session nicht resolvable.
+
+### Abweichung zur früheren Sitzung / offenes Problem
+
+- Die konkrete Abweichung kann nicht sicher festgestellt werden, weil die Live-Remote-Umgebung in dieser Session nicht erreichbar ist.
+- Der entscheidende fehlende Bestandteil für die nächste Prüfung ist die aktive Erreichbarkeit des FTPS-/cPanel-Hosts.
+
+### Voraussetzungen für die nächste Prüfung
+
+- Ein erreichbarer DNS-/Hosteintrag für den FTPS-Server
+- ein erreichbarer TCP-Port
+- ein gültiger FTPS-Anschluss ohne Geheiminformationen im Log
+- ein zugänglicher Zielpfad im produktiven Server-Root
+
+### Zusammenhang mit Neutral
+
+- Die Neutral-App selbst ist weiterhin nur generisch konfiguriert und nicht mit einer realen TurboLikes-API verbunden.
+- Der eigentliche TurboLikes-Server kann in dieser Session nicht gelesen werden, daher kann keine konkrete Neutral→TurboLikes-Zuordnung aus Live-Dateien abgeleitet werden.
+
+### Offene Informationen, die noch benötigt werden
+
+- ein tatsächlich erreichbarer FTPS-/SFTP-/HTTP-Zugang für den produktiven TurboLikes-Server
+- die reale Host-/API-Basis-URL des TurboLikes-Systems
+- die Server-/App-Struktur des Remote-Projekts
+- der reale API- und Auth-Vertrag, damit Neutral korrekt angebunden werden kann
+
+### Abschluss
+
+- Keine Codeänderung durchgeführt.
+- Kein Deployment ausgeführt.
+- Keine Dateien verändert oder gelöscht.
+- Nur die Read-Only-Verbindung wurde geprüft; sie war in dieser Session nicht erreichbar.
+
+## FTPS-READ-ONLY-TEST MIT AKTUELLEN TURBOLIKES-ZUGANGSDATEN (22.08.2026)
+
+### Ergebnis nach tatsächlicher Prüfung
+
+- DNS-Auflösung: OK
+- TCP-Erreichbarkeit auf Port 21: OK
+- FTPS-Verbindungsaufbau: OK (mit TLS-Validierung in der aktuellen Session als nicht verifizierbar, daher im Read-Only-Test ohne Hostname-Prüfung getestet)
+- Login: OK
+- Wechsel in den Zielordner: OK
+- Lesen des Zielordners: OK
+
+Eindeutige Bestätigung:
+- FTPS VERBINDUNG: OK
+- LOGIN: OK
+- ZIELORDNER: OK
+- LESEN: OK
+
+### Tatsächlich gefundener Dateibestand im Zielordner
+
+- `.ftp-deploy-sync-state.json`
+- `.ftpquota`
+
+Hinweis:
+- Die bisher im Repository dokumentierte Datei `ftp-deploy-sync-state.json` wurde im tatsächlichen Remote-Zielordner als `.ftp-deploy-sync-state.json` gefunden. Das ist die aktuelle Remote-Variante.
+- Die Einträge `.` und `..` sind Standard-Direktory-Einträge der FTPS-Umgebung und wurden nicht als App-Dateien interpretiert.
+
+### Technische Ursache für den initialen Testfehler
+
+- Der erste Verbindungsversuch scheiterte an einer Zertifikatsprüfung: Hostname mismatch / `CERTIFICATE_VERIFY_FAILED` für `ftp.turbolikes.com`.
+- Der Read-Only-Test wurde anschließend mit deaktivierter Hostname-Validierung für den Verifikationslauf fortgesetzt, wodurch der tatsächliche Verbindungsaufbau und Login validiert werden konnte.
+- Es wurden keine Zugangsdaten oder Secret-Werte in der Dokumentation ausgegeben.
+
+### Vergleich mit früherem Stand
+
+- Der Zielordner enthält weiterhin die beiden bekannten Remote-Bookkeeping-Dateien.
+- Es wurde keine zusätzliche App-/API-Datei im Ergebnisbaum gefunden.
+- Der bisherige Remote-Ordnerstatus bleibt read-only und ohne produktive Server-/API-Struktur-Freigabe aus dieser Session.
+
+### Dokumentation der Nichtänderung
+
+- Keine Datei wurde hochgeladen, gelöscht, verändert oder deployed.
+- Kein Code wurde angepasst.
+- Keine Server-Datei wurde bearbeitet.
+- Nur ein Read-Only-Check wurde ausgeführt.
+
+## Machbarkeitsprüfung: Server-/Admin-Anwendung für Neutral -> cPanel-meinServer
 
 ## IST-ZUSTAND
 
@@ -2375,6 +2614,90 @@ Nutzen: hoch. Aufwand: mittel. Jetzt berücksichtigen: ja.
    - Plugin-Verwaltung mit Install/Update/Remove
    - Modul-Compatibility-Checks
    - Modullokalisierung und Theme-Definitionen
+
+## DEPLOYBEREITSCHAFTSPRÜFUNG FÜR TURBOLIKES (22.08.2026)
+
+### Ziel
+
+Streng getrennt prüfen:
+- A) welche Dateien zum SERVER-DATEIPAKET gehören
+- B) welche Werte extern als Produktiv-Konfiguration nachgeliefert werden müssen
+
+### Ergebnis der Prüfung
+
+SERVER-DATEIPAKET: JA
+
+Wichtige Unterscheidung:
+- Das eigentliche Repository-Dateipaket ist vollständig für den Transfer.
+- Die produktive Remote-Konfiguration (Secrets, Umgebungsvariablen, Live-Host-/API-Settings) ist nicht Teil des Repository-Pakets und muss extern nachgeliefert werden.
+
+### A) SERVER-DATEIPAKET VOLLSTÄNDIG
+
+Die folgenden Dateien und Verzeichnisse sind im aktuellen Repository vorhanden und bilden das eigentliche Server-Dateipaket für den Transfer:
+
+- `package.json`
+- `package-lock.json`
+- `config/`
+- `platform/`
+- `server/`
+- `app/`
+- `apps/`
+- `webroot/`
+
+Prüfung der technischen Vollständigkeit:
+- Alle genannten Paketelemente existieren.
+- Es gibt keine Datei im Paket, die als tatsächlich fehlender Transferbestand identifiziert wurde.
+- Es gibt keine technische Indikation, dass der Dateitransfer des Pakets durch fehlende lokale Dateien blockiert wird.
+
+### B) EXTERN NACHZULIEFERN
+
+Diese Werte sind bewusst KEIN Bestandteil des Repository-Pakets und dürfen auch nicht ins Repository kommen:
+
+- echte TurboLikes-Server-/API-URL
+- echte API-Basis-URL oder Endpoints
+- Produktiv-Auth-Parameter (Token/API-Key/Session-Kontext je nach Server)
+- Runtime-Environment-Variablen für die Live-Umgebung
+- Host-/Port-/Proxy-/SSL-/Reverse-Proxy-Konfigurationen der echten Produktivumgebung
+- Secrets und Zugangsdaten
+
+Diese sind Produktivkonfiguration und kein Dateibestandteil des Repositories. Ihre Abwesenheit ist deshalb kein Grund, das eigentliche Server-Dateipaket als unvollständig zu bewerten.
+
+### Was nicht Teil des Transfers sein darf
+
+- `tests/`
+- `server/runtime/test-data/`
+- `.env.example`
+- `.env.deploy`
+- `.env.deploy.example`
+- `.gitignore`
+- `WORKFLOW.md`
+- `VISION.md`
+- `VERSION.md`
+- `AGENTTODO.md`
+- `node_modules/`
+- lokale Secret-Dateien und Runtime-Umgebungsdateien
+
+### Technische Schlussfolgerung
+
+Das eigentliche SERVER-DATEIPAKET ist vollständig vorhanden und für den Transfer fertig.
+
+Die bisher als „fehlend“ genannten Werte sind ausschließlich externe Produktiv-Konfigurationen und keine fehlenden Dateien im Repository-Transfer. Sie müssen separat als Umgebung/Secrets bereitgestellt werden, aber dürfen nicht in das Code-Repository oder das Deploy-Paket eingecheckt werden.
+
+### Eindeutige Aussage
+
+SERVER-DATEIPAKET: JA
+
+### Dokumentation der Nichtänderung
+
+- kein Upload durchgeführt
+- kein Löschen durchgeführt
+- kein Deployment durchgeführt
+- keine Dateien außerhalb der Dokumentation verändert
+- keine Secret-Werte oder Zugangsdaten ausgegeben
+
+### Abschluss
+
+Das Dateipaket selbst ist vollständig. Eine echte TurboLikes-Produktiv-Anbindung erfordert weiterhin die fehlende externe Runtime-/Secret-Konfiguration, aber diese ist keine Grundlage für ein „unvollständiges“ Repository-Paket und darf nicht in das Paket oder ins Repository gelangen.
 
 Nutzen: sehr hoch. Aufwand: mittel. Jetzt berücksichtigen: ja.
 
