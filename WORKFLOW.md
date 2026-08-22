@@ -1275,6 +1275,146 @@ Die bestehende FTPS-Verbindung ist nur für Deployment/Transport gedacht, nicht 
 - Die App-Laufzeit arbeitet über generische API-/HTTP-Mechanismen und Provider-Modelle.
 - FTPS-Daten und App-Laufzeit-API-Daten sind verschiedene Konzepte und dürfen nicht miteinander vermischt werden.
 
+## WEBROOT-UI ZUM NODE-BACKEND: TATSÄCHLICHE VERBINDUNG (2026-08-22)
+
+### 1. Welche URL verwendet die Webroot-UI tatsächlich?
+
+Der entscheidende Punkt ist: Die Webroot-UI ruft ihre API-Endpunkte nicht mit einer hardcodierten externen URL auf. In `webroot/master-ui.js` werden die Requests als relative Pfade aufgebaut:
+
+- `fetchJson('/api/status', ...)`
+- `postJson('/api/setup', payload)`
+- `postJson('/api/server/test', payload)`
+- `postJson('/api/database/test', payload)`
+- `postJson('/api/setup/activate', ...)`
+
+Die konkrete Implementierung in `fetchJson()` und `postJson()` nutzt `fetch(url, ...)` mit relativem Pfad und setzt nur Header, aber keine feste produktive Backend-Origin. Dadurch läuft der Browser auf denselben Origin / denselben Host, von dem die Webroot-Seite geladen wurde.
+
+Das bedeutet:
+
+- Die public URL `https://www.turbolikes.com/index/app/neutral/webroot/` ist nur die statische Frontend-Veröffentlichung im Webroot-Verzeichnis.
+- Sie ist nicht automatisch die richtige `Server URL` für das Node-Backend.
+- Die echte Server-URL muss die Host-/Proxy-Basis sein, die den Node-Server öffentlich oder über cPanel-Reverse-Proxy erreichbar macht, nicht der Pfad zum statischen HTML-Verzeichnis.
+
+Die Laufzeit selbst bindet den Node-Server an:
+
+- `server/server.js`: `server.listen(process.env.PORT || 3000, process.env.HOST || '127.0.0.1', ...)`
+- `server/config/index.js`: `host: process.env.HOST || '127.0.0.1'`, `port: Number(process.env.PORT || 3000)`, `apiBase: '/api'`
+
+Die Webroot-Dateien werden über `server/bootstrap/server.js` als statische Dateien ausgeliefert; die API- und Setup-Routen laufen dagegen auf derselben Origin unter `/api/...`.
+
+### 2. Welche API-Basis wird verwendet?
+
+Der Code legt die Backend-API-Basis fest als:
+
+- `server/config/index.js`: `apiBase: '/api'`
+- `server/bootstrap/server.js`: `if (pathname === `${apiBase}/setup` ... )`
+- `getServerTestResult()` setzt den Test-Target mit `new URL(`${targetBase.replace(/\/$/, '')}${apiBase}/status`)`
+
+Damit ist die API-Basis in der tatsächlichen Laufzeit:
+
+- `/api`
+
+nicht `https://www.turbolikes.com/index/app/neutral/webroot/` und auch nicht ein direktes Dateien-Skript-URL-Muster.
+
+### 3. Welche Endpunkte werden von der Setup-Oberfläche aufgerufen?
+
+In `webroot/master-ui.js` sind die relevanten POST-Aufrufe genau definiert:
+
+- `Save configuration`: `POST /api/setup`
+- `Test server`: `POST /api/server/test` mit Payload `{ serverUrl, apiBase }`
+- `Test database`: `POST /api/database/test` mit Datenbankkonfiguration
+- `Activate system`: `POST /api/setup/activate`
+
+Die backendseitigen Routen in `server/bootstrap/server.js` bestätigen diese Endpunkte:
+
+- `/api/setup`
+- `/api/setup/status`
+- `/api/setup/activate`
+- `/api/server/test`
+- `/api/database/status`
+- `/api/database/test`
+
+Die `Test server`-Logik prüft dabei nicht die statische Webroot-URL, sondern die in `serverUrl` angegebene Basis-URL und ruft anschließend `${serverUrl}${apiBase}/status` auf.
+
+### 4. Ist die öffentliche Webroot-Adresse als Server URL korrekt?
+
+Nein – nicht als `Server URL` für den Node-Backend-Context.
+
+Die URL `https://www.turbolikes.com/index/app/neutral/webroot/` ist ein statisches Webroot-/Public-Asset-Pfad, kein erwarteter API-Host. Der tatsächliche Code erwartet eine Server-Basis, die den Node-Server selbst erreicht, typischerweise:
+
+- `https://www.turbolikes.com` wenn der Reverse-Proxy auf den Node-Port zeigt, oder
+- eine separate öffentliche Subdomain / Domain, die auf den Node-Service gemappt ist.
+
+Wenn der cPanel-Host den Node-Server auf demselben öffentlichen Origin ausliefert, dann ist die richtige `Server URL` dieser öffentliche Origin, nicht der Pfad zum Webroot-Verzeichnis. Anders gesagt: `https://www.turbolikes.com/index/app/neutral/webroot/` ist der Frontend-Pfad, nicht die Basis des Node-Backends.
+
+### 5. Wie gelangen die Requests von der Webroot-UI zum Node-Backend?
+
+Über den Browser auf derselben Origin, auf der die Webroot-Seite geladen wurde. Die UI nutzt relative Pfade und das Node-Server-Backend beantwortet diese Pfade auf demselben HTTP-Listener, weil in `server/bootstrap/server.js` sowohl statische Dateien als auch API-Routen auf dem gleichen Server behandelt werden.
+
+Die Struktur ist daher:
+
+- Browser lädt `https://<public-origin>/index/app/neutral/webroot/...
+- JavaScript ruft relative API-Endpunkte wie `/api/setup` auf
+- cPanel-/Reverse-Proxy-/Host-Konfiguration leitet diese Anfragen an den Node-Prozess weiter
+- `server/bootstrap/server.js` behandelt diese Pfade und liefert die JSON-Antworten
+
+### 6. Datenbankkonfiguration: welche Typen und welche tatsächlichen Werte?
+
+Im Code ist der generische Datentyp-Satz in `server/middleware/input-validation.js`:
+
+- `mysql`
+- `postgresql`
+- `sqlite`
+- `indexeddb`
+- `mongodb`
+
+Aber im tatsächlichen Node-Server-Connector in `server/database/connection.js` gibt es einen echten Laufzeitpfad nur für:
+
+- `sqlite`
+- `mysql`
+- `postgresql` wird als Alias behandelt, aber der konkrete Servercode baut die Verbindung in der MySQL-Variante auf
+
+`indexeddb` ist deshalb kein echter Node-Server-Datenbanktyp für den cPanel-Produktivprozess. Es ist ein Browser-/Fallback-/UI-Default, nicht die echte Datenbank des Node-Backends.
+
+Wichtig: Das Setup legt keine Datenbank automatisch an. Der Code validiert und speichert nur die Konfiguration. Die Datenbank muss bereits existieren und der Node-Server muss die tatsächlichen Verbindungswerte (`host`, `port`, `name`, `username`, `password`) über Laufzeitumgebung oder konfigurierte Setup-State kennen.
+
+### 7. Eindeutige Eingabeanleitung für die aktuell sichtbare Setup-Seite
+
+Für die aktuelle Sicht auf der Setup-Seite gilt:
+
+- Application ID: `neutral-app` als Standard-Value, sofern keine andere App-ID im laufenen Setup festgelegt wurde.
+- Application Name: der Name der eigentlich installierten App; kein TurboLikes-Name, kein Hardcoded-Branding aus der Frontend-URL.
+- Server URL: NICHT die statische URL des Webroot-Verzeichnisses. Die korrekte Form ist die öffentliche Origin-/Proxy-Basis, die den Node-Server erreicht, z. B. `https://www.turbolikes.com` oder eine dedizierte Subdomain, sofern diese auf den Node-Port zeigt.
+- API base: `/api`
+- Database type: nur dann `indexeddb`, wenn tatsächlich nur ein Browser-/lokaler Fallback gemeint ist. Für cPanel-/Node-Produktivbetrieb muss es der echte Server-Typ sein, typischerweise `mysql` oder `sqlite`/`postgresql` je nach tatsächlicher Runtime.
+- Database name: der wirklich vorhandene DB-Name / Schema-Name des Produkts, nicht nur ein UI-Default wie `CoreDB`.
+
+### 8. Abschluss
+
+Die Webroot-UI und das Node-Backend sind nicht über eine feste TurboLikes-Host-URL gekoppelt; sie sind über denselben public origin / cPanel-Proxy und den generischen `/api`-Pfad miteinander verbunden. Die URL `https://www.turbolikes.com/index/app/neutral/webroot/` ist die Frontend-Route, nicht der Node-Server-URL. Die tatsächliche `Server URL` muss der Origin-/Proxy-Endpoint sein, der auf den laufenden Node-Server zeigt, und die Datenbank muss bereits als echte Server-Datenbank existieren. Die Laufzeit selbst enthält keine hardcodierte TurboLikes-Produktionsverbindung.
+
+### 9. Dokumentationsmitteilung
+
+Die aktuelle Analyse zeigt: Die bereits deployte App ist ein generisches Neutral-Framework mit Webroot-Frontend und Node-Backend auf derselben Origin oder einem Proxy-Endpoint. Die in der Setup-Seite sichtbaren Felder beziehen sich auf den Framework-Server und nicht auf eine feste TurboLikes-Integration. Die konkrete öffentliche Server-Basis muss aus der tatsächlichen cPanel-/Reverse-Proxy-Konfiguration stammen; sie ist nicht im Repository als feste URL hinterlegt.
+
+### 10. Nicht durchgeführte Änderungen
+
+- Keine Konfiguration gespeichert
+- Keine Datenbank angelegt oder verändert
+- Keine Server-/Deployment-Änderung durchgeführt
+- Keine Datein verändert
+- Keine neue Produktiv-URL oder echte Secret-Values eingeführt
+
+## FTPS- und cPanel-Kontext: Trennung von Deployment, Webroot und Node-Laufzeit
+
+Die kritische technische Unterscheidung ist:
+
+- FTP/FTPS: Transport-/Deployment-Mechanismus
+- Webroot-URL: öffentliche Frontend-Asset-Route im Browser
+- Node-Backend: Prozess, der auf `host:port` lauscht und `/api/*` beantwortet
+
+Diese drei Elemente sind technisch getrennt und dürfen nicht miteinander verwechselt werden. Die Webroot kann auf einer Domain stehen, während der Node-Server intern auf `127.0.0.1:3000` oder einem gecachten Proxy-Port läuft. Die konkrete public mapping muss daher aus dem tatsächlichen cPanel-/Reverse-Proxy-Setup stammen; sie ist im Repo nicht hardcoded.
+
 ### 9. Aufteilung
 
 BEREITS VORHANDEN
