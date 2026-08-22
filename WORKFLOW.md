@@ -5888,3 +5888,87 @@ tests/
 
 Damit ist die VOLLSTÄNDIGE PHASE 5A IMPLEMENTIERUNGSSPEZIFIKATION abgeschlossen, basierend auf verifiziertem Codebestand.
 
+## KORRIGIERTE ENDGÜLTIGE LISTE (Prüfdatum: 2026-08-22)
+
+### Begründung der Korrektur
+
+Die bisherige Version enthielt eine inhaltliche Unschärfe bei `tests/` und `server/runtime/`. Nach Prüfung der echten Abhängigkeiten ist die eindeutige Einordnung:
+
+- `tests/` ist nur für lokale Validierung und darf nur in `NICHT AUF SERVER` stehen.
+- `server/runtime/` ist gemischt: Einige Dateien werden beim Erststart erzeugt, andere dienen nur lokaler Test-/Demo-Persistenz und dürfen nicht auf den Produktivserver.
+- `app/` und `apps/` sind für den Serverbetrieb notwendig, weil der Server aus den App-Manifesten und Modulen die aktive App und die UI-/Runtime-Registrierung aufbaut.
+- `webroot/` ist vollständig erforderlich, weil der Node-Server die statischen UI-Dateien direkt ausliefert.
+- `package.json` ist notwendig, `package-lock.json` ist nicht zwingend für den laufenden Server, aber sehr sinnvoll für reproduzierbare Installationen.
+
+### SERVER-DEPLOY
+
+- `package.json`
+- `config/index.js`
+- `platform/`
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `server/config/index.js`
+- `server/api/health.js`
+- `server/api/logs.js`
+- `server/database/connection.js`
+- `server/middleware/input-validation.js`
+- `server/middleware/notFound.js`
+- `server/services/`
+- `app/`
+- `apps/`
+- `webroot/`
+
+Begründung:
+- `server/server.js` startet den HTTP-Server und lädt den Bootstrap.
+- `server/bootstrap/server.js` liest die App-Definitionen aus `apps/` und registriert sie über `platform/master-framework.js`.
+- `platform/` bildet den Framework-Kern.
+- `server/services/` liefert Auth, Logs, User, Sessions, Health, Release und Persistence.
+- `webroot/` ist die statische UI-/Admin-Auslieferung, die der Server direkt serviert.
+- `app/` und `apps/` enthalten die Laufzeit-App-Definitionen und das aktive App-Manifest.
+
+### SERVER-OPTIONAL
+
+- `package-lock.json`
+- `server/runtime/` (nur falls die Produktivumgebung eine lokale Persistenz- oder Run-Time-Dir benötigt)
+- `server/runtime/release-state.json`
+- `server/runtime/setup-state.json`
+- `server/runtime/data/` (nur wenn lokale SQLite-/Runtime-Persistenz verwendet wird)
+- zukünftige Provider-/Cloud-Erweiterungen unter `platform/`, sofern später aktiviert
+
+Begründung:
+- Diese Dateien sind weder zwingende Source-Dateien noch reine Dev-Only-Artefakte. Sie sind je nach Produktiv-Umgebung entweder erzeugt, optional oder nur für bestimmte Persistenz-/Runtime-Varianten relevant.
+- Sie dürfen nicht automatisch als Test-/Demo-Artefakte mitlaufen, aber sie können in einer produktiven Laufzeitbasis durch den Server selbst oder die Umgebung erzeugt werden.
+
+### NICHT AUF SERVER
+
+- `tests/`
+- `server/runtime/test-data/`
+- `server/runtime/test-data/.storage-check.json`
+- `server/runtime/test-data/neutral-app.db`
+- `server/runtime/test-data/sessions/session-demo.json`
+- `node_modules/`
+- `.env.example`
+- `.env.deploy`
+- `.env.deploy.example`
+- `.gitignore`
+- `WORKFLOW.md`
+- `VISION.md`
+- `VERSION.md`
+- `AGENTTODO.md`
+- lokale Secrets und Zugangsdaten
+- alle Debug- und lokale Entwicklungs-Assets
+
+Begründung:
+- `tests/` ist ausschließlich für Validation und darf nicht in der Produktiv-Distribution stehen.
+- `server/runtime/test-data/` ist rein lokales Demo-/Prüfmaterial.
+- `node_modules/` wird in der Produktivumgebung durch `npm install`/`npm ci` erzeugt, nicht als deployment-artefact committed oder übertragen.
+- `.env*`-Dateien, Dokumentationen und Secrets dürfen nie auf den produktiven Server übertragen werden.
+
+### Erkennter Abschluss
+
+- `tests/` steht eindeutig nur in `NICHT AUF SERVER`.
+- `server/runtime/` ist kein einheitlicher Produktiv-Deploy-Block; der Laufzeitordner kann bei Start erzeugt werden, während Test-/Demo-Dateien und lokale Persistenzdaten getrennt bleiben müssen.
+- `app/` und `apps/` sind technisch notwendig.
+- `webroot/` ist vollständig notwendig.
+- Noch kein Deployment wurde durchgeführt.
+
