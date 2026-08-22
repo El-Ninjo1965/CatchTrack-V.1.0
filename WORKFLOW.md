@@ -6613,3 +6613,57 @@ Ergebnis:
 - Keine Änderung am Server vorgenommen.
 - Der FTP-Zielordner wurde nur gelesen; die beiden bekannten Dateien `.ftpquota` und `ftp-deploy-sync-state.json` wurden nicht gelöscht oder verändert.
 
+## TATSÄCHLICHER SERVER-TRANSFER (2026-08-22)
+
+### Durchgeführter Transfer
+
+- Datum/Uhrzeit: 2026-08-22
+- Transferart: FTPS read/write upload des SERVER-DATEIPAKETS
+- Übertragene Dateien/Verzeichnisse:
+  - `package.json`
+  - `package-lock.json`
+  - `config/`
+  - `platform/`
+  - `server/`
+  - `app/`
+  - `apps/`
+  - `webroot/`
+
+### Ausgeschlossen vom Transfer
+
+- `tests/`
+- `server/runtime/test-data/`
+- `.env.example`
+- `.env.deploy`
+- `.env.deploy.example`
+- `.gitignore`
+- `WORKFLOW.md`
+- `VISION.md`
+- `VERSION.md`
+- `AGENTTODO.md`
+- `node_modules/`
+- lokale Secrets, Passwörter und Zugangsdaten
+- lokale Debug-/Testdaten
+
+### Ergebnis der Existenzprüfung am Ziel
+
+- Das Paket wurde am FTP-Ziel übertragen und der Top-Level-Check war erfolgreich.
+- Die Remote-Root enthält die erwarteten Paketordner/Dateien zusätzlich zu den vorhandenen Systemdateien.
+- Die vorhandenen FTP-Systemdateien wurden nicht gelöscht oder verändert:
+  - `.ftpquota`
+  - `.ftp-deploy-sync-state.json`
+
+### Technische Bestätigung
+
+- Übertragene Paketordner am Ziel vorhanden: `app`, `apps`, `config`, `platform`, `server`, `webroot`
+- Übertragene Root-Dateien am Ziel vorhanden: `package.json`, `package-lock.json`
+- Keine Datei wurde gelöscht.
+- Keine Secrets wurden übertragen.
+- Keine zusätzlichen Bereinigungs- oder Destruktionsschritte wurden ausgeführt.
+
+### Abschluss
+
+- Der eigentliche Server-Transfer wurde durchgeführt.
+- Nur die angegebene SERVER-DEPLOY-Paketstruktur wurde übertragen.
+- Nicht-deployrelevante Dateien und lokale Secret-/Runtime-Umgebungen wurden bewusst ausgeschlossen.
+
