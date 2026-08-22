@@ -2918,6 +2918,338 @@ EMPFOHLEN:
 - welche Provider-/Infrastruktur-Adapter werden als erste produktive Implementierung umgesetzt?
 - wie wird der erste echte Backup-/Restore-Prozess für Benutzer und System konzeptionell geregelt?
 
+## AKTUELLER STAND DER ANALYSE (Prüfdatum: 2026-08-22)
+
+### 1. Gesamtstruktur von Neutral
+
+Der aktuelle Stand zeigt ein neutrales Framework-Repository mit klar separierbaren Schichten:
+
+- Root-Level-Dokumentation: `WORKFLOW.md`, `VISION.md`, `VERSION.md`, `AGENTTODO.md`, `.gitignore`, `.env.example`, `package.json`
+- App-/Runtime-Definitionen: `app/`, `apps/`
+- Framework-/Core-Logik: `platform/`
+- Server-/API-/Runtime-Implementierung: `server/`
+- Frontend-/UI-Assets: `webroot/`
+- Tests: `tests/`
+- Produktiv-/Runtime-State und lokale Daten: `server/runtime/`
+
+Das Repository ist kein fertiger Hosting-Deploy, sondern ein neutraler Master-/Entwicklungsframework-Stand mit vorbereiteter Produktiv-Architektur.
+
+### 2. APP-PAKET
+
+Zum APP-PAKET gehören die app-spezifischen Definitionen und die zugehörigen aktuellen App-Manifest-/Runtime-Daten:
+
+- `app/`
+  - `app/index.js`
+  - `app/modules/`
+    - `app/modules/index.json`
+    - `app/modules/gps/index.js`
+    - `app/modules/gps/module.json`
+- `apps/`
+  - `apps/neutral-app/`
+    - `apps/neutral-app/app-info.json`
+    - `apps/neutral-app/index.html`
+
+Darüber hinaus wird das statische Frontend-/Administrator-UI in `webroot/` teilweise als sichtbare App-Auslieferung genutzt, aber es ist technisch Teil des Server-/UI-Pakets, nicht rein ein App-Manifest-Paket.
+
+### 3. SERVER-PAKET
+
+Zum SERVER-PAKET gehören die echte Serverlaufzeit und die API-/Service-/Middleware-Schicht:
+
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `server/config/index.js`
+- `server/api/`
+  - `health.js`
+  - `logs.js`
+- `server/middleware/`
+  - `input-validation.js`
+  - `notFound.js`
+- `server/services/`
+  - `audit-service.js`
+  - `audit-store.js`
+  - `auth-service.js`
+  - `backup-service.js`
+  - `health-service.js`
+  - `log-service.js`
+  - `login-rate-limiter.js`
+  - `password-hash.js`
+  - `persistence-service.js`
+  - `release-service.js`
+  - `role-service.js`
+  - `session-store.js`
+  - `settings-service.js`
+  - `user-service.js`
+- `server/database/`
+  - `connection.js`
+- `server/runtime/`
+  - `neutral-app.db`
+  - `release-state.json`
+  - `setup-state.json`
+  - `test-data/`
+    - `.storage-check.json`
+    - `neutral-app.db`
+    - `sessions/session-demo.json`
+
+Zusätzlich relevant für die Laufzeit ist das Framework-Core unter `platform/`, das die Server-Initialisierung und die App-/Module-Registrierung unterstützt.
+
+### 4. App-Server-Kommunikation
+
+Die technische Kommunikation ist klar strukturiert:
+
+- Die App-Definitionen in `app/` und `apps/` melden sich über `MasterFramework.registerApp()` an.
+- Der Server-Start aus `server/server.js` lädt `server/bootstrap/server.js`.
+- `server/bootstrap/server.js` liest App-Infos aus `apps/*/app-info.json` und setzt die aktive App.
+- `webroot/` liefert HTML/JS/CSS aus und wird vom HTTP-Server ausgeliefert.
+- Die Browser- oder UI-Schicht ruft API-Endpunkte unter `/api` auf.
+- Pflichtige Server-APIs sind in `server/api/*` definiert, z. B. Health-/Status- und Log-Endpunkte.
+- Der Server nutzt `platform/master-framework.js`, `platform/provider-manager.js` und die Services unter `server/services/` als Runtime-/Business-Logik.
+
+Ergebnis: App und Server sind technisch voneinander getrennt, aber nicht vollständig isoliert, weil die App-Manifest- und UI-Integration im runtime-aktiven Server-Kontext aufeinander angewiesen sind.
+
+### 5. Dateien, die auf dem cPanel für die vollständige App-Funktion nötig wären
+
+Für einen realen cPanel-/FTPS-Produktiv-Deploy müssten die folgenden Kategorien vorhanden sein:
+
+- `package.json`
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `server/config/index.js`
+- `server/api/*`
+- `server/middleware/*`
+- `server/services/*`
+- `server/database/connection.js`
+- `platform/` (Core-/Framework-Layer)
+- `config/index.js`
+- `app/` und `apps/`
+- `webroot/`
+- `.env`-artige Laufzeitwerte (nicht im Repository, nur außerhalb des Source-Codes)
+- notwendige Laufzeitdatenbank-/Runtime-Dateien, sofern der Server themen- bzw. sessionspezifisch auf lokale Persistenz angewiesen ist
+
+Wichtig: Die Test-Dateien, lokale Demo-/Session-Daten und Dokumentationsdateien sind nicht der produktive cPanel-Deploy-Kern.
+
+### 6. Dateien, die ausdrücklich nicht auf den Server gehören
+
+Nicht auf den Produktivserver gehören laut aktuellem Stand ausdrücklich:
+
+- `tests/`
+- `WORKFLOW.md`, `VISION.md`, `VERSION.md`, `AGENTTODO.md`
+- `.gitignore`, `.env.example`, `.env.deploy*` (außer echte runtime `.env` außerhalb des Repo)
+- `node_modules/` als deployte Runtime-Basis; Abhängigkeiten sollten auf dem Server installiert werden, nicht als Commit-/Deploy-Datei mitlaufen
+- `server/runtime/test-data/`
+- `server/runtime/*.db` und lokale Debug-/Test-States, sofern sie nur für Entwicklung gedacht sind
+- editor-/tooling-artefacts wie `.vscode/`, cache- und temp-Dateien
+- keine echten secrets oder Zugangsdaten im Repository
+
+### 7. Trennung von App und Server / zwei getrennte Backups?
+
+Ja, technisch ist die Trennung grundsätzlich gegeben:
+
+- App-Paket: App-Definitionen, Module, App-Manifest, UI-/App-Daten
+- Server-Paket: HTTP-Server, API, Services, Persistence, Framework-Kern, Bildung des Laufzeit-Kontexts
+
+Das erlaubt zwei logisch getrennte Pakete bzw. Backups:
+
+- App-/UI-Paket: `app/`, `apps/`, ggf. `webroot/` als statische Auslieferung
+- Server-/Runtime-Paket: `platform/`, `server/`, `config/`, ggf. runtime state ohne Dokumentation/Tests
+
+Die Trennung ist jedoch nicht absolut abgeschlossen, weil `apps/*/app-info.json` und der aktive App-Kontext vom Server geladen werden und `webroot/` vom Server ausgeliefert wird. Deshalb ist eine saubere Paketierung zwar technisch sinnvoll, aber nicht als vollkommen autonome 100%-gestrittene Isolation zu verstehen.
+
+### 8. Bereits fertige und vorhandene SERVER-Dateien
+
+Der aktuelle Stand enthält bereits einen umfangreichen Server-/Runtime-Block. Bereits vorhanden sind unter anderem:
+
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `server/config/index.js`
+- `server/api/health.js`
+- `server/api/logs.js`
+- `server/database/connection.js`
+- `server/middleware/input-validation.js`
+- `server/middleware/notFound.js`
+- `server/services/*` (mehrere Services bereits implementiert)
+- `server/runtime/` mit persistierten Status-/Daten-Dateien
+- `platform/` mit Framework-Kern und Provider-/Runtime-Management
+
+Insgesamt ist der Server-Teil bereits in einem funktionierenden Framework-Kern vorhanden, aber noch kein vollständiger externer Produktiv-Deploy mit echten Host-/Secret-/Provider-Konfigurationen.
+
+### 9. Fehlende, veraltete oder widersprüchliche Dateien
+
+Es gibt keine kritischen, repo-internen Produktiv-Blocker, aber einige Punkte sind noch unvollständig oder konzeptionell zu trennen:
+
+- Es existiert kein echtes Produktiv-Deploy-Paket `cPanel-meinServer` im Repository.
+- Es gibt keine reale Hosting-/Provider-Umgebung mit echten Produktiv-Secrets.
+- `WORKFLOW.md` beschreibt zukünftige cPanel-/FTPS-Deploy-Schritte, aber der konkrete produktive Delivery-Bestand fehlt noch als separater Pfad.
+- `server/runtime/test-data/` und `server/runtime/*.db` sind konzeptionell für lokale Tests, nicht für finale Server-Distribution.
+- `platform/` und `server/` sind klar getrennt, aber die App-Manifest-/Runtime-Integration erfordert eine gemeinsame runtime-konfigurierte Schnittstelle.
+
+Das ist kein Widerspruch zur Vision, sondern ein Hinweis darauf, dass Neutral aktuell eine funktionierende Master-/Entwicklungsbasis ist und der echte Produktiv-Server-Stack außerhalb des Repositories liegt.
+
+### 10. Abschlussliste
+
+APP-PAKET
+- `app/`
+- `app/modules/`
+- `apps/`
+- `apps/neutral-app/`
+- `app-info.json`-basierte App-Definitionen
+
+SERVER-PAKET
+- `server/`
+- `server/server.js`
+- `server/bootstrap/server.js`
+- `server/api/`
+- `server/config/`
+- `server/services/`
+- `server/database/`
+- `server/middleware/`
+- `server/runtime/`
+- `platform/`
+- `config/index.js`
+- `webroot/` (als ausgelieferte UI-/Frontend-Dateien)
+
+NICHT AUF SERVER
+- `tests/`
+- `WORKFLOW.md`, `VISION.md`, `VERSION.md`, `AGENTTODO.md`
+- `.env.example`, `.env.deploy*`, `.gitignore`
+- `node_modules/`
+- `server/runtime/test-data/`
+- lokale Debug-/Demo-Dateien und temporäre State-Dateien
+- echte Secrets und Access-Credentials
+
+Damit beschreibt diese Analyse den aktuellen Stand zum Zeitpunkt der Prüfung: Neutral ist ein modularer Framework- und Laufzeit-Stack mit klarer App-/Server-Trennung, aber noch kein fertiger Produktiv-Deploy mit externer Hosting- und Secret-Konfiguration.
+
+## EXAKTE SERVER-DEPLOY-LISTE FÜR TURBOLIKES (Prüfdatum: 2026-08-22)
+
+### Grundlage der Prüfung
+
+Die Analyse basiert nicht nur auf Verzeichnisnamen, sondern auf den tatsächlichen Code-Abhängigkeiten der Laufzeit:
+
+- `server/server.js` lädt `./bootstrap/server`
+- `server/bootstrap/server.js` lädt `../config`, `../../platform/master-framework`, alle relevanten Services und Middleware
+- `server/config/index.js` liefert Host, Port, DB- und Auth-Parameter aus Umgebungsvariablen
+- `platform/master-framework.js` bildet den runtime-kritischen App-/Module-/Provider-/Setup-Kontext
+- `platform/provider-manager.js` modelliert Provider-/Adapter-Definitionen, inklusive cPanel/FTPS-Adapter
+- `server/services/*` und `server/api/*` liefern Auth, Health, Logs, Session, User, Settings, Audit, Release und Backup
+- `webroot/` wird als statische App-/Admin-Auslieferung vom HTTP-Server bereitgestellt
+- `app/` und `apps/` liefern App-Manifest-/Runtime-Definitionen; `apps/neutral-app/app-info.json` ist die aktuelle aktive App-Konfiguration
+- `package.json` ist das einzige Projekt-Start- und Dependency-Entry-Point
+
+Wichtig: Noch kein Deployment wurde durchgeführt. Es wurde nur eine Analyse des aktuellen Standes erstellt.
+
+### 1. SERVER-DEPLOY (zwingend auf TurboLikes erforderlich)
+
+Die folgende Liste repräsentiert das minimale Paket, das für den Initialstart der aktuellen Neutral-Server-Laufzeit technisch erforderlich ist:
+
+- `package.json`
+- `package-lock.json` (optional für reproduzierbare Installationen, aber für Build-/Install-Pfade sinnvoll)
+- `config/`
+  - `config/index.js`
+- `platform/`
+  - `platform/master-framework.js`
+  - `platform/provider-manager.js`
+  - `platform/security.js`
+  - `platform/core-*.js` (sofern die Laufzeit sie aufgerufen hat; im aktuellen Stand bildet die gesamte `platform/`-Sammlung den Framework-Kern)
+  - `platform/*.js` (vollständig, weil die Framework-Laufzeit als zusammenhängender Codeblock genutzt wird)
+- `server/`
+  - `server/server.js`
+  - `server/bootstrap/server.js`
+  - `server/config/index.js`
+  - `server/api/health.js`
+  - `server/api/logs.js`
+  - `server/database/connection.js`
+  - `server/middleware/input-validation.js`
+  - `server/middleware/notFound.js`
+  - `server/services/audit-service.js`
+  - `server/services/audit-store.js`
+  - `server/services/auth-service.js`
+  - `server/services/backup-service.js`
+  - `server/services/health-service.js`
+  - `server/services/log-service.js`
+  - `server/services/login-rate-limiter.js`
+  - `server/services/password-hash.js`
+  - `server/services/persistence-service.js`
+  - `server/services/release-service.js`
+  - `server/services/role-service.js`
+  - `server/services/session-store.js`
+  - `server/services/settings-service.js`
+  - `server/services/user-service.js`
+  - `server/runtime/`
+    - `server/runtime/neutral-app.db`
+    - `server/runtime/release-state.json`
+    - `server/runtime/setup-state.json`
+    - `server/runtime/data/` (falls der Laufzeit-DB-Store auf lokaler Persistenz angewiesen ist)
+- `app/`
+  - `app/index.js`
+  - `app/modules/index.json`
+  - `app/modules/gps/index.js`
+  - `app/modules/gps/module.json`
+- `apps/`
+  - `apps/neutral-app/app-info.json`
+  - `apps/neutral-app/index.html`
+- `webroot/`
+  - `webroot/index.html`
+  - `webroot/style.css`
+  - `webroot/user-app.js`
+  - `webroot/master-ui.js`
+  - `webroot/admin.html`
+  - `webroot/admin/*.js`
+  - `webroot/api-client.js`
+  - `webroot/setup.html`
+  - `webroot/dev.html`
+
+### 2. SERVER-OPTIONAL (für bestimmte Funktionen / spätere Erweiterungen / nicht initial notwendig)
+
+Diese Dateien oder Ordner sind für spezielle Funktionen relevant, aber für den Initialstart des Framework-Servers nicht zwingend erforderlich:
+
+- `server/runtime/test-data/`
+  - `server/runtime/test-data/.storage-check.json`
+  - `server/runtime/test-data/neutral-app.db`
+  - `server/runtime/test-data/sessions/session-demo.json`
+- `tests/`
+  - alle Testdateien und Test-Assets
+- `server/runtime/data/neutral-app.db` (wenn lokale DB nicht final genutzt wird)
+- zusätzliche zukünftige Provider-/Cloud-Module unter `platform/` wenn mehrere Anbieter aktiviert werden
+- `config/*.json`-Dateien, falls adminseitig gespeicherte Konfigurationen later als persistent runtime-state erzeugt werden
+- `docs`/Markdown-Dateien als operationales Handbuch, nicht als runtime-Teil
+- `node_modules/` ist zwar technisch erforderlich, aber nicht als Produktiv-Deploy-Datei im Repo zu übertragen; es wird auf dem Server durch `npm install` bzw. `npm ci` erzeugt
+
+### 3. NICHT AUF SERVER
+
+Diese Dateien und Verzeichnisse gehören ausdrücklich nicht auf den Produktivserver:
+
+- `tests/`
+- `WORKFLOW.md`
+- `VISION.md`
+- `VERSION.md`
+- `AGENTTODO.md`
+- `.env.example`
+- `.env.deploy`
+- `.env.deploy.example`
+- `.gitignore`
+- `node_modules/`
+- `server/runtime/test-data/`
+- lokale Debug-/Demo-Daten und temporäre State-Dateien
+- echte Secrets, Zugangsdaten, Passwörter, Tokens, Keys und Credentials im Source-Code oder in einer committed Datei
+- Dokumentationsdateien, die keine Laufzeitfunktion haben
+- lokale Editor-/IDE- und Cache-Artefakte (`.vscode`, `.cache`, Logs, temp-Dateien)
+
+### 4. Technische Eigenständigkeit des SERVER-DEPLOY-Pakets
+
+Das ermittelte SERVER-DEPLOY-Paket ist technisch grundsätzlich eigenständig für den aktuellen Stand, aber nur mit einer wichtigen Voraussetzung:
+
+- Die für die Laufzeit nötigen Umgebungsvariablen (Host, Port, DB-Konfiguration, Auth-/Secret-Werte, Provider-Konfiguration) müssen außerhalb des Repositories im Produktivumfeld gesetzt werden.
+- Das Projekt enthält keine echten Produktiv-Secret-Werte und keine live-Datenbankkonfiguration im Repo.
+- Für cPanel/FTPS muss zusätzlich ein Server-Ordner mit der aktuellen Laufzeitstruktur existieren, in dem `node_modules` per Installationsschritt und die runtime-Konfiguration durch Umgebungsvariablen bereitgestellt werden.
+
+Ohne diese externen Laufzeitwerte kann das Paket zwar technisch auf dem Server gestartet werden, aber nicht mit echten Live-Daten oder echten Produktiv-Credentials.
+
+### 5. Ergebnis / Entscheidungslogik
+
+- Der aktuelle Neutral-Stand ist ein Framework + Runtime + App-Manifest + Server-Gateway mit klarer Trennung zwischen App-Definitionen, Runtime-Framework und Server.
+- Das wirklich nötige Server-Deploy-Paket ist nicht nur `server/`, sondern ein kombiniertes Paket aus `server/ + platform/ + config/ + app/ + apps/ + webroot/ + package.json`.
+- `tests/`, `runtime/test-data/`, `.env*`, Secrets, Docs und lokale Entwicklungs-States gehören nicht auf den Produktivserver.
+- Noch kein Deployment wurde durchgeführt.
+
 ## Schlussfolgerung
 
 Die vorhandene Architektur in `Neutral` bildet bereits eine solide technische Grundlage für eine spätere produktive Server-/Admin-Anwendung. Die wichtigsten Lücken sind nicht in der Gesamtidee, sondern in der Produktivreife: serverseitige Authentifizierung, Session-Sicherheit, Datenbank-/Storage-Qualität, Audit-Logs, Auslieferung für cPanel, Backup/Restore, API-Sicherheit, Update-Strategie und Provider-Abstraktion.
