@@ -1056,6 +1056,91 @@ Dieser Implementierungsplan dokumentiert den Übergang von der aktuellen neutral
   - Danach wird der Branch an den GitHub-Remote synchronisiert.
   - Abschließend wird der lokale HEAD mit dem GitHub-Remote verglichen, damit die Synchronität verifiziert ist.
 
+## TURBOLIKES-VERBINDUNGSSTATUS (22.08.2026)
+
+### Prüfumfang
+
+- Nur der heutige Stand vom 22.08.2026 wurde geprüft.
+- Es wurde keine Änderung am Code durchgeführt.
+- Es wurde kein Deployment oder Transfer ausgeführt.
+- Es wurden keine Secret-Werte oder Passwörter ausgegeben.
+
+### Ergebnis
+
+TEILWEISE EINGERICHTET
+
+### Konfigurationsquellen und tatsächliche Nutzung
+
+- Die App selbst bezieht die Server-/API-Adresse aus generischen, konfigurierbaren Laufzeitwerten und nicht aus einem hardcodierten TurboLikes-Produktionssetup.
+- Die relevante Basis ist in `server/config/index.js`:
+- `apiBase: '/api'`
+- `host: process.env.HOST || '127.0.0.1'`
+- `port: Number(process.env.PORT || 3000)`
+- `database.host` und `database.username/password` sind ebenfalls nur über Umgebungsvariablen bzw. Standardwerte konfigurierbar.
+- In `server/bootstrap/server.js` ist die Verbindungstest-Logik vorhanden:
+- `payload.serverUrl || process.env.SERVER_URL || http://${host}:${port}`
+- `payload.apiBase || '/api'`
+- Der daraus gebildete Health-/Status-Endpunkt ist `/api/status` bzw. `/api/server/test`.
+- In `webroot/api-client.js` werden API-Aufrufe zentral als generische Fetch-Wrapper ausgeführt.
+- Standardwerte sind relative Pfade wie `/api/admin/users`, `/api/setup/status`, `/api/database/status`.
+- Es gibt keine feste TurboLikes-Server-URL im Browser-Client.
+- Für eine produktive Remote-Verbindung sind Umgebungs- und Provider-Konfigurationswerte vorgesehen, aber in der aktuellen Repo-Struktur nicht konkret auf TurboLikes gesetzt.
+
+### Konkrete URL/Endpoint-Analyse
+
+- Aktuell verwendete Standard-URL im Laufzeitcode: `http://127.0.0.1:3000` (falls kein externer `SERVER_URL`-Wert gesetzt ist).
+- Aktuelle API-Basis: `/api`
+- Es gibt keine im Repository vorhandene konkrete TurboLikes-Produktions-URL, kein dedizierter TurboLikes-Host oder ein fertiger Endpoint-Pfad mit Live-Produktionswerten.
+- Die App zeigt damit nicht auf TurboLikes, sondern auf einen generischen lokalen bzw. konfigurierbaren Serverkontext.
+
+### Bereits vorhandene Komponenten
+
+- Generische Serververbindung und Health-Prüfung vorhanden:
+- `/api/status`
+- `/api/health`
+- `/api/server/test`
+- Generische API-Klassen und Fetch-Wrapper vorhanden.
+- Generischer Connection-/Provider-Mechanismus vorhanden:
+- `MasterFramework.registerConnection(...)`
+- `MasterFramework.registerProvider(...)`
+- `/api/connections`
+- `/api/providers`
+- Grundlegender Daten-/Status-/Updates-Mechanismus vorhanden als Framework-Kern:
+- `/api/setup`
+- `/api/database/status`
+- `/api/updates`
+- `/api/backups`
+- `/api/admin/settings`
+- Offline-/Delay-Synchronisationslogik ist im Framework als generisches Konzept vorbereitet, aber kein konkreter TurboLikes-Synchronisationsadapter ist eingebaut.
+
+### Noch fehlende oder nicht fertig konfigurierte Komponenten
+
+- Keine konkrete TurboLikes-Server-URL im Code oder in den Standard-Umgebungsvariablen.
+- Keine konkrete TurboLikes-API-Basis-URL für Produktivbetrieb.
+- Keine feste Authentifizierung für TurboLikes im Repository.
+- Keine vorhandenen Tokens/Secrets für den TurboLikes-Server.
+- Kein konkreter Synchronisationsmechanismus für die Übertragung zwischengespeicherter Daten zu TurboLikes.
+- Kein fertiger produktiver Adapter für Verbindung/Health, Datenabruf, Updates und Offline-Queue-Transfer auf die konkrete TurboLikes-Instanz.
+- Keine produktionsreife Provider-Konfiguration, die den Code als „fertig mit TurboLikes verbunden“ qualifiziert.
+
+### Verwendete Konfigurationswerte / Umgebungsvariablen
+
+- `HOST`, `PORT`, `SERVER_URL` (optional)
+- `ADMIN_ACCESS_TOKEN`, `AUTH_TOKEN`, `CORE_BOOTSTRAP_PASSWORD` (für lokale / bootstrap-spezifische Token, nicht TurboLikes)
+- `DB_TYPE`, `MYSQL_*`, `DB_*` (für Datenbank- und Runtime-Umgebung, nicht für TurboLikes-Server)
+- `FTP_*` nur für Deployment-Transfer-Konfiguration; nicht für App-Server-Verbindung zu TurboLikes
+
+### Schlussfazit
+
+Die Neutral-App enthält ein generisches, konfigurierbares Server-/API-Connection-Framework, aber keine fertige, konkrete und produktionsfähige TurboLikes-Verbindung. Die Verbindung ist daher nicht „bereits eingerichtet“, sondern nur als technischer Grundbaustein vorbereitet.
+
+### Dokumentation der Nichtänderung
+
+- Keine Codeänderungen durchgeführt.
+- Keine Deployment- oder Transfer-Operationen durchgeführt.
+- Keine Server- oder Remote-Änderung vorgenommen.
+- Keine Secret-Werte ausgegeben.
+
 # Machbarkeitsprüfung: Server-/Admin-Anwendung für Neutral -> cPanel-meinServer
 
 ## IST-ZUSTAND
