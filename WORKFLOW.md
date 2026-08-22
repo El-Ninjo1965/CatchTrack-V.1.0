@@ -1141,6 +1141,187 @@ Die Neutral-App enthält ein generisches, konfigurierbares Server-/API-Connectio
 - Keine Server- oder Remote-Änderung vorgenommen.
 - Keine Secret-Werte ausgegeben.
 
+## TURBOLIKES-ANBINDUNG: BENÖTIGTE KOMPONENTEN (2026-08-22)
+
+### 1. Konkrete Server-/API-URL
+
+- Im aktuellen Repository ist keine konkrete TurboLikes-Produktions-URL hinterlegt.
+- Es gibt keinen im Code verwendeten Hardcoded-Host, keinen festen API-Endpoint mit TurboLikes-Domain und keine produktive Live-URL in `config/`, `server/`, `webroot/` oder `platform/`.
+- Die vorhandene App nutzt nur generische Konfigurationswerte:
+  - `HOST` / `PORT`
+  - `SERVER_URL` (optional)
+  - `apiBase` default `/api`
+- Das bedeutet: Für eine echte TurboLikes-Anbindung muss der konkrete Remote-Host und der konkrete API-Pfad extern als Umgebungs- oder Provider-Konfiguration bereitgestellt werden.
+- Kein Wert wird im Repository als echte TurboLikes-URL definiert; keine Vermutung oder Platzhalter-URL wurde eingefügt.
+
+### 2. Bereits vorhandene Server-/API-Endpunkte
+
+Die App enthält einen generischen Server- und API-Backend-Layer, der die folgenden Endpunkte/Verhaltenspfade kennt oder als Architekturziel bereitstellt:
+
+- `/health`
+- `/api/health`
+- `/api/status`
+- `/api/system/info`
+- `/api/logs`
+- `/api/framework`
+- `/api/diagnostics`
+- `/api/release/status`
+- `/api/auth/login`
+- `/api/auth/logout`
+- `/api/auth/me`
+- `/api/connections`
+- `/api/providers`
+- `/api/backups`
+- `/api/setup`
+- `/api/setup/status`
+- `/api/server/test`
+- `/api/database/status`
+- `/api/database/test`
+- `/api/devices`
+- `/api/licenses`
+- `/api/updates`
+- `/api/updates/check`
+- `/api/marketplace`
+- `/api/marketplace/modules`
+- `/api/modules`
+- `/api/admin/users`
+- `/api/admin/roles`
+- `/api/admin/audit`
+- `/api/admin/settings`
+
+Diese Endpunkte sind als generische Runtime-/Admin-/Provider-API im Repository modelliert. Es gibt keinen TurboLikes-spezifischen Endpoint-Namensraum oder Live-Adapter, sondern nur den allgemeinen Framework-Mechanismus.
+
+### 3. Für die TurboLikes-Anbindung erforderliche Authentifizierung
+
+Die vorhandene Architektur unterstützt grundsätzlich:
+
+- statisches Token-Pattern (`Authorization: Bearer ...`, `x-admin-access-token`, `x-auth-token`), erkannt in `server/bootstrap/server.js`
+- Session-/Cookie-Authentifizierung für Browser-Interaktion (`neutral_session` + CSRF)
+- Rollen-/Admin-Checks über `admin`, `developer`, `viewer` etc.
+
+Für eine echte TurboLikes-Anbindung ist deshalb im konkreten Produktivbetrieb mindestens eines der folgenden Modelle erforderlich:
+
+- API-Token / Bearer-Token
+- API-Key / custom auth header
+- Session-basierte Auth, falls die TurboLikes-API tatsächlich sessiongebunden arbeitet
+- Zusätzliche Credentials-/Secret-Referenz im Provider- oder Connection-Kontext
+
+Die App selbst enthält keine TurboLikes-spezifischen Auth-Daten. Die Auth-Methode muss für die konkrete Remote-Umgebung extern konfiguriert werden.
+
+### 4. Benötigte Konfigurationswerte / Environment-/Repository-Secrets
+
+Für die verbindliche TurboLikes-Anbindung werden die folgenden Werte benötigt, aber sie sind im Repository derzeit nicht vorhanden:
+
+- `TURBOLIKES_API_BASE_URL` oder äquivalent
+- `TURBOLIKES_SERVER_URL` oder äquivalent
+- `TURBOLIKES_AUTH_MODE` (`token`, `api-key`, `session`, `none`)
+- `TURBOLIKES_API_TOKEN` oder `TURBOLIKES_API_KEY` je nach Auth-Modell
+- `TURBOLIKES_AUTH_HEADER_NAME` (falls custom header verwendet wird)
+- `TURBOLIKES_SYNC_ENDPOINT` oder äquivalent für spätere Daten-Transfer-/Sync-Route
+- `TURBOLIKES_HEALTH_PATH` oder `TURBOLIKES_STATUS_PATH` für Health-/Reachability-Checks
+- `TURBOLIKES_SYNC_QUEUE_DIR` oder vergleichbarer lokaler Offline-Queue-Pfad
+- optional: `TURBOLIKES_TIMEOUT_MS`, `TURBOLIKES_RETRY_COUNT`, `TURBOLIKES_SSL_VERIFY`
+
+Wichtig:
+- Keine dieser Werte ist im Repository als echte Produktiv-Config vorhanden.
+- Sie müssen von außen als sichere Umgebungsvariablen/Secrets bereitgestellt werden.
+- Sie dürfen nicht im Source-Code oder im Repository als Klartext-Werte liegen.
+
+### 5. Technische Einlesestellen ohne Speicherung im Repository
+
+Die geeigneten technischen Stellen für die spätere TurboLikes-Anbindung sind:
+
+- `.env` oder `.env.production` im lokalen Deployment-Kontext, aber nie im Repo als committed Secret-File
+- GitHub Actions / Repository Secrets oder ein vertrauenswürdiger Secret-Manager im CI-/Deployment-Kontext
+- Laufzeit-Umgebungsvariablen des Hosters / Providers
+- separate Provider-/Connection-Konfigurationen in der Runtime, z. B. über `MasterFramework.registerConnection(...)` oder `registerProvider(...)`
+
+Technisch korrekt wäre:
+- `server/config/index.js` liest die Basis-Umgebungsvariablen
+- `config/index.js` stellt Standardwerte für App-/Runtime-Kontext bereit
+- `webroot/api-client.js` verwendet nur die konfigurierten Basispfade und Auth-Header
+- `platform/master-framework.js` und `platform/provider-manager.js` modellieren den Provider-/Connection-Context, ohne echte TurboLikes-Produktionsdaten im Repo zu speichern
+
+### 6. Vorhandene Dateien, die dafür angepasst werden müssten
+
+Für eine echte TurboLikes-Anbindung fehlen oder müssen konkret ergänzt werden:
+
+- `server/config/index.js` – Server-/API- und Auth-Konfiguration
+- `config/index.js` – allgemeine Runtime-/Umgebungs-Config
+- `platform/master-framework.js` – Verbindung und Provider-Status
+- `platform/provider-manager.js` – Provider-Typen und endpoint-/auth-spezifische Metadaten
+- `webroot/api-client.js` – API-Client für echte TurboLikes-Endpunkte
+- optional: neue Umgebungs-/Secrets-Loader-Dateien, aber ohne echte Werte im Repo
+
+Diese Dateien sind derzeit generisch und neutral, nicht TurboLikes-konkreter Code.
+
+### 7. Fehlende Synchronisationslogik
+
+Die bestehende App enthält generische Framework-Muster, aber keine fertige konkrete Synclogik für TurboLikes. Für den echten Betrieb fehlen noch die folgenden Mechanismen:
+
+- Online-Abruf: echte HTTP-/REST-Abfrage an die TurboLikes-API mit validierter Basis-URL, Auth-Header und Timeout-Handling
+- Updates: Update-/Push-Pfad für neue Daten, Konfigurationsänderungen oder App-State-Änderungen zum TurboLikes-Server
+- Offline gespeicherte Daten: lokale Queue-/Persistenz-Schicht für Daten, die momentan nicht verfügbar sind
+- Nachübertragung: Retry-/Sync-Mechanismus, der gespeicherte Offline-Daten nach erfolgreicher Verbindung wieder an den Server sendet
+- Zustandskontrolle: Status- und Fehlerbehandlung (`status`, `queued`, `retry`, `failed`, `synced`) für den Datenaustausch
+
+Die vorhandenen Hinweise wie `offline-first` in `config/index.js` und `window.DatabaseManager.save('sync', record)` in `app/modules/gps/index.js` sind nur generische Rahmenkonzepte, kein fertiger konkreter TurboLikes-Synchronisationsadapter.
+
+### 8. FTPS vs. Laufzeitverbindung
+
+Die bestehende FTPS-Verbindung ist nur für Deployment/Transport gedacht, nicht für die App-Laufzeitverbindung zum TurboLikes-Server.
+
+- FTPS ist im Repo dokumentiert als Deployment-Mechanismus.
+- Die App-Laufzeit arbeitet über generische API-/HTTP-Mechanismen und Provider-Modelle.
+- FTPS-Daten und App-Laufzeit-API-Daten sind verschiedene Konzepte und dürfen nicht miteinander vermischt werden.
+
+### 9. Aufteilung
+
+BEREITS VORHANDEN
+- generische Server-/API-Architektur
+- generische Auth-Mechanismen (Token, Session, Rollen)
+- Provider-/Connection-Framework
+- Health-/Status-/Setup-/Admin-API-Struktur
+- Offline-First- und Queue-Konzept als generische Architekturidee
+- FTPS-Deployment-Konfiguration als separates Deployment-Transport-Konzept
+
+BENÖTIGT FÜR TURBOLIKES-ANBINDUNG
+- konkrete TurboLikes-Server-URL
+- konkrete TurboLikes-API-Basis
+- konkrete Authentifizierung (Token-/API-Key-/Session-Mechanismus)
+- konkrete Remote-Endpoint-Koordination für Health, Daten, Updates und Sync
+- Provider-/Connection-Konfiguration mit echten Remote-Zielen
+
+BENÖTIGTE SECRETS/ENV-VARIABLEN
+- `TURBOLIKES_API_BASE_URL`
+- `TURBOLIKES_SERVER_URL`
+- `TURBOLIKES_AUTH_MODE`
+- `TURBOLIKES_API_TOKEN` oder `TURBOLIKES_API_KEY`
+- `TURBOLIKES_AUTH_HEADER_NAME`
+- `TURBOLIKES_SYNC_ENDPOINT`
+- `TURBOLIKES_HEALTH_PATH`
+- `TURBOLIKES_SYNC_QUEUE_DIR`
+- zusätzliche Sicherheits- und Timeout-Variablen nach Bedarf
+
+NOCH ZU IMPLEMENTIEREN
+- echte TurboLikes-Provider-/Connection-Config
+- konkrete Remote-URL und API-Basis für den Produktivdienst
+- konkrete Auth-Anbindung mit validierter Header-/Token-Logik
+- Offline-/Queue-Sync-Mechanismus für spätere Übertragung
+- Retry-, Error- und Status-Behandlung für Daten-/Update-Sync
+- Trennung zwischen Deployment-FTPS und App-Laufzeit-API
+
+### 10. Eindeutige Feststellung zum Repositorystatus
+
+- Die konkrete TurboLikes-URL ist im Repository derzeit nicht bekannt.
+- Es wurde keine URL geraten oder erfunden.
+- Es wurde keine Produktiv-Connect-Konfiguration eingeführt.
+- Es wurde keine Codeänderung und kein Deployment ausgeführt.
+
+### 11. Dokumentationsmitteilung
+
+Die aktuelle Lage ist: Die App ist bereit für einen generischen, konfigurierbaren Remote-Server-Connector, aber die konkrete TurboLikes-Anbindung fehlt noch vollständig. Die nötigen Konfigurations- und Secret-Values müssen extern bereitgestellt werden; im Repository selbst gibt es keine produktiven TurboLikes-Daten oder Endpoints.
+
 # Machbarkeitsprüfung: Server-/Admin-Anwendung für Neutral -> cPanel-meinServer
 
 ## IST-ZUSTAND
