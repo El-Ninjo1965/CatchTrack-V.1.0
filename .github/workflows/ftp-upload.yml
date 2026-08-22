@@ -1,0 +1,53 @@
+name: FTPS Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_HOST: ${{ secrets.FTP_HOST }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      FTP_PORT: ${{ secrets.FTP_PORT || 21 }}
+
+    steps:
+      - name: Prüfe benötigte GitHub Secrets
+        shell: bash
+        run: |
+          set -eu
+          for name in FTP_HOST FTP_USER FTP_PASSWORD; do
+            if [ -z "${!name:-}" ]; then
+              echo "Fehlendes GitHub Secret: $name"
+              exit 1
+            fi
+          done
+          echo "FTP-Host: ${FTP_HOST}"
+          echo "FTP-Port: ${FTP_PORT}"
+          echo "FTP-Root: /"
+
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Dateien per FTPS auf das cPanel-FTP-Root übertragen
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ env.FTP_HOST }}
+          username: ${{ env.FTP_USER }}
+          password: ${{ env.FTP_PASSWORD }}
+          port: ${{ env.FTP_PORT }}
+          protocol: ftps
+          server-dir: /
+          local-dir: ./
+          state-name: .ftp-deploy-sync-state.json
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/tests/**
+            **/*.log
