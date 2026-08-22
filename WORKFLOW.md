@@ -2834,6 +2834,62 @@ EMPFOHLEN:
 - keine Tests, keine Dev-Tools, keine Secrets, keine lokalen Preview-Dateien im produktiven Transfer
 - GitHub Actions zur FTPS-Auslieferung mit cPanel-Root-Pfad `/`
 
+## Praktische FTPS-Deploy-Konfiguration für diese VS-Code-Session
+
+### Ziel und Grundsatz
+
+- Die produktive FTPS-Verbindung darf nur als Deployment-Transport genutzt werden.
+- Die Laufzeitanwendung darf keine FTP/FTPS-Verbindung im Produktivbetrieb initiieren.
+- Secrets und Zugangsdaten werden niemals im Repository eingecheckt.
+- Für die VS-Code-Copilot-Session gilt: Repository-Secrets sind nicht automatisch verfügbar.
+
+### Praktisch nutzbare Varianten
+
+1. Umgebungsvariablen in der laufenden Session
+   - Sinnvoll für kurze, temporäre Runs.
+   - Beispiel: `FTP_SERVER`, `FTP_PORT`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_TARGET_DIR`, `FTP_PROTOCOL`.
+   - Voraussetzung: Werte müssen im Session-Kontext als echte Process-Umgebungen bereitgestellt werden.
+
+2. Lokale, nicht ins Repository eingecheckte Konfigurationsdatei
+   - Empfohlen für wiederholte lokale Deploys.
+   - `.env.deploy` oder `.env.local` ist sinnvoll, weil `.gitignore` `.env`, `.env.*` und `*.local` bereits ignoriert.
+   - Das Beispiel im Repo liegt als `.env.deploy.example` vor; echte Werte werden nie commitet.
+
+3. GitHub Actions / GitHub Secrets
+   - Für echte CI/CD-Automatisierung ist diese Methode die beste Produktionslösung.
+   - In der VS-Code-Agent-Session selbst sind diese Secrets nicht automatisch verfügbar, solange keine passende GitHub-Integration/Authorization vorliegt.
+
+4. Externe Secret-Manager / Credential Store
+   - Optional für lokale Maschinen oder Team-Workflows, sofern im Betrieb standardisiert.
+   - Für den reinen Workspace-Provider ist diese Option in der aktuellen Session nicht automatisch verfügbar.
+
+### In dieser Session tatsächlich nutzbar
+
+- Local shell env vars oder eine lokale, ignorierte `.env.deploy`-Datei funktionieren praktikabel.
+- GitHub-Repository-Secrets sind in dieser VS-Code-Copilot-Session nicht direkt verfügbar.
+- Dadurch mussten FTP-Zugangsdaten im bisher getesteten Ablauf direkt vom Nutzer bereitgestellt werden.
+
+### Empfohlene Standardmethode für wiederholte FTPS-Deploys
+
+- `.env.deploy` als lokale, nicht eingecheckte Datei verwenden.
+- `.env.deploy.example` als dokumentiertes Template im Repository pflegen.
+- Ein kleines Validierungsskript (`scripts/ftps-config-check.js`) prüft, ob die erforderlichen Variablen gesetzt sind, ohne einen realen Upload auszuführen.
+- Ein zweites Skript (`scripts/ftps-deploy.js`) ist nur ein Schutz-/Validierungslayer und führt in dieser Session keinen echten Transfer aus.
+- Für späte Automatisierung in GitHub Actions werden dann die gleichen Variablen als GitHub Secrets gesetzt, nicht als Repository-Dateien.
+
+### Sicherheitsregeln
+
+- Keine Secrets oder Passwörter im Quellcode, in Logs oder in Commit-Text hinterlassen.
+- Keine produktiven Datendateien in `Neutral` committen, die FTP-Zugangsdaten enthalten.
+- FTPS wird nur als Deployment-Mechanismus verwendet; die laufende Anwendung selbst wird nicht per FTP/FTPS angesprochen.
+- Der FTP-Root bleibt der definierte Zielordner, keine rekursiven Scans oder zufälligen Dateiveränderungen außerhalb des gezielten Deploy-Ziels.
+
+### Ergebnis für den späteren automatisierten Deploy
+
+- Beste langfristige Lösung: GitHub Actions Secrets für echte CI/CD-Deploys.
+- Beste lokal verfügbare Lösung in dieser Session: lokale `.env.deploy` plus Validierungsskript.
+- Beste Architekturregel: Provider- und Deploy-Konfigurationen bleiben außerhalb des Repository-Codes und werden über Umgebungsvariablen oder einen Secret-Manager verwaltet.
+
 ## ZUKUNFT
 
 - 2FA/MFA als optionale Sicherheitsstufe
