@@ -1462,6 +1462,174 @@ NOCH ZU IMPLEMENTIEREN
 
 Die aktuelle Lage ist: Die App ist bereit für einen generischen, konfigurierbaren Remote-Server-Connector, aber die konkrete TurboLikes-Anbindung fehlt noch vollständig. Die nötigen Konfigurations- und Secret-Values müssen extern bereitgestellt werden; im Repository selbst gibt es keine produktiven TurboLikes-Daten oder Endpoints.
 
+## FIRST-RUN SETUP: KONKRETE WERTE FÜR DIE EXISTIERENDE cPanel-NEUTRAL-APP (2026-08-22)
+
+### 1. Application ID
+
+Der im vorhandenen Projekt vorgesehene Wert ist `neutral-app`.
+
+Belege:
+
+- `apps/neutral-app/app-info.json` enthält `{ "id": "neutral-app" }`
+- `config/index.js` setzt `defaultAppId: process.env.DEFAULT_APP_ID || 'neutral-app'`
+- `.env.example` setzt `DEFAULT_APP_ID=neutral-app`
+
+Status: eindeutig.
+
+### 2. Application Name
+
+Der im vorhandenen Projekt vorgesehene Name der App ist `Neutral App`.
+
+Belege:
+
+- `apps/neutral-app/app-info.json` enthält `"name": "Neutral App"`
+- `webroot/master-ui.js` verwendet `getConfiguredAppName()` mit dem aktiven App-Objekt bzw. Default `Neutral Platform`, aber das aktive App-Manifest in `apps/neutral-app/app-info.json` ist eindeutig `Neutral App`.
+
+Status: eindeutig.
+
+### 3. Server URL
+
+Die Server-URL kann aus dem Repository nicht als konkrete öffentliche Origin der tatsächlich laufenden cPanel-App abgeleitet werden.
+
+Der im Code vorhandene technische Fakt ist:
+
+- `server/server.js` startet den Node-Prozess mit `server.listen(process.env.PORT || 3000, process.env.HOST || '127.0.0.1', ...)`
+- `server/config/index.js` definiert `host: process.env.HOST || '127.0.0.1'` und `port: Number(process.env.PORT || 3000)`
+- `server/bootstrap/server.js` bindet die API an denselben Node-Server und behandelt `/api/*`
+- Die Webroot-JS ruft relative Pfade wie `/api/setup`, `/api/server/test`, `/api/database/test` auf
+
+Das bedeutet: Die App erwartet eine öffentliche URL/Origin, die auf den Node-Server zeigt, aber diese Wert wird nicht im Repository als feste Domain hinterlegt. Die public UI unter `https://www.turbolikes.com/index/app/neutral/webroot/` ist die statische Webroot-Route, nicht die Server-Basis des Node-Backends.
+
+Echte Schlussfolgerung:
+
+- `Server URL` muss aus der cPanel-/Reverse-Proxy-Konfiguration kommen.
+- Der technisch passende Wert ist die öffentliche Origin oder Application URL, die den Node-Server/Proxy auf Port 3000 erreicht.
+- Dieser Wert kann nicht aus dem Repository ermittelt werden.
+
+Wo in cPanel nachsehen:
+
+- Node.js Application / Application URL
+- Reverse Proxy / Pass-through / Proxy Rules
+- Domain/Subdomain, die auf den Node-Port zeigt
+- ggf. cPanel "Application Manager" / "Node.js App" / "Domain Binding"
+
+Status: offen, nicht aus Repository ableitbar.
+
+### 4. API base
+
+Der tatsächlich im Code verwendete API-Basispfad ist `/api`.
+
+Belege:
+
+- `server/config/index.js`: `apiBase: '/api'`
+- `server/bootstrap/server.js`: route checks auf `${apiBase}/setup`, `${apiBase}/server/test`, `${apiBase}/database/test`, `${apiBase}/status`
+- `webroot/master-ui.js`: `postJson('/api/setup', ...)`, `postJson('/api/server/test', ...)`, `postJson('/api/database/test', ...)`
+
+Status: eindeutig.
+
+### 5. Database type
+
+Der Code unterstützt im Setup-/Validation-Level insgesamt diese Typen:
+
+- `mysql`
+- `postgresql`
+- `sqlite`
+- `indexeddb`
+- `mongodb`
+
+Quelle: `server/middleware/input-validation.js`.
+
+Für den tatsächlichen Node-Serverbetrieb sind die praktisch relevanten Pfade in `server/database/connection.js`:
+
+- `sqlite` -> lokaler SQLite-Laufzeitpfad
+- `mysql` -> produktiver DB-Pfad mit `mysql2` / `mysql`
+- `postgresql` wird als Alias-Typ unterstützt, aber der konkrete Node-Server-Konnektor ist primär auf SQLite/MySQL-ähnlichen Laufzeitpfad fokussiert.
+
+Der Setup-UI-Default lautet jedoch `indexeddb`, z. B. in `webroot/master-ui.js`.
+
+Das ist entscheidend:
+
+- `indexeddb` ist kein echter Produktiv-DB-Typ für den Node-cPanel-Server.
+- Es ist ein Browser-/Fallback-/UI-Default.
+- Für den produktiven Node-Server muss der tatsächliche DB-Typ aus den realen cPanel-/Umgebungsdaten stammen.
+
+Zur Frage, ob das Setup eine Datenbank automatisch anlegt:
+
+- Nein.
+- Der Code in `server/bootstrap/server.js` validiert und speichert nur die Konfiguration.
+- Es gibt keine Implementierung, die im First-Run-Setup automatisch eine DB erstellt.
+- Die Datenbank muss bereits existieren und der Laufzeitkontext muss sie mit Host/Name/User/Pass referenzieren.
+
+Status: `indexeddb` ist Default im Setup; echter Serverbetrieb erwartet tatsächliche DB-Konfiguration aus cPanel/Umgebung, meist `mysql` oder `sqlite` je nach Host-Umgebung.
+
+### 6. Database name
+
+Der String `CoreDB` ist ein generischer Setup-Default, kein eindeutiger Wert der vorhandenen App.
+
+Belege:
+
+- `webroot/master-ui.js` setzt `databaseName` default auf `CoreDB`
+- `server/bootstrap/server.js` setzt `databaseConfig.name = database.name || databaseConfig.name || 'CoreDB'`
+
+Der tatsächliche Datenbankname ist im Repository nicht als echte Produktiv-DB hinterlegt. Wenn der Server wirklich auf eine vorhandene DB zeigt, muss der Name aus cPanel/DB-Umgebung übernommen werden.
+
+Status: offen; muss aus der vorhandenen cPanel-Datenbank übernommen werden.
+
+### 7. API-Anbindung der App
+
+Ja, die interne Neutral-App-API ist bereits vollständig im übertragenen Code vorhanden.
+
+Typische bereits implementierte Routen:
+
+- `/health`
+- `/api/health`
+- `/api/status`
+- `/api/system/info`
+- `/api/framework`
+- `/api/setup`
+- `/api/setup/status`
+- `/api/setup/activate`
+- `/api/server/test`
+- `/api/database/status`
+- `/api/database/test`
+- `/api/admin/...`
+
+Dies ist die interne Neutral-Framework-API. Sie läuft im selben Node-Prozess und wird durch den gleichen Server ausgeliefert.
+
+Wichtig ist die Trennung:
+
+- A) interne Neutral-App-API: vorhanden und im Code realisiert
+- B) externe TurboLikes-API: nicht im Repository hinterlegt, keine konkrete Anbindung im Code
+
+Die App ist also bereits als generisches Neutral-Framework lauffähig; eine zusätzliche externe TurboLikes-API-Anbindung fehlt noch ausdrücklich und muss außerhalb des Neutral-Framework-Codes konfiguriert werden.
+
+### 8. Abschluss / Set-up-Tabelle
+
+| Feld | einzutragender Wert | Quelle | Status |
+|---|---|---|---|
+| Application ID | `neutral-app` | `apps/neutral-app/app-info.json`, `config/index.js`, `.env.example` | eindeutig |
+| Application Name | `Neutral App` | `apps/neutral-app/app-info.json` | eindeutig |
+| Server URL | nicht aus Repository ableitbar; muss aus cPanel Application URL / Reverse Proxy / Domain Binding stammen | `server/server.js`, `server/config/index.js`, `server/bootstrap/server.js`, Webroot-API | offen |
+| API base | `/api` | `server/config/index.js`, `webroot/master-ui.js`, `server/bootstrap/server.js` | eindeutig |
+| Database type | `indexeddb` ist UI-Default; echter cPanel-Serverbetrieb muss aus realem DB-Setup stammen, typischerweise `mysql` oder `sqlite` | `webroot/master-ui.js`, `server/middleware/input-validation.js`, `server/database/connection.js` | offen für echte Laufzeit-DB |
+| Database name | `CoreDB` ist nur UI-Default; tatsächlicher Name muss aus cPanel/realer DB kommen | `webroot/master-ui.js`, `server/bootstrap/server.js` | offen |
+
+Diese Werte können jetzt ins Setup eingetragen werden: NEIN.
+
+Nur fehlende Werte und wo sie in cPanel zu finden sind:
+
+- Server URL: in cPanel unter Node.js Application / Application URL / Reverse Proxy / Domain Binding
+- Database type: in cPanel bestehender MySQL-/SQLite-/DB-Setup prüfen; falls MySQL, typischerweise `mysql`
+- Database name: in cPanel MySQL-Datenbank oder SQLite-Datei-/DB-Konfiguration ermitteln
+
+### 9. Nicht durchgeführte Aktionen
+
+- Keine Konfiguration gespeichert
+- Keine Datenbank angelegt oder geändert
+- Keine App-Dateien verändert
+- Keine Node-Prüfung erneut gestartet
+- Keine Deployment-/Upload-Änderung vorgenommen
+
 ## ÖFFENTLICHE ERREICHBARKEIT UND ADMIN-BEREICH (22.08.2026)
 
 ### 1. Tatsächlicher Node-Entrypoint
